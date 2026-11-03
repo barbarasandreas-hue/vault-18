@@ -478,29 +478,65 @@ button { font: inherit; }
 }
 .aviso[hidden] { display: none; }
 
-/* ---------- Indicador de pasos ---------- */
-.pasos { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+/* ---------- Indicador de pasos (compacto: 1 · 2 · 3) ---------- */
+.pasos {
+  list-style: none; margin: 16px 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+}
 .pasos li {
-  display: grid;
-  grid-template-columns: 32px 1fr;
-  gap: 12px;
-  align-items: center;
-  padding: 10px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 4px;
   border-radius: var(--radio);
-  background: var(--gray-light);
+  background: var(--white);
+  border: 1px solid var(--gray-semilight);
   color: var(--gray-semidark);
+  font-size: 14px; text-align: center; line-height: 1.2;
 }
 .pasos .num {
   display: flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px;
+  width: 30px; height: 30px;
   border-radius: 50%;
   border: 2px solid var(--gray-semidark);
   font-weight: 700;
 }
-.pasos li.actual { background: var(--green-20); color: var(--green-dark); font-weight: 600; }
+.pasos li.actual { background: var(--green-20); border-color: var(--green-normal); color: var(--green-dark); font-weight: 700; }
 .pasos li.actual .num { background: var(--green-dark); border-color: var(--green-dark); color: var(--white); }
+.pasos li.hecho { color: var(--gray-dark); }
 .pasos li.hecho .num { background: var(--white); border-color: var(--green-normal); color: var(--green-dark); }
-.pasos small { display: block; font-weight: 400; font-size: 13px; }
+.pasos .num svg { width: 18px; height: 18px; }
+
+/* ---------- Postula: semáforo de carga (color + palabra + ícono) ---------- */
+.formulario { margin-top: 16px; }
+.semaforo { border-left: 8px solid var(--gray-semilight); margin-top: 4px; }
+.semaforo .etiqueta { margin: 0; font-weight: 600; color: var(--gray-semidark); }
+.semaforo .numero { display: block; margin: 2px 0 8px; }
+.semaforo .texto-apoyo { margin-top: 6px; }
+.estado-semaforo {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin: 0; padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 18px; font-weight: 700;
+}
+.estado-semaforo svg { width: 22px; height: 22px; flex: none; }
+.semaforo-holgado { border-left-color: var(--green-normal); }
+.semaforo-holgado .estado-semaforo { background: var(--green-20); color: var(--green-dark); }
+.semaforo-limite { border-left-color: var(--yellow-normal); }
+.semaforo-limite .estado-semaforo { background: var(--yellow-normal); color: var(--gray-dark); }
+.semaforo-no-aprueba { border-left-color: var(--red-normal); }
+.semaforo-no-aprueba .estado-semaforo { background: var(--red-20); color: var(--red-dark); }
+.semaforo-no-aprueba .estado-semaforo svg { color: var(--red-normal); }
+
+.sugerencia {
+  margin-top: 12px; padding: 14px 16px;
+  border-radius: var(--radio);
+  background: var(--yellow-20);
+  border: 1px solid var(--yellow-normal);
+}
+.sugerencia p { margin: 0 0 4px; }
+.sugerencia .enlace { margin-right: 16px; }
+
+.aviso-ok { background: var(--green-20); color: var(--green-dark); }
+#postular-explica:empty { display: none; }
 
 /* ---------- Barra inferior ---------- */
 .barra {
