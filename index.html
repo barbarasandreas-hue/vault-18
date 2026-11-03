@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0033cc">
+  <meta name="theme-color" content="#28892B">
   <meta name="description" content="Primer Peldaño de Bci: tu primer departamento poniendo el 5 % del precio.">
   <title>Primer Peldaño · Bci</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230033cc'/%3E%3Cpath d='M8 24h6v-5h5v-5h5V8' fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2328892B'/%3E%3Cpath d='M8 24h6v-5h5v-5h5V8' fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Figtree:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
@@ -31,8 +31,9 @@
       <!-- ===== Inicio: simulador ===== -->
       <section id="pantalla-inicio" class="pantalla" aria-labelledby="titulo-inicio">
         <header class="encabezado">
-          <h1 id="titulo-inicio" class="h2">Cuánto cuesta tu departamento</h1>
-          <p class="texto-apoyo">Elige para qué lo quieres y cómo lo compras.</p>
+          <div class="figuras" aria-hidden="true"><span class="f-cuadrado"></span><span class="f-circulo"></span><span class="f-triangulo"></span><span class="f-rectangulo"></span></div>
+          <h1 id="titulo-inicio" class="h2">Tu primer departamento</h1>
+          <p class="texto-apoyo">Cuánto pones al escriturar y cada mes.</p>
         </header>
 
         <fieldset class="selector">
@@ -57,7 +58,7 @@
 
         <div class="tarjeta protagonista" aria-live="polite">
           <p class="etiqueta">Pones al escriturar (5 % + gastos)</p>
-          <strong class="numero display-1" id="simula-escriturar">$0</strong>
+          <strong class="numero display-3" id="simula-escriturar">$0</strong>
           <p class="secundario">Y luego <strong id="simula-mes">$0</strong> al mes</p>
           <p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>
         </div>
@@ -67,7 +68,7 @@
         </div>
 
         <div class="tarjeta">
-          <button type="button" class="btn btn-terciario desplegar" id="btn-reparto" aria-expanded="false" aria-controls="reparto">
+          <button type="button" class="enlace desplegar" id="btn-reparto" aria-expanded="false" aria-controls="reparto">
             ¿De dónde sale el resto?
             <svg aria-hidden="true"><use href="#i-flecha"/></svg>
           </button>
@@ -105,7 +106,7 @@
           <div class="filtro">
             <span class="chip chip-ia" id="proyectos-ia"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Filtrado por IA: 4,5 % o más</span>
             <p class="texto-apoyo" id="proyectos-modo"></p>
-            <a href="#inicio" class="btn btn-terciario">Cambiar</a>
+            <a href="#inicio" class="enlace">Cambiar</a>
           </div>
         </header>
 
@@ -130,7 +131,7 @@
 
       <!-- ===== Detalle de un proyecto (se dibuja desde app.js) ===== -->
       <section id="pantalla-proyecto" class="pantalla" aria-labelledby="titulo-proyecto" hidden>
-        <a href="#proyectos" class="btn btn-terciario volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Proyectos</a>
+        <a href="#proyectos" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Proyectos</a>
         <div id="detalle-proyecto"></div>
       </section>
       <!-- ===== Mis proyectos ===== -->

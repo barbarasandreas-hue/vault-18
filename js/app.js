@@ -320,7 +320,7 @@
       '<ol class="pasos">' + pasos + '</ol>' +
       '<div class="acciones">' +
         '<p class="aviso">Disponible pronto: el paso 1, Postula, llega en la próxima versión.</p>' +
-        '<button type="button" class="btn btn-terciario" id="btn-salir">Salir de esta compra</button>' +
+        '<button type="button" class="btn btn-terciario btn-bloque" id="btn-salir">Salir de esta compra</button>' +
       '</div>';
 
     $('btn-salir').addEventListener('click', function () {
