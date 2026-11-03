@@ -1,5 +1,78 @@
 # Evaluación · Sprint 6 · Inversionista
 
+## Segunda revisión (commit `75cc88b`)
+
+Revisé el commit `75cc88b` contra las correcciones 1 a 5 de la primera revisión (más abajo) y la sección "Segunda entrega" de `sprints/sprint-6-entrega.md`. Usé el servidor local del puerto 8000 y Chrome sin ventana, emulando teléfonos de 390 × 844 y 360 × 640. Un script habló directo con Chrome: escribió tecla por tecla y tocó los botones en su posición real en pantalla. Recorrí los dos tamaños con 0 excepciones, 0 errores de consola y 0 respuestas 4xx o 5xx. No probé en un teléfono físico.
+
+### Veredicto
+
+**APROBADO.** Las 5 correcciones están resueltas. **S6-F1 se aprueba**, y S6-F2, S6-F3 y S6-F4 siguen cumpliendo. No encontré regresiones.
+
+### Verificaciones automáticas
+
+| Verificación | Resultado |
+|---|---|
+| `node --test` | 53 de 53 pasan. La prueba nueva del campo de UF y la del mínimo prueban casos reales: 5 de 5, 4 de 5, 0 por financiar, "12,56" y "337,5" |
+| `node --test tests/` | En Node 24 sigue fallando (`✖ tests … 'test failed'`). Es tarea del Planner, igual que en los sprints anteriores |
+| `node --check` de los 3 JS | Sin errores |
+| `grep -rniE "plata\|depto\|dpto"` (incluido el manifest) | Vacío |
+| Rutas `src="/"` o `href="/"` | Ninguna |
+| Librerías externas | Ninguna, solo Google Fonts |
+| HTTP 200 en local y en GitHub Pages | `/`, `index.html`, el CSS, los 3 JS y el manifest. Pages ya sirve este commit: contiene `leerMontoUF` y `linea-ver` |
+
+### Correcciones de la primera revisión
+
+| # | Corrección | | Evidencia |
+|---|---|---|---|
+| 1 | Con menos de UF 10 por financiar, el mínimo pasa a ser lo que falta | ✅ | Guardé en `localStorage` UF 130 en Plaza Independencia. El detalle muestra "Falta por financiar UF 5 = $205.325", la barra en 99 % y "Invertir aquí". En Invertir, la ayuda dice "Falta UF 5 para completar el 15 %: puedes invertir justo eso". UF 4 da error y deja Confirmar desactivado, UF 10 da error por máximo y UF 5 se acepta: "Recibirás al mes $2.491" (recalculado: $2.491). Después de confirmar, el detalle muestra "UF 0 = $0", 100 % y "Este proyecto ya reunió su 15 %", e Invertir dice "no queda nada por financiar". `inversionMinimaUF()` y `validarInversion()` (`js/calculos.js:394-405`) devuelven `completo` solo cuando falta 0 |
+| 2 | La regla de la propia compra, en los dos órdenes | ✅ | Invertir y después comprar: con UF 50 en Alto Ñuñoa, no hay `#btn-comprar`. En su lugar aparece "Ya invertiste en este proyecto, así que no puedes comprar aquí…" y "Ver mis inversiones" (350 × 50 px). Con una compra en Mirador Santa Lucía, Alto Ñuñoa no ofrece `#btn-cambiar-compra`, pero Vista Apoquindo sí, así que el bloqueo es solo donde invertiste. Lo mismo pasa en Plaza Independencia (financiamiento del pie). Comprar y después invertir: el detalle dice "En tu propia compra no puedes invertir", e Invertir no muestra el campo. La sugerencia de Postula excluye los proyectos donde invertiste (`js/app.js:881`). `guardarCompra` solo se llama desde esos dos botones (`js/app.js:652-665`) |
+| 3 | Decimales en UF | ✅ | En la pantalla, "12,5" queda en "12,5" con $6.228 al mes ($513.313 hoy); "12,56" se corta a "12,5" y "1234" se muestra como "1.234". "337,5" se acepta: Confirmar queda activo y muestra $168.153 al mes y $13.859.438. Mis inversiones queda con "UF 337,5", y el detalle con 100 %. Recalculé todo con `node -e`. Todos los "falta por financiar" de los datos tienen como máximo un decimal (337,5; 310,5; 459; 135; 234; 78), así que con un decimal siempre se puede completar el proyecto |
+| 4 | Enlace "Tus inversiones" de 44 px o más | ✅ | Toda la línea es un `<a href="#mis-proyectos/inversiones">`. Mide 350 × 78 px a 390 de ancho y 320 × 78 px a 360. Al tocarla se abre Mis inversiones |
+| 5 | Sin el `120` repetido ni la barra doble | ✅ | No queda ningún `120` literal en `js/app.js`. Hay 1 barra en Plaza Independencia y en Brisas de La Florida, y 2 en Alto Ñuñoa (cupos y 15 %, que son cosas distintas) |
+
+### Estado por feature
+
+| ID | Estado | Nota |
+|---|---|---|
+| S6-F1 Invertir aquí | ✅ aprobada | Ya no hay callejón sin salida, y la regla de la propia compra se cumple en los dos órdenes |
+| S6-F2 Información para invertir | ✅ aprobada | Muestra "UF + 8 % al año · 10 años · Segunda hipoteca · Falta por financiar UF 337,5 = $13.859.438" y la frase de la cuenta custodia |
+| S6-F3 Invertir | ✅ aprobada | El mínimo, el máximo, los decimales, el resultado en vivo y Confirmar funcionan |
+| S6-F4 Mis inversiones | ✅ aprobada | Con UF 337,5 y 2 meses: "Cobrado a la fecha $336.306" (2 × $168.153) y "2 de 120". Con datos dañados en `localStorage` aparece el estado vacío |
+
+Regresiones: recorrí Inicio, Proyectos, 4 detalles, Mis proyectos, Mis inversiones, Perfil, Invertir y dos rutas que no existen, en los dos tamaños. No hubo scroll horizontal (`scrollWidth − innerWidth = 0`), textos cortados ni toques menores a 44 px.
+
+### Puntuaciones
+
+| Dimensión | Nota | Por qué |
+|---|---|---|
+| Funcionalidad | 5 | Las 4 features cumplen, y los números calzan con el recálculo independiente |
+| Calidad móvil | 4 | Los toques miden 44 px o más y no hay scroll horizontal. El teclado decimal depende del idioma del teléfono (ver abajo) |
+| Código | 4 | Las fórmulas nuevas viven en `calculos.js` y tienen pruebas. Quedan un `360` literal y una regla de CSS que no se aplica |
+| Diseño | 4 | La línea de inversiones se lee como tarjeta tocable y los avisos son claros. El "Ver" sale gris en vez de azul |
+
+### Correcciones requeridas
+
+Ninguna bloquea. Para el Sprint 7:
+
+1. En `js/app.js:1374`, "Otro mes" de Mi compra todavía usa `Math.min(360, …)`. Hay que cambiarlo por `SUPUESTOS.mesesBci`. La entrega dice que se reemplazaron "120 y 360", pero este quedó.
+2. En `css/estilos.css`, `.linea-inversiones span` (más específica) le gana a `.linea-ver`. Por eso "Ver" sale `--gray-semidark` (#546e7a, 5,4:1, sí cumple AA) y no `--blue-dark` como pide la regla. Se arregla con `.linea-inversiones .linea-ver` o moviendo la regla.
+3. Planner: `node --test tests/` (séptimo sprint pendiente), y lo que dicen `SPEC.md:108` y `:137`, tal como quedó en la primera revisión.
+
+### Qué revisar a mano en el teléfono
+
+1. **El teclado de Invertir:** mira si muestra coma o punto. Si muestra punto (teléfono en inglés), "12.5" se lee como UF 125, porque el punto es separador de miles. El número se ve en el campo y en "Recibirás al mes", pero conviene saber qué pasa en tu teléfono.
+2. **La línea "Tus inversiones" en Mi camino:** fíjate si se entiende que toda la tarjeta se puede tocar.
+3. **El aviso "Ya invertiste en este proyecto…":** fíjate si se entiende en 10 segundos por qué no puedes comprar ahí.
+
+### Sugerencias (no bloquean)
+
+- Si alguien escribe un punto seguido de 1 o 2 cifras al final (por ejemplo "12.5"), se podría tratar como decimal, o avisar "Usa coma para los decimales".
+- Siguen vigentes las sugerencias de la primera revisión: decir "Terminaste de cobrar" al llegar a 120 de 120, y poner un "Ver proyecto" explícito en cada inversión.
+
+---
+
+## Primera revisión (commit `bd9e1d6`)
+
 Evaluado sobre el commit `bd9e1d6`, contra la sección "Sprint 6" de `PLAN.md`, `SPEC.md`, `CLAUDE.md` y `docs/bci-kit.md`.
 
 La app se probó con `python -m http.server` (puerto 8000), en Chrome sin ventana, emulando teléfonos de 390 × 844 y 360 × 640, con un script que habla directo con Chrome. El script escribió tecla por tecla en los campos y tocó los botones con clics reales en su posición en pantalla. Recorrió:
