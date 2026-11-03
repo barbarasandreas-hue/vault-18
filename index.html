@@ -43,9 +43,14 @@
         <header class="encabezado">
           <div class="figuras" aria-hidden="true"><span class="f-cuadrado"></span><span class="f-circulo"></span><span class="f-triangulo"></span><span class="f-rectangulo"></span></div>
           <h1 id="titulo-inicio" class="h2">Tu primer departamento</h1>
-          <p class="texto-apoyo">Cuánto pones al escriturar y cada mes.</p>
+          <p class="texto-apoyo" id="inicio-apoyo">Cuánto pones al escriturar y cada mes.</p>
         </header>
 
+        <!-- Con una compra en curso: el próximo paso (se dibuja desde app.js) -->
+        <div id="inicio-proximo" hidden></div>
+
+        <div id="inicio-simulador">
+        <button type="button" class="enlace" id="btn-ver-proximo" hidden>Volver a mi próximo paso</button>
         <fieldset class="selector">
           <legend class="oculto-visual">¿Para qué lo quieres?</legend>
           <div class="selector-opciones">
@@ -104,6 +109,7 @@
             </ul>
             <p class="reparto-total">Además pones <strong id="reparto-gastos">$0</strong> de gastos de escritura (≈ 2 %).</p>
           </div>
+        </div>
         </div>
       </section>
 

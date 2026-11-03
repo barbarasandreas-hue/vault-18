@@ -109,9 +109,12 @@
   var NBSP = '\u00a0';
   function plural(n, uno, varios) { return n + NBSP + (n === 1 ? uno : varios); }
 
+  // Separador "·" con el mismo aire a ambos lados (en Overpass el punto queda cargado a un lado).
+  var SEP = '<span class="sep" aria-hidden="true">·</span>';
+
   function ficha(d) {
-    return plural(d.dormitorios, 'dormitorio', 'dormitorios') + ' · ' +
-      plural(d.banos, 'baño', 'baños') + ' · ' + d.m2 + NBSP + 'm²';
+    return plural(d.dormitorios, 'dormitorio', 'dormitorios') + SEP +
+      plural(d.banos, 'baño', 'baños') + SEP + d.m2 + NBSP + 'm²';
   }
 
   var NOMBRE_TIPO = { conjunto: 'Compra en conjunto', financiamiento: 'Financiamiento del pie' };
@@ -139,8 +142,84 @@
     return barraAvance('15 % reunido con inversionistas', formatoPorcentaje(r.avanceFinanciamiento, 0), r.avanceFinanciamiento);
   }
 
+  // ---------- Inicio con próximo paso (S4-F6) ----------
+  // Devuelve lo que se muestra en Inicio según el paso de la compra.
+  function proximoPaso() {
+    var p = buscarProyecto(estado.compra.proyectoId);
+    var e = resumen(p).escenario;
+    var paso = estado.compra.paso || 1;
+    if (paso >= 2 && !estado.compra.carga) paso = 1;
+
+    if (paso === 1) {
+      var k = carga(e.totalMes, estado.sueldoPropio, estado.sueldoPareja);
+      var nivel = nivelCarga(k);
+      return {
+        p: p, etapa: 'Paso 1 de 3' + SEP + 'Postula',
+        etiqueta: nivel ? 'Tu carga' : 'Revisa si califican',
+        numero: nivel ? formatoPorcentaje(cargaRedondeada(k), 1) : null,
+        detalle: nivel ? SEMAFORO[nivel].palabra : 'Escribe los sueldos de los dos para ver tu carga.',
+        accion: 'Ir a Postula'
+      };
+    }
+    if (paso === 2) {
+      var meta = e.alEscriturar;
+      var n = mesesRestantes(meta, estado.ahorrado, estado.ahorroMensual);
+      return {
+        p: p, etapa: 'Paso 2 de 3' + SEP + 'Tu 5 %',
+        etiqueta: n === null ? 'Tu meta al escriturar' : 'Te faltan',
+        numero: n === null ? formatoPesos(meta) : textoMeses(n),
+        detalle: n === null ? 'Calcula en cuántos meses la juntas.'
+          : 'Llevas ' + formatoPesos(estado.ahorrado) + ' de ' + formatoPesos(meta) + '.',
+        accion: estado.ahorroIniciado ? 'Seguir ahorrando' : 'Ir a Tu 5 %'
+      };
+    }
+    if (paso === 3) {
+      return {
+        p: p, etapa: 'Paso 3 de 3' + SEP + 'Firma',
+        etiqueta: 'Ya juntaste', numero: formatoPesos(e.alEscriturar),
+        detalle: 'Revisa lo que firmas en palabras simples.',
+        accion: 'Ir a firmar'
+      };
+    }
+    return {
+      p: p, etapa: 'Mi departamento',
+      etiqueta: 'Pagas al mes', numero: formatoPesos(e.totalMes),
+      detalle: 'Dividendo más la cuota a los inversionistas. Calculado sin plusvalía.',
+      accion: 'Ver mi departamento'
+    };
+  }
+
+  function renderProximo() {
+    var x = proximoPaso();
+    $('inicio-proximo').innerHTML =
+      '<section class="tarjeta proximo" aria-labelledby="titulo-proximo">' +
+        '<p class="chip" id="titulo-proximo">' + x.etapa + '</p>' +
+        '<p class="proximo-proyecto">' + esc(x.p.nombre) + '</p>' +
+        '<p class="etiqueta">' + x.etiqueta + '</p>' +
+        (x.numero ? '<strong class="numero display-2">' + x.numero + '</strong>' : '') +
+        '<p class="texto-apoyo">' + x.detalle + '</p>' +
+      '</section>' +
+      '<div class="accion">' +
+        '<a href="#mis-proyectos" class="btn btn-primario btn-lg btn-bloque">' + x.accion + '</a>' +
+      '</div>' +
+      '<button type="button" class="enlace" id="btn-volver-simular">Volver a simular</button>';
+    $('btn-volver-simular').addEventListener('click', function () {
+      estado.verSimulador = true;
+      renderInicio();
+      $('modo-arrendar').focus();
+    });
+  }
+
   // ---------- Inicio: simulador ----------
   function renderInicio() {
+    var conCompra = !!estado.compra;
+    var verProximo = conCompra && !estado.verSimulador;
+    $('inicio-proximo').hidden = !verProximo;
+    $('inicio-simulador').hidden = verProximo;
+    $('btn-ver-proximo').hidden = !conCompra;
+    $('inicio-apoyo').textContent = verProximo ? 'Tu próximo paso, de un vistazo.' : 'Cuánto pones al escriturar y cada mes.';
+    if (verProximo) { renderProximo(); return; }
+
     var lista = DEPARTAMENTO_REFERENCIA[estado.modo].listaUF;
     var e = escenario(lista, estado.tipo);
     poner('simula-escriturar', e.alEscriturar);
@@ -161,6 +240,11 @@
         guardarEstado();
         renderInicio();
       });
+    });
+
+    $('btn-ver-proximo').addEventListener('click', function () {
+      estado.verSimulador = false;
+      renderInicio();
     });
 
     var boton = $('btn-reparto');
@@ -186,7 +270,7 @@
       : '<p class="etiqueta">Precio del departamento</p><strong class="numero display-4">' + formatoPesos(r.escenario.precio) + '</strong>';
     return '<li><a class="tarjeta tarjeta-proyecto" href="#proyecto/' + esc(p.id) + '">' +
       '<h2 class="h4">' + esc(p.nombre) + '</h2>' +
-      '<p class="texto-apoyo ficha">' + esc(p.comuna) + ' · ' + ficha(d) + '</p>' +
+      '<p class="texto-apoyo ficha">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       numero +
       avanceDe(p, r) +
       '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
@@ -301,7 +385,7 @@
       '<header class="detalle-cabecera">' +
         '<span class="chip">' + NOMBRE_TIPO[p.tipo] + '</span>' +
         '<h1 id="titulo-proyecto" class="h2">' + esc(p.nombre) + '</h1>' +
-        '<p class="texto-apoyo">' + esc(p.comuna) + ' · ' + ficha(d) + '</p>' +
+        '<p class="texto-apoyo">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       '</header>' +
 
       '<div class="tarjeta protagonista">' +
@@ -924,7 +1008,7 @@
     var ruta = leerRuta();
     var destino = RUTAS[ruta.nombre];
 
-    if (destino.pantalla === 'inicio') { sincronizarSelectores(); renderInicio(); }
+    if (destino.pantalla === 'inicio') { estado.verSimulador = false; sincronizarSelectores(); renderInicio(); }
     if (destino.pantalla === 'proyectos') renderProyectos();
     if (destino.pantalla === 'proyecto') renderDetalle(ruta.param);
     if (destino.pantalla === 'mis-proyectos') { estado.pestanaMis = null; renderMisProyectos(); }

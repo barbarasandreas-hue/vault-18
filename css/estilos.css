@@ -580,6 +580,17 @@ button { font: inherit; }
 .logro strong { color: var(--green-dark); }
 .lista-check li:has(> span:last-child:nth-child(2)) { grid-template-columns: 24px 1fr; }
 
+/* Separador "·" con aire parejo a ambos lados */
+.sep { display: inline-block; margin: 0 .4em; }
+
+/* ---------- Inicio: próximo paso ---------- */
+#inicio-simulador[hidden], #inicio-proximo[hidden] { display: none; }
+.proximo .chip { margin: 0; }
+.proximo-proyecto { margin: 8px 0 12px; font-size: 18px; color: var(--gray-dark); }
+.proximo .etiqueta { margin: 0; font-weight: 600; color: var(--gray-semidark); }
+.proximo .numero { display: block; margin: 0 0 4px; }
+#btn-ver-proximo { margin: -8px 0 4px; }
+
 /* ---------- Perfil ---------- */
 #form-perfil .selector legend { font-size: 16px; color: var(--gray-dark); }
 .ayuda-campo { margin: -8px 0 0; font-size: 14px; }
