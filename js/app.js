@@ -17,7 +17,8 @@
     modo: 'arrendar',        // 'arrendar' o 'vivir'
     tipo: 'lote',            // 'lote' o 'individual'
     pestana: 'conjunto',     // pestaña de Proyectos: 'conjunto' o 'financiamiento'
-    compra: leerCompra()     // { proyectoId, departamentoId } o null
+    compra: leerCompra(),    // { proyectoId, departamentoId } o null
+    pestanaMis: null         // pestaña de Mis proyectos: 'compra' o 'inversiones'
   };
 
   function $(id) { return document.getElementById(id); }
@@ -284,6 +285,88 @@
     });
   }
 
+  // ---------- Mis proyectos ----------
+  var PASOS = [
+    { titulo: 'Postula', apoyo: 'Revisamos si tú y tu pareja califican.' },
+    { titulo: 'Tu 5 %', apoyo: 'Juntas lo que pones al escriturar.' },
+    { titulo: 'Firma', apoyo: 'Firmas la escritura y recibes tu departamento.' }
+  ];
+
+  function renderMiCompra() {
+    var p = buscarProyecto(estado.compra.proyectoId);
+    var d = departamentosDe(p.id).filter(function (x) { return x.id === estado.compra.departamentoId; })[0] ||
+      departamentosDe(p.id)[0];
+    var e = resumen(p).escenario;
+    var pasoActual = 0; // Sprint 2: siempre el paso 1 (Postula).
+
+    var pasos = PASOS.map(function (paso, i) {
+      var actual = i === pasoActual;
+      return '<li' + (actual ? ' class="actual" aria-current="step"' : '') + '>' +
+        '<span class="num" aria-hidden="true">' + (i + 1) + '</span>' +
+        '<span>' + paso.titulo + (actual ? ' · Paso actual' : '') +
+        '<small>' + paso.apoyo + '</small></span></li>';
+    }).join('');
+
+    $('panel-compra').innerHTML =
+      '<a class="tarjeta tarjeta-proyecto" href="#proyecto/' + esc(p.id) + '">' +
+        '<span class="chip">' + NOMBRE_TIPO[p.tipo] + '</span>' +
+        '<h2 class="h4" style="margin-top:8px">' + esc(p.nombre) + '</h2>' +
+        '<p class="texto-apoyo ficha">' + esc(p.comuna) + ' · Piso ' + d.piso + ' · ' + ficha(d) + '</p>' +
+        '<p class="etiqueta">Pones al escriturar</p>' +
+        '<strong class="numero display-4">' + formatoPesos(e.alEscriturar) + '</strong>' +
+        '<span class="ver">Ver proyecto <svg aria-hidden="true" width="20" height="20" style="transform:rotate(-90deg)"><use href="#i-flecha"/></svg></span>' +
+      '</a>' +
+      '<h2 class="h5 bloque">Tus pasos</h2>' +
+      '<ol class="pasos">' + pasos + '</ol>' +
+      '<div class="acciones">' +
+        '<p class="aviso">Disponible pronto: el paso 1, Postula, llega en la próxima versión.</p>' +
+        '<button type="button" class="btn btn-terciario" id="btn-salir">Salir de esta compra</button>' +
+      '</div>';
+
+    $('btn-salir').addEventListener('click', function () {
+      guardarCompra(null);
+      renderMisProyectos();
+    });
+  }
+
+  function renderMisProyectos() {
+    var tieneCompra = !!estado.compra;
+    var tieneInversiones = false; // Las inversiones llegan en el Sprint 6.
+    var tieneAlgo = tieneCompra || tieneInversiones;
+
+    $('mis-vacio').hidden = tieneAlgo;
+    $('mis-contenido').hidden = !tieneAlgo;
+    if (!tieneAlgo) return;
+
+    if (!estado.pestanaMis) estado.pestanaMis = tieneCompra ? 'compra' : 'inversiones';
+    document.querySelectorAll('[data-mis]').forEach(function (tab) {
+      var activa = tab.dataset.mis === estado.pestanaMis;
+      tab.setAttribute('aria-selected', String(activa));
+      tab.tabIndex = activa ? 0 : -1;
+    });
+    $('panel-compra').hidden = estado.pestanaMis !== 'compra';
+    $('panel-inversiones').hidden = estado.pestanaMis !== 'inversiones';
+
+    if (tieneCompra) renderMiCompra();
+    else $('panel-compra').innerHTML = '<div class="vacio"><h2 class="h3">Aún no tienes una compra</h2>' +
+      '<div class="acciones"><a href="#proyectos" class="btn btn-primario btn-bloque">Ver proyectos</a></div></div>';
+  }
+
+  function iniciarMisProyectos() {
+    document.querySelectorAll('[data-mis]').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        estado.pestanaMis = tab.dataset.mis;
+        renderMisProyectos();
+      });
+      tab.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+        estado.pestanaMis = estado.pestanaMis === 'compra' ? 'inversiones' : 'compra';
+        renderMisProyectos();
+        $('tab-' + estado.pestanaMis).focus();
+      });
+    });
+  }
+
   // ---------- Navegación ----------
   // Lee la dirección: "#proyecto/alto-nunoa" → { nombre: 'proyecto', param: 'alto-nunoa' }.
   function leerRuta() {
@@ -299,6 +382,7 @@
     if (destino.pantalla === 'inicio') { sincronizarSelectores(); renderInicio(); }
     if (destino.pantalla === 'proyectos') renderProyectos();
     if (destino.pantalla === 'proyecto') renderDetalle(ruta.param);
+    if (destino.pantalla === 'mis-proyectos') { estado.pestanaMis = null; renderMisProyectos(); }
 
     document.querySelectorAll('main > .pantalla').forEach(function (s) {
       s.hidden = s.id !== 'pantalla-' + destino.pantalla;
@@ -313,5 +397,6 @@
   window.addEventListener('hashchange', mostrar);
   iniciarInicio();
   iniciarProyectos();
+  iniciarMisProyectos();
   mostrar();
 })();

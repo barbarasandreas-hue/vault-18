@@ -133,11 +133,40 @@
         <a href="#proyectos" class="btn btn-terciario volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Proyectos</a>
         <div id="detalle-proyecto"></div>
       </section>
+      <!-- ===== Mis proyectos ===== -->
       <section id="pantalla-mis-proyectos" class="pantalla" aria-labelledby="titulo-mis-proyectos" hidden>
-        <div class="vacio">
-          <svg aria-hidden="true"><use href="#i-pronto"/></svg>
-          <h1 id="titulo-mis-proyectos" class="h3">Mis proyectos</h1>
-          <p class="texto-apoyo">Disponible pronto.</p>
+        <header class="encabezado">
+          <h1 id="titulo-mis-proyectos" class="h2">Mis proyectos</h1>
+          <p class="texto-apoyo">Tu compra y tus inversiones, en un solo lugar.</p>
+        </header>
+
+        <div class="vacio" id="mis-vacio">
+          <svg aria-hidden="true"><use href="#i-mis-proyectos"/></svg>
+          <h2 class="h3">Aún no tienes proyectos</h2>
+          <p class="texto-apoyo">Únete a una compra o financia tu pie en Proyectos.</p>
+          <div class="acciones">
+            <a href="#proyectos" class="btn btn-primario btn-bloque">Ver proyectos</a>
+          </div>
+        </div>
+
+        <div id="mis-contenido" hidden>
+          <div class="pestanas" role="tablist" aria-label="Mis proyectos">
+            <button type="button" role="tab" id="tab-compra" data-mis="compra" aria-controls="panel-compra">Mi compra</button>
+            <button type="button" role="tab" id="tab-inversiones" data-mis="inversiones" aria-controls="panel-inversiones">Mis inversiones</button>
+          </div>
+
+          <div id="panel-compra" role="tabpanel" aria-labelledby="tab-compra"></div>
+
+          <div id="panel-inversiones" role="tabpanel" aria-labelledby="tab-inversiones" hidden>
+            <div class="vacio">
+              <svg aria-hidden="true"><use href="#i-pronto"/></svg>
+              <h2 class="h3">Aún no tienes inversiones</h2>
+              <p class="texto-apoyo">En cada proyecto puedes elegir "Invertir aquí".</p>
+              <div class="acciones">
+                <a href="#proyectos" class="btn btn-primario btn-bloque">Ver proyectos</a>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
       <section id="pantalla-perfil" class="pantalla" aria-labelledby="titulo-perfil" hidden>
