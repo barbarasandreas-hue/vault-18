@@ -6,12 +6,12 @@ Especificación del producto. La fuente de verdad del modelo y de las reglas es 
 
 ## 1. Resumen
 
-Primer Peldaño es una app de Bci para el teléfono que permite a jóvenes profesionales comprar su primer departamento poniendo solo el 5 % del precio (más gastos), en vez del 20 %. Bci presta el 80 %, inversionistas del marketplace prestan el 15 % y la app guía al usuario desde la simulación hasta el seguimiento mes a mes. Debe entenderse en 10 segundos por pantalla.
+Primer Peldaño es un marketplace de departamentos de Bci, para el teléfono, que permite a jóvenes profesionales comprar su primer departamento poniendo solo el 5 % del precio (más gastos), en vez del 20 %. En el marketplace el usuario ve proyectos y se une a ellos: **compras en conjunto** (varios compradores compran un lote con 10 % de descuento) o **financiamiento del pie** (inversionistas prestan el 15 % y el usuario pone el 5 %); Bci presta el 80 % restante. La app debe ser fácil de comprender: cada pantalla se entiende en 10 segundos.
 
 ## 2. Usuario objetivo
 
 - **Comprador:** joven profesional de 25 a 35 años que arrienda, tiene sueldo estable y postula junto a su pareja. Puede pagar un dividendo, pero no tiene el pie. En la interfaz se le llama "usuario" o "cliente", nunca por nombre.
-- **Inversionista:** persona con ahorros que busca renta fija en UF.
+- **Inversionista:** persona con ahorros que busca renta fija en UF. En la interfaz se le llama "inversionista", nunca por nombre.
 - **Escenario principal:** el usuario abre la app en el celular, en el metro o en su casa, para saber si puede comprar y cuánto le cuesta. Tiene poco tiempo y desconfía de las promesas.
 
 ## 3. Pantallas
@@ -22,17 +22,28 @@ Cada pantalla tiene **un número protagonista** y **una acción principal**.
 
 | Pantalla | Propósito | Número protagonista | Acción principal |
 |---|---|---|---|
-| **Simula** | Ver cuánto cuesta comprar, para vivir o arrendar, en lote o individual | Cuánto pone al escriturar (5 % + gastos) | Continuar a postular |
-| **Postula** | Saber si el usuario y su pareja califican | Porcentaje de carga, con semáforo: holgado (verde), en el límite (amarillo), no aprueba (rojo) | Postular |
-| **Tu 5 %** | Planificar cómo juntar lo que pone al escriturar | Meses para llegar a la meta | Empezar a ahorrar |
-| **Elige** | Elegir un departamento o un lote entre los que la IA filtró | Precio del departamento o lote y de dónde sale (80 / 15 / 5) | Elegir este |
+| **Simula** | Ver cuánto cuesta comprar, para vivir o arrendar, en lote o individual | Cuánto pone al escriturar (5 % + gastos) | Ver proyectos |
+| **Proyectos** (marketplace) | Recorrer los proyectos filtrados por la IA y unirse a uno | En compra en conjunto: cuánto ahorra por unirse. En financiamiento del pie: el precio y de dónde sale (80 / 15 / 5) | Unirme |
+| **Postula** | Saber si el usuario y su pareja califican para el proyecto elegido | Porcentaje de carga, con semáforo: holgado (verde), en el límite (amarillo), no aprueba (rojo) | Postular |
+| **Tu 5 %** | Planificar cómo juntar lo que pone al escriturar y, al llegar, revisar lo que firma | Meses para llegar a la meta | Empezar a ahorrar |
 | **Mi departamento** | Ver cómo se movió el dinero del mes y el avance de la deuda | Cuánto puso el usuario este mes | Abonar (solo aparece cuando la IA lo recomienda) |
+
+### El marketplace: dos tipos de proyecto
+
+| | Compra en conjunto | Financiamiento del pie |
+|---|---|---|
+| **Qué es** | Un lote de departamentos que se compra entre varios compradores, con 10 % de descuento | Un departamento a precio de lista cuyo 15 % lo prestan inversionistas |
+| **Quién se une** | Compradores (uno por departamento del lote) | El comprador del departamento y los inversionistas que financian |
+| **Qué muestra la tarjeta** | Ahorro por unirse, cupos tomados (por ejemplo, 6 de 10) y fecha de cierre | Precio, avance del financiamiento (por ejemplo, 60 % financiado) y fecha de cierre |
+| **Si no se completa** | El comprador puede pasar a compra individual (precio de lista) o salir sin costo | El comprador puede esperar o salir sin costo; el inversionista recupera su dinero |
+
+Los proyectos de compra en conjunto también se financian con inversionistas (cada departamento del lote tiene su 15 %).
 
 ### Lado del inversionista
 
 | Pantalla | Propósito | Número protagonista | Acción principal |
 |---|---|---|---|
-| **Oportunidades** | Ver departamentos y lotes que buscan financiamiento | Rentabilidad: UF + 8 % a 10 años | Invertir |
+| **Proyectos** (vista inversionista) | El mismo marketplace, mostrando lo que falta por financiar en cada proyecto | Rentabilidad: UF + 8 % a 10 años | Invertir |
 | **Invertir** | Elegir cuánto prestar | Cuota mensual que recibirá | Confirmar |
 | **Mi cartera** | Seguir sus inversiones | Cobrado a la fecha | Ver detalle |
 
@@ -40,20 +51,21 @@ Un selector al inicio permite elegir entre "Quiero comprar" y "Quiero invertir".
 
 ## 4. Flujos clave
 
-1. **Comprador, de principio a fin:** Simula → Postula → Tu 5 % → Elige (con lista de firma) → Mi departamento.
-2. **Inversionista:** Oportunidades → Invertir → Mi cartera.
-3. **Un mes en modo arrendar:** entra el arriendo a la cuenta custodia de Bci → se descuentan administración → se paga primero el dividendo → luego la cuota a los inversionistas → el usuario completa la diferencia. Mi departamento lo muestra como una cascada de pasos.
-4. **Un mes en modo vivir:** el usuario paga el dividendo y la cuota a los inversionistas, y se compara con lo que pagaba de arriendo.
-5. **Postula en amarillo o rojo:** la app sugiere qué cambiar (compra en lote, departamento más barato, sumar el ingreso de la pareja) y deja volver a Simula.
+1. **Comprador, de principio a fin:** Simula → Proyectos (se une a uno) → Postula → Tu 5 % (con lista de firma al llegar a la meta) → Mi departamento.
+2. **Inversionista:** Proyectos → Invertir → Mi cartera.
+3. **Unirse a una compra en conjunto:** ve la tarjeta → revisa ahorro, cupos y fecha de cierre → "Unirme" → toma un cupo → se le explica qué pasa si el grupo no se completa → sigue a Postula.
+4. **Un mes en modo arrendar:** entra el arriendo a la cuenta custodia de Bci → se descuentan administración → se paga primero el dividendo → luego la cuota a los inversionistas → el usuario completa la diferencia. Mi departamento lo muestra como una cascada de pasos.
+5. **Un mes en modo vivir:** el usuario paga el dividendo y la cuota a los inversionistas, y se compara con lo que pagaba de arriendo.
+6. **Postula en amarillo o rojo:** la app sugiere qué cambiar (unirse a una compra en conjunto, un departamento más barato, sumar el ingreso de la pareja) y deja volver a Proyectos.
 
 ## 5. Modelo de datos
 
-- **Departamento:** id, comuna, metros cuadrados, dormitorios, baños, precio de lista en UF, arriendo bruto estimado en pesos, id de lote (si pertenece a uno).
-- **Lote:** id, nombre, lista de departamentos, descuento (10 %).
-- **Usuario:** modo (vivir o arrendar), tipo de compra (lote o individual), sueldo propio, sueldo de la pareja, arriendo actual, ahorro mensual, tipo de ahorro (propio o grupal), departamento elegido.
+- **Departamento:** id, comuna, metros cuadrados, dormitorios, baños, precio de lista en UF, arriendo bruto estimado en pesos, id de proyecto.
+- **Proyecto:** id, nombre del edificio (nunca nombres de personas), comuna, tipo (compra en conjunto o financiamiento del pie), lista de departamentos, cupos totales, cupos tomados, UF ya financiadas por inversionistas, fecha de cierre, descuento (10 % solo en compra en conjunto).
+- **Usuario:** modo (vivir o arrendar), tipo de compra (lote o individual), sueldo propio, sueldo de la pareja, arriendo actual, ahorro mensual, tipo de ahorro (propio o grupal), proyecto y departamento al que se unió.
 - **Crédito Bci:** monto (80 % del precio), tasa 4,5 % anual, 360 meses, seguros UF 0,7 al mes, cuotas pagadas.
 - **Préstamo de inversionistas:** monto (15 % del precio), tasa 8 % anual sobre UF, 120 meses, cuotas pagadas.
-- **Inversión:** id, departamento o lote, monto en UF, fecha, cuotas cobradas.
+- **Inversión:** id, proyecto y departamento, monto en UF, fecha, cuotas cobradas.
 
 Los datos del usuario y las inversiones se guardan en el teléfono (`localStorage`). No hay servidor.
 
@@ -63,7 +75,9 @@ Todas viven en `js/calculos.js`; las pantallas solo las llaman. Los montos se ca
 
 | Cálculo | Fórmula |
 |---|---|
-| Precio | Precio de lista; en lote, precio de lista × 0,9 |
+| Precio | Precio de lista; en compra en conjunto (lote), precio de lista × 0,9 |
+| Ahorro por unirse | Precio de lista × 10 % (UF 2.500 → UF 250 = $10.266.250) |
+| Avance de un proyecto | Cupos tomados / cupos totales; en financiamiento, UF financiadas / UF por financiar |
 | Pie del usuario | Precio × 5 % |
 | Gastos de escritura | Precio × 2 % |
 | Al escriturar | Pie + gastos |
@@ -104,7 +118,7 @@ Valores de referencia (UF $41.065, redondeados al peso):
 - Respeta el notch y la barra inferior (áreas seguras).
 - Campos de dinero con teclado numérico.
 - Botones y zonas táctiles de 44 × 44 px como mínimo.
-- Se entiende en 10 segundos: un número, una acción, textos cortos.
+- Fácil de comprender: se entiende en 10 segundos, con un número, una acción y textos cortos. Los términos financieros (dividendo, pie, carga, segunda hipoteca, cuenta custodia) tienen una explicación de una frase a un toque.
 - Se puede agregar a la pantalla de inicio como una app.
 - Funciona abierta con doble clic, por wifi desde el computador y publicada en GitHub Pages.
 
@@ -127,3 +141,5 @@ Valores de referencia (UF $41.065, redondeados al peso):
 6. La inversión mínima es UF 10.
 7. Los inversionistas y compradores de ejemplo no tienen nombres.
 8. "Avisar cuándo conviene abonar" se simula con una regla simple: cuando el usuario tiene un excedente (por ejemplo, un mes con arriendo mayor al total), la app sugiere abonar a la deuda de inversionistas, que tiene la tasa más alta.
+9. **Los dos tipos de proyecto del marketplace** se interpretan así: "compra en conjunto" es un lote que se completa con varios compradores y tiene 10 % de descuento; "financiamiento del pie" es un departamento a precio de lista cuyo 15 % lo prestan inversionistas. El ahorro grupal del 5 % se arma en Tu 5 %, no en el marketplace. **Confirmar con el equipo.**
+10. Si una compra en conjunto no completa sus cupos antes de la fecha de cierre, el comprador puede pasar a compra individual o salir sin costo.

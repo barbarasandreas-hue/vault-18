@@ -1,6 +1,6 @@
 # Primer Peldaño
 
-App de Bci para que jóvenes profesionales compren su primer departamento sin tener que juntar el pie completo. Es un prototipo para el Taller de Interacción IV (UDD), desafío Bci Labs. El dinero, los inversionistas y la parte legal son simulados; los cálculos son reales.
+App de Bci para que jóvenes profesionales compren su primer departamento sin tener que juntar el pie completo. Es un prototipo para el Taller de Interacción IV (UDD), desafío Bci Labs. El dinero, los inversionistas y la parte legal son simulados; los cálculos son reales. La app debe ser facil de comprender para el usuario. La idea es que sea un marketplace de departamentos en done el usario vea proyectos donde se puede unir, tanto de compras en junto como de financiamiento para el pie.
 
 ## El modelo
 
@@ -19,21 +19,12 @@ App de Bci para que jóvenes profesionales compren su primer departamento sin te
 - Límite de carga: dividendo + cuota a inversionistas ≤ 25% del ingreso es holgado; hasta 30% está en el límite; sobre 30% no aprueba.
 - Departamento de referencia: UF 2.500 para arrendar, UF 3.000 para vivir.
 
-## Pantallas actuales (lado del comprador)
-
-1. Simula: vivir o arrendar, lote o individual, cuánto pone al escriturar y al mes.
-2. Postula: sueldos del usuario y su pareja, porcentaje de carga.
-3. Tu 5%: meta y meses para juntarla.
-4. Elige: departamentos en lote o individuales y de dónde sale el precio.
-5. Mi departamento: cómo se movió el dinero en el mes y avance de la deuda.
-
-Pendiente: lado del inversionista (oportunidades, invertir, mi cartera).
 
 ## Reglas de diseño y contenido
 
 - Interfaz en español de Chile. Usar "dinero", nunca "plata".
-- Escribir siempre "departamento" completo, nunca "depto." ni "dpto.". El prototipo actual todavía abrevia: corregirlo.
-- No usar nombres de personas en la interfaz; hablar de "usuario" o "cliente".
+- Escribir siempre "departamento" completo, nunca "depto." ni "dpto.".
+- No usar nombres de personas en la interfaz; hablar de "usuario" o "cliente" O "inversionista".
 - No usar el auto como forma de juntar el pie.
 - Seguir el **Bci Kit**, la guía de diseño de Bci: https://www.bci.cl/corporativo/documentacion
   - Colores: cuatro familias (azul, verde, amarillo y rojo) más grises. Cada familia tiene tonos `dark`, `normal`, `80`, `60`, `40` y `20`, y los grises van de `dark` a `light`. Usar variables con esos nombres: `--blue-dark`, `--blue-normal`, `--blue-80` … `--blue-20`, `--green-*`, `--yellow-*`, `--red-*`, `--gray-dark`, `--gray-semidark`, `--gray-neutral`, `--gray-semilight`, `--gray-light`, `--white`.
