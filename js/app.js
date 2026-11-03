@@ -50,11 +50,13 @@
   }
 
   // ---------- Textos de apoyo ----------
-  function plural(n, uno, varios) { return n + ' ' + (n === 1 ? uno : varios); }
+  // Espacio que no se corta: el número y su unidad quedan siempre juntos.
+  var NBSP = '\u00a0';
+  function plural(n, uno, varios) { return n + NBSP + (n === 1 ? uno : varios); }
 
   function ficha(d) {
     return plural(d.dormitorios, 'dormitorio', 'dormitorios') + ' · ' +
-      plural(d.banos, 'baño', 'baños') + ' · ' + d.m2 + ' m²';
+      plural(d.banos, 'baño', 'baños') + ' · ' + d.m2 + NBSP + 'm²';
   }
 
   var NOMBRE_TIPO = { conjunto: 'Compra en conjunto', financiamiento: 'Financiamiento del pie' };
@@ -68,7 +70,7 @@
   }
 
   function barraAvance(texto, detalle, fraccion) {
-    var pct = Math.round(fraccion * 100);
+    var pct = porcentajeEntero(fraccion);
     return '<div class="avance">' +
       '<p class="avance-texto"><span>' + texto + '</span><strong>' + detalle + '</strong></p>' +
       '<div class="avance-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="' + esc(texto) + '">' +
@@ -132,16 +134,14 @@
       numero +
       avanceDe(p, r) +
       '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
-      '<span class="ver">Ver proyecto <svg aria-hidden="true" width="20" height="20" style="transform:rotate(-90deg)"><use href="#i-flecha"/></svg></span>' +
+      '<span class="ver">Ver proyecto <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span>' +
       '</a></li>';
   }
 
   function renderProyectos() {
     var arrendar = estado.modo === 'arrendar';
     $('proyectos-ia').hidden = !arrendar;
-    $('proyectos-modo').textContent = arrendar
-      ? 'Para arrendar: rinden 4,5 % o más al año.'
-      : 'Para vivir: todos los proyectos.';
+    $('proyectos-modo').textContent = arrendar ? 'Para arrendar' : 'Para vivir · todos';
 
     document.querySelectorAll('.pestanas [role="tab"]').forEach(function (tab) {
       var activa = tab.dataset.pestana === estado.pestana;
@@ -310,11 +310,11 @@
     $('panel-compra').innerHTML =
       '<a class="tarjeta tarjeta-proyecto" href="#proyecto/' + esc(p.id) + '">' +
         '<span class="chip">' + NOMBRE_TIPO[p.tipo] + '</span>' +
-        '<h2 class="h4" style="margin-top:8px">' + esc(p.nombre) + '</h2>' +
+        '<h2 class="h4 con-chip">' + esc(p.nombre) + '</h2>' +
         '<p class="texto-apoyo ficha">' + esc(p.comuna) + ' · Piso ' + d.piso + ' · ' + ficha(d) + '</p>' +
         '<p class="etiqueta">Pones al escriturar</p>' +
         '<strong class="numero display-4">' + formatoPesos(e.alEscriturar) + '</strong>' +
-        '<span class="ver">Ver proyecto <svg aria-hidden="true" width="20" height="20" style="transform:rotate(-90deg)"><use href="#i-flecha"/></svg></span>' +
+        '<span class="ver">Ver proyecto <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span>' +
       '</a>' +
       '<h2 class="h5 bloque">Tus pasos</h2>' +
       '<ol class="pasos">' + pasos + '</ol>' +

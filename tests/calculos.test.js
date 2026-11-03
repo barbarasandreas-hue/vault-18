@@ -90,6 +90,8 @@ test('avance: 6 de 10 → 60 %', () => {
   assert.strictEqual(c.formatoPorcentaje(c.avance(6, 10), 0), '60 %');
   assert.strictEqual(c.avance(12, 10), 1);
   assert.strictEqual(c.avance(3, 0), 0);
+  assert.strictEqual(c.porcentajeEntero(0.6), 60);
+  assert.strictEqual(c.porcentajeEntero(0.355), 36);
 });
 
 test('por financiar: 15 % de UF 2.250 = UF 337,5 = $13.859.438', () => {

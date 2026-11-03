@@ -131,6 +131,9 @@ function avance(parte, total) {
   return Math.min(1, Math.max(0, parte / total));
 }
 
+// 0.6 → 60 (para el ancho de una barra o aria-valuenow).
+function porcentajeEntero(fraccion) { return Math.round(fraccion * 100); }
+
 // 0.045 → "4,5 %"; 0.6 con 0 decimales → "60 %".
 function formatoPorcentaje(fraccion, decimales) {
   var d = decimales === undefined ? 1 : decimales;
@@ -188,6 +191,7 @@ if (typeof module !== 'undefined') module.exports = {
   ahorroPorUnirseUF: ahorroPorUnirseUF,
   porFinanciarUF: porFinanciarUF,
   avance: avance,
+  porcentajeEntero: porcentajeEntero,
   formatoPorcentaje: formatoPorcentaje,
   formatoFecha: formatoFecha,
   resumenProyecto: resumenProyecto,

@@ -341,7 +341,7 @@ button { font: inherit; }
 .pestanas button[aria-selected="true"] { background: var(--blue-normal); color: var(--white); }
 
 /* ---------- Filtro del modo ---------- */
-.filtro { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 8px; }
+.filtro { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; margin-top: 4px; }
 .filtro .texto-apoyo { font-size: 14px; }
 .filtro .btn-terciario { min-height: var(--toque); padding: 0 4px; font-size: 14px; }
 
@@ -358,6 +358,8 @@ button { font: inherit; }
 .tarjeta-proyecto .ficha { margin: 2px 0 12px; font-size: 14px; }
 .tarjeta-proyecto .etiqueta { margin: 0; font-size: 14px; font-weight: 600; color: var(--gray-semidark); }
 .tarjeta-proyecto .numero { display: block; color: var(--blue-dark); margin: 0 0 12px; }
+.tarjeta-proyecto .con-chip { margin-top: 8px; }
+.flecha-derecha { width: 20px; height: 20px; transform: rotate(-90deg); }
 .tarjeta-proyecto .ver {
   display: flex;
   justify-content: space-between;
