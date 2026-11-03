@@ -33,6 +33,7 @@
     <symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-alerta" viewBox="0 0 24 24"><path d="M12 3.5L21.5 20h-19z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.2v.3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
     <symbol id="i-no" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-aqui" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.5" fill="currentColor"/></symbol>
     <symbol id="i-pronto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   </svg>
 
@@ -42,78 +43,11 @@
   <div class="app">
     <main>
       <!-- ===== Inicio: simulador ===== -->
+      <!-- ===== Inicio (se dibuja desde app.js) =====
+           Sin compra: ¿Cuánto puedo comprar? (S5-F0). Con compra: Mi camino (S5-F6). -->
       <section id="pantalla-inicio" class="pantalla" aria-labelledby="titulo-inicio">
-        <header class="encabezado">
-          <div class="figuras" aria-hidden="true"><span class="f-cuadrado"></span><span class="f-circulo"></span><span class="f-triangulo"></span><span class="f-rectangulo"></span></div>
-          <h1 id="titulo-inicio" class="h2">Tu primer departamento</h1>
-          <p class="texto-apoyo" id="inicio-apoyo">Cuánto pones al escriturar y cada mes.</p>
-        </header>
-
-        <!-- Con una compra en curso: el próximo paso (se dibuja desde app.js) -->
-        <div id="inicio-proximo" hidden></div>
-
-        <div id="inicio-simulador">
-        <button type="button" class="enlace" id="btn-ver-proximo" hidden>Volver a mi próximo paso</button>
-        <fieldset class="selector">
-          <legend class="oculto-visual">¿Para qué lo quieres?</legend>
-          <div class="selector-opciones">
-            <input type="radio" name="modo" id="modo-arrendar" value="arrendar" checked>
-            <label for="modo-arrendar">Para arrendar</label>
-            <input type="radio" name="modo" id="modo-vivir" value="vivir">
-            <label for="modo-vivir">Para vivir</label>
-          </div>
-        </fieldset>
-
-        <fieldset class="selector">
-          <legend class="oculto-visual">¿Cómo lo compras?</legend>
-          <div class="selector-opciones">
-            <input type="radio" name="tipo" id="tipo-lote" value="lote" checked>
-            <label for="tipo-lote">En lote (−10 %)</label>
-            <input type="radio" name="tipo" id="tipo-individual" value="individual">
-            <label for="tipo-individual">Individual</label>
-          </div>
-        </fieldset>
-
-        <div class="tarjeta protagonista" aria-live="polite">
-          <p class="etiqueta">Pones al escriturar (5 % + gastos)</p>
-          <strong class="numero display-3" id="simula-escriturar">$0</strong>
-          <p class="secundario">Y luego <strong id="simula-mes">$0</strong> al mes</p>
-          <p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>
-        </div>
-
-        <div class="accion">
-          <a href="#proyectos" class="btn btn-primario btn-lg btn-bloque">Ver proyectos</a>
-        </div>
-
-        <div class="tarjeta">
-          <button type="button" class="enlace desplegar" id="btn-reparto" aria-expanded="false" aria-controls="reparto">
-            ¿De dónde sale el resto?
-            <svg aria-hidden="true"><use href="#i-flecha"/></svg>
-          </button>
-          <div class="reparto" id="reparto" hidden>
-            <p class="texto-apoyo">Precio del departamento: <strong id="reparto-precio">$0</strong></p>
-            <div class="reparto-barra" aria-hidden="true"><span></span><span></span><span></span></div>
-            <ul class="lista-check">
-              <li>
-                <svg aria-hidden="true"><use href="#i-check"/></svg>
-                <span>80 % lo presta Bci<small>Crédito hipotecario a 30 años, junto a tu pareja</small></span>
-                <span class="monto" id="reparto-bci">$0</span>
-              </li>
-              <li>
-                <svg aria-hidden="true"><use href="#i-check"/></svg>
-                <span>15 % lo reúnes con inversionistas<small>A 10 años, con segunda hipoteca</small></span>
-                <span class="monto" id="reparto-inversionistas">$0</span>
-              </li>
-              <li>
-                <svg aria-hidden="true"><use href="#i-check"/></svg>
-                <span>5 % lo pones tú<small>Con tu ahorro, propio o grupal</small></span>
-                <span class="monto" id="reparto-usuario">$0</span>
-              </li>
-            </ul>
-            <p class="reparto-total">Además pones <strong id="reparto-gastos">$0</strong> de gastos de escritura (≈ 2 %).</p>
-          </div>
-        </div>
-        </div>
+        <div id="inicio-capacidad"></div>
+        <div id="inicio-camino" hidden></div>
       </section>
 
       <!-- ===== Secciones ===== -->
@@ -125,7 +59,8 @@
           <div class="filtro">
             <span class="chip chip-ia" id="proyectos-ia"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Filtrado por IA: 4,5 % o más</span>
             <p class="texto-apoyo" id="proyectos-modo"></p>
-            <a href="#inicio" class="enlace">Cambiar</a>
+            <a href="#perfil" class="enlace">Cambiar</a>
+            <button type="button" class="chip chip-filtro" id="filtro-alcanza" aria-pressed="false" hidden></button>
           </div>
         </header>
 
@@ -139,10 +74,10 @@
           <ul class="lista-proyectos" id="lista-proyectos"></ul>
           <div class="vacio" id="proyectos-vacio" hidden>
             <svg aria-hidden="true"><use href="#i-proyectos"/></svg>
-            <h2 class="h3">Ningún proyecto rinde 4,5 % hoy</h2>
-            <p class="texto-apoyo">Para arrendar, la IA solo muestra departamentos que rinden 4,5 % o más al año.</p>
+            <h2 class="h3" id="vacio-titulo">Ningún proyecto rinde 4,5 % hoy</h2>
+            <p class="texto-apoyo" id="vacio-texto">Para arrendar, la IA solo muestra departamentos que rinden 4,5 % o más al año.</p>
             <div class="acciones">
-              <button type="button" class="btn btn-primario btn-bloque" id="btn-modo-vivir">Cambiar a modo vivir</button>
+              <button type="button" class="btn btn-primario btn-bloque" id="btn-vacio-accion" data-accion="vivir">Cambiar a modo vivir</button>
             </div>
           </div>
         </div>

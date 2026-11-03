@@ -1,11 +1,9 @@
 // Datos de ejemplo de Primer Peldaño (simulados).
 // Los proyectos llevan nombre de edificio, nunca de personas.
 
-// Departamento de referencia (precio de lista en UF) para el simulador de Inicio.
-var DEPARTAMENTO_REFERENCIA = {
-  arrendar: { listaUF: 2500 },
-  vivir: { listaUF: 3000 }
-};
+// Fecha de referencia de la demo: los días para el cierre se cuentan desde aquí,
+// para que los números no cambien según el día en que se muestre la app.
+var FECHA_REFERENCIA = '2026-11-03';
 
 // tipo: 'conjunto' = compra en conjunto (lote con 10 % de descuento)
 //       'financiamiento' = financiamiento del pie (un departamento a precio de lista)
@@ -59,7 +57,7 @@ function buscarProyecto(id) {
 }
 
 if (typeof module !== 'undefined') module.exports = {
-  DEPARTAMENTO_REFERENCIA: DEPARTAMENTO_REFERENCIA,
+  FECHA_REFERENCIA: FECHA_REFERENCIA,
   PROYECTOS: PROYECTOS,
   DEPARTAMENTOS: DEPARTAMENTOS,
   departamentosDe: departamentosDe,

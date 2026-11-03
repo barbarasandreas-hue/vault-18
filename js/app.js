@@ -15,7 +15,6 @@
 
   var estado = {
     modo: 'arrendar',        // 'arrendar' o 'vivir'
-    tipo: 'lote',            // 'lote' o 'individual'
     pestana: 'conjunto',     // pestaña de Proyectos: 'conjunto' o 'financiamiento'
     compra: leerCompra(),    // { proyectoId, departamentoId } o null
     pestanaMis: null,        // pestaña de Mis proyectos: 'compra' o 'inversiones'
@@ -26,15 +25,15 @@
     tipoAhorro: 'propio',    // 'propio' o 'grupal'
     ahorrado: 0,             // lo que lleva juntado (simulado)
     ahorroIniciado: false,   // si ya tocó "Empezar a ahorrar"
-    verSimulador: false      // en Inicio, mostrar el simulador aunque tenga una compra
+    meAlcanza: false         // filtro "Me alcanza" de Proyectos
   };
 
   // ---------- Elecciones que se recuerdan entre visitas (S3-F3) ----------
   var CLAVE_ESTADO = 'primer-peldano-estado';
-  var GUARDADOS = ['modo', 'tipo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual',
+  var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado'];
-  var VALORES_POR_DEFECTO = { modo: 'arrendar', tipo: 'lote', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
-    ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, verSimulador: false };
+  var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
+    ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -44,7 +43,6 @@
       var g = JSON.parse(localStorage.getItem(CLAVE_ESTADO));
       if (!g || typeof g !== 'object') return;
       if (g.modo === 'arrendar' || g.modo === 'vivir') estado.modo = g.modo;
-      if (g.tipo === 'lote' || g.tipo === 'individual') estado.tipo = g.tipo;
       estado.sueldoPropio = montoValido(g.sueldoPropio);
       estado.sueldoPareja = montoValido(g.sueldoPareja);
       estado.arriendoActual = montoValido(g.arriendoActual);
@@ -53,7 +51,6 @@
       estado.ahorrado = montoValido(g.ahorrado) || 0;
       estado.ahorroIniciado = g.ahorroIniciado === true && estado.ahorroMensual > 0;
     } catch (e) { /* sin localStorage: valores por defecto */ }
-    estado.pestana = estado.tipo === 'lote' ? 'conjunto' : 'financiamiento';
   }
 
   function guardarEstado() {
@@ -149,8 +146,8 @@
     return barraAvance('15 % reunido con inversionistas', formatoPorcentaje(r.avanceFinanciamiento, 0), r.avanceFinanciamiento);
   }
 
-  // ---------- Inicio con próximo paso (S4-F6) ----------
-  // Devuelve lo que se muestra en Inicio según el paso de la compra.
+  // ---------- Inicio: Mi camino (S5-F6, sobre el próximo paso de S4-F6) ----------
+  // Lo que se muestra según el paso de la compra: un solo número y la acción del paso.
   function proximoPaso() {
     var p = buscarProyecto(estado.compra.proyectoId);
     var e = resumen(p).escenario;
@@ -160,7 +157,7 @@
       var k = carga(e.totalMes, estado.sueldoPropio, estado.sueldoPareja);
       var nivel = nivelCarga(k);
       return {
-        p: p, etapa: 'Paso 1 de 3' + SEP + 'Postula',
+        p: p, paso: 1, etapa: 'Paso 1 de 3' + SEP + 'Postula',
         etiqueta: nivel ? 'Tu carga' : 'Revisa si califican',
         numero: nivel ? formatoPorcentaje(cargaRedondeada(k), 1) : null,
         detalle: nivel ? SEMAFORO[nivel].palabra : 'Escribe los sueldos de los dos para ver tu carga.',
@@ -171,7 +168,7 @@
       var meta = e.alEscriturar;
       var n = mesesRestantes(meta, estado.ahorrado, estado.ahorroMensual);
       return {
-        p: p, etapa: 'Paso 2 de 3' + SEP + 'Tu 5 %',
+        p: p, paso: 2, etapa: 'Paso 2 de 3' + SEP + 'Tu 5 %',
         etiqueta: n === null ? 'Tu meta al escriturar' : 'Te faltan',
         numero: n === null ? formatoPesos(meta) : textoMeses(n),
         detalle: n === null ? 'Calcula en cuántos meses la juntas.'
@@ -181,26 +178,89 @@
     }
     if (paso === 3) {
       return {
-        p: p, etapa: 'Paso 3 de 3' + SEP + 'Firma',
+        p: p, paso: 3, etapa: 'Paso 3 de 3' + SEP + 'Firma',
         etiqueta: 'Ya juntaste', numero: formatoPesos(e.alEscriturar),
         detalle: 'Revisa lo que firmas en palabras simples.',
         accion: 'Ir a firmar'
       };
     }
+    var m = mesDelDepartamento(p, departamentoDeMiCompra(p));
     return {
-      p: p, etapa: 'Mi departamento',
-      etiqueta: 'Pagas al mes', numero: formatoPesos(e.totalMes),
-      detalle: 'Dividendo más la cuota a los inversionistas. Calculado sin plusvalía.',
+      p: p, paso: 4, etapa: 'Mi departamento' + SEP + 'mes ' + m.mes,
+      etiqueta: estado.modo === 'arrendar' ? 'Este mes pusiste' : 'Este mes pagaste',
+      numero: formatoPesos(m.pone),
+      detalle: m.excedente > 0 ? 'El arriendo alcanzó para todo y te sobraron ' + formatoPesos(m.excedente) + '.'
+        : (estado.modo === 'arrendar' ? 'El arriendo cubrió ' + formatoPesos(m.cascada.neto) + ' y tú completaste el resto.'
+          : 'Dividendo más la cuota a los inversionistas.'),
       accion: 'Ver mi departamento'
     };
   }
 
-  function renderProximo() {
+  // Recorrido de 5 pasos de Mi camino.
+  var CAMINO = ['Únete', 'Postula', 'Ahorra', 'Firma', 'Departamento'];
+
+  function recorridoCamino(paso) {
+    // El paso de la compra (1 a 4) corresponde a los puntos 2 a 5 del camino; "Únete" siempre está hecho.
+    var actual = paso + 1;
+    return '<ol class="camino" aria-label="Tu camino">' + CAMINO.map(function (nombre, i) {
+      var n = i + 1;
+      var estadoPaso = n < actual ? 'hecho' : (n === actual ? 'actual' : 'pendiente');
+      var icono = estadoPaso === 'hecho' ? '<svg aria-hidden="true"><use href="#i-ok"/></svg>'
+        : (estadoPaso === 'actual' ? '<svg aria-hidden="true"><use href="#i-aqui"/></svg>' : '<span aria-hidden="true">' + n + '</span>');
+      var texto = estadoPaso === 'hecho' ? 'listo' : (estadoPaso === 'actual' ? 'estás aquí' : '');
+      return '<li class="' + estadoPaso + '"' + (estadoPaso === 'actual' ? ' aria-current="step"' : '') + '>' +
+        '<span class="camino-icono">' + icono + '</span>' +
+        '<span class="camino-nombre">' + nombre + '</span>' +
+        (texto ? '<span class="camino-estado">' + texto + '</span>' : '') +
+      '</li>';
+    }).join('') + '</ol>';
+  }
+
+  // Avisos de la IA: máximo 2, calculados con datos reales del proyecto y del ahorro.
+  function avisosIA(x) {
+    var p = x.p;
+    var r = resumen(p);
+    var avisos = [];
+    var dias = diasEntre(FECHA_REFERENCIA, p.cierre);
+    var aviso = {
+      cierre: dias > 0 ? 'El proyecto cierra en ' + plural(dias, 'día', 'días') + ', el ' + formatoFecha(p.cierre) + '.' : null,
+      cupos: p.tipo === 'conjunto'
+        ? (r.cuposLibres > 0
+          ? 'El grupo lleva ' + r.cuposTomados + ' de ' + r.cupos + ' cupos: ' + (r.cuposLibres === 1 ? 'falta 1' : 'faltan ' + r.cuposLibres) + ' para completarlo.'
+          : 'El grupo ya está completo.')
+        : 'Ya se reunió el ' + formatoPorcentaje(r.avanceFinanciamiento, 0) + ' de tu 15 % con inversionistas.'
+    };
+    if (x.paso === 2 && estado.ahorroIniciado) {
+      var meta = r.escenario.alEscriturar;
+      var siguiente = HITOS_AHORRO.filter(function (h) { return avance(estado.ahorrado, meta) < h; })[0];
+      if (siguiente) {
+        avisos.push('Te faltan ' + formatoPesos(Math.ceil(meta * siguiente - estado.ahorrado)) +
+          ' para llegar al ' + porcentajeEntero(siguiente) + ' % de tu meta.');
+      }
+      if (aviso.cierre) avisos.push(aviso.cierre);
+    } else if (x.paso === 4) {
+      var m = mesDelDepartamento(p, departamentoDeMiCompra(p));
+      if (m.puedeAbonar) {
+        avisos.push('Este mes te sobraron ' + formatoPesos(m.excedente) +
+          ': conviene abonarlos a la deuda con inversionistas, que tiene la tasa más alta.');
+      }
+    } else {
+      if (aviso.cierre) avisos.push(aviso.cierre);
+      avisos.push(aviso.cupos);
+    }
+    return avisos.slice(0, 2);
+  }
+
+  function renderCamino() {
     var x = proximoPaso();
-    $('inicio-proximo').innerHTML =
-      '<section class="tarjeta proximo" aria-labelledby="titulo-proximo">' +
-        '<p class="chip" id="titulo-proximo">' + x.etapa + '</p>' +
-        '<p class="proximo-proyecto">' + esc(x.p.nombre) + '</p>' +
+    var avisos = avisosIA(x);
+    $('inicio-camino').innerHTML =
+      '<header class="encabezado">' + FIGURAS +
+        '<h1 id="titulo-inicio" class="h2">Mi camino</h1>' +
+        '<p class="texto-apoyo">' + esc(x.p.nombre) + SEP + esc(x.p.comuna) + '</p>' +
+      '</header>' +
+      '<section class="tarjeta proximo" aria-label="Dónde vas">' +
+        '<p class="chip">' + x.etapa + '</p>' +
         '<p class="etiqueta">' + x.etiqueta + '</p>' +
         (x.numero ? '<strong class="numero display-2">' + x.numero + '</strong>' : '') +
         '<p class="texto-apoyo">' + x.detalle + '</p>' +
@@ -208,63 +268,120 @@
       '<div class="accion">' +
         '<a href="#mis-proyectos" class="btn btn-primario btn-lg btn-bloque">' + x.accion + '</a>' +
       '</div>' +
-      '<button type="button" class="enlace" id="btn-volver-simular">Volver a simular</button>';
-    $('btn-volver-simular').addEventListener('click', function () {
-      estado.verSimulador = true;
-      renderInicio();
-      $('modo-arrendar').focus();
+      recorridoCamino(x.paso) +
+      (avisos.length
+        ? '<section class="tarjeta bloque avisos" aria-labelledby="titulo-avisos">' +
+            '<h2 class="h5" id="titulo-avisos">Avisos de la IA</h2>' +
+            '<ul class="lista-check">' + avisos.map(function (a) {
+              return '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>' + a + '</span></li>';
+            }).join('') + '</ul>' +
+          '</section>'
+        : '');
+    // Las inversiones (lo cobrado a la fecha) se agregan en el Sprint 6.
+  }
+
+  // ---------- Inicio: ¿Cuánto puedo comprar? (S5-F0) ----------
+  var FIGURAS = '<div class="figuras" aria-hidden="true"><span class="f-cuadrado"></span><span class="f-circulo"></span>' +
+    '<span class="f-triangulo"></span><span class="f-rectangulo"></span></div>';
+
+  function renderCapacidad() {
+    var opcion = function (valor, texto) {
+      return '<input type="radio" name="modo" id="modo-' + valor + '" value="' + valor + '"' +
+        (estado.modo === valor ? ' checked' : '') + '><label for="modo-' + valor + '">' + texto + '</label>';
+    };
+    $('inicio-capacidad').innerHTML =
+      '<header class="encabezado">' + FIGURAS +
+        '<h1 id="titulo-inicio" class="h2">Tu departamento con el 5 %</h1>' +
+        '<p class="texto-apoyo">Escribe sus sueldos y te decimos hasta cuánto pueden comprar.</p>' +
+      '</header>' +
+      '<fieldset class="selector"><legend class="oculto-visual">¿Para vivir o para arrendar?</legend>' +
+        '<div class="selector-opciones">' + opcion('vivir', 'Para vivir') + opcion('arrendar', 'Para arrendar') + '</div>' +
+      '</fieldset>' +
+      '<div class="campos-dos">' +
+        campoDinero('inicio-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
+        campoDinero('inicio-pareja', 'Sueldo de tu pareja', estado.sueldoPareja) +
+      '</div>' +
+      '<div id="capacidad-resultado" aria-live="polite"></div>' +
+      '<div class="accion-fija"><a href="#proyectos" class="btn btn-primario btn-lg btn-bloque" id="btn-me-alcanza">Ver proyectos que me alcanzan</a></div>' +
+      '<p class="texto-centro"><a href="#proyectos" class="enlace" id="btn-todos">Ver todos los proyectos</a></p>';
+
+    document.querySelectorAll('input[name="modo"]').forEach(function (r) {
+      r.addEventListener('change', function () { estado.modo = r.value; guardarEstado(); });
     });
-  }
-
-  // ---------- Inicio: simulador ----------
-  function renderInicio() {
-    var conCompra = !!estado.compra;
-    var verProximo = conCompra && !estado.verSimulador;
-    $('inicio-proximo').hidden = !verProximo;
-    $('inicio-simulador').hidden = verProximo;
-    $('btn-ver-proximo').hidden = !conCompra;
-    $('inicio-apoyo').textContent = verProximo ? 'Tu próximo paso, de un vistazo.' : 'Cuánto pones al escriturar y cada mes.';
-    if (verProximo) { renderProximo(); return; }
-
-    var lista = DEPARTAMENTO_REFERENCIA[estado.modo].listaUF;
-    var e = escenario(lista, estado.tipo);
-    poner('simula-escriturar', e.alEscriturar);
-    poner('simula-mes', e.totalMes);
-    poner('reparto-precio', e.precio);
-    poner('reparto-bci', e.reparto.bci);
-    poner('reparto-inversionistas', e.reparto.inversionistas);
-    poner('reparto-usuario', e.reparto.usuario);
-    poner('reparto-gastos', e.gastos);
-  }
-
-  function iniciarInicio() {
-    document.querySelectorAll('input[name="modo"], input[name="tipo"]').forEach(function (input) {
-      input.addEventListener('change', function () {
-        estado[input.name] = input.value;
-        // La pestaña de Proyectos sigue a cómo quiere comprar el usuario.
-        if (input.name === 'tipo') estado.pestana = input.value === 'lote' ? 'conjunto' : 'financiamiento';
+    var habia = capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja) !== null;
+    [['inicio-propio', 'sueldoPropio'], ['inicio-pareja', 'sueldoPareja']].forEach(function (c) {
+      var input = $(c[0]);
+      input.addEventListener('input', function () {
+        estado[c[1]] = formatearCampo(input);
         guardarEstado();
-        renderInicio();
+        var hay = renderResultadoCapacidad(false);
+        if (hay && !habia) $('capacidad-resultado').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        habia = hay;
       });
+      input.addEventListener('blur', function () { renderResultadoCapacidad(false); });
     });
-
-    $('btn-ver-proximo').addEventListener('click', function () {
-      estado.verSimulador = false;
-      renderInicio();
+    $('btn-me-alcanza').addEventListener('click', function (ev) {
+      if (capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja) === null) {
+        ev.preventDefault();
+        renderResultadoCapacidad(true);
+        $(estado.sueldoPropio ? 'inicio-pareja' : 'inicio-propio').focus();
+        return;
+      }
+      estado.meAlcanza = true;
     });
+    $('btn-todos').addEventListener('click', function () { estado.meAlcanza = false; });
+    renderResultadoCapacidad(false);
+  }
 
+  // Dibuja solo el resultado (para no perder el foco de los campos). Devuelve true si hay número.
+  function renderResultadoCapacidad(mostrarVacios) {
+    validarSueldo($('inicio-propio'), estado.sueldoPropio, mostrarVacios);
+    validarSueldo($('inicio-pareja'), estado.sueldoPareja, mostrarVacios);
+    var cap = estado.sueldoPropio > 0 || estado.sueldoPareja > 0
+      ? capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja) : null;
+    var resultado = $('capacidad-resultado');
+    $('btn-me-alcanza').setAttribute('aria-disabled', String(cap === null));
+
+    if (cap === null) {
+      resultado.innerHTML = '<p class="sin-numero">Escribe los sueldos para saber cuánto puedes comprar.</p>';
+      return false;
+    }
+    var e = escenario(cap, 'individual');
+    resultado.innerHTML =
+      '<div class="tarjeta protagonista">' +
+        '<p class="etiqueta">Puedes comprar hasta</p>' +
+        '<strong class="numero display-2">' + formatoUF(cap) + '</strong>' +
+        '<p class="texto-apoyo">Es decir, ' + formatoPesos(e.precio) + ', poniendo <strong>' + formatoPesos(e.alEscriturar) +
+          '</strong> al escriturar y <strong>' + formatoPesos(e.totalMes) + '</strong> al mes.</p>' +
+        '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
+        '<button type="button" class="enlace desplegar" id="btn-reparto" aria-expanded="false" aria-controls="reparto">' +
+          '¿De dónde sale el resto?<svg aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
+        '<div class="reparto" id="reparto" hidden>' +
+          '<div class="reparto-barra" aria-hidden="true"><span></span><span></span><span></span></div>' +
+          '<ul class="lista-check">' +
+            filaReparto('80 % lo presta Bci', 'Crédito hipotecario a 30 años, junto a tu pareja', e.reparto.bci) +
+            filaReparto('15 % lo reúnes con inversionistas', 'A 10 años, con segunda hipoteca', e.reparto.inversionistas) +
+            filaReparto('5 % lo pones tú', 'Con tu ahorro, propio o grupal', e.reparto.usuario) +
+          '</ul>' +
+          '<p class="reparto-total">Además pones ' + formatoPesos(e.gastos) + ' de gastos de escritura (≈ 2 %).</p>' +
+        '</div>' +
+      '</div>';
     var boton = $('btn-reparto');
     boton.addEventListener('click', function () {
       var abierto = boton.getAttribute('aria-expanded') === 'true';
       boton.setAttribute('aria-expanded', String(!abierto));
       $('reparto').hidden = abierto;
     });
+    return true;
   }
 
-  function sincronizarSelectores() {
-    document.querySelectorAll('input[name="modo"], input[name="tipo"]').forEach(function (input) {
-      input.checked = input.value === estado[input.name];
-    });
+  function renderInicio() {
+    var conCompra = !!estado.compra;
+    $('inicio-capacidad').hidden = conCompra;
+    $('inicio-camino').hidden = !conCompra;
+    // Solo un bloque existe a la vez, para que no se repita el título de la pantalla.
+    if (conCompra) { $('inicio-capacidad').innerHTML = ''; renderCamino(); }
+    else { $('inicio-camino').innerHTML = ''; renderCapacidad(); }
   }
 
   // ---------- Proyectos: el marketplace ----------
@@ -287,7 +404,7 @@
   function renderProyectos() {
     var arrendar = estado.modo === 'arrendar';
     $('proyectos-ia').hidden = !arrendar;
-    $('proyectos-modo').textContent = arrendar ? 'Para arrendar' : 'Para vivir · todos';
+    $('proyectos-modo').textContent = arrendar ? 'Para arrendar' : 'Para vivir: todos';
 
     document.querySelectorAll('.pestanas [role="tab"]').forEach(function (tab) {
       var activa = tab.dataset.pestana === estado.pestana;
@@ -299,13 +416,35 @@
       ? 'Compran varios juntos un lote y cada uno paga 10 % menos.'
       : 'Un departamento a precio de lista; reúnes tu 15 % con inversionistas.';
 
-    var visibles = PROYECTOS.filter(function (p) {
+    // Filtro "Me alcanza" (S5-F0): solo si hay sueldos para calcular la capacidad.
+    var cap = capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja);
+    var filtro = $('filtro-alcanza');
+    filtro.hidden = cap === null;
+    var usarAlcanza = estado.meAlcanza && cap !== null;
+    filtro.setAttribute('aria-pressed', String(usarAlcanza));
+    filtro.innerHTML = usarAlcanza
+      ? 'Me alcanza: hasta ' + formatoUF(cap) + ' <span class="quitar" aria-hidden="true">×</span><span class="oculto-visual">. Toca para quitar el filtro.</span>'
+      : 'Ver solo los que me alcanzan';
+
+    var delTipo = PROYECTOS.filter(function (p) {
       return p.tipo === estado.pestana && (!arrendar || resumen(p).pasaFiltro);
+    });
+    var visibles = delTipo.filter(function (p) {
+      return !usarAlcanza || resumen(p).escenario.precioUF <= cap;
     });
     $('lista-proyectos').innerHTML = visibles.map(tarjetaProyecto).join('');
     $('lista-proyectos').hidden = visibles.length === 0;
     $('proyectos-explica').hidden = visibles.length === 0;
     $('proyectos-vacio').hidden = visibles.length > 0;
+
+    // El estado vacío explica la causa y ofrece la salida que corresponde.
+    var porAlcanza = usarAlcanza && delTipo.length > 0;
+    $('vacio-titulo').textContent = porAlcanza ? 'Ninguno de este tipo te alcanza hoy' : 'Ningún proyecto rinde 4,5 % hoy';
+    $('vacio-texto').textContent = porAlcanza
+      ? 'Con sus sueldos pueden comprar hasta ' + formatoUF(cap) + '. Prueba la otra pestaña o quita el filtro.'
+      : 'Para arrendar, la IA solo muestra departamentos que rinden 4,5 % o más al año.';
+    $('btn-vacio-accion').textContent = porAlcanza ? 'Quitar el filtro Me alcanza' : 'Cambiar a modo vivir';
+    $('btn-vacio-accion').dataset.accion = porAlcanza ? 'alcanza' : 'vivir';
   }
 
   function iniciarProyectos() {
@@ -322,9 +461,13 @@
         $('tab-' + estado.pestana).focus();
       });
     });
-    $('btn-modo-vivir').addEventListener('click', function () {
-      estado.modo = 'vivir';
-      guardarEstado();
+    $('filtro-alcanza').addEventListener('click', function () {
+      estado.meAlcanza = !estado.meAlcanza;
+      renderProyectos();
+    });
+    $('btn-vacio-accion').addEventListener('click', function () {
+      if ($('btn-vacio-accion').dataset.accion === 'alcanza') estado.meAlcanza = false;
+      else { estado.modo = 'vivir'; guardarEstado(); }
       renderProyectos();
     });
   }
@@ -837,7 +980,7 @@
       estado.ahorrado = 0;
       estado.ahorroIniciado = false;
       guardarEstado();
-      guardarCompra(Object.assign({}, estado.compra, { paso: 4 }));
+      guardarCompra(Object.assign({}, estado.compra, { paso: 4, mes: 1, arriendoMes: d.arriendoBruto, abonadoUF: 0, abonoMes: null }));
       renderMiCompra();
       window.scrollTo(0, 0);
     });
@@ -847,14 +990,169 @@
     return '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>' + titulo + '<small>' + texto + '</small></span></li>';
   }
 
-  // ---------- Después de firmar: Mi departamento (se completa en el Sprint 5) ----------
-  function renderMiDepartamento(p, d) {
+  // ---------- Después de firmar: Mi departamento (S5-F2 a S5-F5) ----------
+
+  // Los números del mes actual, todos desde calculos.js.
+  function mesDelDepartamento(p, d) {
     var e = resumen(p).escenario;
+    var c = estado.compra;
+    var mes = c.mes || 1;
+    var arriendo = c.arriendoMes === undefined || c.arriendoMes === null ? d.arriendoBruto : c.arriendoMes;
+    var cascada = cascadaMes(e.dividendo, e.cuotaInversionistas, arriendo);
+    var arrendar = estado.modo === 'arrendar';
+    return {
+      e: e,
+      mes: mes,
+      arriendo: arriendo,
+      cascada: cascada,
+      pone: arrendar ? cascada.pone : e.totalMes,
+      excedente: arrendar ? cascada.excedente : 0,
+      puedeAbonar: arrendar && cascada.excedente > 0 && c.abonoMes !== mes,
+      saldoBci: ufAPesos(saldoBciUF(e.precioUF, mes)),
+      saldoInversionistas: ufAPesos(saldoInversionistasUF(e.precioUF, mes, c.abonadoUF || 0)),
+      avanceBci: avance(mes, 360),
+      avanceInversionistas: avance(mes, 120)
+    };
+  }
+
+  function pasoCascada(n, texto, detalle, monto, clase) {
+    return '<li class="' + (clase || '') + '"><span class="cascada-num" aria-hidden="true">' + n + '</span>' +
+      '<span class="cascada-texto">' + texto + (detalle ? '<small>' + detalle + '</small>' : '') + '</span>' +
+      '<span class="cascada-monto">' + monto + '</span></li>';
+  }
+
+  function barraDeuda(titulo, mes, total, saldo, fraccion) {
+    var pct = porcentajeEntero(fraccion);
+    return '<div class="deuda">' +
+      '<p class="avance-texto"><span><strong>' + titulo + '</strong></span><span>Mes ' + mes + ' de ' + total + '</span></p>' +
+      '<div class="avance-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="' + esc(titulo) + '">' +
+        '<span style="width:' + Math.max(pct, 1) + '%"></span></div>' +
+      '<p class="cierre">Te queda por pagar ' + formatoPesos(saldo) + '</p>' +
+    '</div>';
+  }
+
+  function renderMiDepartamento(p, d) {
+    var m = mesDelDepartamento(p, d);
+    var c = m.cascada;
+    var arrendar = estado.modo === 'arrendar';
+    var cuerpo;
+
+    if (arrendar) {
+      // S5-F2: cascada de la cuenta custodia.
+      cuerpo =
+        '<div class="tarjeta protagonista">' +
+          '<p class="etiqueta">' + (m.excedente > 0 ? 'Este mes no pusiste nada' : 'Este mes pusiste') + '</p>' +
+          '<strong class="numero display-3">' + formatoPesos(m.pone) + '</strong>' +
+          '<p class="texto-apoyo">' + (m.excedente > 0
+            ? 'El arriendo alcanzó para todo y te sobraron <strong>' + formatoPesos(m.excedente) + '</strong>.'
+            : 'El arriendo cubrió ' + formatoPesos(c.neto) + ' y tú completaste la diferencia.') + '</p>' +
+        '</div>' +
+        campoDinero('arriendo-mes', 'Arriendo que entró este mes', m.arriendo) +
+        '<section class="tarjeta bloque" aria-labelledby="titulo-cascada">' +
+          '<h2 class="h4" id="titulo-cascada">Cómo se movió tu dinero</h2>' +
+          '<p class="texto-apoyo">En la cuenta custodia de Bci, en este orden:</p>' +
+          '<ol class="cascada">' +
+            pasoCascada(1, 'Entra el arriendo', null, formatoPesos(c.bruto)) +
+            pasoCascada(2, 'Se descuentan administración y el mes vacío',
+              'Administración (10 %): ' + formatoPesos(c.administracion) + '. Un mes vacío al año, por mes: ' + formatoPesos(c.vacancia) + '.',
+              '−' + formatoPesos(c.administracion + c.vacancia)) +
+            pasoCascada(3, 'Se paga el dividendo a Bci',
+              'El arriendo cubre ' + formatoPesos(c.cubreDividendo) + '.', formatoPesos(c.dividendo)) +
+            pasoCascada(4, 'Se paga a los inversionistas',
+              'El arriendo cubre ' + formatoPesos(c.cubreCuota) + '.', formatoPesos(c.cuotaInversionistas)) +
+            (m.excedente > 0
+              ? pasoCascada(5, 'Te sobra', 'Lo puedes abonar a tu deuda.', formatoPesos(m.excedente), 'cascada-final')
+              : pasoCascada(5, 'Tú completas la diferencia', null, formatoPesos(m.pone), 'cascada-final')) +
+          '</ol>' +
+        '</section>';
+    } else {
+      // S5-F3: modo vivir, comparado con el arriendo que pagaba.
+      var antes = estado.arriendoActual;
+      var comparacion = '';
+      if (antes !== null && antes !== undefined) {
+        var dif = m.e.totalMes - antes;
+        comparacion = '<p class="comparacion">' + (dif > 0
+          ? 'Antes pagabas ' + formatoPesos(antes) + ' de arriendo: ahora pagas <strong>' + formatoPesos(dif) + ' más</strong> al mes, pero en algo que es tuyo.'
+          : (dif < 0
+            ? 'Antes pagabas ' + formatoPesos(antes) + ' de arriendo: ahora pagas <strong>' + formatoPesos(-dif) + ' menos</strong> al mes.'
+            : 'Pagas lo mismo que antes de arriendo, pero en algo que es tuyo.')) + '</p>';
+      }
+      cuerpo =
+        '<div class="tarjeta protagonista">' +
+          '<p class="etiqueta">Este mes pagaste</p>' +
+          '<strong class="numero display-3">' + formatoPesos(m.e.totalMes) + '</strong>' +
+          '<p class="texto-apoyo">Dividendo ' + formatoPesos(m.e.dividendo) + ' + inversionistas ' +
+            formatoPesos(m.e.cuotaInversionistas) + '.</p>' +
+          comparacion +
+        '</div>' +
+        campoDinero('arriendo-antes', 'Lo que pagabas de arriendo', antes);
+    }
+
+    // S5-F5: aviso de abono, solo con excedente.
+    var abono = '';
+    if (m.puedeAbonar) {
+      abono =
+        '<section class="sugerencia sugerencia-ok bloque" aria-labelledby="titulo-abono">' +
+          '<h2 class="h5" id="titulo-abono">La IA recomienda abonar</h2>' +
+          '<p>Te sobraron ' + formatoPesos(m.excedente) + '. Conviene abonarlos a la deuda con inversionistas, ' +
+            'porque tiene la tasa más alta: UF + 8 %, contra 4,5 % del crédito Bci.</p>' +
+        '</section>' +
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-abonar">Abonar ' +
+          formatoPesos(m.excedente) + '</button></div>';
+    } else if (estado.compra.abonoMes === m.mes) {
+      abono = '<p class="aviso aviso-ok bloque">Abonaste a la deuda con inversionistas este mes (simulado).</p>';
+    }
+
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Total al mes', e.totalMes) + listaPasos(4) +
-      '<div class="logro bloque"><svg aria-hidden="true"><use href="#i-ok"/></svg>' +
-        '<p><strong>¡Firmaste!</strong> El departamento del piso ' + d.piso + ' es tuyo (simulado).</p></div>' +
-      '<p class="aviso bloque">Disponible pronto: Mi departamento, con cómo se mueve tu dinero cada mes.</p>';
+      tarjetaCompacta(p, 'Total al mes', m.e.totalMes) + listaPasos(4) +
+      '<h2 class="h3 bloque" id="titulo-depto">Mi departamento <span class="texto-apoyo titulo-apoyo">mes ' + m.mes + ' desde que firmaste</span></h2>' +
+      cuerpo + abono +
+      // S5-F4: avance de las dos deudas.
+      '<section class="tarjeta bloque" aria-labelledby="titulo-deudas">' +
+        '<h2 class="h4" id="titulo-deudas">Avance de tu deuda</h2>' +
+        barraDeuda('Crédito Bci (30 años)', m.mes, 360, m.saldoBci, m.avanceBci) +
+        barraDeuda('Inversionistas (10 años)', m.mes, 120, m.saldoInversionistas, m.avanceInversionistas) +
+        '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
+      '</section>' +
+      '<div class="acciones">' +
+        '<button type="button" class="btn btn-terciario btn-bloque" id="btn-otro-mes">Simular otro mes</button>' +
+        '<p class="texto-apoyo">Es una simulación: suma una cuota pagada a cada deuda.</p>' +
+      '</div>';
+
+    if (arrendar) {
+      $('arriendo-mes').addEventListener('change', function () {
+        var monto = formatearCampo($('arriendo-mes'));
+        guardarCompra(Object.assign({}, estado.compra, { arriendoMes: monto === null ? 0 : monto }));
+        renderMiCompra();
+        $('arriendo-mes').focus();
+      });
+      $('arriendo-mes').addEventListener('input', function () { formatearCampo($('arriendo-mes')); });
+    } else {
+      $('arriendo-antes').addEventListener('change', function () {
+        estado.arriendoActual = formatearCampo($('arriendo-antes'));
+        guardarEstado();
+        renderMiCompra();
+        $('arriendo-antes').focus();
+      });
+      $('arriendo-antes').addEventListener('input', function () { formatearCampo($('arriendo-antes')); });
+    }
+    var botonAbonar = $('btn-abonar');
+    if (botonAbonar) {
+      botonAbonar.addEventListener('click', function () {
+        guardarCompra(Object.assign({}, estado.compra, {
+          abonadoUF: (estado.compra.abonadoUF || 0) + pesosAUF(m.excedente),
+          abonoMes: m.mes
+        }));
+        renderMiCompra();
+        anunciar('Abonaste ' + formatoPesos(m.excedente) + ' a la deuda con inversionistas.');
+      });
+    }
+    $('btn-otro-mes').addEventListener('click', function () {
+      guardarCompra(Object.assign({}, estado.compra, { mes: Math.min(360, m.mes + 1) }));
+      renderMiCompra();
+      anunciar('Mes ' + (m.mes + 1) + '. Este mes pusiste ' + formatoPesos(mesDelDepartamento(p, d).pone) + '.');
+      $('btn-otro-mes').focus();
+    });
   }
 
   // Versión corta para los pasos: nombre del proyecto (enlace) y una cifra, en una fila.
@@ -1009,8 +1307,6 @@
     });
     $('btn-reiniciar-si').addEventListener('click', function () {
       borrarTodo();
-      $('reparto').hidden = true;
-      $('btn-reparto').setAttribute('aria-expanded', 'false');
       location.hash = '#inicio';
     });
   }
@@ -1038,7 +1334,7 @@
     var ruta = leerRuta();
     var destino = RUTAS[ruta.nombre];
 
-    if (destino.pantalla === 'inicio') { estado.verSimulador = false; sincronizarSelectores(); renderInicio(); }
+    if (destino.pantalla === 'inicio') renderInicio();
     if (destino.pantalla === 'proyectos') renderProyectos();
     if (destino.pantalla === 'proyecto') renderDetalle(ruta.param);
     if (destino.pantalla === 'mis-proyectos') { estado.pestanaMis = null; renderMisProyectos(); }
@@ -1055,7 +1351,6 @@
   }
 
   window.addEventListener('hashchange', mostrar);
-  iniciarInicio();
   iniciarProyectos();
   iniciarMisProyectos();
   mostrar();
