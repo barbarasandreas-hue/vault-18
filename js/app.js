@@ -80,6 +80,20 @@
 
   function $(id) { return document.getElementById(id); }
 
+  // S7-F1: estado de carga del Bci Kit. El botón mantiene su tamaño y color, su texto cambia a
+  // "Cargando…" y, después de un momento, se hace la acción. Evita que se toque dos veces.
+  var ESPERA_CARGA = 700;
+  function conCarga(boton, accion) {
+    if (boton.classList.contains('is-cargando')) return;
+    boton.style.minWidth = boton.offsetWidth + 'px';
+    boton.classList.add('is-cargando');
+    boton.setAttribute('aria-busy', 'true');
+    boton.setAttribute('aria-disabled', 'true');
+    boton.textContent = 'Cargando…';
+    anunciar('Cargando…');
+    setTimeout(accion, ESPERA_CARGA);
+  }
+
   // Avisa a los lectores de pantalla sin mover el foco (región aria-live fija en index.html).
   function anunciar(texto) {
     var r = $('anuncio');
@@ -652,15 +666,19 @@
     var botonComprar = $('btn-comprar');
     if (botonComprar) {
       botonComprar.addEventListener('click', function () {
-        guardarCompra({ proyectoId: p.id, departamentoId: d.id, paso: 1 });
-        location.hash = '#mis-proyectos';
+        conCarga(botonComprar, function () {
+          guardarCompra({ proyectoId: p.id, departamentoId: d.id, paso: 1 });
+          location.hash = '#mis-proyectos';
+        });
       });
     }
     var botonCambiar = $('btn-cambiar-compra');
     if (botonCambiar) {
       botonCambiar.addEventListener('click', function () {
-        guardarCompra({ proyectoId: p.id, departamentoId: d.id, paso: 1 });
-        location.hash = '#mis-proyectos';
+        conCarga(botonCambiar, function () {
+          guardarCompra({ proyectoId: p.id, departamentoId: d.id, paso: 1 });
+          location.hash = '#mis-proyectos';
+        });
       });
     }
   }
@@ -754,9 +772,12 @@
       tocado = true;
       dibujar();
       if ($('btn-confirmar').disabled) { $('monto-uf').focus(); return; }
-      agregarInversion({ id: 'inv-' + Date.now(), proyectoId: p.id, montoUF: monto, fecha: FECHA_REFERENCIA, cuotasCobradas: 0 });
-      anunciar('Invertiste ' + formatoUF(monto) + ' en ' + p.nombre + '.');
-      location.hash = '#mis-proyectos/inversiones';
+      var invertido = monto;
+      conCarga($('btn-confirmar'), function () {
+        agregarInversion({ id: 'inv-' + Date.now(), proyectoId: p.id, montoUF: invertido, fecha: FECHA_REFERENCIA, cuotasCobradas: 0 });
+        anunciar('Invertiste ' + formatoUF(invertido) + ' en ' + p.nombre + '.');
+        location.hash = '#mis-proyectos/inversiones';
+      });
     });
     dibujar();
   }
@@ -995,9 +1016,12 @@
       renderCarga(p, tocados);
       if ($('btn-postular').disabled) return;
       var k = carga(e.totalMes, estado.sueldoPropio, estado.sueldoPareja);
-      guardarCompra(Object.assign({}, estado.compra, { paso: pasoTrasPostular(e.alEscriturar), carga: k }));
-      renderMisProyectos();
-      window.scrollTo(0, 0);
+      conCarga($('btn-postular'), function () {
+        guardarCompra(Object.assign({}, estado.compra, { paso: pasoTrasPostular(e.alEscriturar), carga: k }));
+        renderMisProyectos();
+        window.scrollTo(0, 0);
+        anunciar('Postulación enviada. Sigue Tu 5' + NBSP + '%.');
+      });
     });
     $('btn-salir').addEventListener('click', salirDeCompra);
 
@@ -1193,13 +1217,16 @@
       '</div>';
 
     $('btn-firmar').addEventListener('click', function () {
-      // El ahorro se usó para escriturar: queda en cero.
-      estado.ahorrado = 0;
-      estado.ahorroIniciado = false;
-      guardarEstado();
-      guardarCompra(Object.assign({}, estado.compra, { paso: 4, mes: 1, arriendoMes: d.arriendoBruto, abonos: [] }));
-      renderMiCompra();
-      window.scrollTo(0, 0);
+      conCarga($('btn-firmar'), function () {
+        // El ahorro se usó para escriturar: queda en cero.
+        estado.ahorrado = 0;
+        estado.ahorroIniciado = false;
+        guardarEstado();
+        guardarCompra(Object.assign({}, estado.compra, { paso: 4, mes: 1, arriendoMes: d.arriendoBruto, abonos: [] }));
+        renderMiCompra();
+        window.scrollTo(0, 0);
+        anunciar('¡Firmaste! Ahora ves Mi departamento.');
+      });
     });
   }
 
@@ -1371,7 +1398,7 @@
       });
     }
     $('btn-otro-mes').addEventListener('click', function () {
-      guardarCompra(Object.assign({}, estado.compra, { mes: Math.min(360, m.mes + 1) }));
+      guardarCompra(Object.assign({}, estado.compra, { mes: Math.min(SUPUESTOS.mesesBci, m.mes + 1) }));
       renderMiCompra();
       anunciar('Mes ' + (m.mes + 1) + '. Este mes pusiste ' + formatoPesos(mesDelDepartamento(p, d).pone) + '.');
       $('btn-otro-mes').focus();

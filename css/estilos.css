@@ -208,6 +208,13 @@ button { font: inherit; }
   animation: girar .7s linear infinite;
 }
 @keyframes girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .btn.is-cargando::after { animation: none; border-right-color: currentColor; opacity: .6; }
+  html { scroll-behavior: auto; }
+}
+/* En carga se ve como activo (no gris), aunque no se pueda tocar */
+.btn.is-cargando[aria-disabled="true"] { cursor: progress; }
+.btn-primario.is-cargando[aria-disabled="true"] { background: var(--green-normal); border-color: var(--green-normal); color: var(--white); }
 
 /* ---------- Campos de formulario (Bci Kit: 50 px, texto 18 px, radio 6 px) ---------- */
 .campo { margin: 0 0 16px; }
@@ -706,7 +713,7 @@ button { font: inherit; }
 }
 .linea-inversiones:hover { border-color: var(--green-normal); }
 .linea-ver { margin-left: auto; display: inline-flex; align-items: center; gap: 2px; color: var(--blue-dark); font-weight: 600; text-decoration: underline; }
-.linea-inversiones span { color: var(--gray-semidark); }
+.linea-inversiones > span:first-child { color: var(--gray-semidark); }
 
 /* ---------- Perfil ---------- */
 #form-perfil .selector legend { font-size: 16px; color: var(--gray-dark); }
