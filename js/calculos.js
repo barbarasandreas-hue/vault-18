@@ -137,7 +137,7 @@ function porcentajeEntero(fraccion) { return Math.round(fraccion * 100); }
 // 0.045 → "4,5 %"; 0.6 con 0 decimales → "60 %".
 function formatoPorcentaje(fraccion, decimales) {
   var d = decimales === undefined ? 1 : decimales;
-  return (fraccion * 100).toFixed(d).replace('.', ',') + ' %';
+  return (fraccion * 100).toFixed(d).replace('.', ',') + '\u00a0%'; // espacio que no se corta
 }
 
 var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
@@ -299,9 +299,10 @@ function capacidadCompraUF(sueldoPropio, sueldoPareja) {
 
 // 2472 → "UF 2.472"; 337.5 → "UF 337,5".
 function formatoUF(uf) {
-  var entero = Math.floor(uf);
-  var decimal = Math.round((uf - entero) * 10);
-  return 'UF ' + formatoMiles(entero) + (decimal ? ',' + decimal : '');
+  var decimas = Math.round(uf * 10);          // primero se redondea a un decimal
+  var entero = Math.floor(decimas / 10);
+  var decimal = decimas - entero * 10;
+  return 'UF' + '\u00a0' + formatoMiles(entero) + (decimal ? ',' + decimal : '');
 }
 
 // ---------- Mi departamento: el mes (S5-F1) ----------
@@ -335,23 +336,28 @@ function loQuePoneUsuario(totalMes, arriendoBruto) {
   return totalMes - Math.round(arriendoNeto(arriendoBruto));
 }
 
-// Saldo de una deuda en cuota fija después de N cuotas pagadas, menos lo abonado (todo en UF).
-function saldoDeuda(montoUF, tasaAnual, meses, cuotasPagadas, abonadoUF) {
+// Saldo de una deuda en cuota fija después de N cuotas pagadas (todo en UF).
+// abonos: lista de { mes, uf }. Cada abono se descuenta con los intereses que deja de generar
+// desde el mes en que se hizo: uf × (1 + tasa mensual) elevado a los meses que pasaron.
+function saldoDeuda(montoUF, tasaAnual, meses, cuotasPagadas, abonos) {
   var n = Math.min(Math.max(0, cuotasPagadas || 0), meses);
   var i = tasaAnual / 12;
   var cuota = cuotaFija(montoUF, tasaAnual, meses);
   var saldo = i === 0 ? montoUF - cuota * n
     : montoUF * Math.pow(1 + i, n) - cuota * (Math.pow(1 + i, n) - 1) / i;
-  return Math.max(0, saldo - (abonadoUF || 0));
+  var descuento = (abonos || []).reduce(function (suma, a) {
+    return suma + a.uf * Math.pow(1 + i, Math.max(0, n - a.mes));
+  }, 0);
+  return Math.max(0, saldo - descuento);
 }
 
 function saldoBciUF(precio, cuotasPagadas) {
-  return saldoDeuda(precio * SUPUESTOS.pctBci, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci, cuotasPagadas, 0);
+  return saldoDeuda(precio * SUPUESTOS.pctBci, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci, cuotasPagadas, []);
 }
 
-function saldoInversionistasUF(precio, cuotasPagadas, abonadoUF) {
+function saldoInversionistasUF(precio, cuotasPagadas, abonos) {
   return saldoDeuda(precio * SUPUESTOS.pctInversionistas, SUPUESTOS.tasaInversionistas,
-    SUPUESTOS.mesesInversionistas, cuotasPagadas, abonadoUF);
+    SUPUESTOS.mesesInversionistas, cuotasPagadas, abonos);
 }
 
 // Pesos a UF (para registrar un abono).

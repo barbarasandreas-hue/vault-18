@@ -56,7 +56,12 @@
 /* ---------- Base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html {
+  -webkit-text-size-adjust: 100%;
+  /* scrollIntoView deja libre la barra inferior y la acción fija (unos 72 px) */
+  scroll-padding-bottom: calc(var(--barra-alto) + env(safe-area-inset-bottom) + 88px);
+  scroll-padding-top: 16px;
+}
 
 body {
   margin: 0;
@@ -245,7 +250,7 @@ button { font: inherit; }
   min-height: 100vh;
   min-height: 100dvh;
   padding-top: env(safe-area-inset-top);
-  padding-bottom: calc(var(--barra-alto) + env(safe-area-inset-bottom) + 16px);
+  padding-bottom: calc(var(--barra-alto) + env(safe-area-inset-bottom) + 88px);
 }
 
 .pantalla {

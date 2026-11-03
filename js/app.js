@@ -21,7 +21,7 @@
     sueldoPropio: null,      // sueldo líquido del usuario, en pesos
     sueldoPareja: null,      // sueldo líquido de la pareja, en pesos
     arriendoActual: null,    // lo que paga hoy de arriendo, en pesos
-    ahorroMensual: null,     // cuánto ahorra al mes para su 5 %
+    ahorroMensual: null,     // cuánto ahorra al mes para su 5\u00a0%
     tipoAhorro: 'propio',    // 'propio' o 'grupal'
     ahorrado: 0,             // lo que lleva juntado (simulado)
     ahorroIniciado: false,   // si ya tocó "Empezar a ahorrar"
@@ -143,7 +143,7 @@
     if (proyecto.tipo === 'conjunto') {
       return barraAvance('Cupos tomados', r.cuposTomados + ' de ' + r.cupos, r.avanceCupos);
     }
-    return barraAvance('15 % reunido con inversionistas', formatoPorcentaje(r.avanceFinanciamiento, 0), r.avanceFinanciamiento);
+    return barraAvance('15\u00a0% reunido con inversionistas', formatoPorcentaje(r.avanceFinanciamiento, 0), r.avanceFinanciamiento);
   }
 
   // ---------- Inicio: Mi camino (S5-F6, sobre el próximo paso de S4-F6) ----------
@@ -157,7 +157,7 @@
       var k = carga(e.totalMes, estado.sueldoPropio, estado.sueldoPareja);
       var nivel = nivelCarga(k);
       return {
-        p: p, paso: 1, etapa: 'Paso 1 de 3' + SEP + 'Postula',
+        p: p, paso: 1, etapa: 'Paso 2 de 5' + SEP + 'Postula',
         etiqueta: nivel ? 'Tu carga' : 'Revisa si califican',
         numero: nivel ? formatoPorcentaje(cargaRedondeada(k), 1) : null,
         detalle: nivel ? SEMAFORO[nivel].palabra : 'Escribe los sueldos de los dos para ver tu carga.',
@@ -168,17 +168,17 @@
       var meta = e.alEscriturar;
       var n = mesesRestantes(meta, estado.ahorrado, estado.ahorroMensual);
       return {
-        p: p, paso: 2, etapa: 'Paso 2 de 3' + SEP + 'Tu 5 %',
+        p: p, paso: 2, etapa: 'Paso 3 de 5' + SEP + 'Ahorra',
         etiqueta: n === null ? 'Tu meta al escriturar' : 'Te faltan',
         numero: n === null ? formatoPesos(meta) : textoMeses(n),
         detalle: n === null ? 'Calcula en cuántos meses la juntas.'
           : 'Llevas ' + formatoPesos(estado.ahorrado) + ' de ' + formatoPesos(meta) + '.',
-        accion: estado.ahorroIniciado ? 'Seguir ahorrando' : 'Ir a Tu 5 %'
+        accion: estado.ahorroIniciado ? 'Seguir ahorrando' : 'Ir a Tu 5\u00a0%'
       };
     }
     if (paso === 3) {
       return {
-        p: p, paso: 3, etapa: 'Paso 3 de 3' + SEP + 'Firma',
+        p: p, paso: 3, etapa: 'Paso 4 de 5' + SEP + 'Firma',
         etiqueta: 'Ya juntaste', numero: formatoPesos(e.alEscriturar),
         detalle: 'Revisa lo que firmas en palabras simples.',
         accion: 'Ir a firmar'
@@ -186,10 +186,10 @@
     }
     var m = mesDelDepartamento(p, departamentoDeMiCompra(p));
     return {
-      p: p, paso: 4, etapa: 'Mi departamento' + SEP + 'mes ' + m.mes,
-      etiqueta: estado.modo === 'arrendar' ? 'Este mes pusiste' : 'Este mes pagaste',
-      numero: formatoPesos(m.pone),
-      detalle: m.excedente > 0 ? 'El arriendo alcanzó para todo y te sobraron ' + formatoPesos(m.excedente) + '.'
+      p: p, paso: 4, etapa: 'Paso 5 de 5' + SEP + 'Departamento, mes ' + m.mes,
+      etiqueta: m.excedente > 0 ? 'Este mes te sobraron' : (estado.modo === 'arrendar' ? 'Este mes pusiste' : 'Este mes pagaste'),
+      numero: formatoPesos(m.excedente > 0 ? m.excedente : m.pone),
+      detalle: m.excedente > 0 ? 'El arriendo alcanzó para todo: no pusiste nada.'
         : (estado.modo === 'arrendar' ? 'El arriendo cubrió ' + formatoPesos(m.cascada.neto) + ' y tú completaste el resto.'
           : 'Dividendo más la cuota a los inversionistas.'),
       accion: 'Ver mi departamento'
@@ -228,14 +228,14 @@
         ? (r.cuposLibres > 0
           ? 'El grupo lleva ' + r.cuposTomados + ' de ' + r.cupos + ' cupos: ' + (r.cuposLibres === 1 ? 'falta 1' : 'faltan ' + r.cuposLibres) + ' para completarlo.'
           : 'El grupo ya está completo.')
-        : 'Ya se reunió el ' + formatoPorcentaje(r.avanceFinanciamiento, 0) + ' de tu 15 % con inversionistas.'
+        : 'Ya se reunió el ' + formatoPorcentaje(r.avanceFinanciamiento, 0) + ' de tu 15\u00a0% con inversionistas.'
     };
     if (x.paso === 2 && estado.ahorroIniciado) {
       var meta = r.escenario.alEscriturar;
       var siguiente = HITOS_AHORRO.filter(function (h) { return avance(estado.ahorrado, meta) < h; })[0];
       if (siguiente) {
         avisos.push('Te faltan ' + formatoPesos(Math.ceil(meta * siguiente - estado.ahorrado)) +
-          ' para llegar al ' + porcentajeEntero(siguiente) + ' % de tu meta.');
+          ' para llegar al ' + porcentajeEntero(siguiente) + '\u00a0% de tu meta.');
       }
       if (aviso.cierre) avisos.push(aviso.cierre);
     } else if (x.paso === 4) {
@@ -291,11 +291,11 @@
     };
     $('inicio-capacidad').innerHTML =
       '<header class="encabezado">' + FIGURAS +
-        '<h1 id="titulo-inicio" class="h2">Tu departamento con el 5 %</h1>' +
+        '<h1 id="titulo-inicio" class="h2">Tu departamento con el 5\u00a0%</h1>' +
         '<p class="texto-apoyo">Escribe sus sueldos y te decimos hasta cuánto pueden comprar.</p>' +
       '</header>' +
       '<fieldset class="selector"><legend class="oculto-visual">¿Para vivir o para arrendar?</legend>' +
-        '<div class="selector-opciones">' + opcion('vivir', 'Para vivir') + opcion('arrendar', 'Para arrendar') + '</div>' +
+        '<div class="selector-opciones">' + opcion('arrendar', 'Para arrendar') + opcion('vivir', 'Para vivir') + '</div>' +
       '</fieldset>' +
       '<div class="campos-dos">' +
         campoDinero('inicio-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
@@ -359,11 +359,11 @@
         '<div class="reparto" id="reparto" hidden>' +
           '<div class="reparto-barra" aria-hidden="true"><span></span><span></span><span></span></div>' +
           '<ul class="lista-check">' +
-            filaReparto('80 % lo presta Bci', 'Crédito hipotecario a 30 años, junto a tu pareja', e.reparto.bci) +
-            filaReparto('15 % lo reúnes con inversionistas', 'A 10 años, con segunda hipoteca', e.reparto.inversionistas) +
-            filaReparto('5 % lo pones tú', 'Con tu ahorro, propio o grupal', e.reparto.usuario) +
+            filaReparto('80\u00a0% lo presta Bci', 'Crédito hipotecario a 30 años, junto a tu pareja', e.reparto.bci) +
+            filaReparto('15\u00a0% lo reúnes con inversionistas', 'A 10 años, con segunda hipoteca', e.reparto.inversionistas) +
+            filaReparto('5\u00a0% lo pones tú', 'Con tu ahorro, propio o grupal', e.reparto.usuario) +
           '</ul>' +
-          '<p class="reparto-total">Además pones ' + formatoPesos(e.gastos) + ' de gastos de escritura (≈ 2 %).</p>' +
+          '<p class="reparto-total">Además pones ' + formatoPesos(e.gastos) + ' de gastos de escritura (≈ 2\u00a0%).</p>' +
         '</div>' +
       '</div>';
     var boton = $('btn-reparto');
@@ -413,8 +413,8 @@
     });
     $('panel-proyectos').setAttribute('aria-labelledby', 'tab-' + estado.pestana);
     $('proyectos-explica').textContent = estado.pestana === 'conjunto'
-      ? 'Compran varios juntos un lote y cada uno paga 10 % menos.'
-      : 'Un departamento a precio de lista; reúnes tu 15 % con inversionistas.';
+      ? 'Compran varios juntos un lote y cada uno paga 10\u00a0% menos.'
+      : 'Un departamento a precio de lista; reúnes tu 15\u00a0% con inversionistas.';
 
     // Filtro "Me alcanza" (S5-F0): solo si hay sueldos para calcular la capacidad.
     var cap = capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja);
@@ -439,10 +439,10 @@
 
     // El estado vacío explica la causa y ofrece la salida que corresponde.
     var porAlcanza = usarAlcanza && delTipo.length > 0;
-    $('vacio-titulo').textContent = porAlcanza ? 'Ninguno de este tipo te alcanza hoy' : 'Ningún proyecto rinde 4,5 % hoy';
+    $('vacio-titulo').textContent = porAlcanza ? 'Ninguno de este tipo te alcanza hoy' : 'Ningún proyecto rinde 4,5\u00a0% hoy';
     $('vacio-texto').textContent = porAlcanza
       ? 'Con sus sueldos pueden comprar hasta ' + formatoUF(cap) + '. Prueba la otra pestaña o quita el filtro.'
-      : 'Para arrendar, la IA solo muestra departamentos que rinden 4,5 % o más al año.';
+      : 'Para arrendar, la IA solo muestra departamentos que rinden 4,5\u00a0% o más al año.';
     $('btn-vacio-accion').textContent = porAlcanza ? 'Quitar el filtro Me alcanza' : 'Cambiar a modo vivir';
     $('btn-vacio-accion').dataset.accion = porAlcanza ? 'alcanza' : 'vivir';
   }
@@ -499,17 +499,17 @@
     var precio = conjunto
       ? '<p class="precio-lista">Precio de lista <s>' + formatoPesos(e.precioLista) + '</s></p>' +
         '<strong class="numero display-3">' + formatoPesos(e.precio) + '</strong>' +
-        '<p class="texto-apoyo">10 % menos por comprar en conjunto. Ahorras ' + formatoPesos(r.ahorro) + '.</p>'
+        '<p class="texto-apoyo">10\u00a0% menos por comprar en conjunto. Ahorras ' + formatoPesos(r.ahorro) + '.</p>'
       : '<strong class="numero display-3">' + formatoPesos(e.precio) + '</strong>';
 
     var rinde = estado.modo === 'arrendar'
       ? '<p class="texto-apoyo bloque">Arrendándolo rinde <strong>' + formatoPorcentaje(r.rentabilidad, 1) + '</strong> al año' +
-        (r.pasaFiltro ? ', sobre el 4,5 % que pide la IA.' : ', bajo el 4,5 % que pide la IA.') + '</p>'
+        (r.pasaFiltro ? ', sobre el 4,5\u00a0% que pide la IA.' : ', bajo el 4,5\u00a0% que pide la IA.') + '</p>'
       : '';
 
     var frase = conjunto
       ? 'Si el grupo no se completa: puedes pasar a compra individual o salir sin costo.'
-      : 'Si no se reúne el 15 %: puedes esperar o salir sin costo.';
+      : 'Si no se reúne el 15\u00a0%: puedes esperar o salir sin costo.';
 
     var comprar;
     if (esMiCompra) {
@@ -549,9 +549,9 @@
       '<div class="tarjeta bloque">' +
         '<h2 class="h5">De dónde sale el precio</h2>' +
         '<ul class="lista-check">' +
-          filaReparto('80 % lo presta Bci', 'Crédito hipotecario a 30 años, junto a tu pareja', e.reparto.bci) +
-          filaReparto('15 % lo reúnes con inversionistas', 'A 10 años, con segunda hipoteca', e.reparto.inversionistas) +
-          filaReparto('5 % lo pones tú', 'Con tu ahorro, propio o grupal', e.reparto.usuario) +
+          filaReparto('80\u00a0% lo presta Bci', 'Crédito hipotecario a 30 años, junto a tu pareja', e.reparto.bci) +
+          filaReparto('15\u00a0% lo reúnes con inversionistas', 'A 10 años, con segunda hipoteca', e.reparto.inversionistas) +
+          filaReparto('5\u00a0% lo pones tú', 'Con tu ahorro, propio o grupal', e.reparto.usuario) +
         '</ul>' +
         '<p class="reparto-total">Más ' + formatoPesos(e.gastos) + ' de gastos de escritura: pones <strong>' +
           formatoPesos(e.alEscriturar) + '</strong> al escriturar.</p>' +
@@ -594,14 +594,14 @@
   // ---------- Mis proyectos ----------
   var PASOS = [
     { titulo: 'Postula', apoyo: 'Revisamos si tú y tu pareja califican.' },
-    { titulo: 'Tu 5 %', apoyo: 'Juntas lo que pones al escriturar.' },
+    { titulo: 'Tu 5\u00a0%', apoyo: 'Juntas lo que pones al escriturar.' },
     { titulo: 'Firma', apoyo: 'Firmas la escritura y recibes tu departamento.' }
   ];
 
   var SEMAFORO = {
-    'holgado': { palabra: 'Holgado', icono: 'i-ok', explica: 'Tu carga está dentro de lo que Bci considera cómodo (hasta 25 %).' },
-    'limite': { palabra: 'En el límite', icono: 'i-alerta', explica: 'Bci aprueba hasta 30 %, pero te queda poco margen.' },
-    'no-aprueba': { palabra: 'No aprueba', icono: 'i-no', explica: 'Sobre 30 %, Bci no aprueba el crédito.' }
+    'holgado': { palabra: 'Holgado', icono: 'i-ok', explica: 'Tu carga está dentro de lo que Bci considera cómodo (hasta 25\u00a0%).' },
+    'limite': { palabra: 'En el límite', icono: 'i-alerta', explica: 'Bci aprueba hasta 30\u00a0%, pero te queda poco margen.' },
+    'no-aprueba': { palabra: 'No aprueba', icono: 'i-no', explica: 'Sobre 30\u00a0%, Bci no aprueba el crédito.' }
   };
 
   function departamentoDeMiCompra(p) {
@@ -731,8 +731,8 @@
     boton.disabled = nivel === 'no-aprueba';
     $('postular-explica').textContent = nivel !== 'no-aprueba' ? ''
       : (sug && sug.aprueba
-        ? 'Con una carga sobre 30 % no puedes postular aquí. Revisa la sugerencia de arriba.'
-        : 'Con una carga sobre 30 % no puedes postular aquí: falta ingreso o un departamento más barato.');
+        ? 'Con una carga sobre 30\u00a0% no puedes postular aquí. Revisa la sugerencia de arriba.'
+        : 'Con una carga sobre 30\u00a0% no puedes postular aquí: falta ingreso o un departamento más barato.');
     return true;
   }
 
@@ -788,14 +788,14 @@
     habiaCarga = renderCarga(p, { propio: estado.sueldoPropio !== null, pareja: estado.sueldoPareja !== null });
   }
 
-  // ---------- Paso 2: Tu 5 % (S4-F2, S4-F3 y S4-F4) ----------
+  // ---------- Paso 2: Tu 5\u00a0% (S4-F2, S4-F3 y S4-F4) ----------
   var TIPOS_AHORRO = {
     propio: 'Ahorras solo, en tu propia cuenta.',
-    grupal: 'Ahorras junto a un grupo con una meta común, para motivarse. Cada persona junta su propio 5 % ' +
+    grupal: 'Ahorras junto a un grupo con una meta común, para motivarse. Cada persona junta su propio 5\u00a0% ' +
       'y retira exactamente lo que aportó: nadie aporta por otro ni queda debiendo.'
   };
 
-  // Barra de avance con hitos al 25 %, 50 %, 75 % y 100 %.
+  // Barra de avance con hitos al 25\u00a0%, 50\u00a0%, 75\u00a0% y 100\u00a0%.
   function barraHitos(ahorrado, meta) {
     var pct = porcentajeEntero(avance(ahorrado, meta));
     var logrados = hitosAlcanzados(ahorrado, meta);
@@ -832,7 +832,7 @@
     var meta = resumen(p).escenario.alEscriturar;
     // Si ya se juntó todo (por ejemplo, al cambiar a un proyecto más barato), se pasa a la firma.
     var cabecera = tarjetaCompacta(p, 'Meta al escriturar', meta) + listaPasos(2) +
-      '<h2 class="h3 bloque" id="titulo-tu5">Tu 5 % <span class="texto-apoyo titulo-apoyo">más gastos, lo juntas tú</span></h2>';
+      '<h2 class="h3 bloque" id="titulo-tu5">Tu 5\u00a0% <span class="texto-apoyo titulo-apoyo">más gastos, lo juntas tú</span></h2>';
 
     if (!estado.ahorroIniciado) {
       $('panel-compra').innerHTML = cabecera +
@@ -930,7 +930,7 @@
       var faltanAhora = mesesRestantes(meta, estado.ahorrado, estado.ahorroMensual);
       var mensaje = 'Sumaste un mes. Te faltan ' + textoMeses(faltanAhora) + '.';
       if (nuevos.length) {
-        $('aviso-hito').textContent = '¡Llegaste al ' + porcentajeEntero(nuevos[nuevos.length - 1]) + ' % de tu meta! Sigue así.';
+        $('aviso-hito').textContent = '¡Llegaste al ' + porcentajeEntero(nuevos[nuevos.length - 1]) + '\u00a0% de tu meta! Sigue así.';
         $('aviso-hito').hidden = false;
         mensaje = $('aviso-hito').textContent + ' ' + mensaje;
       }
@@ -955,16 +955,16 @@
       tarjetaCompacta(p, 'Pones al escriturar', e.alEscriturar) + listaPasos(3) +
       '<div class="logro bloque"' + (recienLlegado ? ' role="status"' : '') + '>' +
         '<svg aria-hidden="true"><use href="#i-ok"/></svg>' +
-        '<p><strong>¡Juntaste tu 5 %!</strong> Ya tienes ' + formatoPesos(e.alEscriturar) + ' para escriturar.</p>' +
+        '<p><strong>¡Juntaste tu 5\u00a0%!</strong> Ya tienes ' + formatoPesos(e.alEscriturar) + ' para escriturar.</p>' +
       '</div>' +
       '<section class="tarjeta bloque" aria-labelledby="titulo-firma">' +
         '<h2 class="h3" id="titulo-firma">Lo que firmas</h2>' +
         '<ul class="lista-check">' +
           filaFirma('Crédito hipotecario Bci',
-            'Bci presta el 80 % (' + formatoPesos(e.reparto.bci) + ') a 30 años al 4,5 %. Lo pagan tú y tu pareja: ' +
+            'Bci presta el 80\u00a0% (' + formatoPesos(e.reparto.bci) + ') a 30 años al 4,5\u00a0%. Lo pagan tú y tu pareja: ' +
             formatoPesos(e.dividendo) + ' al mes, con seguros.') +
           filaFirma('Segunda hipoteca con los inversionistas',
-            'Ellos prestan el 15 % (' + formatoPesos(e.reparto.inversionistas) + ') a 10 años, a UF + 8 %: pagas ' +
+            'Ellos prestan el 15\u00a0% (' + formatoPesos(e.reparto.inversionistas) + ') a 10 años, a UF + 8\u00a0%: pagas ' +
             formatoPesos(e.cuotaInversionistas) + ' al mes. Si no pagas, cobran después de Bci.') +
           filaFirma('Cuenta custodia Bci', custodia) +
         '</ul>' +
@@ -980,7 +980,7 @@
       estado.ahorrado = 0;
       estado.ahorroIniciado = false;
       guardarEstado();
-      guardarCompra(Object.assign({}, estado.compra, { paso: 4, mes: 1, arriendoMes: d.arriendoBruto, abonadoUF: 0, abonoMes: null }));
+      guardarCompra(Object.assign({}, estado.compra, { paso: 4, mes: 1, arriendoMes: d.arriendoBruto, abonos: [] }));
       renderMiCompra();
       window.scrollTo(0, 0);
     });
@@ -991,6 +991,12 @@
   }
 
   // ---------- Después de firmar: Mi departamento (S5-F2 a S5-F5) ----------
+
+  // Abonos de la compra como lista { mes, uf }. Acepta el formato anterior (abonadoUF + abonoMes).
+  function abonosDe(c) {
+    if (c.abonos) return c.abonos;
+    return c.abonadoUF ? [{ mes: c.abonoMes || 1, uf: c.abonadoUF }] : [];
+  }
 
   // Los números del mes actual, todos desde calculos.js.
   function mesDelDepartamento(p, d) {
@@ -1007,9 +1013,9 @@
       cascada: cascada,
       pone: arrendar ? cascada.pone : e.totalMes,
       excedente: arrendar ? cascada.excedente : 0,
-      puedeAbonar: arrendar && cascada.excedente > 0 && c.abonoMes !== mes,
+      puedeAbonar: arrendar && cascada.excedente > 0 && !abonosDe(c).some(function (x) { return x.mes === mes; }),
       saldoBci: ufAPesos(saldoBciUF(e.precioUF, mes)),
-      saldoInversionistas: ufAPesos(saldoInversionistasUF(e.precioUF, mes, c.abonadoUF || 0)),
+      saldoInversionistas: ufAPesos(saldoInversionistasUF(e.precioUF, mes, abonosDe(c))),
       avanceBci: avance(mes, 360),
       avanceInversionistas: avance(mes, 120)
     };
@@ -1041,10 +1047,10 @@
       // S5-F2: cascada de la cuenta custodia.
       cuerpo =
         '<div class="tarjeta protagonista">' +
-          '<p class="etiqueta">' + (m.excedente > 0 ? 'Este mes no pusiste nada' : 'Este mes pusiste') + '</p>' +
-          '<strong class="numero display-3">' + formatoPesos(m.pone) + '</strong>' +
+          '<p class="etiqueta">' + (m.excedente > 0 ? 'Este mes te sobraron' : 'Este mes pusiste') + '</p>' +
+          '<strong class="numero display-3">' + formatoPesos(m.excedente > 0 ? m.excedente : m.pone) + '</strong>' +
           '<p class="texto-apoyo">' + (m.excedente > 0
-            ? 'El arriendo alcanzó para todo y te sobraron <strong>' + formatoPesos(m.excedente) + '</strong>.'
+            ? 'El arriendo alcanzó para todo: no pusiste nada.'
             : 'El arriendo cubrió ' + formatoPesos(c.neto) + ' y tú completaste la diferencia.') + '</p>' +
         '</div>' +
         campoDinero('arriendo-mes', 'Arriendo que entró este mes', m.arriendo) +
@@ -1054,7 +1060,7 @@
           '<ol class="cascada">' +
             pasoCascada(1, 'Entra el arriendo', null, formatoPesos(c.bruto)) +
             pasoCascada(2, 'Se descuentan administración y el mes vacío',
-              'Administración (10 %): ' + formatoPesos(c.administracion) + '. Un mes vacío al año, por mes: ' + formatoPesos(c.vacancia) + '.',
+              'Administración (10\u00a0%): ' + formatoPesos(c.administracion) + '. Un mes vacío al año, por mes: ' + formatoPesos(c.vacancia) + '.',
               '−' + formatoPesos(c.administracion + c.vacancia)) +
             pasoCascada(3, 'Se paga el dividendo a Bci',
               'El arriendo cubre ' + formatoPesos(c.cubreDividendo) + '.', formatoPesos(c.dividendo)) +
@@ -1095,11 +1101,11 @@
         '<section class="sugerencia sugerencia-ok bloque" aria-labelledby="titulo-abono">' +
           '<h2 class="h5" id="titulo-abono">La IA recomienda abonar</h2>' +
           '<p>Te sobraron ' + formatoPesos(m.excedente) + '. Conviene abonarlos a la deuda con inversionistas, ' +
-            'porque tiene la tasa más alta: UF + 8 %, contra 4,5 % del crédito Bci.</p>' +
+            'porque tiene la tasa más alta: UF + 8\u00a0%, contra 4,5\u00a0% del crédito Bci.</p>' +
         '</section>' +
         '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-abonar">Abonar ' +
           formatoPesos(m.excedente) + '</button></div>';
-    } else if (estado.compra.abonoMes === m.mes) {
+    } else if (abonosDe(estado.compra).some(function (x) { return x.mes === m.mes; })) {
       abono = '<p class="aviso aviso-ok bloque">Abonaste a la deuda con inversionistas este mes (simulado).</p>';
     }
 
@@ -1140,8 +1146,8 @@
     if (botonAbonar) {
       botonAbonar.addEventListener('click', function () {
         guardarCompra(Object.assign({}, estado.compra, {
-          abonadoUF: (estado.compra.abonadoUF || 0) + pesosAUF(m.excedente),
-          abonoMes: m.mes
+          abonos: abonosDe(estado.compra).concat([{ mes: m.mes, uf: pesosAUF(m.excedente) }]),
+          abonadoUF: null, abonoMes: null
         }));
         renderMiCompra();
         anunciar('Abonaste ' + formatoPesos(m.excedente) + ' a la deuda con inversionistas.');
@@ -1179,7 +1185,7 @@
     return paso;
   }
 
-  // Después de postular: va a Tu 5 %, o directo a la firma si el ahorro ya alcanza la meta.
+  // Después de postular: va a Tu 5\u00a0%, o directo a la firma si el ahorro ya alcanza la meta.
   function pasoTrasPostular(meta) {
     return estado.ahorroIniciado && estado.ahorrado >= meta ? 3 : 2;
   }

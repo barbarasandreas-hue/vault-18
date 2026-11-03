@@ -74,9 +74,9 @@ test('arriendo neto: $600.000 → $495.000', () => {
 test('rentabilidad de UF 2.250: $420.000 pasa el filtro, $400.000 no', () => {
   const alta = c.rentabilidad(420000, 2250);
   const baja = c.rentabilidad(400000, 2250);
-  assert.strictEqual(c.formatoPorcentaje(alta, 1), '4,5 %');
+  assert.strictEqual(c.formatoPorcentaje(alta, 1), '4,5\u00a0%');
   assert.strictEqual(c.pasaFiltroIA(alta), true);
-  assert.strictEqual(c.formatoPorcentaje(baja, 1), '4,3 %');
+  assert.strictEqual(c.formatoPorcentaje(baja, 1), '4,3\u00a0%');
   assert.strictEqual(c.pasaFiltroIA(baja), false);
 });
 
@@ -87,7 +87,7 @@ test('ahorro por unirse a un lote de UF 2.500 → $10.266.250', () => {
 
 test('avance: 6 de 10 → 60 %', () => {
   assert.strictEqual(c.avance(6, 10), 0.6);
-  assert.strictEqual(c.formatoPorcentaje(c.avance(6, 10), 0), '60 %');
+  assert.strictEqual(c.formatoPorcentaje(c.avance(6, 10), 0), '60\u00a0%');
   assert.strictEqual(c.avance(12, 10), 1);
   assert.strictEqual(c.avance(3, 0), 0);
   assert.strictEqual(c.porcentajeEntero(0.6), 60);
@@ -159,21 +159,21 @@ test('en modo arrendar la IA deja proyectos en las dos pestañas', () => {
 test('carga: arrendar en lote con $1.500.000 + $1.000.000 → 22,9 %, holgado', () => {
   const total = c.escenario(2500, 'lote').totalMes;
   const k = c.carga(total, 1500000, 1000000);
-  assert.strictEqual(c.formatoPorcentaje(k, 1), '22,9 %');
+  assert.strictEqual(c.formatoPorcentaje(k, 1), '22,9\u00a0%');
   assert.strictEqual(c.nivelCarga(k), 'holgado');
 });
 
 test('carga: arrendar en lote con $1.200.000 + $800.000 → 28,6 %, en el límite', () => {
   const total = c.escenario(2500, 'lote').totalMes;
   const k = c.carga(total, 1200000, 800000);
-  assert.strictEqual(c.formatoPorcentaje(k, 1), '28,6 %');
+  assert.strictEqual(c.formatoPorcentaje(k, 1), '28,6\u00a0%');
   assert.strictEqual(c.nivelCarga(k), 'limite');
 });
 
 test('carga: vivir individual con $1.500.000 + $1.000.000 → 30,1 %, no aprueba', () => {
   const total = c.escenario(3000, 'individual').totalMes;
   const k = c.carga(total, 1500000, 1000000);
-  assert.strictEqual(c.formatoPorcentaje(k, 1), '30,1 %');
+  assert.strictEqual(c.formatoPorcentaje(k, 1), '30,1\u00a0%');
   assert.strictEqual(c.nivelCarga(k), 'no-aprueba');
 });
 
@@ -189,15 +189,15 @@ test('el semáforo usa la misma carga redondeada que muestra la pantalla', () =>
   // 30,04 % se muestra "30,0 %": es "en el límite", no "no aprueba".
   const k30 = c.carga(total, 902214, 1000000);
   assert.ok(k30 > 0.30);
-  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(k30), 1), '30,0 %');
+  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(k30), 1), '30,0\u00a0%');
   assert.strictEqual(c.nivelCarga(k30), 'limite');
   // 25,03 % se muestra "25,0 %": es "holgado".
   const k25 = c.carga(250300, 600000, 400000);
-  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(k25), 1), '25,0 %');
+  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(k25), 1), '25,0\u00a0%');
   assert.strictEqual(c.nivelCarga(k25), 'holgado');
   // 30,06 % se muestra "30,1 %": no aprueba.
   const k301 = c.carga(300600, 600000, 400000);
-  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(k301), 1), '30,1 %');
+  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(k301), 1), '30,1\u00a0%');
   assert.strictEqual(c.nivelCarga(k301), 'no-aprueba');
   assert.strictEqual(c.cargaRedondeada(null), null);
 });
@@ -206,7 +206,7 @@ test('carga: corte exacto del redondeo en 25 % y 30 %', () => {
   // 30,0499 % se ve "30,0 %" (en el límite); 30,05 % se ve "30,1 %" (no aprueba).
   assert.strictEqual(c.nivelCarga(c.carga(300499, 600000, 400000)), 'limite');
   assert.strictEqual(c.nivelCarga(c.carga(300500, 600000, 400000)), 'no-aprueba');
-  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(c.carga(300500, 600000, 400000)), 1), '30,1 %');
+  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(c.carga(300500, 600000, 400000)), 1), '30,1\u00a0%');
   assert.strictEqual(c.nivelCarga(c.carga(250499, 600000, 400000)), 'holgado');
   assert.strictEqual(c.nivelCarga(c.carga(250500, 600000, 400000)), 'limite');
 });
@@ -232,7 +232,7 @@ test('mejor alternativa: elige la opción con la carga más baja, solo si mejora
   const actual = c.carga(752318, 1500000, 1000000);
   const m = c.mejorAlternativa(actual, opciones, 1500000, 1000000);
   assert.strictEqual(m.id, 'b');
-  assert.strictEqual(c.formatoPorcentaje(m.carga, 1), '20,8 %');
+  assert.strictEqual(c.formatoPorcentaje(m.carga, 1), '20,8\u00a0%');
   assert.strictEqual(m.nivel, 'holgado');
   assert.strictEqual(c.mejorAlternativa(0.1, opciones, 1500000, 1000000), null);
 });
@@ -301,8 +301,12 @@ test('capacidad: sin sueldos devuelve null', () => {
 });
 
 test('formato UF', () => {
-  assert.strictEqual(c.formatoUF(2472), 'UF 2.472');
-  assert.strictEqual(c.formatoUF(337.5), 'UF 337,5');
+  assert.strictEqual(c.formatoUF(2472), 'UF\u00a02.472');
+  assert.strictEqual(c.formatoUF(337.5), 'UF\u00a0337,5');
+  // Redondea primero a un decimal: nunca "337,9" para 337,95 ni "1.234,10" para 1.234,999.
+  assert.strictEqual(c.formatoUF(337.95), 'UF\u00a0338');
+  assert.strictEqual(c.formatoUF(337.94), 'UF\u00a0337,9');
+  assert.strictEqual(c.formatoUF(1234.999), 'UF\u00a01.235');
 });
 
 // ---------- Mi departamento: el mes (S5-F1) ----------
@@ -341,7 +345,16 @@ test('saldo de una deuda después de N cuotas (comparado con una tabla de amorti
   assert.strictEqual(c.saldoDeuda(monto, tasa, meses, 400), c.saldoDeuda(monto, tasa, meses, 360));
   assert.ok(Math.abs(c.saldoBciUF(2250, 0) - 1800) < 1e-9);
   assert.ok(Math.abs(c.saldoInversionistasUF(2250, 0, 0) - 337.5) < 1e-9);
-  assert.ok(Math.abs(c.saldoInversionistasUF(2250, 0, 10) - 327.5) < 1e-9);
+  assert.ok(Math.abs(c.saldoInversionistasUF(2250, 0, [{ mes: 0, uf: 10 }]) - 327.5) < 1e-9);
+});
+
+test('abono: descuenta también los intereses que deja de generar', () => {
+  const i = 0.08 / 12;
+  const sinAbono = c.saldoInversionistasUF(2250, 2, []);
+  const conAbono = c.saldoInversionistasUF(2250, 2, [{ mes: 1, uf: 1 }]);
+  assert.ok(Math.abs(sinAbono - conAbono - (1 + i)) < 1e-12);
+  // En el mismo mes del abono, se descuenta exactamente lo abonado.
+  assert.ok(Math.abs(c.saldoInversionistasUF(2250, 1, []) - c.saldoInversionistasUF(2250, 1, [{ mes: 1, uf: 1 }]) - 1) < 1e-12);
 });
 
 test('días entre fechas', () => {
