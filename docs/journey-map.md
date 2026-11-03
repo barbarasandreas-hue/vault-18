@@ -2,7 +2,7 @@
 
 El journey map muestra el recorrido completo de cada tipo de usuario: qué hace, qué piensa y qué siente en cada etapa, y qué puede hacer la app para ayudarlo. Es la base de las pantallas de `SPEC.md` y del orden de los sprints de `PLAN.md`.
 
-Primer Peldaño es un **marketplace de departamentos**: el usuario ve proyectos y se une a ellos, ya sea a una **compra en conjunto** (varios compradores compran un lote con 10 % de descuento) o a un **financiamiento del pie** (inversionistas financian el 15 % y el usuario pone el 5 %). Hay dos recorridos: el del **comprador** (el foco del prototipo) y el del **inversionista**.
+Primer Peldaño es un **marketplace de departamentos**: el usuario ve proyectos y se une a ellos, ya sea a una **compra en conjunto** (varios compradores compran un lote con 10 % de descuento) o a un **financiamiento del pie** (el usuario reúne su 15 % con ayuda de inversionistas). El 5 % restante lo pone el usuario por sí solo, con su propio ahorro. Hay dos recorridos: el del **comprador** (el foco del prototipo) y el del **inversionista**.
 
 ---
 

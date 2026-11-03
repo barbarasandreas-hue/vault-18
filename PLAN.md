@@ -52,7 +52,7 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 - **S1-F5 Pantalla Simula.** Elige vivir o arrendar, lote o individual.
   - Para arrendar en lote muestra como número protagonista "$6.467.738" al escriturar y "$571.425" al mes.
   - Al cambiar cualquiera de las dos opciones, los números se actualizan al instante y coinciden con la tabla de referencia.
-  - Un toque en "¿De dónde sale el resto?" muestra el reparto 80 % Bci / 15 % inversionistas / 5 % usuario, en pesos.
+  - Un toque en "¿De dónde sale el resto?" muestra el reparto en pesos: 80 % "lo presta Bci", 15 % "lo reúnes con inversionistas", 5 % "lo pones tú".
   - Se lee la frase "Calculado sin plusvalía".
   - Acción principal: "Ver proyectos", que lleva a Proyectos.
 - **S1-F6 Visible en el teléfono por wifi.** `sprints/sprint-1-entrega.md` explica paso a paso cómo abrirla en el celular.
@@ -72,7 +72,7 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
   - 6 cupos tomados de 10 → 60 %.
 - **S2-F3 Pantalla Proyectos.** Lista de tarjetas con pestañas "Compra en conjunto" y "Financiamiento del pie".
   - Tarjeta de compra en conjunto: número protagonista = ahorro por unirse; debajo, cupos tomados ("6 de 10") con barra y fecha de cierre.
-  - Tarjeta de financiamiento del pie: número protagonista = precio en pesos; debajo, avance del financiamiento con barra y fecha de cierre.
+  - Tarjeta de financiamiento del pie: número protagonista = precio en pesos; debajo, cuánto del 15 % ya se reunió con inversionistas (barra) y fecha de cierre.
   - En modo arrendar solo aparecen proyectos cuyos departamentos rinden 4,5 % o más, con la etiqueta "Filtrado por IA".
   - Si no hay proyectos que cumplan, aparece un estado vacío con la acción "Cambiar a modo vivir".
 - **S2-F4 Detalle y unirse.** Al tocar una tarjeta se abre el detalle del proyecto.
@@ -118,7 +118,8 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
   - Barra de avance con hitos al 25 %, 50 %, 75 % y 100 %.
   - Acción principal: "Empezar a ahorrar".
 - **S4-F3 Propio o grupal.** El usuario elige ahorro propio o grupal.
-  - El grupal explica en una frase que cada persona retira exactamente lo que aportó y nadie queda debiendo.
+  - El grupal explica en una frase que cada persona junta su propio 5 % y retira exactamente lo que aportó: nadie aporta por otro ni queda debiendo.
+  - En ninguna parte de la pantalla se sugiere que el 5 % lo pongan inversionistas u otras personas.
   - No se menciona el auto en ninguna parte.
 - **S4-F4 Avance simulado.** Un botón "Simular un mes" suma el ahorro mensual al avance y lo guarda en `localStorage`.
 - **S4-F5 Lista de firma.** Al llegar a la meta aparece un mensaje de logro y la lista de lo que se firma en la escritura (crédito Bci, segunda hipoteca con los inversionistas, cuenta custodia), con checks y en palabras simples.

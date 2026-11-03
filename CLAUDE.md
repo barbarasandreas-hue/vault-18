@@ -5,8 +5,8 @@ App de Bci para que jóvenes profesionales compren su primer departamento sin te
 ## El modelo
 
 - **Bci** presta el 80% del precio con un crédito hipotecario mancomunado (el usuario y su pareja postulan juntos), a 30 años y 4,5%.
-- **Inversionistas** del marketplace prestan el 15% del precio a 10 años, a UF + 8%, con segunda hipoteca.
-- **El usuario** pone el 5% del precio más ≈ 2% de gastos de escritura, con ahorro propio o un ahorro grupal corto donde nadie queda debiendo.
+- **Inversionistas** del marketplace prestan el 15% del precio a 10 años, a UF + 8%, con segunda hipoteca: el usuario reúne ese 15% con su ayuda.
+- **El usuario** pone por sí solo el 5% del precio más ≈ 2% de gastos de escritura, con ahorro propio o un ahorro grupal corto donde cada uno junta su propio 5% y nadie queda debiendo.
 - **Compra en lote** (10% de descuento sobre el precio total) o **individual** (precio de lista).
 - **Para arrendar** (el arriendo entra a una cuenta custodia de Bci, que paga primero el dividendo, luego a los inversionistas, y el usuario completa la diferencia) o **para vivir** (el usuario paga todo, en vez de su arriendo actual).
 - La IA arma los lotes, filtra departamentos donde el arriendo rinde 4,5% o más al año y avisa cuándo conviene abonar. Nunca promete plusvalía.

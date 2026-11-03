@@ -32,12 +32,22 @@ Cada pantalla tiene **un número protagonista** y **una acción principal**.
 
 | | Compra en conjunto | Financiamiento del pie |
 |---|---|---|
-| **Qué es** | Un lote de departamentos que se compra entre varios compradores, con 10 % de descuento | Un departamento a precio de lista cuyo 15 % lo prestan inversionistas |
+| **Qué es** | Un lote de departamentos que se compra entre varios compradores, con 10 % de descuento | Un departamento a precio de lista; el usuario reúne su 15 % con ayuda de inversionistas |
 | **Quién se une** | Compradores (uno por departamento del lote) | El comprador del departamento y los inversionistas que financian |
 | **Qué muestra la tarjeta** | Ahorro por unirse, cupos tomados (por ejemplo, 6 de 10) y fecha de cierre | Precio, avance del financiamiento (por ejemplo, 60 % financiado) y fecha de cierre |
 | **Si no se completa** | El comprador puede pasar a compra individual (precio de lista) o salir sin costo | El comprador puede esperar o salir sin costo; el inversionista recupera su dinero |
 
 Los proyectos de compra en conjunto también se financian con inversionistas (cada departamento del lote tiene su 15 %).
+
+### Quién pone qué
+
+| Parte | Quién | Cómo |
+|---|---|---|
+| 80 % | Bci | Crédito hipotecario mancomunado (usuario y pareja), 30 años, 4,5 % |
+| 15 % | El usuario, con ayuda de inversionistas | Lo reúne en el marketplace: varios inversionistas aportan partes hasta completarlo; se devuelve en 10 años a UF + 8 % |
+| 5 % + gastos | El usuario, por sí solo | Con su propio ahorro. Puede ahorrar solo o en un ahorro grupal, pero en el grupo cada persona junta su propio 5 %: nadie aporta por otro ni queda debiendo |
+
+El 5 % nunca lo financian inversionistas ni otras personas.
 
 ### Lado del inversionista
 
@@ -137,9 +147,9 @@ Valores de referencia (UF $41.065, redondeados al peso):
 2. Los departamentos de referencia (UF 2.500 y UF 3.000) son precios de lista; en lote se les aplica el 10 % de descuento.
 3. La tasa mensual es la tasa anual dividida por 12.
 4. La rentabilidad del arriendo se mide con el arriendo **neto** sobre el precio pagado.
-5. El ahorro grupal es un grupo que ahorra junto con un compromiso común; al terminar, cada persona retira exactamente lo que aportó, así nadie queda debiendo.
+5. El ahorro grupal es un grupo que ahorra junto con un compromiso común, pero cada persona junta su propio 5 %; al terminar, cada una retira exactamente lo que aportó, así nadie queda debiendo. (Confirmado con el equipo.)
 6. La inversión mínima es UF 10.
 7. Los inversionistas y compradores de ejemplo no tienen nombres.
 8. "Avisar cuándo conviene abonar" se simula con una regla simple: cuando el usuario tiene un excedente (por ejemplo, un mes con arriendo mayor al total), la app sugiere abonar a la deuda de inversionistas, que tiene la tasa más alta.
-9. **Los dos tipos de proyecto del marketplace** se interpretan así: "compra en conjunto" es un lote que se completa con varios compradores y tiene 10 % de descuento; "financiamiento del pie" es un departamento a precio de lista cuyo 15 % lo prestan inversionistas. El ahorro grupal del 5 % se arma en Tu 5 %, no en el marketplace. **Confirmar con el equipo.**
+9. **Los dos tipos de proyecto del marketplace** se interpretan así: "compra en conjunto" es un lote que se completa con varios compradores y tiene 10 % de descuento; "financiamiento del pie" es un departamento a precio de lista en el que el usuario reúne su 15 % con ayuda de inversionistas. El 5 % lo pone el usuario por sí solo y se planifica en Tu 5 %, no en el marketplace. (Confirmado con el equipo.)
 10. Si una compra en conjunto no completa sus cupos antes de la fecha de cierre, el comprador puede pasar a compra individual o salir sin costo.
