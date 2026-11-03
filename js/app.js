@@ -24,8 +24,46 @@
     arriendoActual: null     // lo que paga hoy de arriendo, en pesos
   };
 
-  // S3-F3 guarda estas elecciones en el teléfono.
-  function guardarEstado() {}
+  // ---------- Elecciones que se recuerdan entre visitas (S3-F3) ----------
+  var CLAVE_ESTADO = 'primer-peldano-estado';
+  var GUARDADOS = ['modo', 'tipo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual'];
+  var VALORES_POR_DEFECTO = { modo: 'arrendar', tipo: 'lote', sueldoPropio: null, sueldoPareja: null, arriendoActual: null };
+
+  function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
+
+  // Lee lo guardado y descarta lo que no tenga sentido (por si el dato se dañó).
+  function leerEstado() {
+    try {
+      var g = JSON.parse(localStorage.getItem(CLAVE_ESTADO));
+      if (!g || typeof g !== 'object') return;
+      if (g.modo === 'arrendar' || g.modo === 'vivir') estado.modo = g.modo;
+      if (g.tipo === 'lote' || g.tipo === 'individual') estado.tipo = g.tipo;
+      estado.sueldoPropio = montoValido(g.sueldoPropio);
+      estado.sueldoPareja = montoValido(g.sueldoPareja);
+      estado.arriendoActual = montoValido(g.arriendoActual);
+    } catch (e) { /* sin localStorage: valores por defecto */ }
+    estado.pestana = estado.tipo === 'lote' ? 'conjunto' : 'financiamiento';
+  }
+
+  function guardarEstado() {
+    var g = {};
+    GUARDADOS.forEach(function (k) { g[k] = estado[k]; });
+    try { localStorage.setItem(CLAVE_ESTADO, JSON.stringify(g)); } catch (e) { /* queda en memoria */ }
+  }
+
+  // "Empezar de nuevo": borra todo lo guardado y vuelve a los valores por defecto.
+  function borrarTodo() {
+    try {
+      localStorage.removeItem(CLAVE_ESTADO);
+      localStorage.removeItem(CLAVE_COMPRA);
+    } catch (e) { /* nada guardado */ }
+    Object.keys(VALORES_POR_DEFECTO).forEach(function (k) { estado[k] = VALORES_POR_DEFECTO[k]; });
+    estado.compra = null;
+    estado.pestana = 'conjunto';
+    estado.pestanaMis = null;
+  }
+
+  leerEstado();
 
   function $(id) { return document.getElementById(id); }
   function poner(id, pesos) { $(id).textContent = formatoPesos(pesos); }
@@ -109,6 +147,7 @@
         estado[input.name] = input.value;
         // La pestaña de Proyectos sigue a cómo quiere comprar el usuario.
         if (input.name === 'tipo') estado.pestana = input.value === 'lote' ? 'conjunto' : 'financiamiento';
+        guardarEstado();
         renderInicio();
       });
     });
@@ -184,6 +223,7 @@
     });
     $('btn-modo-vivir').addEventListener('click', function () {
       estado.modo = 'vivir';
+      guardarEstado();
       renderProyectos();
     });
   }
