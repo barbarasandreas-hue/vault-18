@@ -153,3 +153,58 @@ test('en modo arrendar la IA deja proyectos en las dos pestañas', () => {
     assert.ok(visibles.length < datos.PROYECTOS.filter((p) => p.tipo === tipo).length, `el filtro no saca ninguno en ${tipo}`);
   }
 });
+
+// ---------- Postula: carga (S3-F1) ----------
+
+test('carga: arrendar en lote con $1.500.000 + $1.000.000 → 22,9 %, holgado', () => {
+  const total = c.escenario(2500, 'lote').totalMes;
+  const k = c.carga(total, 1500000, 1000000);
+  assert.strictEqual(c.formatoPorcentaje(k, 1), '22,9 %');
+  assert.strictEqual(c.nivelCarga(k), 'holgado');
+});
+
+test('carga: arrendar en lote con $1.200.000 + $800.000 → 28,6 %, en el límite', () => {
+  const total = c.escenario(2500, 'lote').totalMes;
+  const k = c.carga(total, 1200000, 800000);
+  assert.strictEqual(c.formatoPorcentaje(k, 1), '28,6 %');
+  assert.strictEqual(c.nivelCarga(k), 'limite');
+});
+
+test('carga: vivir individual con $1.500.000 + $1.000.000 → 30,1 %, no aprueba', () => {
+  const total = c.escenario(3000, 'individual').totalMes;
+  const k = c.carga(total, 1500000, 1000000);
+  assert.strictEqual(c.formatoPorcentaje(k, 1), '30,1 %');
+  assert.strictEqual(c.nivelCarga(k), 'no-aprueba');
+});
+
+test('carga: exactamente 25 % es holgado y exactamente 30 % es en el límite', () => {
+  assert.strictEqual(c.nivelCarga(c.carga(250000, 600000, 400000)), 'holgado');
+  assert.strictEqual(c.nivelCarga(c.carga(300000, 600000, 400000)), 'limite');
+  assert.strictEqual(c.nivelCarga(c.carga(300001, 600000, 400000)), 'no-aprueba');
+  assert.strictEqual(c.nivelCarga(c.carga(250001, 600000, 400000)), 'limite');
+});
+
+test('carga: sin ingreso no calcula', () => {
+  assert.strictEqual(c.carga(500000, 0, 0), null);
+  assert.strictEqual(c.carga(500000, null, null), null);
+  assert.strictEqual(c.nivelCarga(null), null);
+});
+
+test('mejor alternativa: elige la opción con la carga más baja, solo si mejora', () => {
+  const opciones = [{ id: 'a', totalMes: 700000 }, { id: 'b', totalMes: 520000 }, { id: 'c', totalMes: 600000 }];
+  const actual = c.carga(752318, 1500000, 1000000);
+  const m = c.mejorAlternativa(actual, opciones, 1500000, 1000000);
+  assert.strictEqual(m.id, 'b');
+  assert.strictEqual(c.formatoPorcentaje(m.carga, 1), '20,8 %');
+  assert.strictEqual(m.nivel, 'holgado');
+  assert.strictEqual(c.mejorAlternativa(0.1, opciones, 1500000, 1000000), null);
+});
+
+test('leer y mostrar montos de un campo', () => {
+  assert.strictEqual(c.leerMonto('1.500.000'), 1500000);
+  assert.strictEqual(c.leerMonto('$ 800.000'), 800000);
+  assert.strictEqual(c.leerMonto(''), null);
+  assert.strictEqual(c.leerMonto('abc'), null);
+  assert.strictEqual(c.leerMonto('0'), 0);
+  assert.strictEqual(c.formatoMiles(1500000), '1.500.000');
+});

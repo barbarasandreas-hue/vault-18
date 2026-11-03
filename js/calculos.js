@@ -183,7 +183,58 @@ function resumenProyecto(proyecto, departamentos, cuposExtra) {
   };
 }
 
+// ---------- Postula: carga del crédito ----------
+
+// Carga = total al mes / (sueldo propio + sueldo de la pareja). Fracción: 0.229 = 22,9 %.
+function carga(totalMes, sueldoPropio, sueldoPareja) {
+  var ingreso = (sueldoPropio || 0) + (sueldoPareja || 0);
+  if (ingreso <= 0) return null;
+  return totalMes / ingreso;
+}
+
+// Hasta 25 %: holgado. Sobre 25 % y hasta 30 %: en el límite. Sobre 30 %: no aprueba.
+var LIMITE_HOLGADO = 0.25;
+var LIMITE_MAXIMO = 0.30;
+var TOLERANCIA = 1e-9; // para que exactamente 25 % y 30 % no se pasen por redondeo binario
+function nivelCarga(c) {
+  if (c === null || c === undefined || isNaN(c)) return null;
+  if (c <= LIMITE_HOLGADO + TOLERANCIA) return 'holgado';
+  if (c <= LIMITE_MAXIMO + TOLERANCIA) return 'limite';
+  return 'no-aprueba';
+}
+
+// De varias opciones { id, totalMes }, la que deja la carga más baja,
+// solo si mejora la carga actual. Devuelve { id, carga, nivel } o null.
+function mejorAlternativa(cargaActual, opciones, sueldoPropio, sueldoPareja) {
+  var mejor = null;
+  opciones.forEach(function (o) {
+    var c = carga(o.totalMes, sueldoPropio, sueldoPareja);
+    if (c !== null && c < cargaActual && (!mejor || c < mejor.carga)) {
+      mejor = { id: o.id, carga: c, nivel: nivelCarga(c) };
+    }
+  });
+  return mejor;
+}
+
+// Lee lo que escribió el usuario en un campo de dinero: "1.500.000" → 1500000.
+// Vacío → null.
+function leerMonto(texto) {
+  var digitos = String(texto === undefined || texto === null ? '' : texto).replace(/\D/g, '');
+  if (digitos === '') return null;
+  return Number(digitos.slice(0, 12));
+}
+
+// 1500000 → "1.500.000" (sin el signo $, para mostrar dentro de un campo).
+function formatoMiles(n) {
+  return formatoPesos(n).replace('$', '');
+}
+
 if (typeof module !== 'undefined') module.exports = {
+  carga: carga,
+  nivelCarga: nivelCarga,
+  mejorAlternativa: mejorAlternativa,
+  leerMonto: leerMonto,
+  formatoMiles: formatoMiles,
   arriendoNeto: arriendoNeto,
   rentabilidad: rentabilidad,
   RENTABILIDAD_MINIMA: RENTABILIDAD_MINIMA,
