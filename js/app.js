@@ -1105,7 +1105,7 @@
 
     $('panel-compra').innerHTML =
       tarjetaCompacta(p, 'Total al mes', m.e.totalMes) + listaPasos(4) +
-      '<h2 class="h3 bloque" id="titulo-depto">Mi departamento <span class="texto-apoyo titulo-apoyo">mes ' + m.mes + ' desde que firmaste</span></h2>' +
+      '<h2 class="h3 bloque" id="titulo-departamento">Mi departamento <span class="texto-apoyo titulo-apoyo">mes ' + m.mes + ' desde que firmaste</span></h2>' +
       cuerpo + abono +
       // S5-F4: avance de las dos deudas.
       '<section class="tarjeta bloque" aria-labelledby="titulo-deudas">' +
