@@ -94,3 +94,22 @@ Antes de probar, en Perfil toca "Empezar de nuevo".
 
 - **Lo probé en Chrome emulando teléfonos de 360 × 640 y 390 × 844.** Recorrí el detalle, Invertir, Mis inversiones, Inicio (solo inversiones, y compra con inversiones) y Perfil. No hubo errores, scroll horizontal, textos cortados ni toques de menos de 44 px. Falta probarlo en un teléfono real.
 - **Un commit intermedio (`308340a`) quedó con una prueba que fallaba.** La expectativa estaba mal escrita: con menos de UF 10 por financiar, el error correcto es "máximo". La corregí en el commit siguiente (`53932f1`). Desde entonces solo hago commit si todas las pruebas pasan.
+
+---
+
+## Segunda entrega: correcciones de `evaluations/sprint-6.md`
+
+El Evaluator rechazó S6-F1 y aprobó S6-F2 a S6-F4. Estas son las correcciones; S6-F1 vuelve a `en progreso` para que la revise de nuevo.
+
+| # | Corrección | Qué se hizo | Medido |
+|---|---|---|---|
+| 1 | **Un proyecto con menos de UF 10 por financiar quedaba trabado** y decía "ya reunió su 15 %" aunque faltaba algo | Hay una función nueva, `inversionMinimaUF()`: el mínimo es UF 10, o lo que falta si queda menos. `validarInversion()` devuelve `completo` solo si falta 0. "Invertir aquí" aparece mientras falte algo, y la ayuda dice "Falta UF 5 para completar el 15 %: puedes invertir justo eso". | En Plaza Independencia, con UF 5 por financiar: UF 4 da error, UF 10 da error y UF 5 se acepta. Después dice "ya reunió su 15 %" y "Falta por financiar UF 0". La prueba que tenía mal escrita también quedó corregida. |
+| 2 | **La regla de la propia compra se saltaba en el orden inverso** | Si ya invertiste en un proyecto, el detalle no ofrece "Comprar aquí" ni "Cambiar mi compra a este proyecto". En su lugar dice "Ya invertiste en este proyecto, así que no puedes comprar aquí: tu 15 % lo financian otras personas" y ofrece "Ver mis inversiones". La sugerencia de Postula tampoco propone ese proyecto. | Probé los dos órdenes: invertir y después comprar queda bloqueado; comprar y después invertir sigue bloqueado como antes. |
+| 3 | **Decimales en UF:** "12,5" se convertía en UF 125 | El campo acepta un decimal con coma y punto de miles (`limpiarCampoUF()` y `leerMontoUF()` en `calculos.js`, con pruebas) y abre el teclado numérico con coma (`inputmode="decimal"`). Si escribes más de un decimal, se corta al primero. | "12,5" queda en UF 12,5 ($6.228 al mes), y UF 337,5 se puede invertir completa. |
+| 4 | **El enlace "Ver" medía 25 px de ancho** | Ahora toda la línea "Tus inversiones: cobrado a la fecha" es un enlace. | 350 × 78 px. |
+| 5 | **El `120` repetido y la barra doble** | `app.js` usa `SUPUESTOS.mesesInversionistas` y `SUPUESTOS.mesesBci` en vez de 120 y 360. En financiamiento del pie, la barra del 15 % aparece una sola vez. | Hay 1 barra en Plaza Independencia, y 2 en Alto Ñuñoa (cupos y 15 %), que son cosas distintas. |
+| 6 | Pendientes del Planner | El comando de pruebas, un 15 % por departamento en compra en conjunto y el departamento que se guarda en cada inversión. | No me corresponden. |
+
+**Verificación:**
+- Pasan 53 de 53 pruebas, sin errores de sintaxis ni palabras prohibidas.
+- Recorrí Invertir, Mis inversiones, el detalle e Inicio a 360 × 640 y 390 × 844: no hubo errores, scroll horizontal, textos cortados ni toques chicos.

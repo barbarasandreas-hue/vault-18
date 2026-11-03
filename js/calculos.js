@@ -390,12 +390,39 @@ function cuotaInversionUF(montoUF) {
   return cuotaFija(montoUF, SUPUESTOS.tasaInversionistas, SUPUESTOS.mesesInversionistas);
 }
 
-// Revisa un monto a invertir. Devuelve null si sirve, o 'vacio', 'minimo' o 'maximo'.
+// Mínimo para invertir: UF 10, o lo que falta si queda menos (así el proyecto se puede completar).
+function inversionMinimaUF(faltaUF) {
+  return Math.min(INVERSION_MINIMA_UF, Math.max(0, faltaUF));
+}
+
+// Revisa un monto a invertir. Devuelve null si sirve, o 'vacio', 'completo', 'minimo' o 'maximo'.
 function validarInversion(montoUF, faltaUF) {
+  if (!(faltaUF > 1e-9)) return 'completo';
   if (montoUF === null || montoUF === undefined || isNaN(montoUF)) return 'vacio';
-  if (montoUF < INVERSION_MINIMA_UF) return 'minimo';
+  if (montoUF < inversionMinimaUF(faltaUF) - 1e-9) return 'minimo';
   if (montoUF > faltaUF + 1e-9) return 'maximo';
   return null;
+}
+
+// 3. Campo de monto en UF con un decimal (coma decimal, punto de miles).
+// Deja el texto como se debe ver mientras se escribe: "12345,67" → "12.345,6".
+function limpiarCampoUF(texto) {
+  var t = String(texto === undefined || texto === null ? '' : texto).replace(/\./g, '');
+  var partes = t.split(',');
+  var entero = partes[0].replace(/\D/g, '').slice(0, 9);
+  var conComa = partes.length > 1;
+  var decimal = conComa ? partes.slice(1).join('').replace(/\D/g, '').slice(0, 1) : '';
+  if (entero === '' && !conComa) return '';
+  var miles = entero === '' ? '0' : formatoMiles(Number(entero));
+  return miles + (conComa ? ',' + decimal : '');
+}
+
+// Lee el monto en UF de ese campo: "12,5" → 12.5; "1.234" → 1234; vacío → null.
+function leerMontoUF(texto) {
+  var t = limpiarCampoUF(texto);
+  if (t === '' || t === '0,' ) return null;
+  var n = Number(t.replace(/\./g, '').replace(',', '.'));
+  return isNaN(n) ? null : n;
 }
 
 // Lo cobrado a la fecha por una lista de inversiones { montoUF, cuotasCobradas }, en UF.
@@ -416,7 +443,10 @@ if (typeof module !== 'undefined') module.exports = {
   INVERSION_MINIMA_UF: INVERSION_MINIMA_UF,
   faltaFinanciarUF: faltaFinanciarUF,
   cuotaInversionUF: cuotaInversionUF,
+  inversionMinimaUF: inversionMinimaUF,
   validarInversion: validarInversion,
+  limpiarCampoUF: limpiarCampoUF,
+  leerMontoUF: leerMontoUF,
   cobradoUF: cobradoUF,
   cuotaMensualTotalUF: cuotaMensualTotalUF,
   capacidadCompraUF: capacidadCompraUF,

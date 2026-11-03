@@ -121,7 +121,7 @@
         return lista.filter(function (x) {
           return x && buscarProyecto(x.proyectoId) && typeof x.montoUF === 'number' && x.montoUF > 0;
         }).map(function (x) {
-          return Object.assign({}, x, { cuotasCobradas: Math.max(0, Math.min(120, Number(x.cuotasCobradas) || 0)) });
+          return Object.assign({}, x, { cuotasCobradas: Math.max(0, Math.min(SUPUESTOS.mesesInversionistas, Number(x.cuotasCobradas) || 0)) });
         });
       }
     } catch (e) { /* sin localStorage o dato dañado */ }
@@ -313,9 +313,9 @@
         : '');
     if (estado.inversiones.length) {
       $('inicio-camino').insertAdjacentHTML('beforeend',
-        '<p class="linea-inversiones bloque"><span>Tus inversiones: cobrado a la fecha</span> <strong>' +
-        formatoPesos(ufAPesos(cobradoUF(estado.inversiones))) + '</strong> ' +
-        '<a class="enlace" href="#mis-proyectos/inversiones">Ver</a></p>');
+        '<a class="linea-inversiones bloque" href="#mis-proyectos/inversiones"><span>Tus inversiones: cobrado a la fecha</span> <strong>' +
+        formatoPesos(ufAPesos(cobradoUF(estado.inversiones))) + '</strong>' +
+        '<span class="linea-ver">Ver <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span></a>');
     }
   }
 
@@ -570,10 +570,15 @@
       ? 'Si el grupo no se completa: puedes pasar a compra individual o salir sin costo.'
       : 'Si no se reúne el 15\u00a0%: puedes esperar o salir sin costo.';
 
+    var invertiste = invertidoEn(p.id) > 0;
     var comprar;
     if (esMiCompra) {
       comprar = '<p class="aviso">Ya te uniste a este proyecto.</p>' +
         '<a href="#mis-proyectos" class="btn btn-primario btn-lg btn-bloque">Ver mi compra</a>';
+    } else if (invertiste) {
+      // El 15 % de un comprador lo financian otras personas: quien ya invirtió aquí no puede comprar aquí.
+      comprar = '<p class="aviso">Ya invertiste en este proyecto, así que no puedes comprar aquí: tu 15' + NBSP + '% lo financian otras personas.</p>' +
+        '<a href="#mis-proyectos/inversiones" class="btn btn-terciario btn-bloque">Ver mis inversiones</a>';
     } else if (estado.compra && estado.compra.paso === 4) {
       comprar = '<p class="aviso">Ya firmaste tu compra en ' + esc(buscarProyecto(estado.compra.proyectoId).nombre) + '.</p>';
     } else if (estado.compra) {
@@ -632,13 +637,13 @@
           '<li><span>Garantía</span><strong>Segunda hipoteca</strong></li>' +
           '<li><span>Falta por financiar</span><strong>' + formatoUF(r.faltaUF) + ' = ' + formatoPesos(ufAPesos(r.faltaUF)) + '</strong></li>' +
         '</ul>' +
-        barraAvance('15\u00a0% reunido con inversionistas', formatoPorcentaje(r.avanceFinanciamiento, 0), r.avanceFinanciamiento) +
+        (conjunto ? barraAvance('15\u00a0% reunido con inversionistas', formatoPorcentaje(r.avanceFinanciamiento, 0), r.avanceFinanciamiento) : '') +
         '<p class="frase-cierre">Bci cobra el arriendo en una cuenta custodia y paga a los inversionistas después del dividendo.</p>' +
       '</section>' +
 
       '<div class="acciones">' +
         comprar +
-        (r.faltaUF >= INVERSION_MINIMA_UF && !esMiCompra
+        (r.faltaUF > 0 && !esMiCompra
           ? '<a href="#invertir/' + esc(p.id) + '" class="btn btn-secundario-dark btn-bloque">Invertir aquí</a>'
           : '<p class="texto-apoyo">' + (esMiCompra ? 'En tu propia compra no puedes invertir: tu parte es el 5\u00a0%.'
             : 'Este proyecto ya reunió su 15\u00a0%.') + '</p>') +
@@ -679,7 +684,7 @@
       '</header>' +
       '<p class="ficha-inversion"><span>UF + 8 % al año</span>' + SEP + '<span>10 años</span>' + SEP + '<span>Segunda hipoteca</span></p>';
 
-    if (esMiCompra || r.faltaUF < INVERSION_MINIMA_UF) {
+    if (esMiCompra || validarInversion(0, r.faltaUF) === 'completo') {
       contenedor.innerHTML = cabecera +
         '<p class="aviso bloque">' + (esMiCompra
           ? 'Este es el proyecto de tu compra: aquí tu parte es el 5 %, que juntas tú.'
@@ -692,9 +697,10 @@
       '<div class="campo">' +
         '<label for="monto-uf">¿Cuánto quieres invertir?</label>' +
         '<div class="campo-caja campo-uf"><span class="prefijo" aria-hidden="true">UF</span>' +
-        '<input id="monto-uf" type="text" inputmode="numeric" autocomplete="off" aria-describedby="monto-uf-ayuda monto-uf-error"></div>' +
-        '<p class="texto-apoyo ayuda-campo" id="monto-uf-ayuda">Desde ' + formatoUF(INVERSION_MINIMA_UF) +
-          ' hasta ' + formatoUF(r.faltaUF) + ', lo que falta por financiar.</p>' +
+        '<input id="monto-uf" type="text" inputmode="decimal" autocomplete="off" aria-describedby="monto-uf-ayuda monto-uf-error"></div>' +
+        '<p class="texto-apoyo ayuda-campo" id="monto-uf-ayuda">' + (r.faltaUF < INVERSION_MINIMA_UF
+          ? 'Falta ' + formatoUF(r.faltaUF) + ' para completar el 15' + NBSP + '%: puedes invertir justo eso.'
+          : 'Desde ' + formatoUF(INVERSION_MINIMA_UF) + ' hasta ' + formatoUF(r.faltaUF) + ', lo que falta por financiar.') + '</p>' +
         '<p class="error" id="monto-uf-error" hidden><svg aria-hidden="true"><use href="#i-no"/></svg><span></span></p>' +
       '</div>' +
       '<div id="invertir-resultado" aria-live="polite"></div>' +
@@ -706,8 +712,10 @@
     var dibujar = function () {
       var error = validarInversion(monto, r.faltaUF);
       var mensajes = {
-        vacio: 'Escribe cuánto quieres invertir, desde ' + formatoUF(INVERSION_MINIMA_UF) + '.',
-        minimo: 'La inversión mínima es ' + formatoUF(INVERSION_MINIMA_UF) + '.',
+        vacio: 'Escribe cuánto quieres invertir, desde ' + formatoUF(inversionMinimaUF(r.faltaUF)) + '.',
+        minimo: r.faltaUF < INVERSION_MINIMA_UF
+          ? 'Falta ' + formatoUF(r.faltaUF) + ' para completar el 15' + NBSP + '%: invierte justo eso.'
+          : 'La inversión mínima es ' + formatoUF(INVERSION_MINIMA_UF) + '.',
         maximo: 'Falta financiar ' + formatoUF(r.faltaUF) + ': no puedes invertir más que eso.'
       };
       var mostrar = error && (error !== 'vacio' || tocado);
@@ -734,8 +742,8 @@
     var habia = false;
     $('monto-uf').addEventListener('input', function () {
       var input = $('monto-uf');
-      monto = leerMonto(input.value);
-      input.value = monto === null ? '' : formatoMiles(monto);
+      input.value = limpiarCampoUF(input.value);
+      monto = leerMontoUF(input.value);
       dibujar();
       var hay = !validarInversion(monto, r.faltaUF);
       if (hay && !habia) $('invertir-resultado').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -773,7 +781,7 @@
         '<a class="enlace" href="#proyecto/' + esc(p.id) + '">' + esc(p.nombre) + '</a>' +
         '<p class="inversion-fila"><span>Invertiste</span><strong>' + formatoUF(x.montoUF) + '</strong></p>' +
         '<p class="inversion-fila"><span>Recibes al mes</span><strong>' + formatoPesos(cuota) + '</strong></p>' +
-        barraAvance('Cuotas cobradas', x.cuotasCobradas + ' de 120', avance(x.cuotasCobradas, 120)) +
+        barraAvance('Cuotas cobradas', x.cuotasCobradas + ' de ' + SUPUESTOS.mesesInversionistas, avance(x.cuotasCobradas, SUPUESTOS.mesesInversionistas)) +
       '</li>';
     }).join('');
 
@@ -791,7 +799,7 @@
 
     $('btn-cobrar-mes').addEventListener('click', function () {
       estado.inversiones = estado.inversiones.map(function (x) {
-        return Object.assign({}, x, { cuotasCobradas: Math.min(120, (x.cuotasCobradas || 0) + 1) });
+        return Object.assign({}, x, { cuotasCobradas: Math.min(SUPUESTOS.mesesInversionistas, (x.cuotasCobradas || 0) + 1) });
       });
       guardarInversiones();
       renderMisInversiones();
@@ -870,7 +878,7 @@
   function sugerencia(p, cargaActual) {
     var total = resumen(p).escenario.totalMes;
     var opciones = PROYECTOS.filter(function (x) {
-      return x.id !== p.id && resumen(x).cuposLibres > 0 && (estado.modo !== 'arrendar' || resumen(x).pasaFiltro);
+      return x.id !== p.id && invertidoEn(x.id) === 0 && resumen(x).cuposLibres > 0 && (estado.modo !== 'arrendar' || resumen(x).pasaFiltro);
     }).map(function (x) { return { id: x.id, totalMes: resumen(x).escenario.totalMes }; });
     var mejor = mejorAlternativa(cargaActual, opciones, estado.sueldoPropio, estado.sueldoPareja);
 
@@ -1225,8 +1233,8 @@
       puedeAbonar: arrendar && cascada.excedente > 0 && !abonosDe(c).some(function (x) { return x.mes === mes; }),
       saldoBci: ufAPesos(saldoBciUF(e.precioUF, mes)),
       saldoInversionistas: ufAPesos(saldoInversionistasUF(e.precioUF, mes, abonosDe(c))),
-      avanceBci: avance(mes, 360),
-      avanceInversionistas: avance(mes, 120)
+      avanceBci: avance(mes, SUPUESTOS.mesesBci),
+      avanceInversionistas: avance(mes, SUPUESTOS.mesesInversionistas)
     };
   }
 
@@ -1325,8 +1333,8 @@
       // S5-F4: avance de las dos deudas.
       '<section class="tarjeta bloque" aria-labelledby="titulo-deudas">' +
         '<h2 class="h4" id="titulo-deudas">Avance de tu deuda</h2>' +
-        barraDeuda('Crédito Bci (30 años)', m.mes, 360, m.saldoBci, m.avanceBci) +
-        barraDeuda('Inversionistas (10 años)', m.mes, 120, m.saldoInversionistas, m.avanceInversionistas) +
+        barraDeuda('Crédito Bci (30 años)', m.mes, SUPUESTOS.mesesBci, m.saldoBci, m.avanceBci) +
+        barraDeuda('Inversionistas (10 años)', m.mes, SUPUESTOS.mesesInversionistas, m.saldoInversionistas, m.avanceInversionistas) +
         '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
       '</section>' +
       '<div class="acciones">' +

@@ -248,7 +248,7 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 5 | S5-F4 Avance de la deuda | aprobada |
 | 5 | S5-F5 Aviso de abono | aprobada |
 | 5 | S5-F6 Inicio: Mi camino | aprobada |
-| 6 | S6-F1 Invertir aquí | rechazada |
+| 6 | S6-F1 Invertir aquí | en progreso |
 | 6 | S6-F2 Información para invertir | aprobada |
 | 6 | S6-F3 Invertir | aprobada |
 | 6 | S6-F4 Mis inversiones | aprobada |

@@ -383,8 +383,15 @@ test('invertir: mínimo UF 10 y máximo lo que falta por financiar', () => {
   assert.strictEqual(c.validarInversion(10, 100), null);
   assert.strictEqual(c.validarInversion(100, 100), null);
   assert.strictEqual(c.validarInversion(101, 100), 'maximo');
-  // Si falta menos que el mínimo, cualquier monto válido supera lo que falta.
+  // Si falta menos que UF 10, el mínimo es lo que falta: el proyecto se puede completar.
+  assert.strictEqual(c.inversionMinimaUF(5), 5);
+  assert.strictEqual(c.inversionMinimaUF(337.5), 10);
+  assert.strictEqual(c.validarInversion(5, 5), null);
+  assert.strictEqual(c.validarInversion(4, 5), 'minimo');
   assert.strictEqual(c.validarInversion(10, 5), 'maximo');
+  // Solo sin nada por financiar el proyecto está completo.
+  assert.strictEqual(c.validarInversion(10, 0), 'completo');
+  assert.strictEqual(c.validarInversion(null, 0), 'completo');
 });
 
 test('invertir: el avance del financiamiento sube con lo invertido', () => {
@@ -405,4 +412,18 @@ test('mis inversiones: cobrado a la fecha y cuota mensual', () => {
   assert.ok(Math.abs(c.cobradoUF([{ montoUF: 10, cuotasCobradas: 150 }]) - c.cuotaInversionUF(10) * 120) < 1e-9);
   assert.strictEqual(c.cuotaMensualTotalUF([{ montoUF: 10, cuotasCobradas: 120 }]), 0);
   assert.strictEqual(c.cobradoUF([]), 0);
+});
+
+test('campo de UF: acepta un decimal con coma y punto de miles', () => {
+  assert.strictEqual(c.limpiarCampoUF('12,5'), '12,5');
+  assert.strictEqual(c.limpiarCampoUF('12,56'), '12,5');
+  assert.strictEqual(c.limpiarCampoUF('1234'), '1.234');
+  assert.strictEqual(c.limpiarCampoUF('1.234,5'), '1.234,5');
+  assert.strictEqual(c.limpiarCampoUF('12,'), '12,');
+  assert.strictEqual(c.limpiarCampoUF(''), '');
+  assert.strictEqual(c.leerMontoUF('12,5'), 12.5);
+  assert.strictEqual(c.leerMontoUF('337,5'), 337.5);
+  assert.strictEqual(c.leerMontoUF('1.234'), 1234);
+  assert.strictEqual(c.leerMontoUF(''), null);
+  assert.strictEqual(c.validarInversion(c.leerMontoUF('337,5'), 337.5), null);
 });
