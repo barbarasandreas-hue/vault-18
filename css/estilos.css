@@ -606,7 +606,7 @@ button { font: inherit; }
   bottom: calc(var(--barra-alto) + env(safe-area-inset-bottom) + 8px);
   z-index: 5;
   padding: 8px 0;
-  margin: 16px 0 -8px;
+  margin: 16px 0 4px;
   background: linear-gradient(to bottom, rgba(246, 247, 248, 0), var(--gray-light) 30%);
 }
 
@@ -685,9 +685,26 @@ button { font: inherit; }
 .sugerencia-ok .h5 { color: var(--green-dark); margin-bottom: 4px; }
 .btn[aria-disabled="true"] { pointer-events: auto; }
 
+/* ---------- Invertir ---------- */
+.ficha-inversion { margin: -4px 0 16px; color: var(--gray-dark); font-weight: 600; }
+.campo-uf input { padding-left: 48px; }
+.datos-inversion { list-style: none; margin: 4px 0 12px; padding: 0; }
+.datos-inversion li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--gray-light); }
+.datos-inversion li:first-child { border-top: 0; }
+.datos-inversion span { color: var(--gray-semidark); }
+.datos-inversion strong { text-align: right; }
+.lista-inversiones { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; }
+.inversion .enlace { margin-top: -8px; }
+.inversion-fila { display: flex; justify-content: space-between; margin: 0 0 6px; }
+.inversion-fila span { color: var(--gray-semidark); }
+.inversion .avance { margin-top: 8px; }
+.linea-inversiones { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 12px 16px; border-radius: var(--radio); background: var(--white); border: 1px solid var(--gray-semilight); }
+.linea-inversiones span { color: var(--gray-semidark); }
+
 /* ---------- Perfil ---------- */
 #form-perfil .selector legend { font-size: 16px; color: var(--gray-dark); }
-.ayuda-campo { margin: -8px 0 0; font-size: 14px; }
+.ayuda-campo { margin: 4px 0 0; font-size: 14px; }
+#form-perfil .ayuda-campo { margin-top: -8px; }
 .confirmar { display: grid; gap: 8px; justify-items: center; padding: 12px; border-radius: var(--radio); background: var(--red-20); }
 .confirmar[hidden] { display: none; }
 .confirmar p { margin: 0; color: var(--gray-dark); }

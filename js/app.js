@@ -8,10 +8,12 @@
     'proyectos': { pantalla: 'proyectos', seccion: 'proyectos' },
     'proyecto': { pantalla: 'proyecto', seccion: 'proyectos' },
     'mis-proyectos': { pantalla: 'mis-proyectos', seccion: 'mis-proyectos' },
+    'invertir': { pantalla: 'invertir', seccion: 'proyectos' },
     'perfil': { pantalla: 'perfil', seccion: 'perfil' }
   };
 
   var CLAVE_COMPRA = 'primer-peldano-compra';
+  var CLAVE_INVERSIONES = 'primer-peldano-inversiones';
 
   var estado = {
     modo: 'arrendar',        // 'arrendar' o 'vivir'
@@ -25,7 +27,8 @@
     tipoAhorro: 'propio',    // 'propio' o 'grupal'
     ahorrado: 0,             // lo que lleva juntado (simulado)
     ahorroIniciado: false,   // si ya tocó "Empezar a ahorrar"
-    meAlcanza: false         // filtro "Me alcanza" de Proyectos
+    meAlcanza: false,        // filtro "Me alcanza" de Proyectos
+    inversiones: leerInversiones() // [{ id, proyectoId, montoUF, fecha, cuotasCobradas }]
   };
 
   // ---------- Elecciones que se recuerdan entre visitas (S3-F3) ----------
@@ -64,9 +67,11 @@
     try {
       localStorage.removeItem(CLAVE_ESTADO);
       localStorage.removeItem(CLAVE_COMPRA);
+      localStorage.removeItem(CLAVE_INVERSIONES);
     } catch (e) { /* nada guardado */ }
     Object.keys(VALORES_POR_DEFECTO).forEach(function (k) { estado[k] = VALORES_POR_DEFECTO[k]; });
     estado.compra = null;
+    estado.inversiones = [];
     estado.pestana = 'conjunto';
     estado.pestanaMis = null;
   }
@@ -108,6 +113,35 @@
     } catch (e) { /* queda solo en memoria */ }
   }
 
+  // Inversiones guardadas en el teléfono (S6-F4). Se descartan las que no tengan sentido.
+  function leerInversiones() {
+    try {
+      var lista = JSON.parse(localStorage.getItem(CLAVE_INVERSIONES));
+      if (Array.isArray(lista)) {
+        return lista.filter(function (x) {
+          return x && buscarProyecto(x.proyectoId) && typeof x.montoUF === 'number' && x.montoUF > 0;
+        }).map(function (x) {
+          return Object.assign({}, x, { cuotasCobradas: Math.max(0, Math.min(120, Number(x.cuotasCobradas) || 0)) });
+        });
+      }
+    } catch (e) { /* sin localStorage o dato dañado */ }
+    return [];
+  }
+
+  function guardarInversiones() {
+    try { localStorage.setItem(CLAVE_INVERSIONES, JSON.stringify(estado.inversiones)); } catch (e) { /* queda en memoria */ }
+  }
+
+  function agregarInversion(inv) {
+    estado.inversiones = estado.inversiones.concat([inv]);
+    guardarInversiones();
+  }
+
+  // Lo que el usuario invirtió en un proyecto desde este teléfono, en UF.
+  function invertidoEn(proyectoId) {
+    return estado.inversiones.reduce(function (s, x) { return s + (x.proyectoId === proyectoId ? x.montoUF : 0); }, 0);
+  }
+
   // ---------- Textos de apoyo ----------
   // Espacio que no se corta: el número y su unidad quedan siempre juntos.
   var NBSP = '\u00a0';
@@ -128,7 +162,7 @@
   }
 
   function resumen(proyecto) {
-    return resumenProyecto(proyecto, departamentosDe(proyecto.id), cuposExtra(proyecto));
+    return resumenProyecto(proyecto, departamentosDe(proyecto.id), cuposExtra(proyecto), invertidoEn(proyecto.id));
   }
 
   function barraAvance(texto, detalle, fraccion) {
@@ -277,7 +311,32 @@
             }).join('') + '</ul>' +
           '</section>'
         : '');
-    // Las inversiones (lo cobrado a la fecha) se agregan en el Sprint 6.
+    if (estado.inversiones.length) {
+      $('inicio-camino').insertAdjacentHTML('beforeend',
+        '<p class="linea-inversiones bloque"><span>Tus inversiones: cobrado a la fecha</span> <strong>' +
+        formatoPesos(ufAPesos(cobradoUF(estado.inversiones))) + '</strong> ' +
+        '<a class="enlace" href="#mis-proyectos/inversiones">Ver</a></p>');
+    }
+  }
+
+  // Solo inversiones, sin compra: el número es lo cobrado a la fecha (S6-F4).
+  function renderSoloInversiones() {
+    var lista = estado.inversiones;
+    $('inicio-camino').innerHTML =
+      '<header class="encabezado">' + FIGURAS +
+        '<h1 id="titulo-inicio" class="h2">Tus inversiones</h1>' +
+        '<p class="texto-apoyo">Prestas parte del 15\u00a0% de otros compradores, a UF + 8\u00a0%.</p>' +
+      '</header>' +
+      '<section class="tarjeta proximo" aria-label="Lo cobrado">' +
+        '<p class="etiqueta">Cobrado a la fecha</p>' +
+        '<strong class="numero display-2">' + formatoPesos(ufAPesos(cobradoUF(lista))) + '</strong>' +
+        '<p class="texto-apoyo">' + plural(lista.length, 'inversión', 'inversiones') + SEP + 'recibes ' +
+          formatoPesos(ufAPesos(cuotaMensualTotalUF(lista))) + ' al mes.</p>' +
+      '</section>' +
+      '<div class="accion">' +
+        '<a href="#mis-proyectos/inversiones" class="btn btn-primario btn-lg btn-bloque">Ver mis inversiones</a>' +
+      '</div>' +
+      '<p class="texto-centro"><a class="enlace" href="#proyectos">Ver proyectos para comprar</a></p>';
   }
 
   // ---------- Inicio: ¿Cuánto puedo comprar? (S5-F0) ----------
@@ -376,11 +435,11 @@
   }
 
   function renderInicio() {
-    var conCompra = !!estado.compra;
+    var conCompra = !!estado.compra || estado.inversiones.length > 0;
     $('inicio-capacidad').hidden = conCompra;
     $('inicio-camino').hidden = !conCompra;
     // Solo un bloque existe a la vez, para que no se repita el título de la pantalla.
-    if (conCompra) { $('inicio-capacidad').innerHTML = ''; renderCamino(); }
+    if (conCompra) { $('inicio-capacidad').innerHTML = ''; estado.compra ? renderCamino() : renderSoloInversiones(); }
     else { $('inicio-camino').innerHTML = ''; renderCapacidad(); }
   }
 
@@ -561,15 +620,28 @@
 
       '<div class="tarjeta bloque">' +
         avanceDe(p, r) +
-        (conjunto ? '' : '<p class="cierre">' + formatoPesos(r.financiado) + ' de ' + formatoPesos(r.porFinanciar) + '</p>') +
         '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
         '<p class="frase-cierre">' + frase + '</p>' +
       '</div>' +
 
+      '<section class="tarjeta bloque" aria-labelledby="titulo-para-invertir">' +
+        '<h2 class="h5" id="titulo-para-invertir">Para invertir</h2>' +
+        '<ul class="datos-inversion">' +
+          '<li><span>Rentabilidad</span><strong>UF + 8\u00a0% al año</strong></li>' +
+          '<li><span>Plazo</span><strong>10 años</strong></li>' +
+          '<li><span>Garantía</span><strong>Segunda hipoteca</strong></li>' +
+          '<li><span>Falta por financiar</span><strong>' + formatoUF(r.faltaUF) + ' = ' + formatoPesos(ufAPesos(r.faltaUF)) + '</strong></li>' +
+        '</ul>' +
+        barraAvance('15\u00a0% reunido con inversionistas', formatoPorcentaje(r.avanceFinanciamiento, 0), r.avanceFinanciamiento) +
+        '<p class="frase-cierre">Bci cobra el arriendo en una cuenta custodia y paga a los inversionistas después del dividendo.</p>' +
+      '</section>' +
+
       '<div class="acciones">' +
         comprar +
-        '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-invertir" aria-controls="aviso-invertir">Invertir aquí</button>' +
-        '<p class="aviso" id="aviso-invertir" aria-live="polite" hidden>Disponible pronto: invertir llega en una próxima versión.</p>' +
+        (r.faltaUF >= INVERSION_MINIMA_UF && !esMiCompra
+          ? '<a href="#invertir/' + esc(p.id) + '" class="btn btn-secundario-dark btn-bloque">Invertir aquí</a>'
+          : '<p class="texto-apoyo">' + (esMiCompra ? 'En tu propia compra no puedes invertir: tu parte es el 5\u00a0%.'
+            : 'Este proyecto ya reunió su 15\u00a0%.') + '</p>') +
       '</div>';
 
     var botonComprar = $('btn-comprar');
@@ -586,8 +658,145 @@
         location.hash = '#mis-proyectos';
       });
     }
-    $('btn-invertir').addEventListener('click', function () {
-      $('aviso-invertir').hidden = false;
+  }
+
+  // ---------- Invertir (S6-F1 y S6-F3) ----------
+  function renderInvertir(id) {
+    var p = buscarProyecto(id);
+    var contenedor = $('invertir-contenido');
+    $('invertir-volver').setAttribute('href', p ? '#proyecto/' + encodeURIComponent(p.id) : '#proyectos');
+    if (!p) {
+      contenedor.innerHTML = '<div class="vacio"><h1 id="titulo-invertir" class="h3">No encontramos este proyecto</h1>' +
+        '<div class="acciones"><a href="#proyectos" class="btn btn-primario btn-bloque">Ver proyectos</a></div></div>';
+      return;
+    }
+    var r = resumen(p);
+    var esMiCompra = estado.compra && estado.compra.proyectoId === p.id;
+    var cabecera =
+      '<header class="encabezado">' +
+        '<h1 id="titulo-invertir" class="h2">Invertir</h1>' +
+        '<p class="texto-apoyo">' + esc(p.nombre) + SEP + esc(p.comuna) + '</p>' +
+      '</header>' +
+      '<p class="ficha-inversion"><span>UF + 8 % al año</span>' + SEP + '<span>10 años</span>' + SEP + '<span>Segunda hipoteca</span></p>';
+
+    if (esMiCompra || r.faltaUF < INVERSION_MINIMA_UF) {
+      contenedor.innerHTML = cabecera +
+        '<p class="aviso bloque">' + (esMiCompra
+          ? 'Este es el proyecto de tu compra: aquí tu parte es el 5 %, que juntas tú.'
+          : 'Este proyecto ya reunió su 15 %: no queda nada por financiar.') + '</p>' +
+        '<div class="acciones"><a href="#proyectos" class="btn btn-primario btn-bloque">Ver otros proyectos</a></div>';
+      return;
+    }
+
+    contenedor.innerHTML = cabecera +
+      '<div class="campo">' +
+        '<label for="monto-uf">¿Cuánto quieres invertir?</label>' +
+        '<div class="campo-caja campo-uf"><span class="prefijo" aria-hidden="true">UF</span>' +
+        '<input id="monto-uf" type="text" inputmode="numeric" autocomplete="off" aria-describedby="monto-uf-ayuda monto-uf-error"></div>' +
+        '<p class="texto-apoyo ayuda-campo" id="monto-uf-ayuda">Desde ' + formatoUF(INVERSION_MINIMA_UF) +
+          ' hasta ' + formatoUF(r.faltaUF) + ', lo que falta por financiar.</p>' +
+        '<p class="error" id="monto-uf-error" hidden><svg aria-hidden="true"><use href="#i-no"/></svg><span></span></p>' +
+      '</div>' +
+      '<div id="invertir-resultado" aria-live="polite"></div>' +
+      '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-confirmar" aria-describedby="confirmar-explica">Confirmar</button></div>' +
+      '<p class="texto-apoyo" id="confirmar-explica">Es una inversión simulada: no se mueve dinero real.</p>';
+
+    var monto = null;
+    var tocado = false;
+    var dibujar = function () {
+      var error = validarInversion(monto, r.faltaUF);
+      var mensajes = {
+        vacio: 'Escribe cuánto quieres invertir, desde ' + formatoUF(INVERSION_MINIMA_UF) + '.',
+        minimo: 'La inversión mínima es ' + formatoUF(INVERSION_MINIMA_UF) + '.',
+        maximo: 'Falta financiar ' + formatoUF(r.faltaUF) + ': no puedes invertir más que eso.'
+      };
+      var mostrar = error && (error !== 'vacio' || tocado);
+      var caja = $('monto-uf-error');
+      caja.hidden = !mostrar;
+      caja.querySelector('span').textContent = mostrar ? mensajes[error] : '';
+      $('monto-uf').setAttribute('aria-invalid', String(!!mostrar));
+      $('btn-confirmar').disabled = !!error;
+
+      if (error) {
+        $('invertir-resultado').innerHTML = '<p class="sin-numero">Escribe un monto para ver cuánto recibirás al mes.</p>';
+        return;
+      }
+      var cuota = cuotaInversionUF(monto);
+      $('invertir-resultado').innerHTML =
+        '<div class="tarjeta protagonista">' +
+          '<p class="etiqueta">Recibirás al mes</p>' +
+          '<strong class="numero display-2">' + formatoPesos(ufAPesos(cuota)) + '</strong>' +
+          '<p class="texto-apoyo">Durante 10 años, por invertir ' + formatoUF(monto) + ' (' + formatoPesos(ufAPesos(monto)) +
+            ' hoy). La cuota está en UF: sube con la UF.</p>' +
+        '</div>';
+    };
+
+    var habia = false;
+    $('monto-uf').addEventListener('input', function () {
+      var input = $('monto-uf');
+      monto = leerMonto(input.value);
+      input.value = monto === null ? '' : formatoMiles(monto);
+      dibujar();
+      var hay = !validarInversion(monto, r.faltaUF);
+      if (hay && !habia) $('invertir-resultado').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      habia = hay;
+    });
+    $('monto-uf').addEventListener('blur', function () { tocado = true; dibujar(); });
+    $('btn-confirmar').addEventListener('click', function () {
+      tocado = true;
+      dibujar();
+      if ($('btn-confirmar').disabled) { $('monto-uf').focus(); return; }
+      agregarInversion({ id: 'inv-' + Date.now(), proyectoId: p.id, montoUF: monto, fecha: FECHA_REFERENCIA, cuotasCobradas: 0 });
+      anunciar('Invertiste ' + formatoUF(monto) + ' en ' + p.nombre + '.');
+      location.hash = '#mis-proyectos/inversiones';
+    });
+    dibujar();
+  }
+
+  // ---------- Mis inversiones (S6-F4) ----------
+  function renderMisInversiones() {
+    var lista = estado.inversiones;
+    if (!lista.length) {
+      $('panel-inversiones').innerHTML =
+        '<div class="vacio">' +
+          '<svg aria-hidden="true"><use href="#i-pronto"/></svg>' +
+          '<h2 class="h3">Aún no tienes inversiones</h2>' +
+          '<p class="texto-apoyo">En cada proyecto puedes elegir "Invertir aquí".</p>' +
+          '<div class="acciones"><a href="#proyectos" class="btn btn-primario btn-bloque">Ver proyectos</a></div>' +
+        '</div>';
+      return;
+    }
+    var tarjetas = lista.map(function (x) {
+      var p = buscarProyecto(x.proyectoId);
+      var cuota = ufAPesos(cuotaInversionUF(x.montoUF));
+      return '<li class="tarjeta inversion">' +
+        '<a class="enlace" href="#proyecto/' + esc(p.id) + '">' + esc(p.nombre) + '</a>' +
+        '<p class="inversion-fila"><span>Invertiste</span><strong>' + formatoUF(x.montoUF) + '</strong></p>' +
+        '<p class="inversion-fila"><span>Recibes al mes</span><strong>' + formatoPesos(cuota) + '</strong></p>' +
+        barraAvance('Cuotas cobradas', x.cuotasCobradas + ' de 120', avance(x.cuotasCobradas, 120)) +
+      '</li>';
+    }).join('');
+
+    $('panel-inversiones').innerHTML =
+      '<div class="tarjeta protagonista">' +
+        '<p class="etiqueta">Cobrado a la fecha</p>' +
+        '<strong class="numero display-3">' + formatoPesos(ufAPesos(cobradoUF(lista))) + '</strong>' +
+        '<p class="texto-apoyo">' + plural(lista.length, 'inversión', 'inversiones') + SEP + 'recibes ' +
+          formatoPesos(ufAPesos(cuotaMensualTotalUF(lista))) + ' al mes.</p>' +
+      '</div>' +
+      '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-cobrar-mes">Simular un mes</button></div>' +
+      '<p class="texto-apoyo">Es una simulación: cobras una cuota por cada inversión.</p>' +
+      '<ul class="lista-inversiones">' + tarjetas + '</ul>' +
+      '<p class="texto-centro"><a class="enlace" href="#proyectos">Invertir en otro proyecto</a></p>';
+
+    $('btn-cobrar-mes').addEventListener('click', function () {
+      estado.inversiones = estado.inversiones.map(function (x) {
+        return Object.assign({}, x, { cuotasCobradas: Math.min(120, (x.cuotasCobradas || 0) + 1) });
+      });
+      guardarInversiones();
+      renderMisInversiones();
+      anunciar('Cobraste un mes. Llevas ' + formatoPesos(ufAPesos(cobradoUF(estado.inversiones))) + ' a la fecha.');
+      $('btn-cobrar-mes').focus();
     });
   }
 
@@ -1202,7 +1411,7 @@
 
   function renderMisProyectos() {
     var tieneCompra = !!estado.compra;
-    var tieneInversiones = false; // Las inversiones llegan en el Sprint 6.
+    var tieneInversiones = estado.inversiones.length > 0;
     var tieneAlgo = tieneCompra || tieneInversiones;
 
     $('mis-vacio').hidden = tieneAlgo;
@@ -1218,6 +1427,7 @@
     $('panel-compra').hidden = estado.pestanaMis !== 'compra';
     $('panel-inversiones').hidden = estado.pestanaMis !== 'inversiones';
 
+    renderMisInversiones();
     if (tieneCompra) renderMiCompra();
     else $('panel-compra').innerHTML = '<div class="vacio"><h2 class="h3">Aún no tienes una compra</h2>' +
       '<div class="acciones"><a href="#proyectos" class="btn btn-primario btn-bloque">Ver proyectos</a></div></div>';
@@ -1260,7 +1470,7 @@
       '</form>' +
       '<section class="tarjeta bloque" aria-labelledby="titulo-reinicio">' +
         '<h2 class="h4" id="titulo-reinicio">Empezar de nuevo</h2>' +
-        '<p class="texto-apoyo">Borra tu compra y tus datos de este teléfono, y vuelve al simulador.</p>' +
+        '<p class="texto-apoyo">Borra tu compra, tus inversiones y tus datos de este teléfono, y vuelve al inicio.</p>' +
         '<div class="acciones">' +
           '<button type="button" class="btn btn-terciario btn-bloque" id="btn-reiniciar" aria-expanded="false" aria-controls="confirmar-reinicio">Empezar de nuevo</button>' +
           '<div id="confirmar-reinicio" class="confirmar" hidden>' +
@@ -1343,7 +1553,11 @@
     if (destino.pantalla === 'inicio') renderInicio();
     if (destino.pantalla === 'proyectos') renderProyectos();
     if (destino.pantalla === 'proyecto') renderDetalle(ruta.param);
-    if (destino.pantalla === 'mis-proyectos') { estado.pestanaMis = null; renderMisProyectos(); }
+    if (destino.pantalla === 'mis-proyectos') {
+      estado.pestanaMis = ruta.param === 'inversiones' || ruta.param === 'compra' ? ruta.param : null;
+      renderMisProyectos();
+    }
+    if (destino.pantalla === 'invertir') renderInvertir(ruta.param);
     if (destino.pantalla === 'perfil') renderPerfil();
 
     document.querySelectorAll('main > .pantalla').forEach(function (s) {
