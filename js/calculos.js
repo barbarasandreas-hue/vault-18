@@ -103,7 +103,94 @@ function escenario(listaUF, tipo) {
   };
 }
 
+// ---------- Marketplace ----------
+
+// Arriendo neto = bruto − 10 % de administración − 1 mes vacío al año.
+function arriendoNeto(bruto) {
+  return bruto * 0.9 * 11 / 12;
+}
+
+// Rentabilidad anual del arriendo sobre el precio pagado (fracción: 0.045 = 4,5 %).
+function rentabilidad(arriendoBruto, precioPagadoUF) {
+  return arriendoNeto(arriendoBruto) * 12 / (precioPagadoUF * SUPUESTOS.uf);
+}
+
+// La IA solo muestra departamentos que rinden 4,5 % o más al año.
+var RENTABILIDAD_MINIMA = 0.045;
+function pasaFiltroIA(rent) { return rent >= RENTABILIDAD_MINIMA; }
+
+// Ahorro por unirse a una compra en conjunto: 10 % del precio de lista.
+function ahorroPorUnirseUF(listaUF) { return listaUF * SUPUESTOS.descuentoLote; }
+
+// Lo que se reúne con inversionistas: 15 % del precio pagado.
+function porFinanciarUF(precio) { return precio * SUPUESTOS.pctInversionistas; }
+
+// Avance entre 0 y 1 (6 de 10 → 0.6).
+function avance(parte, total) {
+  if (!total || total <= 0) return 0;
+  return Math.min(1, Math.max(0, parte / total));
+}
+
+// 0.045 → "4,5 %"; 0.6 con 0 decimales → "60 %".
+function formatoPorcentaje(fraccion, decimales) {
+  var d = decimales === undefined ? 1 : decimales;
+  return (fraccion * 100).toFixed(d).replace('.', ',') + ' %';
+}
+
+var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+  'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+// "2026-12-15" → "15 de diciembre de 2026".
+function formatoFecha(iso) {
+  var p = String(iso).split('-');
+  return Number(p[2]) + ' de ' + MESES[Number(p[1]) - 1] + ' de ' + p[0];
+}
+
+// Todo lo que se muestra de un proyecto, ya calculado.
+// proyecto.tipo: 'conjunto' (compra en conjunto, con 10 % de descuento)
+// o 'financiamiento' (financiamiento del pie, a precio de lista).
+// departamentos: los disponibles del proyecto (misma tipología y precio).
+// cuposExtra: cupos que tomó el usuario en este teléfono (0 o 1).
+function resumenProyecto(proyecto, departamentos, cuposExtra) {
+  var tipoCompra = proyecto.tipo === 'conjunto' ? 'lote' : 'individual';
+  var listaUF = departamentos[0].listaUF;
+  var e = escenario(listaUF, tipoCompra);
+
+  var rentabilidades = departamentos.map(function (d) {
+    return rentabilidad(d.arriendoBruto, precioUF(d.listaUF, tipoCompra));
+  });
+  var rentMinima = Math.min.apply(null, rentabilidades);
+
+  var tomados = proyecto.cuposTomados + (cuposExtra || 0);
+  var porFinanciar = porFinanciarUF(e.precioUF);
+
+  return {
+    tipoCompra: tipoCompra,
+    escenario: e,
+    ahorro: proyecto.tipo === 'conjunto' ? ufAPesos(ahorroPorUnirseUF(listaUF)) : 0,
+    rentabilidad: rentMinima,
+    pasaFiltro: pasaFiltroIA(rentMinima),
+    cuposTomados: tomados,
+    cupos: proyecto.cupos,
+    cuposLibres: Math.max(0, proyecto.cupos - tomados),
+    avanceCupos: avance(tomados, proyecto.cupos),
+    porFinanciar: ufAPesos(porFinanciar),
+    financiado: ufAPesos(proyecto.ufFinanciadas),
+    avanceFinanciamiento: avance(proyecto.ufFinanciadas, porFinanciar)
+  };
+}
+
 if (typeof module !== 'undefined') module.exports = {
+  arriendoNeto: arriendoNeto,
+  rentabilidad: rentabilidad,
+  RENTABILIDAD_MINIMA: RENTABILIDAD_MINIMA,
+  pasaFiltroIA: pasaFiltroIA,
+  ahorroPorUnirseUF: ahorroPorUnirseUF,
+  porFinanciarUF: porFinanciarUF,
+  avance: avance,
+  formatoPorcentaje: formatoPorcentaje,
+  formatoFecha: formatoFecha,
+  resumenProyecto: resumenProyecto,
   SUPUESTOS: SUPUESTOS,
   precioUF: precioUF,
   pieUF: pieUF,
