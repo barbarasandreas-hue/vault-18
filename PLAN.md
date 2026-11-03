@@ -194,13 +194,13 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 1 | S1-F4 Fórmulas base | aprobada |
 | 1 | S1-F5 Pantalla Simula | aprobada |
 | 1 | S1-F6 Visible en el teléfono por wifi | aprobada |
-| 2 | S2-F0 Nueva barra de 4 secciones | pendiente |
-| 2 | S2-F1 Datos de ejemplo | pendiente |
-| 2 | S2-F2 Fórmulas del marketplace | pendiente |
-| 2 | S2-F3 Pantalla Proyectos | pendiente |
-| 2 | S2-F4 Detalle y unirse | pendiente |
-| 2 | S2-F5 Mis proyectos (estructura) | pendiente |
-| 2 | S2-F6 Publicación en GitHub Pages | pendiente |
+| 2 | S2-F0 Nueva barra de 4 secciones | en progreso |
+| 2 | S2-F1 Datos de ejemplo | en progreso |
+| 2 | S2-F2 Fórmulas del marketplace | en progreso |
+| 2 | S2-F3 Pantalla Proyectos | en progreso |
+| 2 | S2-F4 Detalle y unirse | en progreso |
+| 2 | S2-F5 Mis proyectos (estructura) | en progreso |
+| 2 | S2-F6 Publicación en GitHub Pages | en progreso |
 | 3 | S3-F1 Fórmula de carga | pendiente |
 | 3 | S3-F2 Postula (paso 1 de Mi compra) | pendiente |
 | 3 | S3-F3 Recordar elecciones | pendiente |
