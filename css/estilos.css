@@ -544,6 +544,42 @@ button { font: inherit; }
 .titulo-apoyo { font-size: 15px; }
 .pasos { margin-top: 12px; }
 
+/* ---------- Tu 5 %: meses, hitos y logro ---------- */
+.explica-ahorro { margin: -4px 0 16px; font-size: 15px; }
+.resultado-meses { margin-top: 4px; }
+.resultado-meses .etiqueta { margin: 0; font-weight: 600; color: var(--gray-semidark); }
+.resultado-meses .numero { display: block; margin: 0 0 4px; }
+.hitos { margin-top: 16px; }
+.hitos .avance-barra { height: 12px; }
+.hitos-marcas { position: relative; list-style: none; margin: 0; padding: 0; height: 44px; }
+.hito { position: absolute; top: -17px; display: flex; flex-direction: column; align-items: center; transform: translateX(-50%); }
+.hito-25 { left: 25%; }
+.hito-50 { left: 50%; }
+.hito-75 { left: 75%; }
+.hito-100 { left: 100%; transform: translateX(-100%); align-items: flex-end; }
+.hito-punto {
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--white); border: 2px solid var(--gray-semidark);
+}
+.hito.logrado .hito-punto { background: var(--green-dark); border-color: var(--green-dark); color: var(--white); }
+.hito-punto svg { width: 16px; height: 16px; }
+.hito-texto { margin-top: 2px; font-size: 13px; font-weight: 600; color: var(--gray-semidark); white-space: nowrap; }
+.hito.logrado .hito-texto { color: var(--green-dark); }
+#aviso-hito { margin-top: 8px; }
+
+.logro {
+  display: flex; gap: 12px; align-items: center;
+  padding: 14px 16px;
+  border-radius: var(--radio);
+  background: var(--green-20);
+  color: var(--green-dark);
+}
+.logro svg { width: 32px; height: 32px; flex: none; }
+.logro p { margin: 0; color: var(--gray-dark); }
+.logro strong { color: var(--green-dark); }
+.lista-check li:has(> span:last-child:nth-child(2)) { grid-template-columns: 24px 1fr; }
+
 /* ---------- Perfil ---------- */
 #form-perfil .selector legend { font-size: 16px; color: var(--gray-dark); }
 .ayuda-campo { margin: -8px 0 0; font-size: 14px; }

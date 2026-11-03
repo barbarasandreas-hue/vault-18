@@ -21,13 +21,20 @@
     pestanaMis: null,        // pestaña de Mis proyectos: 'compra' o 'inversiones'
     sueldoPropio: null,      // sueldo líquido del usuario, en pesos
     sueldoPareja: null,      // sueldo líquido de la pareja, en pesos
-    arriendoActual: null     // lo que paga hoy de arriendo, en pesos
+    arriendoActual: null,    // lo que paga hoy de arriendo, en pesos
+    ahorroMensual: null,     // cuánto ahorra al mes para su 5 %
+    tipoAhorro: 'propio',    // 'propio' o 'grupal'
+    ahorrado: 0,             // lo que lleva juntado (simulado)
+    ahorroIniciado: false,   // si ya tocó "Empezar a ahorrar"
+    verSimulador: false      // en Inicio, mostrar el simulador aunque tenga una compra
   };
 
   // ---------- Elecciones que se recuerdan entre visitas (S3-F3) ----------
   var CLAVE_ESTADO = 'primer-peldano-estado';
-  var GUARDADOS = ['modo', 'tipo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual'];
-  var VALORES_POR_DEFECTO = { modo: 'arrendar', tipo: 'lote', sueldoPropio: null, sueldoPareja: null, arriendoActual: null };
+  var GUARDADOS = ['modo', 'tipo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual',
+    'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado'];
+  var VALORES_POR_DEFECTO = { modo: 'arrendar', tipo: 'lote', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
+    ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, verSimulador: false };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -41,6 +48,10 @@
       estado.sueldoPropio = montoValido(g.sueldoPropio);
       estado.sueldoPareja = montoValido(g.sueldoPareja);
       estado.arriendoActual = montoValido(g.arriendoActual);
+      estado.ahorroMensual = montoValido(g.ahorroMensual);
+      if (g.tipoAhorro === 'propio' || g.tipoAhorro === 'grupal') estado.tipoAhorro = g.tipoAhorro;
+      estado.ahorrado = montoValido(g.ahorrado) || 0;
+      estado.ahorroIniciado = g.ahorroIniciado === true && estado.ahorroMensual > 0;
     } catch (e) { /* sin localStorage: valores por defecto */ }
     estado.pestana = estado.tipo === 'lote' ? 'conjunto' : 'financiamiento';
   }
@@ -393,16 +404,20 @@
     return monto;
   }
 
-  // Muestra u oculta el error de un campo de sueldo. Devuelve true si el monto sirve.
-  function validarSueldo(input, monto, mostrarVacio) {
+  // Muestra u oculta el error de un campo de dinero. Devuelve true si el monto sirve.
+  function validarMonto(input, monto, mostrarVacio, textoVacio, textoCero) {
     var caja = $(input.id + '-error');
     var mensaje = '';
-    if (monto === 0) mensaje = 'El sueldo tiene que ser mayor a $0.';
-    else if (monto === null && mostrarVacio) mensaje = 'Escribe el sueldo líquido del mes.';
+    if (monto === 0) mensaje = textoCero;
+    else if (monto === null && mostrarVacio) mensaje = textoVacio;
     caja.hidden = !mensaje;
     caja.querySelector('span').textContent = mensaje;
     input.setAttribute('aria-invalid', String(!!mensaje));
     return monto !== null && monto > 0;
+  }
+
+  function validarSueldo(input, monto, mostrarVacio) {
+    return validarMonto(input, monto, mostrarVacio, 'Escribe el sueldo líquido del mes.', 'El sueldo tiene que ser mayor a $0.');
   }
 
   // Busca otro proyecto que deje la carga en verde o amarillo, con los mismos sueldos.
@@ -538,36 +553,209 @@
     habiaCarga = renderCarga(p, { propio: estado.sueldoPropio !== null, pareja: estado.sueldoPareja !== null });
   }
 
-  function renderPaso2(p, d) {
-    var k = estado.compra.carga;
-    var nivel = nivelCarga(k);
-    $('panel-compra').innerHTML =
-      tarjetaMiCompra(p, d, '') +
-      listaPasos(2) +
-      '<div class="bloque">' +
-        '<p class="aviso aviso-ok">Postulación enviada (simulada): tu carga es ' + formatoPorcentaje(cargaRedondeada(k), 1) + ', ' +
-          SEMAFORO[nivel].palabra.toLowerCase() + '.</p>' +
-        '<p class="aviso bloque">Disponible pronto: el paso 2, Tu 5 %, llega en la próxima versión.</p>' +
-      '</div>' +
-      '<div class="acciones">' +
-        '<button type="button" class="btn btn-terciario btn-bloque" id="btn-repostular">Cambiar mis sueldos</button>' +
-        '<button type="button" class="btn btn-terciario btn-bloque" id="btn-salir">Salir de esta compra</button>' +
-      '</div>';
-    $('btn-repostular').addEventListener('click', function () {
-      guardarCompra(Object.assign({}, estado.compra, { paso: 1, carga: null }));
-      renderMisProyectos();
-    });
-    $('btn-salir').addEventListener('click', salirDeCompra);
+  // ---------- Paso 2: Tu 5 % (S4-F2, S4-F3 y S4-F4) ----------
+  var TIPOS_AHORRO = {
+    propio: 'Ahorras solo, en tu propia cuenta.',
+    grupal: 'Ahorras junto a un grupo con una meta común, para motivarse. Cada persona junta su propio 5 % ' +
+      'y retira exactamente lo que aportó: nadie aporta por otro ni queda debiendo.'
+  };
+
+  // Barra de avance con hitos al 25 %, 50 %, 75 % y 100 %.
+  function barraHitos(ahorrado, meta) {
+    var pct = porcentajeEntero(avance(ahorrado, meta));
+    var logrados = hitosAlcanzados(ahorrado, meta);
+    var marcas = HITOS_AHORRO.map(function (h) {
+      var ok = logrados.indexOf(h) !== -1;
+      return '<li class="hito hito-' + porcentajeEntero(h) + (ok ? ' logrado' : '') + '">' +
+        '<span class="hito-punto" aria-hidden="true">' + (ok ? '<svg><use href="#i-ok"/></svg>' : '') + '</span>' +
+        '<span class="hito-texto">' + porcentajeEntero(h) + NBSP + '%' +
+        '<span class="oculto-visual">' + (ok ? ', logrado' : ', pendiente') + '</span></span></li>';
+    }).join('');
+    return '<div class="hitos">' +
+      '<p class="avance-texto"><span>Llevas ' + formatoPesos(ahorrado) + ' de ' + formatoPesos(meta) + '</span>' +
+        '<strong>' + pct + NBSP + '%</strong></p>' +
+      '<div class="avance-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="Avance de tu ahorro">' +
+        '<span style="width:' + pct + '%"></span></div>' +
+      '<ol class="hitos-marcas" aria-label="Hitos">' + marcas + '</ol>' +
+    '</div>';
   }
 
-  function tarjetaMiCompra(p, d, extra) {
-    return '<a class="tarjeta tarjeta-proyecto" href="#proyecto/' + esc(p.id) + '">' +
-      '<span class="chip">' + NOMBRE_TIPO[p.tipo] + '</span>' +
-      '<h2 class="h4 con-chip">' + esc(p.nombre) + '</h2>' +
-      '<p class="texto-apoyo ficha">' + esc(p.comuna) + ' · Piso ' + d.piso + ' · ' + ficha(d) + '</p>' +
-      extra +
-      '<span class="ver">Ver proyecto <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span>' +
-    '</a>';
+  function selectorAhorro() {
+    var opcion = function (valor, texto) {
+      return '<input type="radio" name="tipo-ahorro" id="ahorro-' + valor + '" value="' + valor + '"' +
+        (estado.tipoAhorro === valor ? ' checked' : '') + '><label for="ahorro-' + valor + '">' + texto + '</label>';
+    };
+    return '<fieldset class="selector"><legend class="oculto-visual">¿Cómo vas a ahorrar?</legend>' +
+      '<div class="selector-opciones">' + opcion('propio', 'Ahorro propio') + opcion('grupal', 'Ahorro grupal') + '</div>' +
+      '</fieldset>' +
+      '<p class="texto-apoyo explica-ahorro" id="explica-ahorro" aria-live="polite">' + TIPOS_AHORRO[estado.tipoAhorro] + '</p>';
+  }
+
+  function textoMeses(n) { return n === 1 ? '1 mes' : n + ' meses'; }
+
+  function renderTu5(p, d) {
+    var meta = resumen(p).escenario.alEscriturar;
+    // Si ya se juntó todo (por ejemplo, al cambiar a un proyecto más barato), se pasa a la firma.
+    if (estado.ahorroIniciado && estado.ahorrado >= meta) {
+      guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
+      renderFirma(p, d, true);
+      return;
+    }
+
+    var cabecera = tarjetaCompacta(p, 'Meta al escriturar', meta) + listaPasos(2) +
+      '<h2 class="h3 bloque" id="titulo-tu5">Tu 5 % <span class="texto-apoyo titulo-apoyo">más gastos, lo juntas tú</span></h2>';
+
+    if (!estado.ahorroIniciado) {
+      $('panel-compra').innerHTML = cabecera +
+        '<section aria-labelledby="titulo-tu5">' +
+          selectorAhorro() +
+          campoDinero('ahorro-mensual', '¿Cuánto puedes ahorrar al mes?', estado.ahorroMensual) +
+          '<div id="meses-resultado" aria-live="polite"></div>' +
+          '<div class="acciones">' +
+            '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-empezar">Empezar a ahorrar</button>' +
+            '<button type="button" class="btn btn-terciario btn-bloque" id="btn-salir">Salir de esta compra</button>' +
+          '</div>' +
+        '</section>';
+
+      var tocado = false;
+      var dibujarMeses = function () {
+        var ok = validarMonto($('ahorro-mensual'), estado.ahorroMensual, tocado,
+          'Escribe cuánto puedes ahorrar al mes.', 'El ahorro tiene que ser mayor a $0.');
+        $('btn-empezar').disabled = !ok;
+        if (!ok) {
+          $('meses-resultado').innerHTML = '<p class="texto-apoyo">Escribe tu ahorro mensual para ver en cuántos meses llegas.</p>';
+          return;
+        }
+        var n = mesesRestantes(meta, estado.ahorrado, estado.ahorroMensual);
+        $('meses-resultado').innerHTML =
+          '<div class="tarjeta resultado-meses">' +
+            '<p class="etiqueta">Llegas a tu meta en</p>' +
+            '<strong class="numero display-2">' + textoMeses(n) + '</strong>' +
+            '<p class="texto-apoyo">Juntas ' + formatoPesos(meta) + ' ahorrando ' + formatoPesos(estado.ahorroMensual) + ' al mes.</p>' +
+            barraHitos(estado.ahorrado, meta) +
+          '</div>';
+      };
+
+      document.querySelectorAll('input[name="tipo-ahorro"]').forEach(function (r) {
+        r.addEventListener('change', function () {
+          estado.tipoAhorro = r.value;
+          guardarEstado();
+          $('explica-ahorro').textContent = TIPOS_AHORRO[estado.tipoAhorro];
+        });
+      });
+      $('ahorro-mensual').addEventListener('input', function () {
+        estado.ahorroMensual = formatearCampo($('ahorro-mensual'));
+        guardarEstado();
+        dibujarMeses();
+      });
+      $('ahorro-mensual').addEventListener('blur', function () { tocado = true; dibujarMeses(); });
+      $('btn-empezar').addEventListener('click', function () {
+        tocado = true;
+        dibujarMeses();
+        if ($('btn-empezar').disabled) { $('ahorro-mensual').focus(); return; }
+        estado.ahorroIniciado = true;
+        guardarEstado();
+        renderMiCompra();
+        window.scrollTo(0, 0);
+      });
+      $('btn-salir').addEventListener('click', salirDeCompra);
+      dibujarMeses();
+      return;
+    }
+
+    // Ya empezó a ahorrar: el número es lo que falta, y la acción es simular un mes.
+    var faltan = mesesRestantes(meta, estado.ahorrado, estado.ahorroMensual);
+    $('panel-compra').innerHTML = cabecera +
+      '<section aria-labelledby="titulo-tu5">' +
+        '<div class="tarjeta resultado-meses">' +
+          '<p class="etiqueta">Te faltan</p>' +
+          '<strong class="numero display-2">' + textoMeses(faltan) + '</strong>' +
+          '<p class="texto-apoyo">' + (estado.tipoAhorro === 'grupal' ? 'Ahorro grupal' : 'Ahorro propio') +
+            ' de ' + formatoPesos(estado.ahorroMensual) + ' al mes.</p>' +
+          barraHitos(estado.ahorrado, meta) +
+          '<p class="aviso aviso-ok" id="aviso-hito" aria-live="polite" hidden></p>' +
+        '</div>' +
+        '<div class="acciones">' +
+          '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-simular-mes">Simular un mes</button>' +
+          '<p class="texto-apoyo">Es una simulación: suma tu ahorro de un mes al avance.</p>' +
+          '<button type="button" class="btn btn-terciario btn-bloque" id="btn-cambiar-ahorro">Cambiar mi ahorro mensual</button>' +
+        '</div>' +
+      '</section>';
+
+    $('btn-simular-mes').addEventListener('click', function () {
+      var antes = hitosAlcanzados(estado.ahorrado, meta);
+      estado.ahorrado = sumarMes(estado.ahorrado, estado.ahorroMensual, meta);
+      guardarEstado();
+      if (estado.ahorrado >= meta) {
+        guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
+        renderFirma(p, d, true);
+        window.scrollTo(0, 0);
+        return;
+      }
+      var nuevos = hitosAlcanzados(estado.ahorrado, meta).filter(function (h) { return antes.indexOf(h) === -1; });
+      renderTu5(p, d);
+      if (nuevos.length) {
+        $('aviso-hito').textContent = '¡Llegaste al ' + porcentajeEntero(nuevos[nuevos.length - 1]) + ' % de tu meta! Sigue así.';
+        $('aviso-hito').hidden = false;
+      }
+    });
+    $('btn-cambiar-ahorro').addEventListener('click', function () {
+      estado.ahorroIniciado = false;
+      guardarEstado();
+      renderMiCompra();
+    });
+  }
+
+  // ---------- Paso 3: Firma (S4-F5) ----------
+  function renderFirma(p, d, recienLlegado) {
+    var e = resumen(p).escenario;
+    var custodia = estado.modo === 'arrendar'
+      ? 'El arriendo entra a una cuenta de Bci que paga primero el dividendo, después a los inversionistas, y tú completas la diferencia.'
+      : 'Cada mes, desde una cuenta de Bci, se paga primero el dividendo y después a los inversionistas.';
+
+    $('panel-compra').innerHTML =
+      tarjetaCompacta(p, 'Pones al escriturar', e.alEscriturar) + listaPasos(3) +
+      '<div class="logro bloque"' + (recienLlegado ? ' role="status"' : '') + '>' +
+        '<svg aria-hidden="true"><use href="#i-ok"/></svg>' +
+        '<p><strong>¡Juntaste tu 5 %!</strong> Ya tienes ' + formatoPesos(e.alEscriturar) + ' para escriturar.</p>' +
+      '</div>' +
+      '<section class="tarjeta bloque" aria-labelledby="titulo-firma">' +
+        '<h2 class="h3" id="titulo-firma">Lo que firmas</h2>' +
+        '<ul class="lista-check">' +
+          filaFirma('Crédito hipotecario Bci',
+            'Bci presta el 80 % (' + formatoPesos(e.reparto.bci) + ') a 30 años al 4,5 %. Lo pagan tú y tu pareja: ' +
+            formatoPesos(e.dividendo) + ' al mes, con seguros.') +
+          filaFirma('Segunda hipoteca con los inversionistas',
+            'Ellos prestan el 15 % (' + formatoPesos(e.reparto.inversionistas) + ') a 10 años, a UF + 8 %: pagas ' +
+            formatoPesos(e.cuotaInversionistas) + ' al mes. Si no pagas, cobran después de Bci.') +
+          filaFirma('Cuenta custodia Bci', custodia) +
+        '</ul>' +
+        '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
+      '</section>' +
+      '<div class="acciones">' +
+        '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-firmar">Firmar</button>' +
+        '<p class="texto-apoyo">Es una firma simulada: en este prototipo no se firma nada real.</p>' +
+      '</div>';
+
+    $('btn-firmar').addEventListener('click', function () {
+      guardarCompra(Object.assign({}, estado.compra, { paso: 4 }));
+      renderMiCompra();
+      window.scrollTo(0, 0);
+    });
+  }
+
+  function filaFirma(titulo, texto) {
+    return '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>' + titulo + '<small>' + texto + '</small></span></li>';
+  }
+
+  // ---------- Después de firmar: Mi departamento (se completa en el Sprint 5) ----------
+  function renderMiDepartamento(p, d) {
+    var e = resumen(p).escenario;
+    $('panel-compra').innerHTML =
+      tarjetaCompacta(p, 'Total al mes', e.totalMes) + listaPasos(4) +
+      '<div class="logro bloque"><svg aria-hidden="true"><use href="#i-ok"/></svg>' +
+        '<p><strong>¡Firmaste!</strong> El departamento del piso ' + d.piso + ' es tuyo (simulado).</p></div>' +
+      '<p class="aviso bloque">Disponible pronto: Mi departamento, con cómo se mueve tu dinero cada mes.</p>';
   }
 
   // Versión corta para los pasos: nombre del proyecto (enlace) y una cifra, en una fila.
@@ -586,7 +774,11 @@
   function renderMiCompra() {
     var p = buscarProyecto(estado.compra.proyectoId);
     var d = departamentoDeMiCompra(p);
-    if (estado.compra.paso === 2 && estado.compra.carga) renderPaso2(p, d);
+    var paso = estado.compra.paso || 1;
+    if (paso >= 2 && !estado.compra.carga) paso = 1; // sin postulación guardada, se vuelve a postular
+    if (paso === 4) renderMiDepartamento(p, d);
+    else if (paso === 3) renderFirma(p, d, false);
+    else if (paso === 2) renderTu5(p, d);
     else renderPostula(p, d);
   }
 
@@ -712,7 +904,7 @@
   // Si el usuario ya postuló y cambia sus sueldos, la carga guardada se vuelve a
   // calcular; si ya no le alcanza para postular, vuelve al paso 1.
   function recalcularPostulacion() {
-    if (!estado.compra || estado.compra.paso !== 2) return;
+    if (!estado.compra || (estado.compra.paso !== 2 && estado.compra.paso !== 3)) return;
     var p = buscarProyecto(estado.compra.proyectoId);
     var k = carga(resumen(p).escenario.totalMes, estado.sueldoPropio, estado.sueldoPareja);
     var nivel = nivelCarga(k);
