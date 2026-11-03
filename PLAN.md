@@ -252,9 +252,9 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 6 | S6-F2 Información para invertir | aprobada |
 | 6 | S6-F3 Invertir | aprobada |
 | 6 | S6-F4 Mis inversiones | aprobada |
-| 7 | S7-F1 Estado de carga en botones | en progreso |
-| 7 | S7-F2 Contraste AA | en progreso |
-| 7 | S7-F3 Textos de 10 segundos | en progreso |
-| 7 | S7-F4 Explicaciones a un toque | en progreso |
-| 7 | S7-F5 Revisión en 360 px | en progreso |
-| 7 | S7-F6 Introducción | en progreso |
+| 7 | S7-F1 Estado de carga en botones | rechazada |
+| 7 | S7-F2 Contraste AA | aprobada |
+| 7 | S7-F3 Textos de 10 segundos | aprobada |
+| 7 | S7-F4 Explicaciones a un toque | rechazada |
+| 7 | S7-F5 Revisión en 360 px | aprobada |
+| 7 | S7-F6 Introducción | aprobada |
