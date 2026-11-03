@@ -235,12 +235,12 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 3 | S3-F3 Recordar elecciones | aprobada |
 | 3 | S3-F4 Agregar a pantalla de inicio | aprobada |
 | 3 | S3-F5 Perfil | aprobada |
-| 4 | S4-F1 Fórmula de meses | en progreso |
-| 4 | S4-F2 Tu 5 % (paso 2 de Mi compra) | en progreso |
-| 4 | S4-F3 Propio o grupal | en progreso |
-| 4 | S4-F4 Avance simulado | en progreso |
-| 4 | S4-F5 Lista de firma | en progreso |
-| 4 | S4-F6 Inicio con próximo paso | en progreso |
+| 4 | S4-F1 Fórmula de meses | aprobada |
+| 4 | S4-F2 Tu 5 % (paso 2 de Mi compra) | aprobada |
+| 4 | S4-F3 Propio o grupal | aprobada |
+| 4 | S4-F4 Avance simulado | aprobada |
+| 4 | S4-F5 Lista de firma | aprobada |
+| 4 | S4-F6 Inicio con próximo paso | aprobada |
 | 5 | S5-F0 Inicio: ¿Cuánto puedo comprar? (hacer primero) | pendiente |
 | 5 | S5-F1 Fórmulas del mes | pendiente |
 | 5 | S5-F2 Cascada de la cuenta custodia | pendiente |
