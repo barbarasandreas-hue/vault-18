@@ -180,8 +180,36 @@ test('carga: vivir individual con $1.500.000 + $1.000.000 → 30,1 %, no aprueba
 test('carga: exactamente 25 % es holgado y exactamente 30 % es en el límite', () => {
   assert.strictEqual(c.nivelCarga(c.carga(250000, 600000, 400000)), 'holgado');
   assert.strictEqual(c.nivelCarga(c.carga(300000, 600000, 400000)), 'limite');
-  assert.strictEqual(c.nivelCarga(c.carga(300001, 600000, 400000)), 'no-aprueba');
-  assert.strictEqual(c.nivelCarga(c.carga(250001, 600000, 400000)), 'limite');
+  assert.strictEqual(c.nivelCarga(c.carga(301000, 600000, 400000)), 'no-aprueba');
+  assert.strictEqual(c.nivelCarga(c.carga(251000, 600000, 400000)), 'limite');
+});
+
+test('el semáforo usa la misma carga redondeada que muestra la pantalla', () => {
+  const total = c.escenario(2500, 'lote').totalMes; // $571.425
+  // 30,04 % se muestra "30,0 %": es "en el límite", no "no aprueba".
+  const k30 = c.carga(total, 902214, 1000000);
+  assert.ok(k30 > 0.30);
+  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(k30), 1), '30,0 %');
+  assert.strictEqual(c.nivelCarga(k30), 'limite');
+  // 25,03 % se muestra "25,0 %": es "holgado".
+  const k25 = c.carga(250300, 600000, 400000);
+  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(k25), 1), '25,0 %');
+  assert.strictEqual(c.nivelCarga(k25), 'holgado');
+  // 30,06 % se muestra "30,1 %": no aprueba.
+  const k301 = c.carga(300600, 600000, 400000);
+  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(k301), 1), '30,1 %');
+  assert.strictEqual(c.nivelCarga(k301), 'no-aprueba');
+  assert.strictEqual(c.cargaRedondeada(null), null);
+});
+
+test('ingreso total, mínimo y faltante', () => {
+  assert.strictEqual(c.ingresoTotal(900000, 800000), 1700000);
+  assert.strictEqual(c.ingresoTotal(900000, null), 900000);
+  const total = c.escenario(2500, 'lote').totalMes; // Alto Ñuñoa: $571.425
+  assert.strictEqual(c.ingresoMinimo(total), 1904750);
+  assert.strictEqual(c.ingresoFaltante(total, 900000, 800000), 204750);
+  assert.strictEqual(c.ingresoFaltante(total, 1500000, 1000000), 0);
+  assert.strictEqual(c.nivelCarga(c.carga(total, 1904750, 0)), 'limite');
 });
 
 test('carga: sin ingreso no calcula', () => {

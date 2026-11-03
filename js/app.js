@@ -272,8 +272,14 @@
       comprar = '<p class="aviso">Ya te uniste a este proyecto.</p>' +
         '<a href="#mis-proyectos" class="btn btn-primario btn-lg btn-bloque">Ver mi compra</a>';
     } else if (estado.compra) {
-      comprar = '<p class="aviso">Ya tienes una compra en curso.</p>' +
-        (r.cuposLibres > 0 ? '<button type="button" class="btn btn-terciario btn-bloque" id="btn-cambiar-compra">Cambiar mi compra a este proyecto</button>' : '');
+      var actual = buscarProyecto(estado.compra.proyectoId);
+      var reemplaza = (estado.compra.paso || 1) >= 2
+        ? '<p class="texto-apoyo">Tu postulación en ' + esc(actual.nombre) + ' se reemplaza: vuelves a postular aquí.</p>'
+        : '';
+      comprar = '<p class="aviso">Ya tienes una compra en ' + esc(actual.nombre) + '.</p>' +
+        (r.cuposLibres > 0
+          ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-cambiar-compra">Cambiar mi compra a este proyecto</button>' + reemplaza
+          : '');
     } else if (r.cuposLibres === 0) {
       comprar = '<p class="aviso">Sin cupos disponibles.</p>';
     } else {
@@ -399,27 +405,49 @@
     return monto !== null && monto > 0;
   }
 
-  // Busca otro proyecto que baje la carga, con los mismos sueldos.
+  // Busca otro proyecto que deje la carga en verde o amarillo, con los mismos sueldos.
+  // Si ninguno aprueba, dice cuánto ingreso falta para este proyecto.
+  // Devuelve { html, aprueba } (aprueba = la sugerencia permite postular).
   function sugerencia(p, cargaActual) {
+    var total = resumen(p).escenario.totalMes;
     var opciones = PROYECTOS.filter(function (x) {
       return x.id !== p.id && resumen(x).cuposLibres > 0 && (estado.modo !== 'arrendar' || resumen(x).pasaFiltro);
     }).map(function (x) { return { id: x.id, totalMes: resumen(x).escenario.totalMes }; });
     var mejor = mejorAlternativa(cargaActual, opciones, estado.sueldoPropio, estado.sueldoPareja);
-    if (!mejor) {
-      return '<div class="sugerencia"><p>Para bajar tu carga, suma otro ingreso o elige un departamento más barato.</p>' +
-        '<a class="enlace" href="#proyectos">Ver proyectos</a></div>';
+
+    if (mejor && mejor.nivel !== 'no-aprueba') {
+      var otro = buscarProyecto(mejor.id);
+      var frase = otro.tipo === 'conjunto'
+        ? 'Si te unes a la compra en conjunto de ' + esc(otro.nombre) + ', tu carga baja a '
+        : 'En ' + esc(otro.nombre) + ', tu carga baja a ';
+      return {
+        aprueba: true,
+        html: '<div class="sugerencia"><p>' + frase + '<strong>' + formatoPorcentaje(cargaRedondeada(mejor.carga), 1) +
+          '</strong> (' + SEMAFORO[mejor.nivel].palabra.toLowerCase() + ').</p>' +
+          '<a class="enlace" href="#proyecto/' + esc(otro.id) + '">Ver ' + esc(otro.nombre) + '</a> ' +
+          '<a class="enlace" href="#proyectos">Ver proyectos</a></div>'
+      };
     }
-    var otro = buscarProyecto(mejor.id);
-    var frase = otro.tipo === 'conjunto'
-      ? 'Si te unes a la compra en conjunto de ' + esc(otro.nombre) + ', tu carga baja a '
-      : 'En ' + esc(otro.nombre) + ', tu carga baja a ';
-    return '<div class="sugerencia"><p>' + frase + '<strong>' + formatoPorcentaje(mejor.carga, 1) + '</strong> (' +
-      SEMAFORO[mejor.nivel].palabra.toLowerCase() + ').</p>' +
-      '<a class="enlace" href="#proyecto/' + esc(otro.id) + '">Ver ' + esc(otro.nombre) + '</a> ' +
-      '<a class="enlace" href="#proyectos">Ver proyectos</a></div>';
+
+    if (nivelCarga(cargaActual) === 'no-aprueba') {
+      return {
+        aprueba: false,
+        html: '<div class="sugerencia"><p>Para postular aquí, a su ingreso le faltan <strong>' +
+          formatoPesos(ingresoFaltante(total, estado.sueldoPropio, estado.sueldoPareja)) + '</strong> al mes: ' +
+          'necesitan ' + formatoPesos(ingresoMinimo(total)) + ' entre los dos.</p>' +
+          '<a class="enlace" href="#proyectos">Ver proyectos más baratos</a></div>'
+      };
+    }
+
+    return {
+      aprueba: true,
+      html: '<div class="sugerencia"><p>Para bajar tu carga, suma otro ingreso o elige un departamento más barato.</p>' +
+        '<a class="enlace" href="#proyectos">Ver proyectos</a></div>'
+    };
   }
 
   // Recalcula la carga con lo que hay en los campos. No toca los campos (para no perder el foco).
+  // Devuelve true si se pudo calcular.
   function renderCarga(p, mostrarVacios) {
     var total = resumen(p).escenario.totalMes;
     var okPropio = validarSueldo($('sueldo-propio'), estado.sueldoPropio, mostrarVacios.propio);
@@ -431,37 +459,40 @@
       resultado.innerHTML = '<p class="texto-apoyo">Escribe los dos sueldos para ver tu carga.</p>';
       boton.disabled = true;
       $('postular-explica').textContent = 'Para postular, completa los dos sueldos.';
-      return;
+      return false;
     }
 
     var k = carga(total, estado.sueldoPropio, estado.sueldoPareja);
     var nivel = nivelCarga(k);
     var s = SEMAFORO[nivel];
+    var sug = nivel === 'holgado' ? null : sugerencia(p, k);
     resultado.innerHTML =
       '<div class="tarjeta semaforo semaforo-' + nivel + '">' +
         '<p class="etiqueta">Tu carga</p>' +
-        '<strong class="numero display-2">' + formatoPorcentaje(k, 1) + '</strong>' +
-        '<p class="estado-semaforo"><svg aria-hidden="true"><use href="#' + s.icono + '"/></svg>' + s.palabra + '</p>' +
-        '<p class="texto-apoyo">' + s.explica + '</p>' +
-        '<p class="texto-apoyo">Pagas ' + formatoPesos(total) + ' al mes de ' +
-          formatoPesos(estado.sueldoPropio + estado.sueldoPareja) + ' de ingreso.</p>' +
+        '<div class="semaforo-fila">' +
+          '<strong class="numero display-2">' + formatoPorcentaje(cargaRedondeada(k), 1) + '</strong>' +
+          '<p class="estado-semaforo"><svg aria-hidden="true"><use href="#' + s.icono + '"/></svg>' + s.palabra + '</p>' +
+        '</div>' +
+        '<p class="texto-apoyo">' + s.explica + ' Pagan ' + formatoPesos(total) + ' al mes de ' +
+          formatoPesos(ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) + ' de ingreso.</p>' +
       '</div>' +
-      (nivel === 'holgado' ? '' : sugerencia(p, k));
+      (sug ? sug.html : '');
 
     boton.disabled = nivel === 'no-aprueba';
-    $('postular-explica').textContent = nivel === 'no-aprueba'
-      ? 'Con una carga sobre 30 % no puedes postular. Prueba la sugerencia de arriba.'
-      : '';
+    $('postular-explica').textContent = nivel !== 'no-aprueba' ? ''
+      : (sug && sug.aprueba
+        ? 'Con una carga sobre 30 % no puedes postular aquí. Revisa la sugerencia de arriba.'
+        : 'Con una carga sobre 30 % no puedes postular aquí: falta ingreso o un departamento más barato.');
+    return true;
   }
 
   function renderPostula(p, d) {
     var e = resumen(p).escenario;
     $('panel-compra').innerHTML =
-      tarjetaMiCompra(p, d, '<p class="texto-apoyo">Total al mes: <strong>' + formatoPesos(e.totalMes) + '</strong></p>') +
+      tarjetaCompacta(p, 'Total al mes', e.totalMes) +
       listaPasos(1) +
       '<section class="bloque" aria-labelledby="titulo-postula">' +
-        '<h2 class="h3" id="titulo-postula">Postula</h2>' +
-        '<p class="texto-apoyo">Bci revisa cuánto de su ingreso pagarían al mes tú y tu pareja.</p>' +
+        '<h2 class="h3" id="titulo-postula">Postula <span class="texto-apoyo titulo-apoyo">con los sueldos líquidos</span></h2>' +
         '<div class="formulario">' +
           campoDinero('sueldo-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
           campoDinero('sueldo-pareja', 'Sueldo líquido de tu pareja', estado.sueldoPareja) +
@@ -475,12 +506,16 @@
       '</section>';
 
     var tocados = { propio: false, pareja: false };
+    var habiaCarga = false;
     [['sueldo-propio', 'sueldoPropio', 'propio'], ['sueldo-pareja', 'sueldoPareja', 'pareja']].forEach(function (c) {
       var input = $(c[0]);
       input.addEventListener('input', function () {
         estado[c[1]] = formatearCampo(input);
         guardarEstado();
-        renderCarga(p, tocados);
+        var hayCarga = renderCarga(p, tocados);
+        // La primera vez que aparece la carga, se trae a la vista (el teclado puede taparla).
+        if (hayCarga && !habiaCarga) $('carga-resultado').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        habiaCarga = hayCarga;
       });
       input.addEventListener('blur', function () {
         tocados[c[2]] = true;
@@ -500,7 +535,7 @@
     $('btn-salir').addEventListener('click', salirDeCompra);
 
     // Si ya había sueldos guardados, se muestra la carga de inmediato.
-    renderCarga(p, { propio: estado.sueldoPropio !== null, pareja: estado.sueldoPareja !== null });
+    habiaCarga = renderCarga(p, { propio: estado.sueldoPropio !== null, pareja: estado.sueldoPareja !== null });
   }
 
   function renderPaso2(p, d) {
@@ -510,7 +545,7 @@
       tarjetaMiCompra(p, d, '') +
       listaPasos(2) +
       '<div class="bloque">' +
-        '<p class="aviso aviso-ok">Postulación enviada (simulada): tu carga es ' + formatoPorcentaje(k, 1) + ', ' +
+        '<p class="aviso aviso-ok">Postulación enviada (simulada): tu carga es ' + formatoPorcentaje(cargaRedondeada(k), 1) + ', ' +
           SEMAFORO[nivel].palabra.toLowerCase() + '.</p>' +
         '<p class="aviso bloque">Disponible pronto: el paso 2, Tu 5 %, llega en la próxima versión.</p>' +
       '</div>' +
@@ -533,6 +568,14 @@
       extra +
       '<span class="ver">Ver proyecto <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span>' +
     '</a>';
+  }
+
+  // Versión corta para los pasos: nombre del proyecto (enlace) y una cifra, en una fila.
+  function tarjetaCompacta(p, etiqueta, pesos) {
+    return '<div class="tarjeta compacta">' +
+      '<a class="enlace" href="#proyecto/' + esc(p.id) + '">' + esc(p.nombre) + '</a>' +
+      '<p class="compacta-cifra"><span>' + etiqueta + '</span><strong>' + formatoPesos(pesos) + '</strong></p>' +
+    '</div>';
   }
 
   function salirDeCompra() {

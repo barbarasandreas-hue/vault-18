@@ -185,22 +185,46 @@ function resumenProyecto(proyecto, departamentos, cuposExtra) {
 
 // ---------- Postula: carga del crédito ----------
 
-// Carga = total al mes / (sueldo propio + sueldo de la pareja). Fracción: 0.229 = 22,9 %.
+// Ingreso del hogar: sueldo propio + sueldo de la pareja.
+function ingresoTotal(sueldoPropio, sueldoPareja) {
+  return (sueldoPropio || 0) + (sueldoPareja || 0);
+}
+
+// Carga = total al mes / ingreso del hogar. Fracción: 0.229 = 22,9 %.
 function carga(totalMes, sueldoPropio, sueldoPareja) {
-  var ingreso = (sueldoPropio || 0) + (sueldoPareja || 0);
+  var ingreso = ingresoTotal(sueldoPropio, sueldoPareja);
   if (ingreso <= 0) return null;
   return totalMes / ingreso;
 }
 
+// La carga que se muestra, redondeada a 1 decimal del porcentaje (0.30044 → 0.300).
+// El semáforo usa este mismo valor, para que nunca diga "30,0 %" y "No aprueba" a la vez.
+function cargaRedondeada(c) {
+  if (c === null || c === undefined || isNaN(c)) return null;
+  return Math.round(c * 1000) / 1000;
+}
+
 // Hasta 25 %: holgado. Sobre 25 % y hasta 30 %: en el límite. Sobre 30 %: no aprueba.
+// Se compara la carga redondeada que ve el usuario.
 var LIMITE_HOLGADO = 0.25;
 var LIMITE_MAXIMO = 0.30;
-var TOLERANCIA = 1e-9; // para que exactamente 25 % y 30 % no se pasen por redondeo binario
+var TOLERANCIA = 1e-9; // para que 0,25 y 0,30 no se pasen por redondeo binario
 function nivelCarga(c) {
-  if (c === null || c === undefined || isNaN(c)) return null;
-  if (c <= LIMITE_HOLGADO + TOLERANCIA) return 'holgado';
-  if (c <= LIMITE_MAXIMO + TOLERANCIA) return 'limite';
+  var r = cargaRedondeada(c);
+  if (r === null) return null;
+  if (r <= LIMITE_HOLGADO + TOLERANCIA) return 'holgado';
+  if (r <= LIMITE_MAXIMO + TOLERANCIA) return 'limite';
   return 'no-aprueba';
+}
+
+// Ingreso del hogar mínimo para que la carga no pase de 30 %.
+function ingresoMinimo(totalMes) {
+  return Math.ceil(totalMes / LIMITE_MAXIMO);
+}
+
+// Cuánto ingreso al mes le falta al hogar para postular (0 si ya alcanza).
+function ingresoFaltante(totalMes, sueldoPropio, sueldoPareja) {
+  return Math.max(0, ingresoMinimo(totalMes) - ingresoTotal(sueldoPropio, sueldoPareja));
 }
 
 // De varias opciones { id, totalMes }, la que deja la carga más baja,
@@ -230,8 +254,12 @@ function formatoMiles(n) {
 }
 
 if (typeof module !== 'undefined') module.exports = {
+  ingresoTotal: ingresoTotal,
   carga: carga,
+  cargaRedondeada: cargaRedondeada,
   nivelCarga: nivelCarga,
+  ingresoMinimo: ingresoMinimo,
+  ingresoFaltante: ingresoFaltante,
   mejorAlternativa: mejorAlternativa,
   leerMonto: leerMonto,
   formatoMiles: formatoMiles,
