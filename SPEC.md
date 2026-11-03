@@ -150,9 +150,12 @@ Valores de referencia (UF $41.065, redondeados al peso):
 
 ## 7. Dirección visual
 
-- **Bci Kit** (https://www.bci.cl/corporativo/documentacion). Colores con variables `--blue-*`, `--green-*`, `--yellow-*`, `--red-*` (tonos `dark`, `normal`, `80`, `60`, `40`, `20`) y grises `--gray-dark`, `--gray-semidark`, `--gray-neutral`, `--gray-semilight`, `--gray-light`, `--white`. Si no se pueden leer los valores del sitio, usar azul #0033cc, verde #19a246, amarillo #ffc629, rojo #d7261e y aclarar para los tonos 80 a 20.
-- **Tipografías:** Barlow Condensed para títulos (Display 1 a 4, Encabezado 1 a 6) y Figtree para el texto, desde Google Fonts.
-- **Botones:** primario, secundario dark, secundario light, terciario y terciario light; tamaños small, normal y large; con estado de carga.
+- **Bci Kit** (https://www.bci.cl/corporativo/documentacion). Los valores oficiales están en [`docs/bci-kit.md`](docs/bci-kit.md). Colores con variables `--blue-*`, `--green-*`, `--yellow-*`, `--red-*` (tonos `dark`, `normal`, `80`, `60`, `40`, `20`) y grises `--gray-dark`, `--gray-semidark`, `--gray-neutral`, `--gray-semilight`, `--gray-light`, `--white`. Verde = acciones y logros; rojo = errores y alertas; azul = enlaces e información; amarillo = alertas suaves, solo como fondo; gris = textos y fondos.
+- **Tipografía:** Overpass para todo, desde Google Fonts. Títulos en peso 400 y `--gray-dark`: Display 1 a 4 (64, 52, 42 y 34 px) y Encabezado 1 a 6 (30, 26, 22, 20, 18 y 16 px). El número protagonista usa Display 2 o 3.
+- **Botones:** píldoras con borde redondeado de 48 px, borde de 1,6 px y texto en mayúsculas. Tipos: primario (verde relleno), secundario dark, secundario light, terciario (blanco con borde gris) y terciario light. Tamaños: small (36 px), normal (50 px) y large (56 px). Con estado de carga.
+- **Formularios:** campos de 50 px de alto, texto de 18 px, borde redondeado de 6 px y etiqueta siempre visible.
+- **Íconos:** SVG de línea dibujados en el código (la fuente de íconos de Bci no es pública).
+- **Elemento de marca:** las cuatro figuras (cuadrado rojo, círculo verde, triángulo amarillo y rectángulo azul) como detalle sobre títulos de sección.
 - **Semáforo:** verde = holgado, amarillo = en el límite, rojo = no aprueba. Nunca solo con color: siempre con palabra e ícono.
 - **Listas:** con check cuando el orden no importa; numeradas solo para pasos.
 - **Fondos claros**, mucho aire, el número protagonista grande y arriba.

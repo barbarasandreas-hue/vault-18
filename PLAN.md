@@ -95,8 +95,16 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 
 ## Sprint 3 · Postula, Perfil y agregar a pantalla de inicio
 
-**Objetivo:** saber si el usuario y su pareja califican para el proyecto elegido, y poder instalar la app como ícono.
+**Objetivo:** pasar la app al Bci Kit oficial, saber si el usuario y su pareja califican para el proyecto elegido, y poder instalar la app como ícono.
 
+- **S3-F0 Bci Kit oficial (hacer primero).** Reemplaza los valores de referencia de los Sprints 1 y 2 por los oficiales de `docs/bci-kit.md`.
+  - `css/estilos.css` usa exactamente los colores de `docs/bci-kit.md` (por ejemplo, `--green-normal: #28892B`, `--blue-normal: #2772CC`, `--gray-dark: #37474F`).
+  - Overpass (pesos 400, 600 y 700) reemplaza a Barlow Condensed y Figtree en `index.html` y en el CSS; los títulos van en peso 400.
+  - Display 1 a 4 y Encabezado 1 a 6 tienen los tamaños de `docs/bci-kit.md`.
+  - Los botones son píldoras (radio 48 px, borde 1,6 px, texto en mayúsculas) con altos de 36, 50 y 56 px; el small tiene una zona táctil de 44 px como mínimo.
+  - El texto blanco sobre `--green-normal` va en negrita de 19 px o más; el texto verde chico va en `--green-dark`; ningún texto es amarillo.
+  - Los campos de dinero miden 50 px de alto, con texto de 18 px y radio de 6 px.
+  - Los íconos son SVG de línea dibujados en el código; no se usa la fuente de íconos de Bci.
 - **S3-F1 Fórmula de carga.** En `js/calculos.js`, carga y su nivel (holgado, en el límite, no aprueba), con pruebas.
   - Arrendar en lote con $1.500.000 + $1.000.000 → 22,9 %, holgado.
   - Arrendar en lote con $1.200.000 + $800.000 → 28,6 %, en el límite.
@@ -201,6 +209,7 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 2 | S2-F4 Detalle y unirse | en progreso |
 | 2 | S2-F5 Mis proyectos (estructura) | en progreso |
 | 2 | S2-F6 Publicación en GitHub Pages | en progreso |
+| 3 | S3-F0 Bci Kit oficial (hacer primero) | pendiente |
 | 3 | S3-F1 Fórmula de carga | pendiente |
 | 3 | S3-F2 Postula (paso 1 de Mi compra) | pendiente |
 | 3 | S3-F3 Recordar elecciones | pendiente |

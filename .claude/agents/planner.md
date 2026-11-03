@@ -34,7 +34,7 @@ Sé ambicioso en el *qué* y concreto en el *para quién*, pero no bajes a detal
 4. **Flujos clave**: los recorridos más importantes, paso a paso.
 5. **Modelo de datos**: departamentos, lotes, usuario, crédito y cuotas, con sus campos principales.
 6. **Fórmulas**: qué calcula cada pantalla, usando los supuestos de `CLAUDE.md` (UF $41.065, 4,5 % a 30 años, UF + 8 % a 10 años, arriendo neto, límites de carga 25 % y 30 %).
-7. **Dirección visual**: Bci Kit (colores `--blue-*`, `--green-*`, `--yellow-*`, `--red-*`, `--gray-*`), Barlow Condensed para títulos, Figtree para texto, fondos claros, contraste AA.
+7. **Dirección visual**: Bci Kit (colores `--blue-*`, `--green-*`, `--yellow-*`, `--red-*`, `--gray-*`), Overpass para títulos y texto (valores oficiales en `docs/bci-kit.md`), fondos claros, contraste AA.
 8. **Requisitos móviles**: 390 px de ancho, áreas seguras (notch), teclado numérico en campos de dinero, botones de 44 × 44 px como mínimo, se entiende en 10 segundos.
 9. **Fuera de alcance**: lo que no se hará en esta versión.
 

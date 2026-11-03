@@ -49,7 +49,7 @@ En cada pantalla nueva o modificada:
 
 ### 4. Contenido, diseño y código
 - Español de Chile, "dinero", "departamento" completo, montos con punto de miles, sin nombres de personas, no usar el auto para juntar el pie, sin promesas de plusvalía y con el escenario sin plusvalía visible.
-- Bci Kit: variables `--blue-*`, `--green-*`, `--yellow-*`, `--red-*`, `--gray-*`; Barlow Condensed en títulos y Figtree en texto; fondos claros; listas con check cuando el orden no importa.
+- Bci Kit: variables `--blue-*`, `--green-*`, `--yellow-*`, `--red-*`, `--gray-*`; valores de `docs/bci-kit.md`; Overpass en títulos y texto; fondos claros; listas con check cuando el orden no importa.
 - Código ordenado según la estructura de `CLAUDE.md`, nombres claros, sin código muerto ni duplicado evidente, sin claves ni datos sensibles.
 - Una interfaz genérica de plantilla cuenta como defecto.
 

@@ -28,12 +28,13 @@ App de Bci para que jóvenes profesionales compren su primer departamento sin te
 - No usar el auto como forma de juntar el pie.
 - Seguir el **Bci Kit**, la guía de diseño de Bci: https://www.bci.cl/corporativo/documentacion
   - Colores: cuatro familias (azul, verde, amarillo y rojo) más grises. Cada familia tiene tonos `dark`, `normal`, `80`, `60`, `40` y `20`, y los grises van de `dark` a `light`. Usar variables con esos nombres: `--blue-dark`, `--blue-normal`, `--blue-80` … `--blue-20`, `--green-*`, `--yellow-*`, `--red-*`, `--gray-dark`, `--gray-semidark`, `--gray-neutral`, `--gray-semilight`, `--gray-light`, `--white`.
-  - La guía no publica los valores hexadecimales. Si puedes abrir la página, toma los valores de su CSS. Si no, usa estos de referencia: azul #0033cc, verde #19a246, amarillo #ffc629, rojo #d7261e, y deriva los tonos 80 a 20 aclarando cada color.
-  - Botones: primario, secundario dark, secundario light, terciario y terciario light, en tamaños small, normal y large, con estado de carga.
+  - Los valores oficiales (colores, tipografía, botones, formularios) están en `docs/bci-kit.md`, tomados de la página del Bci Kit. Rojo y amarillo no tienen tono `dark` en la guía: se usan los derivados de ese documento.
+  - Botones: primario, secundario dark, secundario light, terciario y terciario light, en tamaños small, normal y large, con estado de carga. Son píldoras (borde redondeado de 48 px) con texto en mayúsculas.
   - Títulos: estilos Display 1 a 4 y Encabezado 1 a 6.
   - Listas: viñetas con ícono de check cuando el orden no importa; listas numeradas solo para secuencias o prioridades.
-  - Accesibilidad: contraste AA como mínimo, pensando en usuarios con baja visión.
-- Fondos claros. Tipografías: Barlow Condensed para títulos y Figtree para el texto, salvo que el Bci Kit indique otras.
+  - Accesibilidad: contraste AA como mínimo, pensando en usuarios con baja visión. Ojo: el texto blanco sobre `--green-normal` no llega a AA en tamaño normal; seguir la regla de `docs/bci-kit.md`. El amarillo nunca se usa como texto.
+  - Íconos: Bci usa una fuente propia que no es pública; usar íconos SVG de línea dibujados en el código.
+- Fondos claros. Tipografía: **Overpass** (la del Bci Kit) para títulos y textos, desde Google Fonts. Los títulos van en peso 400, no en negrita.
 - Mobile first (390 px de ancho). Un número y una acción por pantalla. Se entiende en 10 segundos. Siempre mostrar el escenario sin plusvalía.
 - Los montos se muestran en pesos chilenos, con punto de miles (es-CL).
 
