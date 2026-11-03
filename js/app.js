@@ -585,6 +585,98 @@
     });
   }
 
+  // ---------- Perfil (S3-F5) ----------
+  function renderPerfil() {
+    var opcion = function (valor, texto) {
+      return '<input type="radio" name="perfil-modo" id="perfil-' + valor + '" value="' + valor + '"' +
+        (estado.modo === valor ? ' checked' : '') + '><label for="perfil-' + valor + '">' + texto + '</label>';
+    };
+    $('perfil-contenido').innerHTML =
+      '<form id="form-perfil" novalidate>' +
+        '<fieldset class="selector"><legend>¿Para qué quieres el departamento?</legend>' +
+          '<div class="selector-opciones">' + opcion('arrendar', 'Para arrendar') + opcion('vivir', 'Para vivir') + '</div>' +
+        '</fieldset>' +
+        campoDinero('perfil-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
+        campoDinero('perfil-pareja', 'Sueldo líquido de tu pareja', estado.sueldoPareja) +
+        campoDinero('perfil-arriendo', 'Lo que pagas hoy de arriendo', estado.arriendoActual) +
+        '<p class="texto-apoyo ayuda-campo">Opcional. Sirve para comparar lo que pagarías si lo compras para vivir.</p>' +
+        '<div class="acciones">' +
+          '<button type="submit" class="btn btn-primario btn-lg btn-bloque">Guardar cambios</button>' +
+          '<p class="aviso aviso-ok" id="perfil-guardado" aria-live="polite" hidden></p>' +
+        '</div>' +
+      '</form>' +
+      '<section class="tarjeta bloque" aria-labelledby="titulo-reinicio">' +
+        '<h2 class="h4" id="titulo-reinicio">Empezar de nuevo</h2>' +
+        '<p class="texto-apoyo">Borra tu compra y tus datos de este teléfono, y vuelve al simulador.</p>' +
+        '<div class="acciones">' +
+          '<button type="button" class="btn btn-terciario btn-bloque" id="btn-reiniciar" aria-expanded="false" aria-controls="confirmar-reinicio">Empezar de nuevo</button>' +
+          '<div id="confirmar-reinicio" class="confirmar" hidden>' +
+            '<p><strong>¿Seguro?</strong> Esto no se puede deshacer.</p>' +
+            '<button type="button" class="btn btn-peligro btn-bloque" id="btn-reiniciar-si">Sí, borrar todo</button>' +
+            '<button type="button" class="enlace" id="btn-reiniciar-no">Cancelar</button>' +
+          '</div>' +
+        '</div>' +
+      '</section>';
+
+    ['perfil-propio', 'perfil-pareja', 'perfil-arriendo'].forEach(function (id) {
+      $(id).addEventListener('input', function () {
+        formatearCampo($(id));
+        $('perfil-guardado').hidden = true;
+      });
+    });
+
+    $('form-perfil').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var propio = leerMonto($('perfil-propio').value);
+      var pareja = leerMonto($('perfil-pareja').value);
+      var arriendo = leerMonto($('perfil-arriendo').value);
+      // Los sueldos pueden quedar vacíos, pero no en $0. El arriendo puede ser $0.
+      var okPropio = validarSueldo($('perfil-propio'), propio, false);
+      var okPareja = validarSueldo($('perfil-pareja'), pareja, false);
+      if ((!okPropio && propio !== null) || (!okPareja && pareja !== null)) {
+        (propio === 0 ? $('perfil-propio') : $('perfil-pareja')).focus();
+        return;
+      }
+      estado.modo = document.querySelector('input[name="perfil-modo"]:checked').value;
+      estado.sueldoPropio = propio;
+      estado.sueldoPareja = pareja;
+      estado.arriendoActual = arriendo;
+      guardarEstado();
+      recalcularPostulacion();
+      $('perfil-guardado').textContent = 'Cambios guardados. Todo se recalculó con tus datos nuevos.';
+      $('perfil-guardado').hidden = false;
+    });
+
+    var confirmar = $('confirmar-reinicio');
+    $('btn-reiniciar').addEventListener('click', function () {
+      confirmar.hidden = false;
+      $('btn-reiniciar').setAttribute('aria-expanded', 'true');
+      $('btn-reiniciar-si').focus();
+    });
+    $('btn-reiniciar-no').addEventListener('click', function () {
+      confirmar.hidden = true;
+      $('btn-reiniciar').setAttribute('aria-expanded', 'false');
+      $('btn-reiniciar').focus();
+    });
+    $('btn-reiniciar-si').addEventListener('click', function () {
+      borrarTodo();
+      $('reparto').hidden = true;
+      $('btn-reparto').setAttribute('aria-expanded', 'false');
+      location.hash = '#inicio';
+    });
+  }
+
+  // Si el usuario ya postuló y cambia sus sueldos, la carga guardada se vuelve a
+  // calcular; si ya no le alcanza para postular, vuelve al paso 1.
+  function recalcularPostulacion() {
+    if (!estado.compra || estado.compra.paso !== 2) return;
+    var p = buscarProyecto(estado.compra.proyectoId);
+    var k = carga(resumen(p).escenario.totalMes, estado.sueldoPropio, estado.sueldoPareja);
+    var nivel = nivelCarga(k);
+    if (!nivel || nivel === 'no-aprueba') guardarCompra(Object.assign({}, estado.compra, { paso: 1, carga: null }));
+    else guardarCompra(Object.assign({}, estado.compra, { carga: k }));
+  }
+
   // ---------- Navegación ----------
   // Lee la dirección: "#proyecto/alto-nunoa" → { nombre: 'proyecto', param: 'alto-nunoa' }.
   function leerRuta() {
@@ -601,6 +693,7 @@
     if (destino.pantalla === 'proyectos') renderProyectos();
     if (destino.pantalla === 'proyecto') renderDetalle(ruta.param);
     if (destino.pantalla === 'mis-proyectos') { estado.pestanaMis = null; renderMisProyectos(); }
+    if (destino.pantalla === 'perfil') renderPerfil();
 
     document.querySelectorAll('main > .pantalla').forEach(function (s) {
       s.hidden = s.id !== 'pantalla-' + destino.pantalla;

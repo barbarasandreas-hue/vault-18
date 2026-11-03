@@ -538,6 +538,16 @@ button { font: inherit; }
 .aviso-ok { background: var(--green-20); color: var(--green-dark); }
 #postular-explica:empty { display: none; }
 
+/* ---------- Perfil ---------- */
+#form-perfil .selector legend { font-size: 16px; color: var(--gray-dark); }
+.ayuda-campo { margin: -8px 0 0; font-size: 14px; }
+.confirmar { display: grid; gap: 8px; justify-items: center; padding: 12px; border-radius: var(--radio); background: var(--red-20); }
+.confirmar[hidden] { display: none; }
+.confirmar p { margin: 0; color: var(--gray-dark); }
+/* Acción de borrar: el rojo del Bci Kit es para eliminar (texto --red-dark, 7,1:1 sobre blanco) */
+.btn-peligro { background: var(--white); color: var(--red-dark); border-color: var(--red-normal); }
+.btn-peligro:hover { background: var(--red-20); }
+
 /* ---------- Barra inferior ---------- */
 .barra {
   position: fixed;
