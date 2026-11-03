@@ -2,7 +2,7 @@
 
 Evaluado sobre el commit `24aee3b`, contra la sección "Sprint 4" de `PLAN.md`. El commit `f3fcff0` es del Planner: solo cambia `PLAN.md`, `SPEC.md` y el journey map para el Sprint 5, y no se usa para juzgar este sprint.
 
-La app se probó con el servidor local, en Chrome sin ventana, emulando teléfonos de 390 × 844 y 360 × 640, con un script que escribe tecla por tecla. No se probó en un teléfono físico. Este es un informe breve: se cortó por límite de uso.
+La app se probó con el servidor local, en Chrome sin ventana, emulando teléfonos de 390 × 844 y 360 × 640, con un script que escribe tecla por tecla. No se probó en un teléfono físico.
 
 ## 1. Veredicto
 
@@ -36,6 +36,10 @@ La app se probó con el servidor local, en Chrome sin ventana, emulando teléfon
 **Correcciones del Sprint 3:** la carga se ve sin bajar (y = 540 a 390 px, y = 336 a 360 × 640); 30,04 % ahora muestra "30,0 %, En el límite"; en rojo dice cuánto ingreso falta; "Cambiar mi compra" es primario `btn-lg`.
 
 **Móvil:** no hay scroll horizontal ni textos cortados en ninguna pantalla del recorrido, y todos los toques miden 44 px o más.
+
+**Contraste de los elementos nuevos** (calculado con los colores del CSS; AA es 4,5:1, y 3:1 en gráficos): logro 7,44 (texto) y 5,42 (título verde); fila compacta y textos de los hitos 5,40; hito logrado 7,03; chip del paso en Inicio 5,66; borde del punto de cada hito (gráfico) 5,40. Todo cumple AA.
+
+**Capturas (390 y 360 px):** Tu 5 % con la barra de hitos (check en 25 %) y el aviso verde; la firma con el logro y los 3 ítems con check y montos; Inicio con "Paso 2 de 3 · Tu 5 %", "13 meses" y "Seguir ahorrando" visibles sin bajar. Se ven ordenadas y siguen el Bci Kit. El "·" ya no se ve pegado a la palabra siguiente.
 
 ## 4. Puntuaciones
 
