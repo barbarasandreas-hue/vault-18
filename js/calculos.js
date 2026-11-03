@@ -253,7 +253,40 @@ function formatoMiles(n) {
   return formatoPesos(n).replace('$', '');
 }
 
+// ---------- Tu 5 %: ahorro para la meta ----------
+
+// Meses para juntar la meta ahorrando un monto fijo al mes (hacia arriba).
+// Ahorro vacío o cero → null (no un número infinito).
+function mesesParaMeta(meta, ahorroMensual) {
+  if (!ahorroMensual || ahorroMensual <= 0) return null;
+  return Math.ceil(Math.max(0, meta) / ahorroMensual);
+}
+
+// Meses que faltan, descontando lo que ya se juntó.
+function mesesRestantes(meta, ahorrado, ahorroMensual) {
+  return mesesParaMeta(Math.max(0, meta - (ahorrado || 0)), ahorroMensual);
+}
+
+// Hitos de la barra de avance del ahorro.
+var HITOS_AHORRO = [0.25, 0.5, 0.75, 1];
+
+// Hitos ya alcanzados con lo ahorrado (por ejemplo [0.25, 0.5]).
+function hitosAlcanzados(ahorrado, meta) {
+  var a = avance(ahorrado, meta);
+  return HITOS_AHORRO.filter(function (h) { return a >= h; });
+}
+
+// Un mes más de ahorro, sin pasarse de la meta.
+function sumarMes(ahorrado, ahorroMensual, meta) {
+  return Math.min(meta, (ahorrado || 0) + (ahorroMensual || 0));
+}
+
 if (typeof module !== 'undefined') module.exports = {
+  mesesParaMeta: mesesParaMeta,
+  mesesRestantes: mesesRestantes,
+  HITOS_AHORRO: HITOS_AHORRO,
+  hitosAlcanzados: hitosAlcanzados,
+  sumarMes: sumarMes,
   ingresoTotal: ingresoTotal,
   carga: carga,
   cargaRedondeada: cargaRedondeada,

@@ -236,3 +236,33 @@ test('leer y mostrar montos de un campo', () => {
   assert.strictEqual(c.leerMonto('0'), 0);
   assert.strictEqual(c.formatoMiles(1500000), '1.500.000');
 });
+
+// ---------- Tu 5 %: meses para la meta (S4-F1) ----------
+
+test('meses: arrendar en lote ($6.467.738) ahorrando $500.000 → 13 meses', () => {
+  const meta = c.escenario(2500, 'lote').alEscriturar;
+  assert.strictEqual(meta, 6467738);
+  assert.strictEqual(c.mesesParaMeta(meta, 500000), 13);
+});
+
+test('meses: ahorro cero o vacío → error (null), no infinito', () => {
+  assert.strictEqual(c.mesesParaMeta(6467738, 0), null);
+  assert.strictEqual(c.mesesParaMeta(6467738, null), null);
+  assert.strictEqual(c.mesesParaMeta(6467738, undefined), null);
+  assert.strictEqual(c.mesesParaMeta(6467738, -100), null);
+});
+
+test('meses: redondea hacia arriba y descuenta lo ahorrado', () => {
+  assert.strictEqual(c.mesesParaMeta(1000000, 500000), 2);
+  assert.strictEqual(c.mesesParaMeta(1000001, 500000), 3);
+  assert.strictEqual(c.mesesRestantes(6467738, 3000000, 500000), 7);
+  assert.strictEqual(c.mesesRestantes(6467738, 6467738, 500000), 0);
+});
+
+test('ahorro: hitos alcanzados y un mes más sin pasarse de la meta', () => {
+  assert.deepStrictEqual(c.hitosAlcanzados(0, 1000), []);
+  assert.deepStrictEqual(c.hitosAlcanzados(500, 1000), [0.25, 0.5]);
+  assert.deepStrictEqual(c.hitosAlcanzados(1000, 1000), [0.25, 0.5, 0.75, 1]);
+  assert.strictEqual(c.sumarMes(6000000, 500000, 6467738), 6467738);
+  assert.strictEqual(c.sumarMes(0, 500000, 6467738), 500000);
+});
