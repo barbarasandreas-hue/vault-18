@@ -715,6 +715,42 @@ button { font: inherit; }
 .linea-ver { margin-left: auto; display: inline-flex; align-items: center; gap: 2px; color: var(--blue-dark); font-weight: 600; text-decoration: underline; }
 .linea-inversiones > span:first-child { color: var(--gray-semidark); }
 
+/* ---------- S7-F4: explicaciones a un toque ---------- */
+.btn-ayuda {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; margin: -12px -10px -12px -6px; padding: 0;
+  vertical-align: middle;
+  border: 0; border-radius: 50%; background: transparent;
+  color: var(--blue-dark); cursor: pointer;
+}
+.btn-ayuda svg { width: 20px; height: 20px; }
+.btn-ayuda:hover, .btn-ayuda[aria-expanded="true"] { color: var(--gray-dark); }
+.ayuda-globo {
+  display: block; grid-column: 1 / -1;
+  margin: 8px 0 0; padding: 10px 12px;
+  border-radius: var(--radio-campo);
+  background: var(--blue-20); color: var(--gray-dark);
+  font-size: 15px; font-weight: 400; line-height: 1.45; text-transform: none; letter-spacing: 0;
+}
+.chip-fila { margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 0 4px; }
+.datos-inversion li { flex-wrap: wrap; align-items: center; }
+.datos-inversion li .ayuda-globo { flex-basis: 100%; }
+.glosario { margin: 8px 0 12px; }
+.glosario div { padding: 10px 0; border-top: 1px solid var(--gray-light); }
+.glosario div:first-child { border-top: 0; }
+.glosario dt { font-weight: 700; }
+.glosario dd { margin: 2px 0 0; color: var(--gray-semidark); }
+
+/* ---------- S7-F6: introducción ---------- */
+body.en-intro .barra { display: none; }
+body.en-intro .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
+.intro { padding-top: 32px; }
+.marca-intro { margin: 0 0 8px; font-weight: 700; color: var(--gray-semidark); letter-spacing: .3px; }
+.intro .display-4 { margin-bottom: 8px; }
+.intro-lista { margin: 20px 0 16px; }
+.intro-lista li { font-size: 18px; font-weight: 600; }
+.intro-lista small { font-weight: 400; }
+
 /* ---------- Perfil ---------- */
 #form-perfil .selector legend { font-size: 16px; color: var(--gray-dark); }
 .ayuda-campo { margin: 4px 0 0; font-size: 14px; }

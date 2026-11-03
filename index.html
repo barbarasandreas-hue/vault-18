@@ -34,6 +34,7 @@
     <symbol id="i-alerta" viewBox="0 0 24 24"><path d="M12 3.5L21.5 20h-19z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.2v.3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
     <symbol id="i-no" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
     <symbol id="i-aqui" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.5" fill="currentColor"/></symbol>
+    <symbol id="i-ayuda" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.2" fill="currentColor"/></symbol>
     <symbol id="i-pronto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   </svg>
 
@@ -43,6 +44,21 @@
   <div class="app">
     <main>
       <!-- ===== Inicio: simulador ===== -->
+      <!-- ===== Introducción (S7-F6): solo la primera vez, antes de Inicio ===== -->
+      <section id="pantalla-intro" class="pantalla intro" aria-labelledby="titulo-intro" hidden>
+        <div class="figuras" aria-hidden="true"><span class="f-cuadrado"></span><span class="f-circulo"></span><span class="f-triangulo"></span><span class="f-rectangulo"></span></div>
+        <p class="marca-intro">Bci<span class="sep" aria-hidden="true">·</span>Primer Peldaño</p>
+        <h1 id="titulo-intro" class="display-4">Tu departamento con el 5&nbsp;% del precio</h1>
+        <p class="texto-apoyo">Lo pagan entre tres partes, y tú pones la más chica.</p>
+        <ul class="lista-check intro-lista">
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Bci te presta el 80&nbsp;%<small>Un crédito hipotecario a 30 años, que pagas junto a tu pareja.</small></span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Inversionistas te prestan el 15&nbsp;%<small>A 10 años, con la garantía de una segunda hipoteca.</small></span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Tú pones el 5&nbsp;% y los gastos<small>Con tu ahorro, propio o grupal: nadie lo pone por ti.</small></span></li>
+        </ul>
+        <p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Sin promesas de plusvalía</p>
+        <div class="accion"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-empezar-intro">Empezar</button></div>
+      </section>
+
       <!-- ===== Inicio (se dibuja desde app.js) =====
            Sin compra: ¿Cuánto puedo comprar? (S5-F0). Con compra: Mi camino (S5-F6). -->
       <section id="pantalla-inicio" class="pantalla" aria-labelledby="titulo-inicio">

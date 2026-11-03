@@ -4,6 +4,7 @@
 (function () {
   // Ruta → pantalla que se muestra y botón de la barra que queda activo.
   var RUTAS = {
+    'bienvenida': { pantalla: 'intro', seccion: null },
     'inicio': { pantalla: 'inicio', seccion: 'inicio' },
     'proyectos': { pantalla: 'proyectos', seccion: 'proyectos' },
     'proyecto': { pantalla: 'proyecto', seccion: 'proyectos' },
@@ -28,7 +29,8 @@
     ahorrado: 0,             // lo que lleva juntado (simulado)
     ahorroIniciado: false,   // si ya tocó "Empezar a ahorrar"
     meAlcanza: false,        // filtro "Me alcanza" de Proyectos
-    inversiones: leerInversiones() // [{ id, proyectoId, montoUF, fecha, cuotasCobradas }]
+    inversiones: leerInversiones(), // [{ id, proyectoId, montoUF, fecha, cuotasCobradas }]
+    introVista: false        // S7-F6: si ya vio la introducción
   };
 
   // ---------- Elecciones que se recuerdan entre visitas (S3-F3) ----------
@@ -68,10 +70,12 @@
       localStorage.removeItem(CLAVE_ESTADO);
       localStorage.removeItem(CLAVE_COMPRA);
       localStorage.removeItem(CLAVE_INVERSIONES);
+      localStorage.removeItem(CLAVE_INTRO);
     } catch (e) { /* nada guardado */ }
     Object.keys(VALORES_POR_DEFECTO).forEach(function (k) { estado[k] = VALORES_POR_DEFECTO[k]; });
     estado.compra = null;
     estado.inversiones = [];
+    estado.introVista = false;
     estado.pestana = 'conjunto';
     estado.pestanaMis = null;
   }
@@ -192,6 +196,79 @@
       return barraAvance('Cupos tomados', r.cuposTomados + ' de ' + r.cupos, r.avanceCupos);
     }
     return barraAvance('15\u00a0% reunido con inversionistas', formatoPorcentaje(r.avanceFinanciamiento, 0), r.avanceFinanciamiento);
+  }
+
+  // ---------- S7-F4: explicaciones a un toque ----------
+  // Una frase por término, sin jerga. Las mismas se reúnen en Perfil › Ayuda.
+  var GLOSARIO = {
+    'dividendo': { termino: 'Dividendo', pregunta: '¿Qué es el dividendo?',
+      texto: 'Es la cuota que pagas cada mes a Bci por el crédito hipotecario, con los seguros incluidos.' },
+    'pie': { termino: 'Pie', pregunta: '¿Qué es el pie?',
+      texto: 'Es la parte del precio que pones tú al comprar: aquí, solo el 5 %, más los gastos de escritura.' },
+    'carga': { termino: 'Carga', pregunta: '¿Qué es la carga?',
+      texto: 'Es la parte de lo que ganan tú y tu pareja que se va cada mes en el dividendo y la cuota a los inversionistas.' },
+    'segunda-hipoteca': { termino: 'Segunda hipoteca', pregunta: '¿Qué es la segunda hipoteca?',
+      texto: 'Es la garantía de los inversionistas: si dejas de pagar, ellos cobran con el departamento, después de Bci.' },
+    'cuenta-custodia': { termino: 'Cuenta custodia', pregunta: '¿Qué es la cuenta custodia?',
+      texto: 'Es una cuenta de Bci donde entra el arriendo y desde la que se paga primero el dividendo y después a los inversionistas.' },
+    'compra-conjunto': { termino: 'Compra en conjunto', pregunta: '¿Qué es la compra en conjunto?',
+      texto: 'Varias personas compran juntas los departamentos de un edificio y cada una paga 10 % menos.' },
+    'financiamiento-pie': { termino: 'Financiamiento del pie', pregunta: '¿Qué es el financiamiento del pie?',
+      texto: 'Compras un departamento a precio de lista y varios inversionistas te prestan el 15 % del precio.' }
+  };
+
+  // Botón de ayuda (44 × 44 px) para un término del glosario.
+  function ayuda(clave) {
+    return '<button type="button" class="btn-ayuda" data-ayuda="' + clave + '" aria-expanded="false" aria-label="' +
+      GLOSARIO[clave].pregunta + '"><svg aria-hidden="true"><use href="#i-ayuda"/></svg></button>';
+  }
+
+  // Un solo manejador para todos los botones de ayuda: abre o cierra la explicación debajo del término.
+  var contadorAyuda = 0;
+  function iniciarAyudas() {
+    document.addEventListener('click', function (ev) {
+      var boton = ev.target.closest('.btn-ayuda');
+      if (!boton) return;
+      var abierto = boton.getAttribute('aria-expanded') === 'true';
+      if (abierto) {
+        var viejo = $(boton.getAttribute('aria-controls'));
+        if (viejo) viejo.remove();
+        boton.setAttribute('aria-expanded', 'false');
+        return;
+      }
+      var id = 'ayuda-' + (++contadorAyuda);
+      var globo = document.createElement('span');
+      globo.className = 'ayuda-globo';
+      globo.id = id;
+      globo.textContent = GLOSARIO[boton.dataset.ayuda].texto;
+      // La explicación va al final del elemento que contiene el término (párrafo, ítem o título).
+      var contenedor = boton.closest('li, p, h1, h2, h3, .chip-fila') || boton.parentNode;
+      contenedor.appendChild(globo);
+      boton.setAttribute('aria-controls', id);
+      boton.setAttribute('aria-expanded', 'true');
+    });
+  }
+
+  function glosarioCompleto() {
+    return '<dl class="glosario">' + Object.keys(GLOSARIO).map(function (k) {
+      return '<div><dt>' + GLOSARIO[k].termino + '</dt><dd>' + GLOSARIO[k].texto + '</dd></div>';
+    }).join('') + '</dl>';
+  }
+
+  // ---------- S7-F6: introducción (solo la primera vez, antes de Inicio) ----------
+  var CLAVE_INTRO = 'primer-peldano-intro';
+  function leerIntroVista() {
+    try { return localStorage.getItem(CLAVE_INTRO) === '1'; } catch (e) { return false; }
+  }
+  function marcarIntroVista() {
+    estado.introVista = true;
+    try { localStorage.setItem(CLAVE_INTRO, '1'); } catch (e) { /* queda en memoria */ }
+  }
+  function iniciarIntro() {
+    $('btn-empezar-intro').addEventListener('click', function () {
+      marcarIntroVista();
+      location.hash = '#inicio';
+    });
   }
 
   // ---------- Inicio: Mi camino (S5-F6, sobre el próximo paso de S4-F6) ----------
@@ -425,7 +502,7 @@
         '<p class="etiqueta">Puedes comprar hasta</p>' +
         '<strong class="numero display-2">' + formatoUF(cap) + '</strong>' +
         '<p class="texto-apoyo">Es decir, ' + formatoPesos(e.precio) + ', poniendo <strong>' + formatoPesos(e.alEscriturar) +
-          '</strong> al escriturar y <strong>' + formatoPesos(e.totalMes) + '</strong> al mes.</p>' +
+          '</strong> al escriturar y <strong>' + formatoPesos(e.totalMes) + '</strong> al mes. ' + ayuda('pie') + '</p>' +
         '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
         '<button type="button" class="enlace desplegar" id="btn-reparto" aria-expanded="false" aria-controls="reparto">' +
           '¿De dónde sale el resto?<svg aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
@@ -485,9 +562,9 @@
       tab.tabIndex = activa ? 0 : -1;
     });
     $('panel-proyectos').setAttribute('aria-labelledby', 'tab-' + estado.pestana);
-    $('proyectos-explica').textContent = estado.pestana === 'conjunto'
-      ? 'Compran varios juntos un lote y cada uno paga 10\u00a0% menos.'
-      : 'Un departamento a precio de lista; reúnes tu 15\u00a0% con inversionistas.';
+    $('proyectos-explica').innerHTML = (estado.pestana === 'conjunto'
+      ? 'Compran varios juntos un lote y cada uno paga 10\u00a0% menos. ' + ayuda('compra-conjunto')
+      : 'Un departamento a precio de lista; reúnes tu 15\u00a0% con inversionistas. ' + ayuda('financiamiento-pie'));
 
     // Filtro "Me alcanza" (S5-F0): solo si hay sueldos para calcular la capacidad.
     var cap = capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja);
@@ -612,7 +689,8 @@
 
     contenedor.innerHTML =
       '<header class="detalle-cabecera">' +
-        '<span class="chip">' + NOMBRE_TIPO[p.tipo] + '</span>' +
+        '<p class="chip-fila"><span class="chip">' + NOMBRE_TIPO[p.tipo] + '</span> ' +
+          ayuda(conjunto ? 'compra-conjunto' : 'financiamiento-pie') + '</p>' +
         '<h1 id="titulo-proyecto" class="h2">' + esc(p.nombre) + '</h1>' +
         '<p class="texto-apoyo">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       '</header>' +
@@ -634,7 +712,7 @@
         '<p class="reparto-total">Más ' + formatoPesos(e.gastos) + ' de gastos de escritura: pones <strong>' +
           formatoPesos(e.alEscriturar) + '</strong> al escriturar.</p>' +
         '<p class="reparto-total">Al mes: dividendo ' + formatoPesos(e.dividendo) + ' + inversionistas ' +
-          formatoPesos(e.cuotaInversionistas) + ' = <strong>' + formatoPesos(e.totalMes) + '</strong>.</p>' +
+          formatoPesos(e.cuotaInversionistas) + ' = <strong>' + formatoPesos(e.totalMes) + '</strong>. ' + ayuda('dividendo') + '</p>' +
       '</div>' +
 
       '<div class="tarjeta bloque">' +
@@ -648,11 +726,11 @@
         '<ul class="datos-inversion">' +
           '<li><span>Rentabilidad</span><strong>UF + 8\u00a0% al año</strong></li>' +
           '<li><span>Plazo</span><strong>10 años</strong></li>' +
-          '<li><span>Garantía</span><strong>Segunda hipoteca</strong></li>' +
+          '<li><span>Garantía</span><strong>Segunda hipoteca ' + ayuda('segunda-hipoteca') + '</strong></li>' +
           '<li><span>Falta por financiar</span><strong>' + formatoUF(r.faltaUF) + ' = ' + formatoPesos(ufAPesos(r.faltaUF)) + '</strong></li>' +
         '</ul>' +
         (conjunto ? barraAvance('15\u00a0% reunido con inversionistas', formatoPorcentaje(r.avanceFinanciamiento, 0), r.avanceFinanciamiento) : '') +
-        '<p class="frase-cierre">Bci cobra el arriendo en una cuenta custodia y paga a los inversionistas después del dividendo.</p>' +
+        '<p class="frase-cierre">Bci cobra el arriendo en una cuenta custodia y paga a los inversionistas después del dividendo. ' + ayuda('cuenta-custodia') + '</p>' +
       '</section>' +
 
       '<div class="acciones">' +
@@ -956,7 +1034,7 @@
     var sug = nivel === 'holgado' ? null : sugerencia(p, k);
     resultado.innerHTML =
       '<div class="tarjeta semaforo semaforo-' + nivel + '">' +
-        '<p class="etiqueta">Tu carga</p>' +
+        '<p class="etiqueta">Tu carga ' + ayuda('carga') + '</p>' +
         '<div class="semaforo-fila">' +
           '<strong class="numero display-2">' + formatoPorcentaje(cargaRedondeada(k), 1) + '</strong>' +
           '<p class="estado-semaforo"><svg aria-hidden="true"><use href="#' + s.icono + '"/></svg>' + s.palabra + '</p>' +
@@ -1073,7 +1151,7 @@
     var meta = resumen(p).escenario.alEscriturar;
     // Si ya se juntó todo (por ejemplo, al cambiar a un proyecto más barato), se pasa a la firma.
     var cabecera = tarjetaCompacta(p, 'Meta al escriturar', meta) + listaPasos(2) +
-      '<h2 class="h3 bloque" id="titulo-tu5">Tu 5\u00a0% <span class="texto-apoyo titulo-apoyo">más gastos, lo juntas tú</span></h2>';
+      '<h2 class="h3 bloque" id="titulo-tu5">Tu 5\u00a0% <span class="texto-apoyo titulo-apoyo">más gastos, lo juntas tú</span> ' + ayuda('pie') + '</h2>';
 
     if (!estado.ahorroIniciado) {
       $('panel-compra').innerHTML = cabecera +
@@ -1201,13 +1279,13 @@
       '<section class="tarjeta bloque" aria-labelledby="titulo-firma">' +
         '<h2 class="h3" id="titulo-firma">Lo que firmas</h2>' +
         '<ul class="lista-check">' +
-          filaFirma('Crédito hipotecario Bci',
+          filaFirma('Crédito hipotecario Bci ' + ayuda('dividendo'),
             'Bci presta el 80\u00a0% (' + formatoPesos(e.reparto.bci) + ') a 30 años al 4,5\u00a0%. Lo pagan tú y tu pareja: ' +
             formatoPesos(e.dividendo) + ' al mes, con seguros.') +
-          filaFirma('Segunda hipoteca con los inversionistas',
+          filaFirma('Segunda hipoteca con los inversionistas ' + ayuda('segunda-hipoteca'),
             'Ellos prestan el 15\u00a0% (' + formatoPesos(e.reparto.inversionistas) + ') a 10 años, a UF + 8\u00a0%: pagas ' +
             formatoPesos(e.cuotaInversionistas) + ' al mes. Si no pagas, cobran después de Bci.') +
-          filaFirma('Cuenta custodia Bci', custodia) +
+          filaFirma('Cuenta custodia Bci ' + ayuda('cuenta-custodia'), custodia) +
         '</ul>' +
         '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
       '</section>' +
@@ -1300,7 +1378,7 @@
         campoDinero('arriendo-mes', 'Arriendo que entró este mes', m.arriendo) +
         '<section class="tarjeta bloque" aria-labelledby="titulo-cascada">' +
           '<h2 class="h4" id="titulo-cascada">Cómo se movió tu dinero</h2>' +
-          '<p class="texto-apoyo">En la cuenta custodia de Bci, en este orden:</p>' +
+          '<p class="texto-apoyo">En la cuenta custodia de Bci, en este orden: ' + ayuda('cuenta-custodia') + '</p>' +
           '<ol class="cascada">' +
             pasoCascada(1, 'Entra el arriendo', null, formatoPesos(c.bruto)) +
             pasoCascada(2, 'Se descuentan administración y el mes vacío',
@@ -1503,6 +1581,12 @@
           '<p class="aviso aviso-ok" id="perfil-guardado" aria-live="polite" hidden></p>' +
         '</div>' +
       '</form>' +
+      '<section class="tarjeta bloque" aria-labelledby="titulo-ayuda">' +
+        '<h2 class="h4" id="titulo-ayuda">Ayuda</h2>' +
+        '<p class="texto-apoyo">Las palabras de la app, en una frase.</p>' +
+        glosarioCompleto() +
+        '<a class="enlace" href="#bienvenida">Ver de nuevo la introducción</a>' +
+      '</section>' +
       '<section class="tarjeta bloque" aria-labelledby="titulo-reinicio">' +
         '<h2 class="h4" id="titulo-reinicio">Empezar de nuevo</h2>' +
         '<p class="texto-apoyo">Borra tu compra, tus inversiones y tus datos de este teléfono, y vuelve al inicio.</p>' +
@@ -1583,7 +1667,13 @@
 
   function mostrar() {
     var ruta = leerRuta();
+    // S7-F6: la primera vez, antes de Inicio, se muestra la introducción.
+    if (ruta.nombre === 'inicio' && !estado.introVista) {
+      location.replace('#bienvenida');
+      ruta = leerRuta();
+    }
     var destino = RUTAS[ruta.nombre];
+    document.body.classList.toggle('en-intro', destino.pantalla === 'intro');
 
     if (destino.pantalla === 'inicio') renderInicio();
     if (destino.pantalla === 'proyectos') renderProyectos();
@@ -1608,5 +1698,8 @@
   window.addEventListener('hashchange', mostrar);
   iniciarProyectos();
   iniciarMisProyectos();
+  iniciarAyudas();
+  iniciarIntro();
+  estado.introVista = leerIntroVista() || !!estado.compra || estado.inversiones.length > 0;
   mostrar();
 })();
