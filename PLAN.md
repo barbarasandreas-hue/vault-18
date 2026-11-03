@@ -209,12 +209,12 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 2 | S2-F4 Detalle y unirse | aprobada |
 | 2 | S2-F5 Mis proyectos (estructura) | aprobada |
 | 2 | S2-F6 Publicación en GitHub Pages | aprobada |
-| 3 | S3-F0 Bci Kit oficial (hacer primero) | en progreso |
-| 3 | S3-F1 Fórmula de carga | en progreso |
-| 3 | S3-F2 Postula (paso 1 de Mi compra) | en progreso |
-| 3 | S3-F3 Recordar elecciones | en progreso |
-| 3 | S3-F4 Agregar a pantalla de inicio | en progreso |
-| 3 | S3-F5 Perfil | en progreso |
+| 3 | S3-F0 Bci Kit oficial (hacer primero) | aprobada |
+| 3 | S3-F1 Fórmula de carga | aprobada |
+| 3 | S3-F2 Postula (paso 1 de Mi compra) | aprobada |
+| 3 | S3-F3 Recordar elecciones | aprobada |
+| 3 | S3-F4 Agregar a pantalla de inicio | aprobada |
+| 3 | S3-F5 Perfil | aprobada |
 | 4 | S4-F1 Fórmula de meses | pendiente |
 | 4 | S4-F2 Tu 5 % (paso 2 de Mi compra) | pendiente |
 | 4 | S4-F3 Propio o grupal | pendiente |
