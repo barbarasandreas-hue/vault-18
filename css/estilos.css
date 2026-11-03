@@ -685,6 +685,8 @@ button { font: inherit; }
 .cascada li.cascada-final { background: var(--green-20); border-radius: var(--radio); padding: 10px 8px; border-top: 0; margin-top: 4px; }
 .cascada li.cascada-final .cascada-num { background: var(--green-dark); color: var(--white); }
 .cascada li.cascada-final .cascada-texto { font-weight: 700; color: var(--green-dark); }
+/* El texto chico de la fila final, en gris oscuro: --gray-semidark sobre --green-20 da 4,16:1 */
+.cascada li.cascada-final small { color: var(--gray-dark); font-weight: 400; }
 .deuda { margin-top: 14px; }
 .deuda .avance-texto span:last-child { color: var(--gray-semidark); }
 .comparacion { margin: 10px 0 0; padding: 10px 12px; border-radius: var(--radio-campo); background: var(--gray-light); }
@@ -735,6 +737,8 @@ button { font: inherit; }
 .chip-fila { margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 0 4px; }
 .datos-inversion li { flex-wrap: wrap; align-items: center; }
 .datos-inversion li .ayuda-globo { flex-basis: 100%; }
+/* La explicación nunca hereda el gris de la fila (--gray-semidark sobre --blue-20 da 4,14:1) */
+.datos-inversion .ayuda-globo, .ayuda-globo { color: var(--gray-dark); }
 .glosario { margin: 8px 0 12px; }
 .glosario div { padding: 10px 0; border-top: 1px solid var(--gray-light); }
 .glosario div:first-child { border-top: 0; }
