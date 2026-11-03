@@ -97,12 +97,41 @@
       </section>
 
       <!-- ===== Secciones ===== -->
+      <!-- ===== Proyectos: el marketplace ===== -->
       <section id="pantalla-proyectos" class="pantalla" aria-labelledby="titulo-proyectos" hidden>
-        <div class="vacio">
-          <svg aria-hidden="true"><use href="#i-pronto"/></svg>
-          <h1 id="titulo-proyectos" class="h3">Proyectos</h1>
-          <p class="texto-apoyo">Disponible pronto.</p>
+        <header class="encabezado">
+          <h1 id="titulo-proyectos" class="h2">Proyectos</h1>
+          <p class="texto-apoyo">Únete a una compra o financia tu pie.</p>
+          <div class="filtro">
+            <span class="chip chip-ia" id="proyectos-ia"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Filtrado por IA</span>
+            <p class="texto-apoyo" id="proyectos-modo"></p>
+            <a href="#inicio" class="btn btn-terciario">Cambiar</a>
+          </div>
+        </header>
+
+        <div class="pestanas" role="tablist" aria-label="Tipo de proyecto">
+          <button type="button" role="tab" id="tab-conjunto" data-pestana="conjunto" aria-controls="panel-proyectos">Compra en conjunto</button>
+          <button type="button" role="tab" id="tab-financiamiento" data-pestana="financiamiento" aria-controls="panel-proyectos">Financiamiento del pie</button>
         </div>
+
+        <div id="panel-proyectos" role="tabpanel">
+          <p class="texto-apoyo" id="proyectos-explica"></p>
+          <ul class="lista-proyectos" id="lista-proyectos"></ul>
+          <div class="vacio" id="proyectos-vacio" hidden>
+            <svg aria-hidden="true"><use href="#i-proyectos"/></svg>
+            <h2 class="h3">Ningún proyecto rinde 4,5 % hoy</h2>
+            <p class="texto-apoyo">Para arrendar, la IA solo muestra departamentos que rinden 4,5 % o más al año.</p>
+            <div class="acciones">
+              <button type="button" class="btn btn-primario btn-bloque" id="btn-modo-vivir">Cambiar a modo vivir</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Detalle de un proyecto (se dibuja desde app.js) ===== -->
+      <section id="pantalla-proyecto" class="pantalla" aria-labelledby="titulo-proyecto" hidden>
+        <a href="#proyectos" class="btn btn-terciario volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Proyectos</a>
+        <div id="detalle-proyecto"></div>
       </section>
       <section id="pantalla-mis-proyectos" class="pantalla" aria-labelledby="titulo-mis-proyectos" hidden>
         <div class="vacio">
