@@ -77,6 +77,13 @@
   leerEstado();
 
   function $(id) { return document.getElementById(id); }
+
+  // Avisa a los lectores de pantalla sin mover el foco (región aria-live fija en index.html).
+  function anunciar(texto) {
+    var r = $('anuncio');
+    r.textContent = '';
+    setTimeout(function () { r.textContent = texto; }, 50);
+  }
   function poner(id, pesos) { $(id).textContent = formatoPesos(pesos); }
 
   // Escapa texto antes de ponerlo dentro de HTML.
@@ -147,8 +154,7 @@
   function proximoPaso() {
     var p = buscarProyecto(estado.compra.proyectoId);
     var e = resumen(p).escenario;
-    var paso = estado.compra.paso || 1;
-    if (paso >= 2 && !estado.compra.carga) paso = 1;
+    var paso = pasoEfectivo();
 
     if (paso === 1) {
       var k = carga(e.totalMes, estado.sueldoPropio, estado.sueldoPareja);
@@ -366,6 +372,8 @@
     if (esMiCompra) {
       comprar = '<p class="aviso">Ya te uniste a este proyecto.</p>' +
         '<a href="#mis-proyectos" class="btn btn-primario btn-lg btn-bloque">Ver mi compra</a>';
+    } else if (estado.compra && estado.compra.paso === 4) {
+      comprar = '<p class="aviso">Ya firmaste tu compra en ' + esc(buscarProyecto(estado.compra.proyectoId).nombre) + '.</p>';
     } else if (estado.compra) {
       var actual = buscarProyecto(estado.compra.proyectoId);
       var reemplaza = (estado.compra.paso || 1) >= 2
@@ -597,8 +605,8 @@
           campoDinero('sueldo-pareja', 'Sueldo líquido de tu pareja', estado.sueldoPareja) +
         '</div>' +
         '<div id="carga-resultado" aria-live="polite"></div>' +
-        '<div class="acciones">' +
-          '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-postular" aria-describedby="postular-explica">Postular</button>' +
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-postular" aria-describedby="postular-explica">Postular</button></div>' +
+          '<div class="acciones">' +
           '<p class="texto-apoyo" id="postular-explica"></p>' +
           '<button type="button" class="btn btn-terciario btn-bloque" id="btn-salir">Salir de esta compra</button>' +
         '</div>' +
@@ -627,7 +635,7 @@
       renderCarga(p, tocados);
       if ($('btn-postular').disabled) return;
       var k = carga(e.totalMes, estado.sueldoPropio, estado.sueldoPareja);
-      guardarCompra(Object.assign({}, estado.compra, { paso: 2, carga: k }));
+      guardarCompra(Object.assign({}, estado.compra, { paso: pasoTrasPostular(e.alEscriturar), carga: k }));
       renderMisProyectos();
       window.scrollTo(0, 0);
     });
@@ -680,12 +688,6 @@
   function renderTu5(p, d) {
     var meta = resumen(p).escenario.alEscriturar;
     // Si ya se juntó todo (por ejemplo, al cambiar a un proyecto más barato), se pasa a la firma.
-    if (estado.ahorroIniciado && estado.ahorrado >= meta) {
-      guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
-      renderFirma(p, d, true);
-      return;
-    }
-
     var cabecera = tarjetaCompacta(p, 'Meta al escriturar', meta) + listaPasos(2) +
       '<h2 class="h3 bloque" id="titulo-tu5">Tu 5 % <span class="texto-apoyo titulo-apoyo">más gastos, lo juntas tú</span></h2>';
 
@@ -695,8 +697,8 @@
           selectorAhorro() +
           campoDinero('ahorro-mensual', '¿Cuánto puedes ahorrar al mes?', estado.ahorroMensual) +
           '<div id="meses-resultado" aria-live="polite"></div>' +
-          '<div class="acciones">' +
-            '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-empezar">Empezar a ahorrar</button>' +
+          '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-empezar">Empezar a ahorrar</button></div>' +
+            '<div class="acciones">' +
             '<button type="button" class="btn btn-terciario btn-bloque" id="btn-salir">Salir de esta compra</button>' +
           '</div>' +
         '</section>';
@@ -727,10 +729,14 @@
           $('explica-ahorro').textContent = TIPOS_AHORRO[estado.tipoAhorro];
         });
       });
+      var habiaMeses = estado.ahorroMensual > 0;
       $('ahorro-mensual').addEventListener('input', function () {
         estado.ahorroMensual = formatearCampo($('ahorro-mensual'));
         guardarEstado();
         dibujarMeses();
+        var hayMeses = estado.ahorroMensual > 0;
+        if (hayMeses && !habiaMeses) $('meses-resultado').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        habiaMeses = hayMeses;
       });
       $('ahorro-mensual').addEventListener('blur', function () { tocado = true; dibujarMeses(); });
       $('btn-empezar').addEventListener('click', function () {
@@ -757,10 +763,10 @@
           '<p class="texto-apoyo">' + (estado.tipoAhorro === 'grupal' ? 'Ahorro grupal' : 'Ahorro propio') +
             ' de ' + formatoPesos(estado.ahorroMensual) + ' al mes.</p>' +
           barraHitos(estado.ahorrado, meta) +
-          '<p class="aviso aviso-ok" id="aviso-hito" aria-live="polite" hidden></p>' +
+          '<p class="aviso aviso-ok" id="aviso-hito" hidden></p>' +
         '</div>' +
-        '<div class="acciones">' +
-          '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-simular-mes">Simular un mes</button>' +
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-simular-mes">Simular un mes</button></div>' +
+          '<div class="acciones">' +
           '<p class="texto-apoyo">Es una simulación: suma tu ahorro de un mes al avance.</p>' +
           '<button type="button" class="btn btn-terciario btn-bloque" id="btn-cambiar-ahorro">Cambiar mi ahorro mensual</button>' +
         '</div>' +
@@ -778,10 +784,15 @@
       }
       var nuevos = hitosAlcanzados(estado.ahorrado, meta).filter(function (h) { return antes.indexOf(h) === -1; });
       renderTu5(p, d);
+      var faltanAhora = mesesRestantes(meta, estado.ahorrado, estado.ahorroMensual);
+      var mensaje = 'Sumaste un mes. Te faltan ' + textoMeses(faltanAhora) + '.';
       if (nuevos.length) {
         $('aviso-hito').textContent = '¡Llegaste al ' + porcentajeEntero(nuevos[nuevos.length - 1]) + ' % de tu meta! Sigue así.';
         $('aviso-hito').hidden = false;
+        mensaje = $('aviso-hito').textContent + ' ' + mensaje;
       }
+      anunciar(mensaje);
+      $('btn-simular-mes').focus();
     });
     $('btn-cambiar-ahorro').addEventListener('click', function () {
       estado.ahorroIniciado = false;
@@ -816,12 +827,16 @@
         '</ul>' +
         '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
       '</section>' +
-      '<div class="acciones">' +
-        '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-firmar">Firmar</button>' +
+      '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-firmar">Firmar</button></div>' +
+        '<div class="acciones">' +
         '<p class="texto-apoyo">Es una firma simulada: en este prototipo no se firma nada real.</p>' +
       '</div>';
 
     $('btn-firmar').addEventListener('click', function () {
+      // El ahorro se usó para escriturar: queda en cero.
+      estado.ahorrado = 0;
+      estado.ahorroIniciado = false;
+      guardarEstado();
       guardarCompra(Object.assign({}, estado.compra, { paso: 4 }));
       renderMiCompra();
       window.scrollTo(0, 0);
@@ -855,13 +870,28 @@
     renderMisProyectos();
   }
 
+  // En qué paso está la compra, sin guardar nada (lo usan Mi compra e Inicio).
+  // Sin postulación guardada se vuelve a Postula; con la meta ya juntada se pasa a la firma.
+  function pasoEfectivo() {
+    var c = estado.compra;
+    var paso = c.paso || 1;
+    if (paso >= 2 && paso < 4 && !c.carga) return 1;
+    if (paso === 2 && estado.ahorroIniciado &&
+        estado.ahorrado >= resumen(buscarProyecto(c.proyectoId)).escenario.alEscriturar) return 3;
+    return paso;
+  }
+
+  // Después de postular: va a Tu 5 %, o directo a la firma si el ahorro ya alcanza la meta.
+  function pasoTrasPostular(meta) {
+    return estado.ahorroIniciado && estado.ahorrado >= meta ? 3 : 2;
+  }
+
   function renderMiCompra() {
     var p = buscarProyecto(estado.compra.proyectoId);
     var d = departamentoDeMiCompra(p);
-    var paso = estado.compra.paso || 1;
-    if (paso >= 2 && !estado.compra.carga) paso = 1; // sin postulación guardada, se vuelve a postular
+    var paso = pasoEfectivo();
     if (paso === 4) renderMiDepartamento(p, d);
-    else if (paso === 3) renderFirma(p, d, false);
+    else if (paso === 3) renderFirma(p, d, estado.compra.paso === 2);
     else if (paso === 2) renderTu5(p, d);
     else renderPostula(p, d);
   }

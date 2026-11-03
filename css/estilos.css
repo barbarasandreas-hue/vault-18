@@ -478,7 +478,7 @@ button { font: inherit; }
 
 /* ---------- Indicador de pasos (compacto: 1 · 2 · 3) ---------- */
 .pasos {
-  list-style: none; margin: 16px 0 0; padding: 0;
+  list-style: none; margin: 12px 0 0; padding: 0;
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
 }
 .pasos li {
@@ -542,7 +542,6 @@ button { font: inherit; }
 .compacta-cifra { margin: 0; display: flex; gap: 6px; align-items: baseline; color: var(--gray-semidark); font-size: 14px; }
 .compacta-cifra strong { color: var(--gray-dark); font-size: 16px; }
 .titulo-apoyo { font-size: 15px; }
-.pasos { margin-top: 12px; }
 
 /* ---------- Tu 5 %: meses, hitos y logro ---------- */
 .explica-ahorro { margin: -4px 0 16px; font-size: 15px; }
@@ -590,6 +589,17 @@ button { font: inherit; }
 .proximo .etiqueta { margin: 0; font-weight: 600; color: var(--gray-semidark); }
 .proximo .numero { display: block; margin: 0 0 4px; }
 #btn-ver-proximo { margin: -8px 0 4px; }
+
+/* Acción principal de un paso: queda fija sobre la barra inferior mientras se baja,
+   para que se vea en teléfonos bajos (360 × 640). */
+.accion-fija {
+  position: sticky;
+  bottom: calc(var(--barra-alto) + env(safe-area-inset-bottom) + 8px);
+  z-index: 5;
+  padding: 8px 0;
+  margin: 16px 0 -8px;
+  background: linear-gradient(to bottom, rgba(246, 247, 248, 0), var(--gray-light) 30%);
+}
 
 /* ---------- Perfil ---------- */
 #form-perfil .selector legend { font-size: 16px; color: var(--gray-dark); }

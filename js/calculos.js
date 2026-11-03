@@ -201,7 +201,9 @@ function carga(totalMes, sueldoPropio, sueldoPareja) {
 // El semáforo usa este mismo valor, para que nunca diga "30,0 %" y "No aprueba" a la vez.
 function cargaRedondeada(c) {
   if (c === null || c === undefined || isNaN(c)) return null;
-  return Math.round(c * 1000) / 1000;
+  // El 1e-7 hace que los casos de justo la mitad (30,05 %) suban, como en el redondeo escolar,
+  // aunque la multiplicación binaria dé 300,4999…
+  return Math.round(c * 1000 + 1e-7) / 1000;
 }
 
 // Hasta 25 %: holgado. Sobre 25 % y hasta 30 %: en el límite. Sobre 30 %: no aprueba.

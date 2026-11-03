@@ -202,6 +202,15 @@ test('el semáforo usa la misma carga redondeada que muestra la pantalla', () =>
   assert.strictEqual(c.cargaRedondeada(null), null);
 });
 
+test('carga: corte exacto del redondeo en 25 % y 30 %', () => {
+  // 30,0499 % se ve "30,0 %" (en el límite); 30,05 % se ve "30,1 %" (no aprueba).
+  assert.strictEqual(c.nivelCarga(c.carga(300499, 600000, 400000)), 'limite');
+  assert.strictEqual(c.nivelCarga(c.carga(300500, 600000, 400000)), 'no-aprueba');
+  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(c.carga(300500, 600000, 400000)), 1), '30,1 %');
+  assert.strictEqual(c.nivelCarga(c.carga(250499, 600000, 400000)), 'holgado');
+  assert.strictEqual(c.nivelCarga(c.carga(250500, 600000, 400000)), 'limite');
+});
+
 test('ingreso total, mínimo y faltante', () => {
   assert.strictEqual(c.ingresoTotal(900000, 800000), 1700000);
   assert.strictEqual(c.ingresoTotal(900000, null), 900000);
