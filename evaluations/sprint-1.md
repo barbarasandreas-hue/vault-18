@@ -1,5 +1,58 @@
 # Evaluación · Sprint 1 · Base y Simula
 
+## Segunda revisión (3 de noviembre de 2026, sobre el commit `570c954`)
+
+**Veredicto: se mantiene APROBADO.** El código de la app no cambió desde la primera revisión: `index.html`, `css/` y `js/` son los mismos de las 07:05. Esta vez sí se vio la app en pantalla: se abrió en Chrome sin ventana, emulando un teléfono de 390 × 844 y de 360 × 844, y se recorrió con un script (tocar el reparto, las 4 combinaciones, la barra y "Ver proyectos").
+
+### Repetido y confirmado
+
+| Verificación | Resultado |
+|---|---|
+| `node --test` | 9 de 9 pasan |
+| `node --test tests/` | Sigue fallando en Node 24 (`✖ tests 'test failed'`). Es el comando de `CLAUDE.md` y `PLAN.md`, no el código; sigue pendiente para el Planner |
+| `node --check` de los 3 JS | Sin errores |
+| Palabras prohibidas, rutas `/` y recursos externos | Vacío, ninguna y solo Google Fonts |
+| HTTP 200 | `/`, `index.html`, `css/estilos.css` y los 3 JS. `manifest.webmanifest` da 404 (es de S3-F4) |
+| Recálculo con `node -e`, sin `calculos.js` | Los 4 escenarios coinciden al peso con la tabla, con `escenario()` y **con lo que muestra la pantalla** |
+| Contraste recalculado | Igual que en la primera revisión, todo AA. El ícono decorativo del estado vacío (`--blue-60` sobre `--gray-light`) da 3,21:1, que basta para un gráfico |
+
+### Lo que se vio en el navegador (nuevo)
+
+| Revisión | 390 px | 360 px |
+|---|---|---|
+| Scroll horizontal (`scrollWidth` del documento) | 390, ninguno | 360, ninguno |
+| Igual, quitando `overflow-x: hidden` del `body` | 390, ninguno | 360, ninguno. Esa línea no esconde ningún desborde |
+| Elementos que se salen del ancho o textos cortados | Ninguno, con el reparto cerrado y abierto | Ninguno |
+| Fuentes cargadas (Barlow Condensed 700 y Figtree 400) | Sí | Sí |
+| Número protagonista "$6.467.738" | Una línea, 70 px de alto | Una línea, 59 px de alto |
+| Título "Cuánto cuesta tu departamento" | Una línea | Dos líneas, cortado entre palabras |
+| Botones de la barra | 77–80 × 64 px | 71–74 × 64 px; "Mi departamento" en 2 líneas, sin cortes |
+| "¿De dónde sale el resto?" | Abre, `aria-expanded="true"`, muestra $92.396.250 / $73.917.000 / $13.859.438 / $4.619.813 y $1.847.925 de gastos | Igual |
+| Barra: cada botón muestra solo su pantalla y marca `aria-current` | Sí, las 5 | Sí |
+| "Disponible pronto" en las 4 pantallas vacías | Sí | Sí |
+| "Ver proyectos" lleva a `#proyectos` | Sí | Sí |
+| Dirección desconocida (`#nada`) | Muestra Simula | Muestra Simula |
+| Al final de la página, "Ver proyectos" queda sobre la barra | Sí, 37 px libres | Sí, 39 px libres |
+| Errores de JavaScript en la consola | Ninguno | Ninguno |
+
+### Hallazgos nuevos (ninguno bloquea)
+
+1. **La acción principal no se ve al abrir la app.** A 390 × 844, el botón "Ver proyectos" empieza en y = 764 y la barra en y = 777: al entrar, solo asoman unos 13 px y hay que bajar para encontrarlo. En un teléfono real, con las barras del navegador, la pantalla es más baja y el botón queda escondido del todo. No falla ningún criterio de S1-F5, pero va contra "una acción por pantalla, se entiende en 10 segundos". **Para S2-F0** (Simula pasa a Inicio), conviene subir la acción, por ejemplo con el reparto cerrado bajo el botón, o con el texto de apoyo más corto.
+2. **404 en la consola.** Chrome pide `favicon.ico` y no existe. Es el único recurso que falla. Se resuelve con `<link rel="icon">` cuando lleguen los íconos de S3-F4.
+3. **La barra crece 2 px a 390 px.** "Mi departamento" en 2 líneas deja ese botón en 66 px de alto, aunque `--barra-alto` dice 64. No se nota, y la barra se reemplaza en S2-F0, pero allí conviene volver a medir "Mis proyectos".
+
+### Limpieza de la primera revisión: sigue pendiente
+
+Los 4 puntos de la sección 5 siguen igual: el comentario "Sprint 4" en `js/datos.js:2`, `.oculto-visual` sin uso (`css/estilos.css:78-84`), el campo `descripcion` sin uso (`js/datos.js:6-7`) y `stroke="#fff"` fijo en `index.html:17`. Se pueden resolver al empezar el Sprint 2.
+
+### Puntuaciones (sin cambios)
+
+Funcionalidad 5 · Calidad móvil 4 (baja por el hallazgo 1, aunque ahora se vio en pantalla) · Código 4 · Diseño 4.
+
+---
+
+## Primera revisión
+
 Evaluado contra la sección "Sprint 1 · Base y Simula" de la versión actual de `PLAN.md` y contra `CLAUDE.md`. La barra de 4 secciones (S2-F0) no se exige en este sprint: S1-F3 se evalúa con su texto actual (5 pantallas).
 
 **Límite de esta revisión:** no hubo navegador. El diseño a 390 px y 360 px se evaluó leyendo `index.html` y `css/estilos.css`, y midiendo los textos críticos con las métricas reales de las fuentes (Figtree 400/700 y Barlow Condensed 700, descargadas de Google Fonts y medidas con un script de Node). Nada se vio en pantalla.
