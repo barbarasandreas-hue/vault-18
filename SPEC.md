@@ -30,7 +30,7 @@ La barra muestra **lugares a los que el usuario vuelve**, no pasos que hace una 
 
 | Sección | Para qué sirve | Número protagonista | Acción principal |
 |---|---|---|---|
-| **Inicio** | Saber en qué va y cuál es el próximo paso. La primera vez es el **simulador** | Primera vez: cuánto pone al escriturar. Después: el número de la etapa en que va (meses que faltan, lo que puso este mes, cobrado a la fecha) | El próximo paso ("Ver proyectos", "Postular", "Simular un mes"…) |
+| **Inicio** | La pantalla más importante. La primera vez: **¿cuánto puedo comprar?** Después: **Mi camino**, cómo va su compra y qué sigue | Primera vez: hasta cuántas UF puede comprar. Después: el número de la etapa en que va (carga, meses que faltan, lo que puso este mes, cobrado a la fecha) | Primera vez: "Ver proyectos que me alcanzan". Después: el próximo paso |
 | **Proyectos** | El marketplace: recorrer los proyectos filtrados por la IA y unirse a uno, como comprador o como inversionista | En cada tarjeta, uno solo: ahorro por unirse (compra en conjunto) o precio (financiamiento del pie) | Ver proyecto |
 | **Mis proyectos** | Todo lo que el usuario tiene: su compra y sus inversiones | Depende de la pestaña (ver abajo) | Depende de la etapa |
 | **Perfil** | Datos que la app recuerda, ayuda y opciones | — | Guardar cambios |
@@ -39,8 +39,31 @@ Cada sección tiene un ícono y su nombre escrito; la activa se distingue con co
 
 ### Inicio
 
-- **Primera vez (simulador):** elige vivir o arrendar, lote o individual, y ve "Pones $6.467.738 al escriturar" y "$571.425 al mes", con "¿De dónde sale el resto?" a un toque y la frase "Calculado sin plusvalía". Acción: "Ver proyectos".
-- **Después:** una tarjeta grande con el próximo paso según la etapa de la compra, y debajo, si tiene inversiones, un resumen de lo cobrado. El simulador queda a un toque ("Volver a simular").
+Inicio es **la pantalla más importante**: responde lo que el usuario quiere saber al abrir la app. Tiene dos estados.
+
+**1. Primera vez (sin compra ni inversiones): "¿Cuánto puedo comprar?"**
+
+- Título "Tu departamento con el 5 %", con las cuatro figuras de marca.
+- Selector "¿Para vivir o para arrendar?" (define el filtro de Proyectos) y dos campos: sueldo tuyo y sueldo de tu pareja. Son los mismos sueldos que usa Postula, así que Postula llega prellenado.
+- **Número protagonista:** "Puedes comprar hasta **UF 2.472**" y debajo "poniendo $7.105.888 al escriturar · $624.970 al mes". Se lee "Calculado sin plusvalía".
+- "¿De dónde sale el resto?" a un toque: el reparto 80 / 15 / 5 de ese precio máximo.
+- **Acción:** "Ver proyectos que me alcanzan", que abre Proyectos con el filtro "Me alcanza" activo (solo departamentos cuyo precio pagado es menor o igual a la capacidad).
+- Sin sueldos todavía: "Escribe los sueldos para saber cuánto puedes comprar", sin números inventados.
+
+**2. Ya empezó: "Mi camino"**
+
+| Parte | Qué muestra |
+|---|---|
+| Encabezado | Nombre del proyecto al que se unió |
+| Número protagonista (uno, según la etapa) | Postula: su carga · Tu 5 %: "Te faltan 9 meses" · Firma: "Ya juntaste $X" · Mi departamento: lo que puso este mes |
+| Recorrido | 5 pasos: Únete · Postula · Ahorra · Firma · Departamento. Hechos con check, el actual destacado |
+| Acción principal | La del paso actual ("Seguir ahorrando", "Ir a firmar"…) |
+| Avisos de la IA | Máximo 2, en lista con check, calculados con datos reales: cupos del grupo, días para el cierre, hitos del ahorro y, después de firmar, cuándo conviene abonar |
+| Tus inversiones | Una línea con lo cobrado a la fecha, solo si tiene inversiones |
+
+Si el usuario solo tiene inversiones (sin compra), el número protagonista es lo cobrado a la fecha y la acción es "Ver mis inversiones".
+
+El simulador genérico (departamento de referencia) deja de ser una pantalla. Sus cálculos siguen en `js/calculos.js`, en las pruebas y en el detalle de cada proyecto.
 
 ### Proyectos (marketplace)
 
@@ -96,7 +119,7 @@ El 5 % nunca lo financian inversionistas ni otras personas.
 
 ## 4. Flujos clave
 
-1. **Comprador, de principio a fin:** Inicio (simulador) → Proyectos → detalle → "Comprar aquí" → Mis proyectos › Mi compra: Postula → Tu 5 % → Firma → Mi departamento.
+1. **Comprador, de principio a fin:** Inicio (¿cuánto puedo comprar?) → Proyectos que le alcanzan → detalle → "Comprar aquí" → Mis proyectos › Mi compra: Postula → Tu 5 % → Firma → Mi departamento.
 2. **Inversionista:** Proyectos → detalle → "Invertir aquí" → Invertir → Mis proyectos › Mis inversiones.
 3. **Unirse a una compra en conjunto:** ve la tarjeta → revisa ahorro, cupos y fecha de cierre → "Comprar aquí" → toma un cupo → se le explica qué pasa si el grupo no se completa → sigue a Postula.
 4. **Un mes en modo arrendar:** entra el arriendo a la cuenta custodia de Bci → se descuentan administración → se paga primero el dividendo → luego la cuota a los inversionistas → el usuario completa la diferencia. Mi compra, en su etapa Mi departamento, lo muestra como una cascada de pasos.
@@ -122,6 +145,7 @@ Todas viven en `js/calculos.js`; las pantallas solo las llaman. Los montos se ca
 | Cálculo | Fórmula |
 |---|---|
 | Precio | Precio de lista; en compra en conjunto (lote), precio de lista × 0,9 |
+| Capacidad de compra | Mayor precio (en UF enteras, hacia abajo) con carga ≤ 25 %: (0,25 × ingreso / UF − 0,7) / (0,8 × factor 4,5 % a 360 meses + 0,15 × factor 8 % a 120 meses). $1.500.000 + $1.000.000 → UF 2.472, $7.105.888 al escriturar, $624.970 al mes |
 | Ahorro por unirse | Precio de lista × 10 % (UF 2.500 → UF 250 = $10.266.250) |
 | Avance de un proyecto | Cupos tomados / cupos totales; en financiamiento, UF financiadas / UF por financiar |
 | Pie del usuario | Precio × 5 % |
@@ -192,3 +216,5 @@ Valores de referencia (UF $41.065, redondeados al peso):
 8. "Avisar cuándo conviene abonar" se simula con una regla simple: cuando el usuario tiene un excedente (por ejemplo, un mes con arriendo mayor al total), la app sugiere abonar a la deuda de inversionistas, que tiene la tasa más alta.
 9. **Los dos tipos de proyecto del marketplace** se interpretan así: "compra en conjunto" es un lote que se completa con varios compradores y tiene 10 % de descuento; "financiamiento del pie" es un departamento a precio de lista en el que el usuario reúne su 15 % con ayuda de inversionistas. El 5 % lo pone el usuario por sí solo y se planifica en Tu 5 %, no en el marketplace. (Confirmado con el equipo.)
 10. Si una compra en conjunto no completa sus cupos antes de la fecha de cierre, el comprador puede pasar a compra individual o salir sin costo.
+11. La capacidad de compra se calcula con el límite holgado (25 %), para no empujar al usuario al límite.
+12. Los días para el cierre de un proyecto se cuentan desde una fecha de referencia fija de la demo (definida en `js/datos.js`), para que los números no cambien según el día en que se muestre.

@@ -146,10 +146,23 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 - **S4-F6 Inicio con próximo paso.** Una vez que el usuario se unió a un proyecto, Inicio muestra una tarjeta con el paso en que va y su número (por ejemplo, "Te faltan 13 meses") y un botón que lleva directo a ese paso.
   - "Volver a simular" sigue a un toque.
 
-## Sprint 5 · Mi departamento
+## Sprint 5 · Inicio y Mi departamento
 
-**Objetivo:** que el usuario vea cómo se movió el dinero del mes y cuánto le falta para terminar de pagar.
+**Objetivo:** que Inicio responda lo que el usuario quiere saber al abrir la app (cuánto puede comprar, o cómo va su compra) y que vea cómo se movió el dinero del mes.
 
+- **S5-F0 Inicio: ¿Cuánto puedo comprar? (hacer primero).** La primera vez (sin compra ni inversiones), Inicio deja de ser el simulador y responde cuánto puede comprar el usuario.
+  - Nueva fórmula `capacidadCompraUF(sueldoPropio, sueldoPareja)` en `js/calculos.js`, con pruebas:
+    - $1.500.000 + $1.000.000 → UF 2.472, $7.105.888 al escriturar, $624.970 al mes.
+    - $1.200.000 + $800.000 → UF 1.953, $5.613.996 al escriturar, $499.792 al mes.
+    - $2.000.000 + $1.000.000 → UF 2.990, $8.594.905 al escriturar, $749.907 al mes.
+    - En los tres casos la carga resultante es 25 % o menos; sin sueldos devuelve `null`.
+  - Pantalla: título "Tu departamento con el 5 %" con las cuatro figuras de marca, selector vivir o arrendar y dos campos de sueldo con `inputmode="numeric"`.
+  - Número protagonista: "Puedes comprar hasta UF 2.472" (con los sueldos del ejemplo), y debajo lo que pone al escriturar y al mes. Se lee "Calculado sin plusvalía".
+  - "¿De dónde sale el resto?" muestra el reparto 80 / 15 / 5 de ese precio en pesos.
+  - Sin sueldos: mensaje "Escribe los sueldos para saber cuánto puedes comprar" y ningún número.
+  - Los sueldos son los mismos que usa Postula: al llegar a Postula ya están escritos.
+  - Acción principal: "Ver proyectos que me alcanzan" → Proyectos con el filtro "Me alcanza" activo, que muestra solo departamentos con precio pagado menor o igual a la capacidad; el filtro se puede quitar.
+  - Ya no existe el simulador genérico ni el enlace "Volver a simular". "Empezar de nuevo" (Perfil) ahora vuelve a esta pantalla.
 - **S5-F1 Fórmulas del mes.** Lo que pone el usuario y saldo de cada deuda después de N cuotas, con pruebas.
   - Arrendar en lote con arriendo bruto $450.000 → neto $371.250 → el usuario pone $200.175.
   - Arriendo bruto $700.000 → neto $577.500 → excedente de $6.075.
@@ -160,6 +173,13 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
   - Se lee "Calculado sin plusvalía" junto al avance.
 - **S5-F5 Aviso de abono.** Cuando hay excedente, aparece la acción "Abonar" con la explicación de que conviene abonar a la deuda de inversionistas porque tiene la tasa más alta.
   - Sin excedente, la acción no aparece.
+
+- **S5-F6 Inicio: Mi camino.** Cuando el usuario ya se unió a un proyecto, Inicio muestra cómo va su compra. Se construye sobre `proximoPaso()` (S4-F6).
+  - Arriba el nombre del proyecto y un solo número según la etapa: carga (Postula), meses que faltan (Tu 5 %), lo juntado (Firma) o lo que puso este mes (Mi departamento, con los números de S5-F1).
+  - Recorrido de 5 pasos: Únete · Postula · Ahorra · Firma · Departamento. Los hechos llevan check y el actual se destaca con color e ícono, no solo con color. Ningún nombre se corta a 360 px y no se usan abreviaciones.
+  - Acción principal: la del paso actual, que lleva directo a ese paso.
+  - Avisos de la IA: máximo 2, en lista con check, calculados con datos reales (cupos tomados, días para el cierre con la fecha de referencia de `js/datos.js`, hitos del ahorro y, después de firmar, el aviso de abono de S5-F5). Sin avisos, la sección no aparece.
+  - Si tiene inversiones, una línea con lo cobrado a la fecha. Si solo tiene inversiones (sin compra), el número protagonista es lo cobrado y la acción es "Ver mis inversiones".
 
 ## Sprint 6 · Inversionista
 
@@ -188,7 +208,7 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 - **S7-F3 Textos de 10 segundos.** Cada pantalla tiene un título de máximo 6 palabras y una frase de apoyo de máximo 15.
 - **S7-F4 Explicaciones a un toque.** Dividendo, pie, carga, segunda hipoteca, cuenta custodia, compra en conjunto y financiamiento del pie tienen un ícono de ayuda que abre una explicación de una frase, sin jerga. Las mismas explicaciones se reúnen en Perfil › Ayuda.
 - **S7-F5 Revisión en 360 px.** Ningún texto cortado ni scroll horizontal en ninguna pantalla.
-- **S7-F6 Introducción.** Una primera pantalla, solo la primera vez, con el mensaje "Tu departamento con el 5 % del precio" y una lista con check de las 3 partes (Bci, inversionistas, tú) y de los dos tipos de proyecto.
+- **S7-F6 Introducción.** Una primera pantalla, solo la primera vez y antes de Inicio, con el mensaje "Tu departamento con el 5 % del precio" y una lista con check de las 3 partes (Bci, inversionistas, tú). No repite el cálculo de cuánto puede comprar, que es lo que hace Inicio.
 
 ---
 
@@ -221,11 +241,13 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 4 | S4-F4 Avance simulado | en progreso |
 | 4 | S4-F5 Lista de firma | en progreso |
 | 4 | S4-F6 Inicio con próximo paso | en progreso |
+| 5 | S5-F0 Inicio: ¿Cuánto puedo comprar? (hacer primero) | pendiente |
 | 5 | S5-F1 Fórmulas del mes | pendiente |
 | 5 | S5-F2 Cascada de la cuenta custodia | pendiente |
 | 5 | S5-F3 Modo vivir | pendiente |
 | 5 | S5-F4 Avance de la deuda | pendiente |
 | 5 | S5-F5 Aviso de abono | pendiente |
+| 5 | S5-F6 Inicio: Mi camino | pendiente |
 | 6 | S6-F1 Invertir aquí | pendiente |
 | 6 | S6-F2 Información para invertir | pendiente |
 | 6 | S6-F3 Invertir | pendiente |

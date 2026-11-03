@@ -12,15 +12,15 @@ Primer Peldaño es un **marketplace de departamentos**: el usuario ve proyectos 
 
 **Qué quiere:** dejar de pagar arriendo y tener su primer departamento, para vivirlo o para arrendarlo.
 
-| Etapa | 1. Descubre | 2. Simula | 3. Explora proyectos | 4. Postula | 5. Junta su 5 % | 6. Escritura | 7. Mi departamento |
+| Etapa | 1. Descubre | 2. ¿Cuánto puedo comprar? | 3. Explora proyectos | 4. Postula | 5. Junta su 5 % | 6. Escritura | 7. Mi departamento |
 |---|---|---|---|---|---|---|---|
-| **Qué hace** | Ve un aviso en la app Bci o en redes | Elige vivir o arrendar, lote o individual | Recorre el marketplace y se une a una compra en conjunto o a un financiamiento del pie | Ingresa su sueldo y el de su pareja | Fija cuánto ahorra al mes, solo o en grupo | Firma (simulada) y paga su 5 % más los gastos | Mira cómo se movió el dinero del mes |
-| **Qué piensa** | "Nunca voy a juntar el 20 %" | "¿Solo $6,5 millones? ¿Dónde está la letra chica?" | "¿Cuál me conviene? ¿Y si el grupo no se completa?" | "¿Nos van a rechazar?" | "13 meses… ¿lo voy a lograr?" | "¿Estoy firmando algo que no entiendo?" | "¿Cuánto me toca poner este mes?" |
+| **Qué hace** | Ve un aviso en la app Bci o en redes | Escribe su sueldo y el de su pareja | Recorre el marketplace y se une a una compra en conjunto o a un financiamiento del pie | Ingresa su sueldo y el de su pareja | Fija cuánto ahorra al mes, solo o en grupo | Firma (simulada) y paga su 5 % más los gastos | Mira cómo se movió el dinero del mes |
+| **Qué piensa** | "Nunca voy a juntar el 20 %" | "¿Me alcanza? ¿Y solo pongo $7 millones?" | "¿Cuál me conviene? ¿Y si el grupo no se completa?" | "¿Nos van a rechazar?" | "13 meses… ¿lo voy a lograr?" | "¿Estoy firmando algo que no entiendo?" | "¿Cuánto me toca poner este mes?" |
 | **Qué siente** | Frustración | Sorpresa y desconfianza | Entusiasmo, con algo de duda | Ansiedad | Motivación que cae a mitad de camino | Nervios y orgullo | Tranquilidad, o alerta si algo cambia |
-| **Dónde ocurre** | — | Inicio (simulador) | Proyectos → detalle → "Comprar aquí" | Mis proyectos › Mi compra, paso 1 | Mis proyectos › Mi compra, paso 2 | Mis proyectos › Mi compra, paso 3 | Mis proyectos › Mi compra (después de firmar) |
-| **Número protagonista** | — | Cuánto pone al escriturar | Cuánto ahorra por unirse (en compra en conjunto) o cuánto falta por financiar | Porcentaje de carga | Meses para llegar a la meta | — | Cuánto puso este mes |
-| **Dolor** | El pie parece imposible | Desconfía de lo que parece demasiado bueno | Demasiadas opciones; miedo a que el grupo no se complete | Hablar de dinero en pareja; miedo al rechazo | Pierde motivación entre el mes 4 y el 6 | Lo legal es difícil de entender | Un mes vacío o un arriendo más bajo de lo esperado |
-| **Oportunidad** | Un mensaje simple: "5 % en vez de 20 %" | Mostrar de dónde sale el resto (80 / 15 / 5) con un toque y siempre el escenario sin plusvalía | La IA filtra proyectos que rinden 4,5 % o más; cupos y fecha de cierre a la vista; qué pasa si el grupo no se completa, dicho claro | Semáforo sin juicio y qué cambiar para quedar holgado | Hitos visibles, avance en porcentaje y ahorro grupal | Lista con checks de lo que firma, en palabras simples | Flujo de la cuenta custodia claro y aviso de cuándo conviene abonar |
+| **Dónde ocurre** | — | Inicio, primera vez | Proyectos → detalle → "Comprar aquí" | Mis proyectos › Mi compra, paso 1 | Mis proyectos › Mi compra, paso 2 | Mis proyectos › Mi compra, paso 3 | Mis proyectos › Mi compra (después de firmar) |
+| **Número protagonista** | — | Hasta cuántas UF puede comprar | Cuánto ahorra por unirse (en compra en conjunto) o cuánto falta por financiar | Porcentaje de carga | Meses para llegar a la meta | — | Cuánto puso este mes |
+| **Dolor** | El pie parece imposible | No sabe si califica; desconfía de lo que parece demasiado bueno | Demasiadas opciones; miedo a que el grupo no se complete | Hablar de dinero en pareja; miedo al rechazo | Pierde motivación entre el mes 4 y el 6 | Lo legal es difícil de entender | Un mes vacío o un arriendo más bajo de lo esperado |
+| **Oportunidad** | Un mensaje simple: "5 % en vez de 20 %" | Responder con su propio sueldo, mostrar de dónde sale el resto (80 / 15 / 5) y siempre el escenario sin plusvalía; llevarlo a los proyectos que le alcanzan | La IA filtra proyectos que rinden 4,5 % o más; cupos y fecha de cierre a la vista; qué pasa si el grupo no se completa, dicho claro | Semáforo sin juicio y qué cambiar para quedar holgado | Hitos visibles, avance en porcentaje y ahorro grupal | Lista con checks de lo que firma, en palabras simples | Flujo de la cuenta custodia claro y aviso de cuándo conviene abonar |
 | **Sprint** | — | 1 | 2 | 3 | 4 | 4 | 5 |
 
 ### Curva emocional
@@ -31,14 +31,16 @@ alto  |          *        *                            *
 medio |        /   \    /   \     *        / \       /   \/
       |       /     \  /     \   / \      /   \     /
 bajo  |  *---/       \/       \-*   \----*     \---/
-      +--Descubre--Simula--Proyectos--Postula--Junta--Escritura--Mi departamento
+      +--Descubre--Cuánto--Proyectos--Postula--Junta--Escritura--Mi departamento
 ```
+
+**Inicio acompaña todo el recorrido.** La primera vez responde "¿cuánto puedo comprar?"; desde que el usuario se une a un proyecto se convierte en **Mi camino**: un número según la etapa, el recorrido de 5 pasos, la acción que sigue y los avisos de la IA.
 
 ### Momentos críticos
 
 Son los puntos donde el usuario puede abandonar. Ahí se concentra el diseño:
 
-1. **Desconfianza en Simula.** El número es tan bueno que parece mentira. Solución: mostrar de dónde sale el resto del dinero y nunca prometer plusvalía.
+1. **Duda en "¿Cuánto puedo comprar?".** No sabe si califica y el número parece demasiado bueno. Solución: calcularlo con su propio sueldo, mostrar de dónde sale el resto del dinero y nunca prometer plusvalía.
 2. **Duda en Proyectos.** Unirse a un grupo de desconocidos da miedo. Solución: mostrar cupos tomados, fecha de cierre y qué pasa si el grupo no se completa (puede pasar a compra individual o salir sin costo).
 3. **Miedo en Postula.** Nadie quiere ver "rechazado". Solución: un semáforo que, si sale amarillo o rojo, dice qué cambiar (por ejemplo, unirse a una compra en conjunto o elegir un departamento más barato).
 4. **Valle en Tu 5 %.** Ahorrar meses cansa. Solución: hitos, avance visible y la opción de ahorrar en grupo.
