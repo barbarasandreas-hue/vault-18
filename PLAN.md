@@ -188,12 +188,12 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 
 | Sprint | Feature | Estado |
 |---|---|---|
-| 1 | S1-F1 Estructura de archivos | en progreso |
-| 1 | S1-F2 Tokens del Bci Kit | en progreso |
-| 1 | S1-F3 Navegación | en progreso |
-| 1 | S1-F4 Fórmulas base | en progreso |
-| 1 | S1-F5 Pantalla Simula | en progreso |
-| 1 | S1-F6 Visible en el teléfono por wifi | en progreso |
+| 1 | S1-F1 Estructura de archivos | aprobada |
+| 1 | S1-F2 Tokens del Bci Kit | aprobada |
+| 1 | S1-F3 Navegación | aprobada |
+| 1 | S1-F4 Fórmulas base | aprobada |
+| 1 | S1-F5 Pantalla Simula | aprobada |
+| 1 | S1-F6 Visible en el teléfono por wifi | aprobada |
 | 2 | S2-F0 Nueva barra de 4 secciones | pendiente |
 | 2 | S2-F1 Datos de ejemplo | pendiente |
 | 2 | S2-F2 Fórmulas del marketplace | pendiente |
