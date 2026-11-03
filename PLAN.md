@@ -241,13 +241,13 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 4 | S4-F4 Avance simulado | aprobada |
 | 4 | S4-F5 Lista de firma | aprobada |
 | 4 | S4-F6 Inicio con próximo paso | aprobada |
-| 5 | S5-F0 Inicio: ¿Cuánto puedo comprar? (hacer primero) | pendiente |
-| 5 | S5-F1 Fórmulas del mes | pendiente |
-| 5 | S5-F2 Cascada de la cuenta custodia | pendiente |
-| 5 | S5-F3 Modo vivir | pendiente |
-| 5 | S5-F4 Avance de la deuda | pendiente |
-| 5 | S5-F5 Aviso de abono | pendiente |
-| 5 | S5-F6 Inicio: Mi camino | pendiente |
+| 5 | S5-F0 Inicio: ¿Cuánto puedo comprar? (hacer primero) | en progreso |
+| 5 | S5-F1 Fórmulas del mes | en progreso |
+| 5 | S5-F2 Cascada de la cuenta custodia | en progreso |
+| 5 | S5-F3 Modo vivir | en progreso |
+| 5 | S5-F4 Avance de la deuda | en progreso |
+| 5 | S5-F5 Aviso de abono | en progreso |
+| 5 | S5-F6 Inicio: Mi camino | en progreso |
 | 6 | S6-F1 Invertir aquí | pendiente |
 | 6 | S6-F2 Información para invertir | pendiente |
 | 6 | S6-F3 Invertir | pendiente |

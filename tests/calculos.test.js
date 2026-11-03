@@ -275,3 +275,77 @@ test('ahorro: hitos alcanzados y un mes más sin pasarse de la meta', () => {
   assert.strictEqual(c.sumarMes(6000000, 500000, 6467738), 6467738);
   assert.strictEqual(c.sumarMes(0, 500000, 6467738), 500000);
 });
+
+// ---------- Inicio: ¿cuánto puedo comprar? (S5-F0) ----------
+
+for (const [propio, pareja, uf, escriturar, mes] of [
+  [1500000, 1000000, 2472, 7105888, 624970],
+  [1200000, 800000, 1953, 5613996, 499792],
+  [2000000, 1000000, 2990, 8594905, 749907]
+]) {
+  test(`capacidad: $${propio} + $${pareja} → UF ${uf}`, () => {
+    const cap = c.capacidadCompraUF(propio, pareja);
+    assert.strictEqual(cap, uf);
+    const e = c.escenario(cap, 'individual');
+    cerca(e.alEscriturar, escriturar, 'al escriturar');
+    cerca(e.totalMes, mes, 'al mes');
+    assert.ok(c.carga(e.totalMes, propio, pareja) <= 0.25, 'la carga debe quedar en 25 % o menos');
+    // Una UF más ya pasa del 25 %.
+    assert.ok(c.carga(c.escenario(cap + 1, 'individual').totalMes, propio, pareja) > 0.25);
+  });
+}
+
+test('capacidad: sin sueldos devuelve null', () => {
+  assert.strictEqual(c.capacidadCompraUF(null, null), null);
+  assert.strictEqual(c.capacidadCompraUF(0, 0), null);
+});
+
+test('formato UF', () => {
+  assert.strictEqual(c.formatoUF(2472), 'UF 2.472');
+  assert.strictEqual(c.formatoUF(337.5), 'UF 337,5');
+});
+
+// ---------- Mi departamento: el mes (S5-F1) ----------
+
+test('mes en arrendar: arriendo $450.000 → neto $371.250 → el usuario pone $200.175', () => {
+  const e = c.escenario(2500, 'lote');
+  const m = c.cascadaMes(e.dividendo, e.cuotaInversionistas, 450000);
+  assert.strictEqual(m.neto, 371250);
+  assert.strictEqual(m.administracion + m.vacancia + m.neto, 450000);
+  assert.strictEqual(m.pone, 200175);
+  assert.strictEqual(m.excedente, 0);
+  assert.strictEqual(m.cubreDividendo, 371250);
+  assert.strictEqual(m.cubreCuota, 0);
+  assert.strictEqual(c.loQuePoneUsuario(e.totalMes, 450000), 200175);
+});
+
+test('mes en arrendar: arriendo $700.000 → neto $577.500 → excedente $6.075', () => {
+  const e = c.escenario(2500, 'lote');
+  const m = c.cascadaMes(e.dividendo, e.cuotaInversionistas, 700000);
+  assert.strictEqual(m.neto, 577500);
+  assert.strictEqual(m.pone, 0);
+  assert.strictEqual(m.excedente, 6075);
+  assert.strictEqual(m.cubreDividendo, e.dividendo);
+  assert.strictEqual(m.cubreCuota, e.cuotaInversionistas);
+  assert.strictEqual(c.loQuePoneUsuario(e.totalMes, 700000), -6075);
+});
+
+test('saldo de una deuda después de N cuotas (comparado con una tabla de amortización)', () => {
+  const monto = 1800, tasa = 0.045, meses = 360;
+  const cuota = c.cuotaFija(monto, tasa, meses);
+  let saldo = monto;
+  for (let n = 1; n <= 12; n++) saldo = saldo * (1 + tasa / 12) - cuota;
+  assert.ok(Math.abs(c.saldoDeuda(monto, tasa, meses, 12) - saldo) < 1e-9);
+  assert.strictEqual(c.saldoDeuda(monto, tasa, meses, 0), monto);
+  assert.ok(c.saldoDeuda(monto, tasa, meses, 360) < 1e-6);
+  assert.strictEqual(c.saldoDeuda(monto, tasa, meses, 400), c.saldoDeuda(monto, tasa, meses, 360));
+  assert.ok(Math.abs(c.saldoBciUF(2250, 0) - 1800) < 1e-9);
+  assert.ok(Math.abs(c.saldoInversionistasUF(2250, 0, 0) - 337.5) < 1e-9);
+  assert.ok(Math.abs(c.saldoInversionistasUF(2250, 0, 10) - 327.5) < 1e-9);
+});
+
+test('días entre fechas', () => {
+  assert.strictEqual(c.diasEntre('2026-11-03', '2026-12-15'), 42);
+  assert.strictEqual(c.diasEntre('2026-11-03', '2026-11-03'), 0);
+  assert.strictEqual(c.diasEntre('2026-12-15', '2026-11-03'), -42);
+});

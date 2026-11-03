@@ -283,7 +283,97 @@ function sumarMes(ahorrado, ahorroMensual, meta) {
   return Math.min(meta, (ahorrado || 0) + (ahorroMensual || 0));
 }
 
+// ---------- Inicio: ¿cuánto puedo comprar? (S5-F0) ----------
+
+// Mayor precio, en UF enteras hacia abajo, con una carga de 25 % o menos (holgado).
+// Total al mes = dividendo (80 %, 4,5 %, 360 meses) + seguros + cuota inversionistas (15 %, 8 %, 120 meses).
+function capacidadCompraUF(sueldoPropio, sueldoPareja) {
+  var ingreso = ingresoTotal(sueldoPropio, sueldoPareja);
+  if (!ingreso || ingreso <= 0) return null;
+  var presupuestoUF = LIMITE_HOLGADO * ingreso / SUPUESTOS.uf - SUPUESTOS.segurosUF;
+  if (presupuestoUF <= 0) return 0;
+  var factor = SUPUESTOS.pctBci * cuotaFija(1, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) +
+    SUPUESTOS.pctInversionistas * cuotaFija(1, SUPUESTOS.tasaInversionistas, SUPUESTOS.mesesInversionistas);
+  return Math.floor(presupuestoUF / factor + 1e-9);
+}
+
+// 2472 → "UF 2.472"; 337.5 → "UF 337,5".
+function formatoUF(uf) {
+  var entero = Math.floor(uf);
+  var decimal = Math.round((uf - entero) * 10);
+  return 'UF ' + formatoMiles(entero) + (decimal ? ',' + decimal : '');
+}
+
+// ---------- Mi departamento: el mes (S5-F1) ----------
+
+// Cómo se reparte el arriendo de un mes en la cuenta custodia (modo arrendar).
+// Primero se descuentan la administración (10 %) y el mes vacío del año (1/12 de lo que queda),
+// después se paga el dividendo, luego a los inversionistas, y el usuario completa la diferencia.
+function cascadaMes(dividendo, cuotaInversionistas, arriendoBruto) {
+  var bruto = Math.max(0, arriendoBruto || 0);
+  var administracion = Math.round(bruto * 0.10);
+  var vacancia = Math.round((bruto - administracion) / 12);
+  var neto = bruto - administracion - vacancia;
+  var total = dividendo + cuotaInversionistas;
+  return {
+    bruto: bruto,
+    administracion: administracion,
+    vacancia: vacancia,
+    neto: neto,
+    dividendo: dividendo,
+    cubreDividendo: Math.min(neto, dividendo),
+    cuotaInversionistas: cuotaInversionistas,
+    cubreCuota: Math.min(Math.max(0, neto - dividendo), cuotaInversionistas),
+    total: total,
+    pone: Math.max(0, total - neto),        // lo que completa el usuario
+    excedente: Math.max(0, neto - total)    // lo que sobra (se puede abonar)
+  };
+}
+
+// Lo que pone el usuario un mes en modo arrendar (negativo = recibe la diferencia).
+function loQuePoneUsuario(totalMes, arriendoBruto) {
+  return totalMes - Math.round(arriendoNeto(arriendoBruto));
+}
+
+// Saldo de una deuda en cuota fija después de N cuotas pagadas, menos lo abonado (todo en UF).
+function saldoDeuda(montoUF, tasaAnual, meses, cuotasPagadas, abonadoUF) {
+  var n = Math.min(Math.max(0, cuotasPagadas || 0), meses);
+  var i = tasaAnual / 12;
+  var cuota = cuotaFija(montoUF, tasaAnual, meses);
+  var saldo = i === 0 ? montoUF - cuota * n
+    : montoUF * Math.pow(1 + i, n) - cuota * (Math.pow(1 + i, n) - 1) / i;
+  return Math.max(0, saldo - (abonadoUF || 0));
+}
+
+function saldoBciUF(precio, cuotasPagadas) {
+  return saldoDeuda(precio * SUPUESTOS.pctBci, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci, cuotasPagadas, 0);
+}
+
+function saldoInversionistasUF(precio, cuotasPagadas, abonadoUF) {
+  return saldoDeuda(precio * SUPUESTOS.pctInversionistas, SUPUESTOS.tasaInversionistas,
+    SUPUESTOS.mesesInversionistas, cuotasPagadas, abonadoUF);
+}
+
+// Pesos a UF (para registrar un abono).
+function pesosAUF(pesos) { return pesos / SUPUESTOS.uf; }
+
+// Días entre dos fechas "AAAA-MM-DD" (negativo si la segunda ya pasó).
+function diasEntre(desde, hasta) {
+  var a = String(desde).split('-').map(Number);
+  var b = String(hasta).split('-').map(Number);
+  return Math.round((Date.UTC(b[0], b[1] - 1, b[2]) - Date.UTC(a[0], a[1] - 1, a[2])) / 86400000);
+}
+
 if (typeof module !== 'undefined') module.exports = {
+  capacidadCompraUF: capacidadCompraUF,
+  formatoUF: formatoUF,
+  cascadaMes: cascadaMes,
+  loQuePoneUsuario: loQuePoneUsuario,
+  saldoDeuda: saldoDeuda,
+  saldoBciUF: saldoBciUF,
+  saldoInversionistasUF: saldoInversionistasUF,
+  pesosAUF: pesosAUF,
+  diasEntre: diasEntre,
   mesesParaMeta: mesesParaMeta,
   mesesRestantes: mesesRestantes,
   HITOS_AHORRO: HITOS_AHORRO,
