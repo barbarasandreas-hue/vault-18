@@ -313,7 +313,7 @@ button { font: inherit; }
 }
 .barra ul {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   max-width: 480px;
   margin: 0 auto;
   padding: 0;
@@ -326,7 +326,7 @@ button { font: inherit; }
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-height: var(--barra-alto);
+  height: var(--barra-alto);
   min-width: var(--toque);
   padding: 6px 2px;
   color: var(--gray-semidark);
@@ -334,9 +334,16 @@ button { font: inherit; }
   font-size: 12px;
   line-height: 1.15;
   text-align: center;
+  white-space: nowrap;
 }
 .barra svg { width: 24px; height: 24px; flex: none; }
-.barra a[aria-current="page"] { color: var(--blue-normal); font-weight: 700; }
+.barra a[aria-current="page"] {
+  color: var(--blue-normal);
+  font-weight: 700;
+  /* Ícono relleno: estas variables entran a los símbolos SVG */
+  --relleno: currentColor;
+  --hueco: var(--white);
+}
 .barra a[aria-current="page"]::before {
   content: '';
   position: absolute;
@@ -349,5 +356,4 @@ button { font: inherit; }
 /* Pantallas angostas (360 px) */
 @media (max-width: 370px) {
   .display-1 { font-size: 54px; }
-  .barra a { font-size: 11px; }
 }

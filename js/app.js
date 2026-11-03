@@ -2,7 +2,13 @@
 // Las cifras salen siempre de js/calculos.js; aquí solo se muestran.
 
 (function () {
-  var PANTALLAS = ['simula', 'proyectos', 'postula', 'ahorro', 'departamento'];
+  // Ruta → pantalla que se muestra y botón de la barra que queda activo.
+  var RUTAS = {
+    'inicio': { pantalla: 'inicio', seccion: 'inicio' },
+    'proyectos': { pantalla: 'proyectos', seccion: 'proyectos' },
+    'mis-proyectos': { pantalla: 'mis-proyectos', seccion: 'mis-proyectos' },
+    'perfil': { pantalla: 'perfil', seccion: 'perfil' }
+  };
 
   var estado = {
     modo: 'arrendar',  // 'arrendar' o 'vivir'
@@ -12,8 +18,8 @@
   function $(id) { return document.getElementById(id); }
   function poner(id, pesos) { $(id).textContent = formatoPesos(pesos); }
 
-  // ---------- Simula ----------
-  function renderSimula() {
+  // ---------- Inicio: simulador ----------
+  function renderInicio() {
     var lista = DEPARTAMENTO_REFERENCIA[estado.modo].listaUF;
     var e = escenario(lista, estado.tipo);
     poner('simula-escriturar', e.alEscriturar);
@@ -25,12 +31,11 @@
     poner('reparto-gastos', e.gastos);
   }
 
-  function iniciarSimula() {
+  function iniciarInicio() {
     document.querySelectorAll('input[name="modo"], input[name="tipo"]').forEach(function (input) {
-      input.checked = input.value === estado[input.name];
       input.addEventListener('change', function () {
         estado[input.name] = input.value;
-        renderSimula();
+        renderInicio();
       });
     });
 
@@ -40,26 +45,39 @@
       boton.setAttribute('aria-expanded', String(!abierto));
       $('reparto').hidden = abierto;
     });
+  }
 
-    renderSimula();
+  function sincronizarSelectores() {
+    document.querySelectorAll('input[name="modo"], input[name="tipo"]').forEach(function (input) {
+      input.checked = input.value === estado[input.name];
+    });
   }
 
   // ---------- Navegación ----------
-  function mostrar() {
-    var actual = location.hash.replace('#', '');
-    if (PANTALLAS.indexOf(actual) === -1) actual = 'simula';
+  // Lee la dirección: "#proyecto/p1" → { nombre: 'proyecto', param: 'p1' }.
+  function leerRuta() {
+    var partes = location.hash.replace('#', '').split('/');
+    var nombre = RUTAS[partes[0]] ? partes[0] : 'inicio';
+    return { nombre: nombre, param: partes[1] || null };
+  }
 
-    PANTALLAS.forEach(function (nombre) {
-      $('pantalla-' + nombre).hidden = nombre !== actual;
+  function mostrar() {
+    var ruta = leerRuta();
+    var destino = RUTAS[ruta.nombre];
+
+    document.querySelectorAll('main > .pantalla').forEach(function (s) {
+      s.hidden = s.id !== 'pantalla-' + destino.pantalla;
     });
     document.querySelectorAll('.barra a').forEach(function (a) {
-      if (a.dataset.pantalla === actual) a.setAttribute('aria-current', 'page');
+      if (a.dataset.seccion === destino.seccion) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
     });
+
+    if (destino.pantalla === 'inicio') { sincronizarSelectores(); renderInicio(); }
     window.scrollTo(0, 0);
   }
 
   window.addEventListener('hashchange', mostrar);
-  iniciarSimula();
+  iniciarInicio();
   mostrar();
 })();

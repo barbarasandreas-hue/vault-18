@@ -18,20 +18,20 @@
     <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" style="stroke: var(--white)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-flecha" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M8.5 12l2.5 2.5 4.5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-    <symbol id="i-simula" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 7h8M8 11h2M12 11h2M16 11h0M8 15h2M12 15h2M8 18h2M12 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
-    <symbol id="i-postula" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 13l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-    <symbol id="i-ahorro" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v10M15 9.5c0-1.2-1.3-2-3-2s-3 .8-3 2 1.3 1.8 3 2.2 3 1 3 2.3-1.3 2-3 2-3-.8-3-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
-    <symbol id="i-proyectos" viewBox="0 0 24 24"><path d="M4 21V9l8-5 8 5v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 21v-6h6v6M3 21h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
-    <symbol id="i-departamento" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M10 21v-4h4v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <!-- Íconos de la barra: con la sección activa, --relleno y --hueco los dejan rellenos -->
+    <symbol id="i-inicio" viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z" style="fill: var(--relleno, none)" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-proyectos" viewBox="0 0 24 24"><rect x="3" y="9" width="7" height="12" rx="1" style="fill: var(--relleno, none)" stroke="currentColor" stroke-width="2"/><rect x="10" y="3" width="11" height="18" rx="1" style="fill: var(--relleno, none)" stroke="currentColor" stroke-width="2"/><path d="M14 7.5h3M14 11.5h3M14 15.5h3M6 13h1M6 17h1" style="stroke: var(--hueco, currentColor)" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-mis-proyectos" viewBox="0 0 24 24"><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="7" width="18" height="13" rx="2" style="fill: var(--relleno, none)" stroke="currentColor" stroke-width="2"/><path d="M8.5 13.5l2.5 2.5 4.5-5" fill="none" style="stroke: var(--hueco, currentColor)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-perfil" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" style="fill: var(--relleno, none)" stroke="currentColor" stroke-width="2"/><path d="M4 21c0-4.2 3.6-7 8-7s8 2.8 8 7z" style="fill: var(--relleno, none)" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
     <symbol id="i-pronto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   </svg>
 
   <div class="app">
     <main>
-      <!-- ===== Simula ===== -->
-      <section id="pantalla-simula" class="pantalla" aria-labelledby="titulo-simula">
+      <!-- ===== Inicio: simulador ===== -->
+      <section id="pantalla-inicio" class="pantalla" aria-labelledby="titulo-inicio">
         <header class="encabezado">
-          <h1 id="titulo-simula" class="h2">Cuánto cuesta tu departamento</h1>
+          <h1 id="titulo-inicio" class="h2">Cuánto cuesta tu departamento</h1>
           <p class="texto-apoyo">Elige para qué lo quieres y cómo lo compras.</p>
         </header>
 
@@ -96,7 +96,7 @@
         </div>
       </section>
 
-      <!-- ===== Pantallas de los próximos sprints ===== -->
+      <!-- ===== Secciones ===== -->
       <section id="pantalla-proyectos" class="pantalla" aria-labelledby="titulo-proyectos" hidden>
         <div class="vacio">
           <svg aria-hidden="true"><use href="#i-pronto"/></svg>
@@ -104,36 +104,28 @@
           <p class="texto-apoyo">Disponible pronto.</p>
         </div>
       </section>
-      <section id="pantalla-postula" class="pantalla" aria-labelledby="titulo-postula" hidden>
+      <section id="pantalla-mis-proyectos" class="pantalla" aria-labelledby="titulo-mis-proyectos" hidden>
         <div class="vacio">
           <svg aria-hidden="true"><use href="#i-pronto"/></svg>
-          <h1 id="titulo-postula" class="h3">Postula</h1>
+          <h1 id="titulo-mis-proyectos" class="h3">Mis proyectos</h1>
           <p class="texto-apoyo">Disponible pronto.</p>
         </div>
       </section>
-      <section id="pantalla-ahorro" class="pantalla" aria-labelledby="titulo-ahorro" hidden>
+      <section id="pantalla-perfil" class="pantalla" aria-labelledby="titulo-perfil" hidden>
         <div class="vacio">
           <svg aria-hidden="true"><use href="#i-pronto"/></svg>
-          <h1 id="titulo-ahorro" class="h3">Tu 5 %</h1>
-          <p class="texto-apoyo">Disponible pronto.</p>
-        </div>
-      </section>
-      <section id="pantalla-departamento" class="pantalla" aria-labelledby="titulo-departamento" hidden>
-        <div class="vacio">
-          <svg aria-hidden="true"><use href="#i-pronto"/></svg>
-          <h1 id="titulo-departamento" class="h3">Mi departamento</h1>
+          <h1 id="titulo-perfil" class="h3">Perfil</h1>
           <p class="texto-apoyo">Disponible pronto.</p>
         </div>
       </section>
     </main>
 
-    <nav class="barra" aria-label="Pantallas">
+    <nav class="barra" aria-label="Secciones">
       <ul>
-        <li><a href="#simula" data-pantalla="simula"><svg aria-hidden="true"><use href="#i-simula"/></svg>Simula</a></li>
-        <li><a href="#proyectos" data-pantalla="proyectos"><svg aria-hidden="true"><use href="#i-proyectos"/></svg>Proyectos</a></li>
-        <li><a href="#postula" data-pantalla="postula"><svg aria-hidden="true"><use href="#i-postula"/></svg>Postula</a></li>
-        <li><a href="#ahorro" data-pantalla="ahorro"><svg aria-hidden="true"><use href="#i-ahorro"/></svg>Tu 5 %</a></li>
-        <li><a href="#departamento" data-pantalla="departamento"><svg aria-hidden="true"><use href="#i-departamento"/></svg>Mi departamento</a></li>
+        <li><a href="#inicio" data-seccion="inicio"><svg aria-hidden="true"><use href="#i-inicio"/></svg>Inicio</a></li>
+        <li><a href="#proyectos" data-seccion="proyectos"><svg aria-hidden="true"><use href="#i-proyectos"/></svg>Proyectos</a></li>
+        <li><a href="#mis-proyectos" data-seccion="mis-proyectos"><svg aria-hidden="true"><use href="#i-mis-proyectos"/></svg>Mis proyectos</a></li>
+        <li><a href="#perfil" data-seccion="perfil"><svg aria-hidden="true"><use href="#i-perfil"/></svg>Perfil</a></li>
       </ul>
     </nav>
   </div>
