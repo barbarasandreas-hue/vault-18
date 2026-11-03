@@ -4,7 +4,7 @@ Evaluado sobre el commit `bc9501c`, contra la sección "Sprint 2" de `PLAN.md` y
 
 La app se recorrió en Chrome sin ventana, emulando teléfonos de 390 × 844 y 360 × 844, **directamente en GitHub Pages** (`https://barbarasandreas-hue.github.io/vault-18/`), con un script que toca cada botón y mide la pantalla. No se probó en un teléfono físico.
 
-**Cambios de reglas durante la evaluación:** mientras se revisaba, aparecieron cambios sin commit en `CLAUDE.md`, `SPEC.md` y un archivo nuevo, `docs/bci-kit.md`. Piden Overpass en vez de Barlow Condensed y Figtree, títulos en peso 400, botón primario verde y botones en mayúsculas. Son posteriores a la entrega y `PLAN.md` no tiene criterios para ellos, así que **no se usan para juzgar este sprint**. Ver la corrección 1.
+**Cambios de reglas durante la evaluación:** mientras se revisaba, el Planner hizo el commit `7cb03c5`, que agrega los valores oficiales del Bci Kit (`docs/bci-kit.md`): Overpass en vez de Barlow Condensed y Figtree, títulos en peso 400, botón primario verde y botones en mayúsculas. Es posterior a la entrega y quedó planificado como **S3-F0 Bci Kit oficial**, así que **no se usa para juzgar este sprint**. Ver la corrección 1.
 
 ## 1. Veredicto
 
@@ -127,7 +127,7 @@ Los 4 escenarios de Inicio siguen dentro de ±$1 de la tabla. Vivir individual m
 
 No hay correcciones que bloqueen. Para el Sprint 3, en orden de importancia:
 
-1. **Nueva dirección visual (Planner, antes que el Generator).** Los cambios sin commit de `CLAUDE.md`, `SPEC.md` y `docs/bci-kit.md` (Overpass, títulos en peso 400, primario verde, botones en mayúsculas y de 50 px, figuras de marca) tocan todas las pantallas, y `PLAN.md` no tiene ninguna feature ni criterio para ellos. El Planner debe hacer commit de esos cambios y agregar una feature con criterios verificables, por ejemplo "S3-F0 Bci Kit oficial". Hay que cuidar que el texto blanco sobre `--green-normal` no llega a AA (lo advierte el mismo `CLAUDE.md`). Hasta entonces, el Evaluator seguirá aceptando Barlow Condensed y Figtree.
+1. **S3-F0 Bci Kit oficial, lo primero del Sprint 3.** Hoy la app usa Barlow Condensed y Figtree, `--blue-normal: #0033cc`, primario azul y botones sin mayúsculas. Todo eso cambia con `docs/bci-kit.md`. Como toca todas las pantallas, conviene hacerlo antes que Postula y Perfil, y volver a medir a 360 px. Overpass es más ancha que Barlow Condensed: hay que revisar el número protagonista ("$8.623.650"), las pestañas y "Mis proyectos" en la barra. Además, el blanco sobre `--green-normal` debe ir en negrita de 19 px o más.
 2. **`js/app.js:57`, función `ficha()`:** usar un espacio que no se corta entre el número y "m²" (`d.m2 + ' m²'`). A 360 px, Mi compra muestra "52" al final de una línea y "m²" sola en la siguiente.
 3. **`js/app.js:71`, función `barraAvance()`:** `Math.round(fraccion * 100)` es un cálculo hecho en la pantalla. Hay que moverlo a `calculos.js` (por ejemplo, `porcentajeEntero(fraccion)`) y usarlo también para `aria-valuenow`.
 4. **`js/app.js:135`, `:313` y `:317`:** los `style="transform:rotate(-90deg)"` y `style="margin-top:8px"` dentro de los textos HTML tienen que pasar a clases en `css/estilos.css`.
