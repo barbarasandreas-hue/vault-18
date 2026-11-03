@@ -62,6 +62,11 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 
 **Objetivo:** que el usuario recorra el marketplace, entienda los dos tipos de proyecto y se una a uno; y poder mostrar la app desde cualquier teléfono.
 
+- **S2-F0 Nueva barra de 4 secciones.** Reemplaza la barra del Sprint 1 (5 pasos) por Inicio, Proyectos, Mis proyectos y Perfil (ver `SPEC.md`, sección 3).
+  - Tocar cada ícono muestra su sección; la activa se distingue con color, ícono relleno y texto en negrita, no solo con color.
+  - Los 4 nombres caben sin cortarse a 360 px y cada botón mide 44 × 44 px como mínimo.
+  - La pantalla Simula del Sprint 1 pasa a ser el simulador de Inicio, sin perder ninguno de sus criterios (montos, desglose y "Calculado sin plusvalía").
+  - Las secciones aún no hechas muestran "Disponible pronto".
 - **S2-F1 Datos de ejemplo.** `js/datos.js` con al menos 4 proyectos (2 de compra en conjunto y 2 de financiamiento del pie) y al menos 10 departamentos en comunas reales de Santiago. Los proyectos llevan nombre de edificio, nunca de personas.
   - Cada proyecto tiene tipo, cupos totales, cupos tomados, UF financiadas y fecha de cierre.
   - Al menos 2 departamentos tienen rentabilidad menor a 4,5 % (para probar el filtro).
@@ -79,11 +84,16 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
   - Muestra el reparto 80 / 15 / 5 en pesos y el total al mes, calculados con `calculos.js`.
   - En compra en conjunto, el precio de lista aparece tachado junto al precio con 10 % de descuento.
   - Explica en una frase qué pasa si el grupo no se completa ("Puedes pasar a compra individual o salir sin costo").
-  - Acción principal: "Unirme". Al tocarla, el cupo se marca como tomado, se guarda en `localStorage` y la app lleva a Postula.
-- **S2-F5 Publicación en GitHub Pages.** La entrega explica en palabras simples cómo activar Pages desde la rama `main`.
+  - Al final, dos caminos: "Comprar aquí" (principal) e "Invertir aquí" (secundario; muestra "Disponible pronto" hasta el Sprint 6).
+  - "Comprar aquí" marca el cupo como tomado, lo guarda en `localStorage` y lleva a Mis proyectos › Mi compra.
+  - Si el usuario ya tiene una compra, "Comprar aquí" se reemplaza por un aviso ("Ya tienes una compra en curso").
+- **S2-F5 Mis proyectos (estructura).** Pestañas "Mi compra" y "Mis inversiones".
+  - Sin compra ni inversiones: estado vacío con la acción "Ver proyectos".
+  - Con una compra: Mi compra muestra el proyecto elegido y un indicador de pasos (1 Postula · 2 Tu 5 % · 3 Firma) con el paso 1 activo.
+- **S2-F6 Publicación en GitHub Pages.** La entrega explica en palabras simples cómo activar Pages desde la rama `main`.
   - La app funciona en `https://<usuario>.github.io/<repositorio>/` sin errores 404.
 
-## Sprint 3 · Postula y agregar a pantalla de inicio
+## Sprint 3 · Postula, Perfil y agregar a pantalla de inicio
 
 **Objetivo:** saber si el usuario y su pareja califican para el proyecto elegido, y poder instalar la app como ícono.
 
@@ -92,18 +102,19 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
   - Arrendar en lote con $1.200.000 + $800.000 → 28,6 %, en el límite.
   - Vivir individual con $1.500.000 + $1.000.000 → 30,1 %, no aprueba.
   - Exactamente 25 % es holgado y exactamente 30 % es en el límite.
-- **S3-F2 Pantalla Postula.** Dos campos de sueldo (usuario y pareja), con el proyecto elegido visible arriba.
+- **S3-F2 Postula (paso 1 de Mi compra).** Dos campos de sueldo (usuario y pareja), con el proyecto elegido visible arriba.
   - Los campos usan `inputmode="numeric"` y muestran el monto con punto de miles al escribir.
   - Número protagonista: el porcentaje de carga con semáforo (color + palabra + ícono).
   - Si un campo está vacío o es cero, muestra un mensaje de error claro y no calcula.
   - En amarillo o rojo, muestra una sugerencia concreta calculada con `calculos.js` (por ejemplo, "Si te unes a una compra en conjunto, tu carga baja a X %") y un enlace para volver a Proyectos.
-  - Si el usuario no se ha unido a ningún proyecto, usa el escenario de Simula y lo dice.
-  - Acción principal: "Postular" (deshabilitada en rojo).
+  - Acción principal: "Postular" (deshabilitada en rojo). Al postular en verde o amarillo, el indicador avanza al paso 2.
 - **S3-F3 Recordar elecciones.** Modo, tipo de compra, proyecto y sueldos se guardan en `localStorage`.
-  - Al recargar la página, Simula, Proyectos y Postula muestran lo último elegido.
+  - Al recargar la página, Inicio, Proyectos y Mis proyectos muestran lo último elegido.
   - Si `localStorage` no está disponible, la app funciona igual con valores por defecto.
 - **S3-F4 Agregar a pantalla de inicio.** `manifest.webmanifest` con nombre, colores del Bci Kit e íconos de 192 y 512 px.
   - El manifest responde 200 y está enlazado desde `index.html`.
+- **S3-F5 Perfil.** Muestra y permite editar modo (vivir o arrendar), sueldos y arriendo actual; al guardar, todo se recalcula.
+  - "Empezar de nuevo" borra lo guardado y vuelve al simulador de Inicio.
 
 ## Sprint 4 · Tu 5 % y escritura
 
@@ -112,7 +123,7 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 - **S4-F1 Fórmula de meses.** Meses para la meta, con pruebas.
   - Arrendar en lote ($6.467.738) ahorrando $500.000 al mes → 13 meses.
   - Ahorro mensual cero o vacío → error, no un número infinito.
-- **S4-F2 Pantalla Tu 5 %.** La meta sale del proyecto al que se unió el usuario (o del escenario de Simula).
+- **S4-F2 Tu 5 % (paso 2 de Mi compra).** La meta sale del proyecto al que se unió el usuario.
   - Número protagonista: los meses ("13 meses").
   - Campo de ahorro mensual con teclado numérico.
   - Barra de avance con hitos al 25 %, 50 %, 75 % y 100 %.
@@ -123,7 +134,9 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
   - No se menciona el auto en ninguna parte.
 - **S4-F4 Avance simulado.** Un botón "Simular un mes" suma el ahorro mensual al avance y lo guarda en `localStorage`.
 - **S4-F5 Lista de firma.** Al llegar a la meta aparece un mensaje de logro y la lista de lo que se firma en la escritura (crédito Bci, segunda hipoteca con los inversionistas, cuenta custodia), con checks y en palabras simples.
-  - Acción principal: "Firmar" (simulado), que lleva a Mi departamento.
+  - Es el paso 3 de Mi compra. Acción principal: "Firmar" (simulado); después, Mi compra pasa a mostrar Mi departamento.
+- **S4-F6 Inicio con próximo paso.** Una vez que el usuario se unió a un proyecto, Inicio muestra una tarjeta con el paso en que va y su número (por ejemplo, "Te faltan 13 meses") y un botón que lleva directo a ese paso.
+  - "Volver a simular" sigue a un toque.
 
 ## Sprint 5 · Mi departamento
 
@@ -132,7 +145,7 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 - **S5-F1 Fórmulas del mes.** Lo que pone el usuario y saldo de cada deuda después de N cuotas, con pruebas.
   - Arrendar en lote con arriendo bruto $450.000 → neto $371.250 → el usuario pone $200.175.
   - Arriendo bruto $700.000 → neto $577.500 → excedente de $6.075.
-- **S5-F2 Cascada de la cuenta custodia (modo arrendar).** Pasos numerados: entra el arriendo, se descuenta administración, se paga el dividendo, se paga a los inversionistas, el usuario completa.
+- **S5-F2 Cascada de la cuenta custodia (modo arrendar).** Se ve en Mis proyectos › Mi compra después de firmar. Pasos numerados: entra el arriendo, se descuenta administración, se paga el dividendo, se paga a los inversionistas, el usuario completa.
   - Número protagonista: lo que puso el usuario este mes ($200.175 en el ejemplo).
 - **S5-F3 Modo vivir.** Muestra el total al mes y lo compara con el arriendo actual del usuario.
 - **S5-F4 Avance de la deuda.** Dos barras: crédito Bci (30 años) e inversionistas (10 años), con meses pagados y saldo en pesos.
@@ -142,29 +155,30 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 
 ## Sprint 6 · Inversionista
 
-**Objetivo:** que un inversionista recorra el mismo marketplace, invierta en el financiamiento del pie y siga su cartera.
+**Objetivo:** que cualquier usuario pueda invertir en un proyecto desde el mismo marketplace y seguir sus inversiones. No hay selector de rol: se decide dentro de cada proyecto.
 
-- **S6-F1 Selector de rol.** Al abrir la app se elige "Quiero comprar" o "Quiero invertir"; la elección se recuerda y se puede cambiar.
-  - Cada rol tiene su propia barra inferior.
-- **S6-F2 Proyectos (vista inversionista).** Las mismas tarjetas del marketplace, mostrando rentabilidad (UF + 8 %), plazo (10 años), garantía (segunda hipoteca) y lo que falta por financiar.
+- **S6-F1 Invertir aquí.** En el detalle de cada proyecto, "Invertir aquí" queda activo y abre la pantalla Invertir.
+  - Un usuario puede tener una compra e inversiones al mismo tiempo.
+- **S6-F2 Información para invertir.** El detalle del proyecto muestra rentabilidad (UF + 8 %), plazo (10 años), garantía (segunda hipoteca) y lo que falta por financiar.
   - Departamento de UF 2.250 en una compra en conjunto → por financiar UF 337,5 = $13.859.438.
   - Una frase explica la cuenta custodia: Bci cobra el arriendo y paga a los inversionistas después del dividendo.
 - **S6-F3 Invertir.** Campo de monto en UF con teclado numérico.
   - Número protagonista: la cuota mensual que recibirá. UF 10 → $4.982 al mes.
   - Menos de UF 10 o más de lo que falta por financiar → mensaje de error y "Confirmar" deshabilitado.
   - Al confirmar, el avance del financiamiento del proyecto sube en el marketplace.
-- **S6-F4 Mi cartera.** Lista de inversiones guardadas en `localStorage`.
+- **S6-F4 Mis inversiones.** Pestaña de Mis proyectos con la lista de inversiones guardadas en `localStorage`.
   - Número protagonista: cobrado a la fecha. Botón "Simular un mes" suma una cuota por inversión.
   - Sin inversiones, muestra un estado vacío con la acción "Ver proyectos".
+  - Si el usuario solo tiene inversiones (sin compra), Mis proyectos abre directo en esta pestaña e Inicio muestra lo cobrado a la fecha.
 
 ## Sprint 7 · Pulido, comprensión y accesibilidad
 
 **Objetivo:** que la app se sienta terminada y sea fácil de comprender para todos, incluidas personas con baja visión.
 
-- **S7-F1 Estado de carga en botones.** Las acciones principales (Unirme, Postular, Firmar, Confirmar) muestran el estado de carga del Bci Kit por un momento antes de avanzar.
+- **S7-F1 Estado de carga en botones.** Las acciones principales (Comprar aquí, Postular, Firmar, Confirmar) muestran el estado de carga del Bci Kit por un momento antes de avanzar.
 - **S7-F2 Contraste AA.** Todas las combinaciones de texto y fondo cumplen 4,5:1 (texto normal) o 3:1 (texto grande), calculadas con los colores reales del CSS.
 - **S7-F3 Textos de 10 segundos.** Cada pantalla tiene un título de máximo 6 palabras y una frase de apoyo de máximo 15.
-- **S7-F4 Explicaciones a un toque.** Dividendo, pie, carga, segunda hipoteca, cuenta custodia, compra en conjunto y financiamiento del pie tienen un ícono de ayuda que abre una explicación de una frase, sin jerga.
+- **S7-F4 Explicaciones a un toque.** Dividendo, pie, carga, segunda hipoteca, cuenta custodia, compra en conjunto y financiamiento del pie tienen un ícono de ayuda que abre una explicación de una frase, sin jerga. Las mismas explicaciones se reúnen en Perfil › Ayuda.
 - **S7-F5 Revisión en 360 px.** Ningún texto cortado ni scroll horizontal en ninguna pantalla.
 - **S7-F6 Introducción.** Una primera pantalla, solo la primera vez, con el mensaje "Tu departamento con el 5 % del precio" y una lista con check de las 3 partes (Bci, inversionistas, tú) y de los dos tipos de proyecto.
 
@@ -180,29 +194,33 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 1 | S1-F4 Fórmulas base | en progreso |
 | 1 | S1-F5 Pantalla Simula | en progreso |
 | 1 | S1-F6 Visible en el teléfono por wifi | en progreso |
+| 2 | S2-F0 Nueva barra de 4 secciones | pendiente |
 | 2 | S2-F1 Datos de ejemplo | pendiente |
 | 2 | S2-F2 Fórmulas del marketplace | pendiente |
 | 2 | S2-F3 Pantalla Proyectos | pendiente |
 | 2 | S2-F4 Detalle y unirse | pendiente |
-| 2 | S2-F5 Publicación en GitHub Pages | pendiente |
+| 2 | S2-F5 Mis proyectos (estructura) | pendiente |
+| 2 | S2-F6 Publicación en GitHub Pages | pendiente |
 | 3 | S3-F1 Fórmula de carga | pendiente |
-| 3 | S3-F2 Pantalla Postula | pendiente |
+| 3 | S3-F2 Postula (paso 1 de Mi compra) | pendiente |
 | 3 | S3-F3 Recordar elecciones | pendiente |
 | 3 | S3-F4 Agregar a pantalla de inicio | pendiente |
+| 3 | S3-F5 Perfil | pendiente |
 | 4 | S4-F1 Fórmula de meses | pendiente |
-| 4 | S4-F2 Pantalla Tu 5 % | pendiente |
+| 4 | S4-F2 Tu 5 % (paso 2 de Mi compra) | pendiente |
 | 4 | S4-F3 Propio o grupal | pendiente |
 | 4 | S4-F4 Avance simulado | pendiente |
 | 4 | S4-F5 Lista de firma | pendiente |
+| 4 | S4-F6 Inicio con próximo paso | pendiente |
 | 5 | S5-F1 Fórmulas del mes | pendiente |
 | 5 | S5-F2 Cascada de la cuenta custodia | pendiente |
 | 5 | S5-F3 Modo vivir | pendiente |
 | 5 | S5-F4 Avance de la deuda | pendiente |
 | 5 | S5-F5 Aviso de abono | pendiente |
-| 6 | S6-F1 Selector de rol | pendiente |
-| 6 | S6-F2 Proyectos (vista inversionista) | pendiente |
+| 6 | S6-F1 Invertir aquí | pendiente |
+| 6 | S6-F2 Información para invertir | pendiente |
 | 6 | S6-F3 Invertir | pendiente |
-| 6 | S6-F4 Mi cartera | pendiente |
+| 6 | S6-F4 Mis inversiones | pendiente |
 | 7 | S7-F1 Estado de carga en botones | pendiente |
 | 7 | S7-F2 Contraste AA | pendiente |
 | 7 | S7-F3 Textos de 10 segundos | pendiente |

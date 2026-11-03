@@ -18,15 +18,60 @@ Primer Peldaño es un marketplace de departamentos de Bci, para el teléfono, qu
 
 Cada pantalla tiene **un número protagonista** y **una acción principal**.
 
-### Lado del comprador
+### Navegación: la barra inferior
 
-| Pantalla | Propósito | Número protagonista | Acción principal |
+La barra muestra **lugares a los que el usuario vuelve**, no pasos que hace una sola vez. Los pasos (postular, ahorrar, firmar) viven dentro de las secciones. Hay **una sola barra para todos**: no se elige rol al abrir la app; el usuario decide si compra o invierte **dentro de cada proyecto**.
+
+```
+┌──────────┬────────────┬──────────────┬──────────┐
+│  Inicio  │ Proyectos  │ Mis proyectos│  Perfil  │
+└──────────┴────────────┴──────────────┴──────────┘
+```
+
+| Sección | Para qué sirve | Número protagonista | Acción principal |
 |---|---|---|---|
-| **Simula** | Ver cuánto cuesta comprar, para vivir o arrendar, en lote o individual | Cuánto pone al escriturar (5 % + gastos) | Ver proyectos |
-| **Proyectos** (marketplace) | Recorrer los proyectos filtrados por la IA y unirse a uno | En compra en conjunto: cuánto ahorra por unirse. En financiamiento del pie: el precio y de dónde sale (80 / 15 / 5) | Unirme |
-| **Postula** | Saber si el usuario y su pareja califican para el proyecto elegido | Porcentaje de carga, con semáforo: holgado (verde), en el límite (amarillo), no aprueba (rojo) | Postular |
-| **Tu 5 %** | Planificar cómo juntar lo que pone al escriturar y, al llegar, revisar lo que firma | Meses para llegar a la meta | Empezar a ahorrar |
-| **Mi departamento** | Ver cómo se movió el dinero del mes y el avance de la deuda | Cuánto puso el usuario este mes | Abonar (solo aparece cuando la IA lo recomienda) |
+| **Inicio** | Saber en qué va y cuál es el próximo paso. La primera vez es el **simulador** | Primera vez: cuánto pone al escriturar. Después: el número de la etapa en que va (meses que faltan, lo que puso este mes, cobrado a la fecha) | El próximo paso ("Ver proyectos", "Postular", "Simular un mes"…) |
+| **Proyectos** | El marketplace: recorrer los proyectos filtrados por la IA y unirse a uno, como comprador o como inversionista | En cada tarjeta, uno solo: ahorro por unirse (compra en conjunto) o precio (financiamiento del pie) | Ver proyecto |
+| **Mis proyectos** | Todo lo que el usuario tiene: su compra y sus inversiones | Depende de la pestaña (ver abajo) | Depende de la etapa |
+| **Perfil** | Datos que la app recuerda, ayuda y opciones | — | Guardar cambios |
+
+Cada sección tiene un ícono y su nombre escrito; la activa se distingue con color, ícono relleno y texto en negrita.
+
+### Inicio
+
+- **Primera vez (simulador):** elige vivir o arrendar, lote o individual, y ve "Pones $6.467.738 al escriturar" y "$571.425 al mes", con "¿De dónde sale el resto?" a un toque y la frase "Calculado sin plusvalía". Acción: "Ver proyectos".
+- **Después:** una tarjeta grande con el próximo paso según la etapa de la compra, y debajo, si tiene inversiones, un resumen de lo cobrado. El simulador queda a un toque ("Volver a simular").
+
+### Proyectos (marketplace)
+
+- Lista de tarjetas con pestañas "Compra en conjunto" y "Financiamiento del pie", filtradas por la IA (en modo arrendar, solo departamentos que rinden 4,5 % o más).
+- **Detalle del proyecto:** reparto 80 / 15 / 5 en pesos, total al mes, cupos o avance del financiamiento, fecha de cierre y qué pasa si no se completa. Al final, **dos caminos**:
+  - **"Comprar aquí"**: toma un cupo y sigue en Mis proyectos › Mi compra (paso 1, Postula).
+  - **"Invertir aquí"**: abre Invertir (monto desde UF 10, cuota mensual que recibirá, Confirmar) y la inversión aparece en Mis proyectos › Mis inversiones.
+- Un usuario solo puede tener una compra a la vez; si ya tiene una, "Comprar aquí" se reemplaza por un aviso y solo queda "Invertir aquí".
+
+### Mis proyectos
+
+Dos pestañas: **Mi compra** y **Mis inversiones**. Si el usuario solo tiene una de las dos, se abre directo en esa. Si no tiene ninguna, muestra un estado vacío con "Ver proyectos".
+
+**Mi compra** cambia según la etapa, con un indicador de pasos arriba (1 Postula · 2 Tu 5 % · 3 Firma):
+
+| Etapa | Qué se ve | Número protagonista | Acción principal |
+|---|---|---|---|
+| 1. Postula | Sueldos del usuario y su pareja, semáforo de carga y sugerencia si sale amarillo o rojo | Porcentaje de carga | Postular |
+| 2. Tu 5 % | Meta, ahorro mensual, propio o grupal, barra con hitos | Meses para la meta | Empezar a ahorrar / Simular un mes |
+| 3. Firma | Lista con checks de lo que se firma (crédito Bci, segunda hipoteca, cuenta custodia) | — | Firmar (simulado) |
+| Mi departamento (después de firmar) | Cascada de la cuenta custodia (arrendar) o comparación con el arriendo actual (vivir), avance de las dos deudas, "Calculado sin plusvalía" | Cuánto puso el usuario este mes | Abonar (solo cuando la IA lo recomienda) |
+
+**Mis inversiones**: lista de inversiones, cada una con su proyecto, monto y cuota mensual.
+- Número protagonista: cobrado a la fecha.
+- Acción principal: "Simular un mes" (suma una cuota por inversión). Desde cada inversión, "Ver proyecto".
+
+### Perfil
+
+- Datos que la app recuerda: modo (vivir o arrendar), sueldos, arriendo actual. Se pueden editar y recalculan todo.
+- Ayuda: explicación en una frase de cada término (dividendo, pie, carga, segunda hipoteca, cuenta custodia, compra en conjunto, financiamiento del pie).
+- "Empezar de nuevo": borra lo guardado para volver a mostrar la demo desde cero.
 
 ### El marketplace: dos tipos de proyecto
 
@@ -49,24 +94,15 @@ Los proyectos de compra en conjunto también se financian con inversionistas (ca
 
 El 5 % nunca lo financian inversionistas ni otras personas.
 
-### Lado del inversionista
-
-| Pantalla | Propósito | Número protagonista | Acción principal |
-|---|---|---|---|
-| **Proyectos** (vista inversionista) | El mismo marketplace, mostrando lo que falta por financiar en cada proyecto | Rentabilidad: UF + 8 % a 10 años | Invertir |
-| **Invertir** | Elegir cuánto prestar | Cuota mensual que recibirá | Confirmar |
-| **Mi cartera** | Seguir sus inversiones | Cobrado a la fecha | Ver detalle |
-
-Un selector al inicio permite elegir entre "Quiero comprar" y "Quiero invertir".
-
 ## 4. Flujos clave
 
-1. **Comprador, de principio a fin:** Simula → Proyectos (se une a uno) → Postula → Tu 5 % (con lista de firma al llegar a la meta) → Mi departamento.
-2. **Inversionista:** Proyectos → Invertir → Mi cartera.
-3. **Unirse a una compra en conjunto:** ve la tarjeta → revisa ahorro, cupos y fecha de cierre → "Unirme" → toma un cupo → se le explica qué pasa si el grupo no se completa → sigue a Postula.
-4. **Un mes en modo arrendar:** entra el arriendo a la cuenta custodia de Bci → se descuentan administración → se paga primero el dividendo → luego la cuota a los inversionistas → el usuario completa la diferencia. Mi departamento lo muestra como una cascada de pasos.
+1. **Comprador, de principio a fin:** Inicio (simulador) → Proyectos → detalle → "Comprar aquí" → Mis proyectos › Mi compra: Postula → Tu 5 % → Firma → Mi departamento.
+2. **Inversionista:** Proyectos → detalle → "Invertir aquí" → Invertir → Mis proyectos › Mis inversiones.
+3. **Unirse a una compra en conjunto:** ve la tarjeta → revisa ahorro, cupos y fecha de cierre → "Comprar aquí" → toma un cupo → se le explica qué pasa si el grupo no se completa → sigue a Postula.
+4. **Un mes en modo arrendar:** entra el arriendo a la cuenta custodia de Bci → se descuentan administración → se paga primero el dividendo → luego la cuota a los inversionistas → el usuario completa la diferencia. Mi compra, en su etapa Mi departamento, lo muestra como una cascada de pasos.
 5. **Un mes en modo vivir:** el usuario paga el dividendo y la cuota a los inversionistas, y se compara con lo que pagaba de arriendo.
 6. **Postula en amarillo o rojo:** la app sugiere qué cambiar (unirse a una compra en conjunto, un departamento más barato, sumar el ingreso de la pareja) y deja volver a Proyectos.
+7. **Volver a la app:** al abrirla, Inicio muestra el próximo paso según dónde quedó el usuario.
 
 ## 5. Modelo de datos
 
