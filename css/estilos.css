@@ -179,16 +179,7 @@ button { font: inherit; }
 }
 .pantalla[hidden] { display: none; }
 
-.marca {
-  font-family: var(--font-titulos);
-  font-weight: 700;
-  font-size: 18px;
-  color: var(--blue-normal);
-  margin: 0 0 16px;
-  letter-spacing: .3px;
-}
-
-.encabezado { margin-bottom: 20px; }
+.encabezado { margin-bottom: 16px; }
 .encabezado .h2 { margin-bottom: 4px; }
 
 /* ---------- Selector segmentado ---------- */
@@ -236,7 +227,7 @@ button { font: inherit; }
   box-shadow: 0 1px 3px rgba(31, 41, 51, .08);
 }
 
-.protagonista { margin: 20px 0 16px; }
+.protagonista { margin: 16px 0 0; }
 .protagonista .etiqueta { font-weight: 600; color: var(--gray-semidark); margin: 0; }
 .protagonista .numero {
   display: block;
@@ -244,14 +235,14 @@ button { font: inherit; }
   margin: 4px 0;
   overflow-wrap: anywhere;
 }
-.protagonista .secundario { margin: 12px 0 0; font-size: 18px; }
+.protagonista .secundario { margin: 4px 0 0; font-size: 18px; }
 .protagonista .secundario strong { font-family: var(--font-titulos); font-size: 26px; color: var(--gray-dark); }
 
 .sello {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 14px;
+  margin-top: 12px;
   padding: 4px 12px;
   border-radius: 999px;
   background: var(--green-20);
@@ -299,7 +290,7 @@ button { font: inherit; }
 .lista-check small { display: block; color: var(--gray-semidark); font-size: 14px; }
 .reparto-total { margin: 8px 0 0; font-size: 14px; color: var(--gray-semidark); }
 
-.accion { margin-top: 24px; }
+.accion { margin: 16px 0; }
 
 /* ---------- Estado vacío ---------- */
 .vacio {

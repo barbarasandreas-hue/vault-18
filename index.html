@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#0033cc">
   <meta name="description" content="Primer Peldaño de Bci: tu primer departamento poniendo el 5 % del precio.">
   <title>Primer Peldaño · Bci</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230033cc'/%3E%3Cpath d='M8 24h6v-5h5v-5h5V8' fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Figtree:wght@400;600;700&display=swap">
@@ -14,7 +15,7 @@
 <body>
   <!-- Íconos reutilizables -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" style="stroke: var(--white)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-flecha" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M8.5 12l2.5 2.5 4.5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-simula" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 7h8M8 11h2M12 11h2M16 11h0M8 15h2M12 15h2M8 18h2M12 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
@@ -29,14 +30,13 @@
     <main>
       <!-- ===== Simula ===== -->
       <section id="pantalla-simula" class="pantalla" aria-labelledby="titulo-simula">
-        <p class="marca">Bci · Primer Peldaño</p>
         <header class="encabezado">
           <h1 id="titulo-simula" class="h2">Cuánto cuesta tu departamento</h1>
           <p class="texto-apoyo">Elige para qué lo quieres y cómo lo compras.</p>
         </header>
 
         <fieldset class="selector">
-          <legend>¿Para qué lo quieres?</legend>
+          <legend class="oculto-visual">¿Para qué lo quieres?</legend>
           <div class="selector-opciones">
             <input type="radio" name="modo" id="modo-arrendar" value="arrendar" checked>
             <label for="modo-arrendar">Para arrendar</label>
@@ -46,7 +46,7 @@
         </fieldset>
 
         <fieldset class="selector">
-          <legend>¿Cómo lo compras?</legend>
+          <legend class="oculto-visual">¿Cómo lo compras?</legend>
           <div class="selector-opciones">
             <input type="radio" name="tipo" id="tipo-lote" value="lote" checked>
             <label for="tipo-lote">En lote (−10 %)</label>
@@ -56,11 +56,14 @@
         </fieldset>
 
         <div class="tarjeta protagonista" aria-live="polite">
-          <p class="etiqueta">Pones al escriturar</p>
+          <p class="etiqueta">Pones al escriturar (5 % + gastos)</p>
           <strong class="numero display-1" id="simula-escriturar">$0</strong>
-          <p class="texto-apoyo">Tu 5 % del precio más los gastos de escritura.</p>
           <p class="secundario">Y luego <strong id="simula-mes">$0</strong> al mes</p>
           <p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>
+        </div>
+
+        <div class="accion">
+          <a href="#proyectos" class="btn btn-primario btn-lg btn-bloque">Ver proyectos</a>
         </div>
 
         <div class="tarjeta">
@@ -90,10 +93,6 @@
             </ul>
             <p class="reparto-total">Además pones <strong id="reparto-gastos">$0</strong> de gastos de escritura (≈ 2 %).</p>
           </div>
-        </div>
-
-        <div class="accion">
-          <a href="#proyectos" class="btn btn-primario btn-lg btn-bloque">Ver proyectos</a>
         </div>
       </section>
 

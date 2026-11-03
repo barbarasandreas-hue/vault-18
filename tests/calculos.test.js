@@ -25,6 +25,15 @@ for (const r of referencia) {
   });
 }
 
+for (const r of referencia) {
+  test(`las cifras de ${r.nombre} cuadran a la vista`, () => {
+    const e = c.escenario(r.lista, r.tipo);
+    assert.strictEqual(e.dividendo + e.cuotaInversionistas, e.totalMes);
+    assert.strictEqual(e.reparto.bci + e.reparto.inversionistas + e.reparto.usuario, e.precio);
+    assert.strictEqual(e.pie + e.gastos, e.alEscriturar);
+  });
+}
+
 test('precio en lote tiene 10 % de descuento', () => {
   assert.strictEqual(c.precioUF(2500, 'lote'), 2250);
   assert.strictEqual(c.precioUF(2500, 'individual'), 2500);

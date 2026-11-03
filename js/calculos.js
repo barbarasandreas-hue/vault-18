@@ -71,24 +71,34 @@ function formatoPesos(pesos) {
 
 // Todos los números de un escenario, en pesos, listos para mostrar.
 // listaUF: precio de lista del departamento; tipo: 'lote' o 'individual'.
+// Las cifras cuadran a la vista: el total al mes es la suma de sus partes
+// redondeadas, y el 80 % de Bci (la parte más grande) absorbe el redondeo
+// para que 80 + 15 + 5 sume exactamente el precio.
 function escenario(listaUF, tipo) {
   var precio = precioUF(listaUF, tipo);
+  var precioPesos = ufAPesos(precio);
   var dividendo = ufAPesos(dividendoUF(precio));
   var cuota = ufAPesos(cuotaInversionistasUF(precio));
   var reparto = repartoUF(precio);
+  var inversionistas = ufAPesos(reparto.inversionistas);
+  var usuario = ufAPesos(reparto.usuario);
+  var bci = precioPesos - inversionistas - usuario;
+  var gastos = ufAPesos(gastosUF(precio));
   return {
+    listaUF: listaUF,
     precioUF: precio,
-    precio: ufAPesos(precio),
-    pie: ufAPesos(pieUF(precio)),
-    gastos: ufAPesos(gastosUF(precio)),
-    alEscriturar: ufAPesos(alEscriturarUF(precio)),
+    precioLista: ufAPesos(listaUF),
+    precio: precioPesos,
+    pie: usuario,
+    gastos: gastos,
+    alEscriturar: usuario + gastos,
     dividendo: dividendo,
     cuotaInversionistas: cuota,
-    totalMes: ufAPesos(totalMesUF(precio)),
+    totalMes: dividendo + cuota,
     reparto: {
-      bci: ufAPesos(reparto.bci),
-      inversionistas: ufAPesos(reparto.inversionistas),
-      usuario: ufAPesos(reparto.usuario)
+      bci: bci,
+      inversionistas: inversionistas,
+      usuario: usuario
     }
   };
 }
