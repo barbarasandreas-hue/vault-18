@@ -154,7 +154,8 @@ function formatoFecha(iso) {
 // o 'financiamiento' (financiamiento del pie, a precio de lista).
 // departamentos: los disponibles del proyecto (misma tipología y precio).
 // cuposExtra: cupos que tomó el usuario en este teléfono (0 o 1).
-function resumenProyecto(proyecto, departamentos, cuposExtra) {
+// invertidoUF: lo que el usuario invirtió en este proyecto desde este teléfono.
+function resumenProyecto(proyecto, departamentos, cuposExtra, invertidoUF) {
   var tipoCompra = proyecto.tipo === 'conjunto' ? 'lote' : 'individual';
   var listaUF = departamentos[0].listaUF;
   var e = escenario(listaUF, tipoCompra);
@@ -166,6 +167,7 @@ function resumenProyecto(proyecto, departamentos, cuposExtra) {
 
   var tomados = proyecto.cuposTomados + (cuposExtra || 0);
   var porFinanciar = porFinanciarUF(e.precioUF);
+  var financiadas = proyecto.ufFinanciadas + (invertidoUF || 0);
 
   return {
     tipoCompra: tipoCompra,
@@ -177,9 +179,12 @@ function resumenProyecto(proyecto, departamentos, cuposExtra) {
     cupos: proyecto.cupos,
     cuposLibres: Math.max(0, proyecto.cupos - tomados),
     avanceCupos: avance(tomados, proyecto.cupos),
+    porFinanciarUF: porFinanciar,
     porFinanciar: ufAPesos(porFinanciar),
-    financiado: ufAPesos(proyecto.ufFinanciadas),
-    avanceFinanciamiento: avance(proyecto.ufFinanciadas, porFinanciar)
+    financiadoUF: financiadas,
+    financiado: ufAPesos(financiadas),
+    faltaUF: faltaFinanciarUF(porFinanciar, financiadas),
+    avanceFinanciamiento: avance(financiadas, porFinanciar)
   };
 }
 
@@ -370,7 +375,50 @@ function diasEntre(desde, hasta) {
   return Math.round((Date.UTC(b[0], b[1] - 1, b[2]) - Date.UTC(a[0], a[1] - 1, a[2])) / 86400000);
 }
 
+// ---------- Invertir (S6-F2 y S6-F3) ----------
+
+// La inversión mínima es UF 10.
+var INVERSION_MINIMA_UF = 10;
+
+// Lo que falta por financiar del 15 %, en UF (nunca negativo).
+function faltaFinanciarUF(porFinanciar, financiadas) {
+  return Math.max(0, porFinanciar - (financiadas || 0));
+}
+
+// Cuota mensual que recibe el inversionista: cuota fija a UF + 8 % en 120 meses, en UF.
+function cuotaInversionUF(montoUF) {
+  return cuotaFija(montoUF, SUPUESTOS.tasaInversionistas, SUPUESTOS.mesesInversionistas);
+}
+
+// Revisa un monto a invertir. Devuelve null si sirve, o 'vacio', 'minimo' o 'maximo'.
+function validarInversion(montoUF, faltaUF) {
+  if (montoUF === null || montoUF === undefined || isNaN(montoUF)) return 'vacio';
+  if (montoUF < INVERSION_MINIMA_UF) return 'minimo';
+  if (montoUF > faltaUF + 1e-9) return 'maximo';
+  return null;
+}
+
+// Lo cobrado a la fecha por una lista de inversiones { montoUF, cuotasCobradas }, en UF.
+function cobradoUF(inversiones) {
+  return (inversiones || []).reduce(function (suma, x) {
+    return suma + cuotaInversionUF(x.montoUF) * Math.min(x.cuotasCobradas || 0, SUPUESTOS.mesesInversionistas);
+  }, 0);
+}
+
+// Lo que recibe al mes por todas sus inversiones que aún no terminan, en UF.
+function cuotaMensualTotalUF(inversiones) {
+  return (inversiones || []).reduce(function (suma, x) {
+    return suma + ((x.cuotasCobradas || 0) < SUPUESTOS.mesesInversionistas ? cuotaInversionUF(x.montoUF) : 0);
+  }, 0);
+}
+
 if (typeof module !== 'undefined') module.exports = {
+  INVERSION_MINIMA_UF: INVERSION_MINIMA_UF,
+  faltaFinanciarUF: faltaFinanciarUF,
+  cuotaInversionUF: cuotaInversionUF,
+  validarInversion: validarInversion,
+  cobradoUF: cobradoUF,
+  cuotaMensualTotalUF: cuotaMensualTotalUF,
   capacidadCompraUF: capacidadCompraUF,
   formatoUF: formatoUF,
   cascadaMes: cascadaMes,

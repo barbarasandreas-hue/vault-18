@@ -362,3 +362,46 @@ test('días entre fechas', () => {
   assert.strictEqual(c.diasEntre('2026-11-03', '2026-11-03'), 0);
   assert.strictEqual(c.diasEntre('2026-12-15', '2026-11-03'), -42);
 });
+
+// ---------- Invertir (S6) ----------
+
+test('por financiar en Alto Ñuñoa (UF 2.250 en compra en conjunto) → UF 337,5 = $13.859.438', () => {
+  const p = datos.buscarProyecto('alto-nunoa');
+  const r = c.resumenProyecto(p, datos.departamentosDe(p.id), 0, 0);
+  assert.strictEqual(r.porFinanciarUF, 337.5);
+  assert.strictEqual(r.porFinanciar, 13859438);
+  assert.strictEqual(r.faltaUF, 337.5);
+});
+
+test('invertir: UF 10 → $4.982 al mes', () => {
+  assert.strictEqual(c.ufAPesos(c.cuotaInversionUF(10)), 4982);
+});
+
+test('invertir: mínimo UF 10 y máximo lo que falta por financiar', () => {
+  assert.strictEqual(c.validarInversion(null, 100), 'vacio');
+  assert.strictEqual(c.validarInversion(9, 100), 'minimo');
+  assert.strictEqual(c.validarInversion(10, 100), null);
+  assert.strictEqual(c.validarInversion(100, 100), null);
+  assert.strictEqual(c.validarInversion(101, 100), 'maximo');
+  assert.strictEqual(c.validarInversion(10, 5), 'minimo');
+});
+
+test('invertir: el avance del financiamiento sube con lo invertido', () => {
+  const p = datos.buscarProyecto('plaza-independencia'); // UF 202,5 de 337,5 → 60 %
+  const antes = c.resumenProyecto(p, datos.departamentosDe(p.id), 0, 0);
+  const despues = c.resumenProyecto(p, datos.departamentosDe(p.id), 0, 67.5);
+  assert.strictEqual(antes.avanceFinanciamiento, 0.6);
+  assert.strictEqual(despues.avanceFinanciamiento, 0.8);
+  assert.strictEqual(despues.faltaUF, 67.5);
+  assert.strictEqual(c.faltaFinanciarUF(100, 150), 0);
+});
+
+test('mis inversiones: cobrado a la fecha y cuota mensual', () => {
+  const lista = [{ montoUF: 10, cuotasCobradas: 3 }, { montoUF: 20, cuotasCobradas: 0 }];
+  assert.ok(Math.abs(c.cobradoUF(lista) - c.cuotaInversionUF(10) * 3) < 1e-12);
+  assert.ok(Math.abs(c.cuotaMensualTotalUF(lista) - c.cuotaInversionUF(30)) < 1e-12);
+  // Al terminar los 120 meses, ya no cobra más.
+  assert.ok(Math.abs(c.cobradoUF([{ montoUF: 10, cuotasCobradas: 150 }]) - c.cuotaInversionUF(10) * 120) < 1e-9);
+  assert.strictEqual(c.cuotaMensualTotalUF([{ montoUF: 10, cuotasCobradas: 120 }]), 0);
+  assert.strictEqual(c.cobradoUF([]), 0);
+});
