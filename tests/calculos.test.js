@@ -383,7 +383,8 @@ test('invertir: mínimo UF 10 y máximo lo que falta por financiar', () => {
   assert.strictEqual(c.validarInversion(10, 100), null);
   assert.strictEqual(c.validarInversion(100, 100), null);
   assert.strictEqual(c.validarInversion(101, 100), 'maximo');
-  assert.strictEqual(c.validarInversion(10, 5), 'minimo');
+  // Si falta menos que el mínimo, cualquier monto válido supera lo que falta.
+  assert.strictEqual(c.validarInversion(10, 5), 'maximo');
 });
 
 test('invertir: el avance del financiamiento sube con lo invertido', () => {
