@@ -702,16 +702,20 @@ function cambiosTodaviaNo(perfil, id) {
     var sinCuotas = Object.assign({}, perfil, { otrasCuotas: 0 });
     var ev = sostenible(sinCuotas, actual.dividendo);
     cambios.push({ tipo: 'cuotas', otras: perfil.otrasCuotas, cargaTotal: ev.cargaTotal,
-      queda: ev.mes.queda, cumple: ev.cumple });
+      queda: ev.mes.queda, cumple: ev.cumple, evaluacion: ev });
   }
   if (lista > ESTUDIO_UF) {
     var e = numerosCamino(id, ESTUDIO_UF, perfil);
     cambios.push({ tipo: 'estudio', listaUF: ESTUDIO_UF, alEscriturar: e.alEscriturar, dividendo: e.dividendo,
-      cumple: e.evaluacion.cumple, meses: e.meses });
+      cumple: e.evaluacion.cumple, meses: e.meses, evaluacion: e.evaluacion });
   }
   var necesario = ingresoNecesario(perfil, actual.dividendo);
   var ingreso = ingresoTotal(perfil.sueldoPropio, perfil.sueldoPareja);
-  cambios.push({ tipo: 'renta', ingreso: necesario, falta: Math.max(0, necesario - ingreso) });
+  // Con esa renta (sumada al sueldo propio) el camino ya es sostenible: este cambio siempre resuelve.
+  var conRenta = Object.assign({}, perfil, { sueldoPropio: necesario, sueldoPareja: null });
+  var evRenta = sostenible(conRenta, actual.dividendo);
+  cambios.push({ tipo: 'renta', ingreso: necesario, falta: Math.max(0, necesario - ingreso),
+    cumple: evRenta.cumple, evaluacion: evRenta });
   return cambios.slice(0, 3);
 }
 
@@ -765,17 +769,18 @@ var MAS_BARATO = {
   'iva-cero': { descuento: 0.065, sinSubsidio: false, desde: '2026-12-01', hasta: '2027-12-01' }
 };
 
-// Pie y dividendo de un departamento con un ajuste (o ninguno), comparado con el de referencia.
+// Pie y dividendo de un departamento con un ajuste (o ninguno), y cuánto baja el pie frente
+// al mismo departamento sin el ajuste. El usado no es compra en grupo: no lleva descuento de grupo.
 function pieMasBarato(listaUF, tipoCompra, modo, unidades, ajuste) {
   var a = MAS_BARATO[ajuste];
   var lista = a ? listaUF * (1 - a.descuento) : listaUF;
-  var precio = precioUF(lista, tipoCompra, unidades);
+  var precio = precioUF(lista, ajuste === 'usado' ? 'individual' : tipoCompra, unidades);
   var tasa = a && a.sinSubsidio ? SUPUESTOS.tasaSinSubsidio : SUPUESTOS.tasaBci;
   var pie = ufAPesos(pieUF(precio, modo));
-  var pieReferencia = ufAPesos(pieUF(LISTA_REFERENCIA_UF, modo));
+  var pieSinAjuste = ufAPesos(pieUF(precioUF(listaUF, tipoCompra, unidades), modo));
   return {
-    precio: ufAPesos(precio), pie: pie, pieReferencia: pieReferencia,
-    baja: pieReferencia - pie,
+    precio: ufAPesos(precio), pie: pie, pieSinAjuste: pieSinAjuste,
+    baja: pieSinAjuste - pie,
     dividendo: ufAPesos(dividendoUF(precio, modo, tasa)),
     sinSubsidio: !!(a && a.sinSubsidio)
   };

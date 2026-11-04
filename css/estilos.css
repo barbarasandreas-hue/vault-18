@@ -960,3 +960,8 @@ body.en-intro .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
   border: 1px solid var(--gray-semidark); border-radius: var(--radio-campo);
   font-family: var(--font); font-size: 15px; color: var(--gray-dark); background: var(--white); resize: vertical;
 }
+.explica-ahorro:empty { display: none; }
+/* Todavía no: check solo en lo que ya resuelve; lo que no alcanza va con reloj gris */
+.lista-cambios li.cambio-no svg { color: var(--gray-semidark); }
+.lista-cambios small strong { color: var(--gray-dark); }
+#capacidad-resultado .datos-inversion { margin-top: 8px; }

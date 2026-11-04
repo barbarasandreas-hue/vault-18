@@ -108,6 +108,10 @@ test('Todavía no: hasta 3 cambios calculados', () => {
   const p = { ...base, modo: 'vivir', sueldoPropio: 1200000, sueldoPareja: null, otrasCuotas: 200000, ahorroActual: 0, ahorroMensual: 200000 };
   const cambios = c.cambiosTodaviaNo(p, 'grupo-vivir');
   assert.deepStrictEqual(cambios.map((x) => x.tipo), ['cuotas', 'estudio', 'renta']);
+  // Ni terminar las cuotas ni el estudio alcanzan en este caso; la renta sí, siempre
+  assert.deepStrictEqual(cambios.map((x) => x.cumple), [false, false, true]);
+  assert.ok(cambios[0].evaluacion.cargaDividendo > 0.25);
+  assert.ok(cambios[1].evaluacion.cargaTotal > 0.30);
   assert.ok(Math.abs(cambios[0].cargaTotal - 0.369) < 1e-9);
   assert.strictEqual(cambios[1].dividendo, c.numerosCamino('grupo-vivir', 1200).dividendo);
   assert.strictEqual(cambios[1].meses, Math.ceil(cambios[1].alEscriturar / 200000));
@@ -145,7 +149,7 @@ test('Ficha respaldo familiar: 5 % propio, 10 % del familiar y cuándo se libera
   assert.ok(c.saldoDeuda(credito, 0.039, 360, r.mesesLibera - 1, []) > 2000);
 });
 
-test('Comprar más barato: usado e IVA cero bajan el pie', () => {
+test('Comprar más barato: usado e IVA cero bajan el pie del mismo departamento', () => {
   const u = c.pieMasBarato(2500, 'individual', 'vivir', 1, 'usado');
   assert.strictEqual(u.pie, c.ufAPesos(2500 * 0.824 * 0.1));
   assert.strictEqual(u.baja, 10266250 - u.pie);
@@ -154,8 +158,16 @@ test('Comprar más barato: usado e IVA cero bajan el pie', () => {
   const i = c.pieMasBarato(2500, 'individual', 'vivir', 1, 'iva-cero');
   assert.strictEqual(i.pie, c.ufAPesos(2500 * 0.935 * 0.1));
   assert.strictEqual(i.sinSubsidio, false);
-  const sin = c.pieMasBarato(1200, 'individual', 'vivir', 1, null);
-  assert.strictEqual(sin.baja, 10266250 - c.ufAPesos(120));
+  // Sin ajuste (solo filtro de tamaño) no baja nada frente a sí mismo
+  assert.strictEqual(c.pieMasBarato(1200, 'individual', 'vivir', 1, null).baja, 0);
+  // Usado en un proyecto en grupo: sin descuento de grupo (Parque Quinta Normal, UF 1.750, lote de 8)
+  const pq = c.pieMasBarato(1750, 'lote', 'arrendar', 8, 'usado');
+  assert.strictEqual(pq.precio, c.ufAPesos(1750 * 0.824));
+  assert.strictEqual(pq.pieSinAjuste, c.ufAPesos(1750 * 0.97 * 0.05));
+  // IVA cero en grupo: con descuento de grupo, comparado con el mismo proyecto en grupo
+  const ig = c.pieMasBarato(2500, 'lote', 'arrendar', 10, 'iva-cero');
+  assert.strictEqual(ig.pie, c.ufAPesos(2500 * 0.935 * 0.95 * 0.05));
+  assert.strictEqual(ig.baja, c.ufAPesos(2375 * 0.05) - ig.pie);
 });
 
 test('Registro: el texto para copiar', () => {

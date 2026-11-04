@@ -95,3 +95,31 @@ Inicio (¿cuánto puedo comprar?) → **Tu mes real** → **Tus caminos** → Pr
 3. **Elegir "A · Compra en grupo" para invertir** (el comprador pone 20 %) lleva a la pestaña Compra en grupo, que en modo arrendar todavía muestra el reparto 80 / 15 / 5. El Sprint 10 (pie en cuotas) debería mostrar el reparto 80 / 20 cuando ese sea el camino elegido.
 4. **Créditos individuales** (con FOGAES o al 80 %): la app no tiene una lista de departamentos sueltos, así que el camino lleva a Proyectos.
 5. **El Usado** se aplica como precio de referencia sobre proyectos nuevos, y la nota lo aclara.
+
+## Limpieza de textos y correcciones tras la evaluación (4-nov-2026)
+
+**Limpieza de textos.** Se sacaron en toda la app las explicaciones que repetían lo que ya dice un número, un título o un botón "?". En cada pantalla quedan el título, el número protagonista, una línea de apoyo como máximo y la acción.
+
+- **Lo que se sacó o se acortó:**
+  - los porcentajes de los botones Usado e IVA cero (ahora están en el "?" de "Comprar más barato");
+  - la nota de fechas del IVA cero;
+  - las frases "Es una simulación…";
+  - el texto bajo los campos;
+  - el párrafo de la cuenta custodia;
+  - "Peor caso" y la razón de los caminos, ahora en una línea;
+  - los 3 pasos de las fichas, ahora más cortos;
+  - las bajadas de Mis proyectos y de Perfil.
+- **Lo que se mantuvo**, porque lo exigen las reglas: el sello sin plusvalía, el dividendo sin subsidio (peor caso), "Existe hoy" o "Propuesta", la frase de la demo en Tus documentos y la de la aprobación final.
+
+**Correcciones de S9-F3 y S9-F5** (de `evaluations/sprint-9.md`):
+
+- **S9-F3:**
+  - cada cambio de Todavía no lleva check solo si con él ya conviene;
+  - si no alcanza, lleva un reloj gris y dice por qué ("Aún no: el dividendo es el 36,9 % de su ingreso (máximo 25 %)");
+  - la renta necesaria siempre resuelve, con una prueba.
+- **S9-F5:**
+  - `pieMasBarato` ya no aplica el descuento de grupo al usado;
+  - lo que baja el pie se compara con el mismo departamento sin el ajuste (`pieSinAjuste`);
+  - las pruebas quedaron actualizadas.
+
+Siguen pendientes las correcciones del Sprint 8.
