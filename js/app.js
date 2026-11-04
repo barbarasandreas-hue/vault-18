@@ -10,7 +10,11 @@
     'proyecto': { pantalla: 'proyecto', seccion: 'proyectos' },
     'mis-proyectos': { pantalla: 'mis-proyectos', seccion: 'mis-proyectos' },
     'invertir': { pantalla: 'invertir', seccion: 'proyectos' },
-    'perfil': { pantalla: 'perfil', seccion: 'perfil' }
+    'perfil': { pantalla: 'perfil', seccion: 'perfil' },
+    'mes-real': { pantalla: 'mes-real', seccion: 'inicio' },
+    'caminos': { pantalla: 'caminos', seccion: 'inicio' },
+    'ficha': { pantalla: 'ficha', seccion: 'inicio' },
+    'registro': { pantalla: 'registro', seccion: 'perfil' }
   };
 
   var CLAVE_COMPRA = 'primer-peldano-compra';
@@ -32,16 +36,22 @@
     ahorroIniciado: false,   // si ya tocó "Empezar a ahorrar"
     meAlcanza: false,        // filtro "Me alcanza" de Proyectos
     inversiones: leerInversiones(), // [{ id, proyectoId, montoUF, fecha, cuotasCobradas }]
-    introVista: false        // S7-F6: si ya vio la introducción
+    introVista: false,       // S7-F6: si ya vio la introducción
+    ahorroActual: null,      // S9: lo que tiene ahorrado hoy, en pesos
+    caminoElegido: null,     // S9-F2: id del camino que eligió (ver CAMINOS en calculos.js)
+    verOtros: false,         // S9-F2: "Ver otros caminos" abierto
+    masBaratoTipo: null,     // S9-F5: 'estudio', '1d' o null
+    masBaratoAjuste: null    // S9-F5: 'usado', 'iva-cero' o null
   };
 
   // ---------- Elecciones que se recuerdan entre visitas (S3-F3) ----------
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
-    'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado'];
+    'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
-    ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false };
+    ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
+    ahorroActual: null, caminoElegido: null, verOtros: false, masBaratoTipo: null, masBaratoAjuste: null };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -62,6 +72,8 @@
       if (g.tipoAhorro === 'propio' || g.tipoAhorro === 'grupal') estado.tipoAhorro = g.tipoAhorro;
       estado.ahorrado = montoValido(g.ahorrado) || 0;
       estado.ahorroIniciado = g.ahorroIniciado === true && estado.ahorroMensual > 0;
+      estado.ahorroActual = montoValido(g.ahorroActual);
+      if (typeof CAMINOS !== 'undefined' && CAMINOS[g.caminoElegido] && !CAMINOS[g.caminoElegido].ficha) estado.caminoElegido = g.caminoElegido;
     } catch (e) { /* sin localStorage: valores por defecto */ }
   }
 
@@ -475,8 +487,8 @@
         campoDinero('inicio-pareja', 'Sueldo de tu pareja', estado.sueldoPareja) +
       '</div>' +
       '<div id="capacidad-resultado" aria-live="polite"></div>' +
-      '<div class="accion-fija"><a href="#proyectos" class="btn btn-primario btn-lg btn-bloque" id="btn-me-alcanza">Ver proyectos que me alcanzan</a></div>' +
-      '<p class="texto-centro"><a href="#proyectos" class="enlace" id="btn-todos">Ver todos los proyectos</a></p>';
+      '<div class="accion-fija"><a href="#mes-real" class="btn btn-primario btn-lg btn-bloque" id="btn-mes-real">Ver mi mes real</a></div>' +
+      '<p class="texto-centro"><a href="#proyectos" class="enlace" id="btn-me-alcanza">Ver proyectos que me alcanzan</a></p>';
 
     document.querySelectorAll('input[name="modo"]').forEach(function (r) {
       r.addEventListener('change', function () { estado.modo = r.value; guardarEstado(); renderResultadoCapacidad(false); });
@@ -493,16 +505,18 @@
       });
       input.addEventListener('blur', function () { renderResultadoCapacidad(false); });
     });
+    // Sin sueldos, las dos acciones piden escribirlos primero.
+    var pedirSueldos = function (ev) {
+      if (capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo) !== null) return false;
+      ev.preventDefault();
+      renderResultadoCapacidad(true);
+      $(estado.sueldoPropio ? 'inicio-pareja' : 'inicio-propio').focus();
+      return true;
+    };
+    $('btn-mes-real').addEventListener('click', pedirSueldos);
     $('btn-me-alcanza').addEventListener('click', function (ev) {
-      if (capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo) === null) {
-        ev.preventDefault();
-        renderResultadoCapacidad(true);
-        $(estado.sueldoPropio ? 'inicio-pareja' : 'inicio-propio').focus();
-        return;
-      }
-      estado.meAlcanza = true;
+      if (!pedirSueldos(ev)) estado.meAlcanza = true;
     });
-    $('btn-todos').addEventListener('click', function () { estado.meAlcanza = false; });
     renderResultadoCapacidad(false);
   }
 
@@ -513,7 +527,7 @@
     var cap = estado.sueldoPropio > 0 || estado.sueldoPareja > 0
       ? capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo) : null;
     var resultado = $('capacidad-resultado');
-    $('btn-me-alcanza').setAttribute('aria-disabled', String(cap === null));
+    $('btn-mes-real').setAttribute('aria-disabled', String(cap === null));
 
     if (cap === null) {
       resultado.innerHTML = '<p class="sin-numero">Escribe los sueldos para saber cuánto puedes comprar.</p>';
@@ -573,10 +587,21 @@
       '<h2 class="h4">' + esc(p.nombre) + '</h2>' +
       '<p class="texto-apoyo ficha">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       numero +
+      lineaMasBarato(p, r, d) +
       avanceDe(p, r) +
       '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
       '<span class="ver">Ver proyecto <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span>' +
       '</a></li>';
+  }
+
+  // S9-F5: con un filtro de Comprar más barato, la tarjeta dice cuánto baja el pie.
+  function lineaMasBarato(p, r, d) {
+    if (!estado.masBaratoTipo && !estado.masBaratoAjuste) return '';
+    var m = pieMasBarato(d.listaUF, r.tipoCompra, estado.modo, p.cupos, estado.masBaratoAjuste);
+    var precio = estado.masBaratoAjuste === 'usado' ? 'Un usado parecido: ' + formatoPesos(m.precio) + ' (sin subsidio a la tasa). '
+      : (estado.masBaratoAjuste === 'iva-cero' ? 'Con IVA cero: ' + formatoPesos(m.precio) + '. ' : '');
+    return '<p class="mas-barato-linea">' + precio + 'Tu pie: <strong>' + formatoPesos(m.pie) + '</strong>' +
+      (m.baja > 0 ? ', ' + formatoPesos(m.baja) + ' menos que en uno de ' + formatoUF(LISTA_REFERENCIA_UF) : '') + '.</p>';
   }
 
   function renderProyectos() {
@@ -609,26 +634,47 @@
     var delTipo = soloArrendar ? [] : PROYECTOS.filter(function (p) {
       return p.tipo === estado.pestana && (!arrendar || resumen(p).pasaFiltro);
     });
-    var visibles = delTipo.filter(function (p) {
+    // S9-F5: Comprar más barato. El tipo filtra por dormitorios; el ajuste cambia el precio de la tarjeta.
+    var DORMITORIOS = { estudio: 0, '1d': 1 };
+    var delTamano = delTipo.filter(function (p) {
+      return estado.masBaratoTipo === null || departamentosDe(p.id)[0].dormitorios === DORMITORIOS[estado.masBaratoTipo];
+    });
+    var visibles = delTamano.filter(function (p) {
       return !usarAlcanza || resumen(p).escenario.precioUF <= cap;
     });
+    document.querySelectorAll('#mas-barato [data-tipo]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.tipo === estado.masBaratoTipo));
+    });
+    document.querySelectorAll('#mas-barato [data-ajuste]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.ajuste === estado.masBaratoAjuste));
+    });
+    var a = estado.masBaratoAjuste && MAS_BARATO[estado.masBaratoAjuste];
+    $('mas-barato-nota').hidden = !a;
+    $('mas-barato-nota').textContent = !a ? ''
+      : (estado.masBaratoAjuste === 'iva-cero'
+        ? 'IVA cero rige del ' + formatoFecha(a.desde) + ' al ' + formatoFecha(a.hasta) + ', solo en departamentos nuevos. La inmobiliaria decide cuánto baja: estimamos ' + formatoPorcentaje(a.descuento) + '.'
+        : 'Un usado parecido cuesta cerca de ' + formatoPorcentaje(a.descuento) + ' menos, pero no tiene subsidio a la tasa ni IVA cero. Estos proyectos son nuevos: el precio de usado es una referencia.');
     $('lista-proyectos').innerHTML = visibles.map(tarjetaProyecto).join('');
     $('lista-proyectos').hidden = visibles.length === 0;
     $('proyectos-explica').hidden = visibles.length === 0;
     $('proyectos-vacio').hidden = visibles.length > 0;
 
     // El estado vacío explica la causa y ofrece la salida que corresponde.
-    var porAlcanza = usarAlcanza && delTipo.length > 0;
+    var porTamano = !soloArrendar && delTipo.length > 0 && delTamano.length === 0;
+    var porAlcanza = !porTamano && usarAlcanza && delTamano.length > 0;
+    var nombreTamano = estado.masBaratoTipo === 'estudio' ? 'estudios' : 'departamentos de 1 dormitorio';
     $('vacio-titulo').textContent = soloArrendar ? 'El pie compartido es para arrendar'
-      : (porAlcanza ? 'Ninguno de este tipo te alcanza hoy' : 'Ningún proyecto rinde 3,9\u00a0% hoy');
+      : (porTamano ? 'No hay ' + nombreTamano + ' en esta pestaña'
+        : (porAlcanza ? 'Ninguno de este tipo te alcanza hoy' : 'Ningún proyecto rinde 3,9\u00a0% hoy'));
     $('vacio-texto').textContent = soloArrendar
       ? 'Los inversionistas recuperan su parte con el arriendo. Para vivir, mira la compra en grupo.'
-      : (porAlcanza
-        ? 'Con sus sueldos pueden comprar hasta ' + formatoUF(cap) + '. Prueba la otra pestaña o quita el filtro.'
-        : 'Para arrendar, la IA solo muestra departamentos cuyo arriendo neto rinde 3,9\u00a0% o más al año, la tasa del crédito.');
+      : (porTamano ? 'Prueba la otra pestaña o quita el filtro de tamaño.'
+        : (porAlcanza
+          ? 'Con sus sueldos pueden comprar hasta ' + formatoUF(cap) + '. Prueba la otra pestaña o quita el filtro.'
+          : 'Para arrendar, la IA solo muestra departamentos cuyo arriendo neto rinde 3,9\u00a0% o más al año, la tasa del crédito.'));
     $('btn-vacio-accion').textContent = soloArrendar ? 'Cambiar a modo arrendar'
-      : (porAlcanza ? 'Quitar el filtro Me alcanza' : 'Cambiar a modo vivir');
-    $('btn-vacio-accion').dataset.accion = soloArrendar ? 'arrendar' : (porAlcanza ? 'alcanza' : 'vivir');
+      : (porTamano ? 'Quitar el filtro de tamaño' : (porAlcanza ? 'Quitar el filtro Me alcanza' : 'Cambiar a modo vivir'));
+    $('btn-vacio-accion').dataset.accion = soloArrendar ? 'arrendar' : (porTamano ? 'tamano' : (porAlcanza ? 'alcanza' : 'vivir'));
   }
 
   function iniciarProyectos() {
@@ -645,6 +691,19 @@
         $('tab-' + estado.pestana).focus();
       });
     });
+    // S9-F5: los chips de tamaño se excluyen entre sí, y los de precio también.
+    document.querySelectorAll('#mas-barato [data-tipo]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        estado.masBaratoTipo = estado.masBaratoTipo === b.dataset.tipo ? null : b.dataset.tipo;
+        renderProyectos();
+      });
+    });
+    document.querySelectorAll('#mas-barato [data-ajuste]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        estado.masBaratoAjuste = estado.masBaratoAjuste === b.dataset.ajuste ? null : b.dataset.ajuste;
+        renderProyectos();
+      });
+    });
     $('filtro-alcanza').addEventListener('click', function () {
       estado.meAlcanza = !estado.meAlcanza;
       renderProyectos();
@@ -652,6 +711,7 @@
     $('btn-vacio-accion').addEventListener('click', function () {
       var accion = $('btn-vacio-accion').dataset.accion;
       if (accion === 'alcanza') estado.meAlcanza = false;
+      else if (accion === 'tamano') estado.masBaratoTipo = null;
       else { estado.modo = accion === 'arrendar' ? 'arrendar' : 'vivir'; guardarEstado(); }
       renderProyectos();
     });
@@ -1886,6 +1946,482 @@
     });
   }
 
+  // ---------- Sprint 9: Tu mes real, Tus caminos, Todavía no y fichas ----------
+
+  // Registro de la sesión de prueba (S9-F6): lo llena la facilitadora; "Me interesa" y el camino
+  // elegido se anotan solos. Se guarda aparte de los datos del usuario.
+  var CLAVE_REGISTRO = 'primer-peldano-registro';
+  var REGISTRO_VACIO = { plazoAntes: null, plazoDespues: null, camino: null, explicacion: null, confianza: null,
+    meInteresa: [], recordarme: null };
+  function leerRegistro() {
+    var r = Object.assign({}, REGISTRO_VACIO, { meInteresa: [] });
+    try {
+      var g = JSON.parse(localStorage.getItem(CLAVE_REGISTRO));
+      if (!g || typeof g !== 'object') return r;
+      var entero = function (v, min, max) { return typeof v === 'number' && v >= min && v <= max && Math.floor(v) === v ? v : null; };
+      r.plazoAntes = entero(g.plazoAntes, 0, 60);
+      r.plazoDespues = entero(g.plazoDespues, 0, 60);
+      r.camino = CAMINOS[g.camino] ? g.camino : null;
+      r.explicacion = entero(g.explicacion, 0, 3);
+      r.confianza = entero(g.confianza, 1, 5);
+      r.meInteresa = Array.isArray(g.meInteresa) ? g.meInteresa.filter(function (id) { return CAMINOS[id]; }) : [];
+      r.recordarme = entero(g.recordarme, 1, 24);
+    } catch (e) { /* sin localStorage: registro vacío */ }
+    return r;
+  }
+  var registro = leerRegistro();
+  function guardarRegistro() {
+    try { localStorage.setItem(CLAVE_REGISTRO, JSON.stringify(registro)); } catch (e) { /* queda en memoria */ }
+  }
+
+  // ¿Hay una compra en grupo que le alcance? (en modo arrendar, solo las que pasan el filtro de 3,9 %)
+  function hayGrupoQueAlcanza() {
+    var cap = capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo);
+    if (cap === null) return false;
+    return PROYECTOS.some(function (p) {
+      if (p.tipo !== 'conjunto') return false;
+      var r = resumen(p);
+      return (estado.modo !== 'arrendar' || r.pasaFiltro) && r.escenario.precioUF <= cap;
+    });
+  }
+
+  function perfilActual() {
+    return {
+      modo: estado.modo, sueldoPropio: estado.sueldoPropio, sueldoPareja: estado.sueldoPareja,
+      arriendoActual: estado.arriendoActual, otrasCuotas: estado.otrasCuotas,
+      ahorroActual: estado.ahorroActual, ahorroMensual: estado.ahorroMensual,
+      hayGrupo: hayGrupoQueAlcanza()
+    };
+  }
+
+  // Sin sueldos no hay nada que calcular: se vuelve a Inicio.
+  function sinSueldos(contenedor, titulo, idTitulo) {
+    contenedor.innerHTML =
+      '<header class="encabezado"><h1 id="' + idTitulo + '" class="h2">' + titulo + '</h1></header>' +
+      '<div class="vacio">' +
+        '<svg aria-hidden="true"><use href="#i-inicio"/></svg>' +
+        '<h2 class="h3">Primero, sus sueldos</h2>' +
+        '<p class="texto-apoyo">Con sus sueldos calculamos cuánto les queda al mes y qué camino les conviene.</p>' +
+        '<div class="acciones"><a href="#inicio" class="btn btn-primario btn-bloque">Escribir los sueldos</a></div>' +
+      '</div>';
+  }
+
+  // ----- Tu mes real (S9-F1) -----
+  function renderMesReal() {
+    var c = $('mes-real-contenido');
+    if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return sinSueldos(c, 'Tu mes real', 'titulo-mes-real');
+    var arrendar = estado.modo === 'arrendar';
+    c.innerHTML =
+      '<a href="#inicio" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Inicio</a>' +
+      '<header class="encabezado">' +
+        '<h1 id="titulo-mes-real" class="h2">Tu mes real</h1>' +
+        '<p class="texto-apoyo">Lo que te queda para vivir después del dividendo.</p>' +
+      '</header>' +
+      '<div class="formulario campos-dos">' +
+        (arrendar ? campoDinero('mes-arriendo', 'Arriendo que pagas hoy', estado.arriendoActual) : '') +
+        campoDinero('mes-otras', 'Otras cuotas al mes', estado.otrasCuotas) +
+      '</div>' +
+      '<p class="texto-apoyo ayuda-campo">' + (arrendar
+        ? 'Si lo compras para arrendar, sigues pagando tu arriendo. Si no tienes cuotas, déjalo vacío.'
+        : 'Si lo compras para vivir, dejas de pagar arriendo. Si no tienes cuotas, déjalo vacío.') + '</p>' +
+      '<div id="mes-resultado" aria-live="polite"></div>' +
+      '<section class="tarjeta bloque" aria-labelledby="titulo-ahorro-camino">' +
+        '<h2 class="h5" id="titulo-ahorro-camino">Para calcular tus caminos</h2>' +
+        '<div class="campos-dos">' +
+          campoDinero('mes-ahorro', 'Lo que tienes ahorrado', estado.ahorroActual) +
+          campoDinero('mes-ahorro-mensual', 'Lo que puedes ahorrar al mes', estado.ahorroMensual) +
+        '</div>' +
+        '<p class="texto-apoyo ayuda-campo">Con esto vemos cuánto te falta y en cuántos meses llegas.</p>' +
+      '</section>' +
+      '<div class="accion-fija"><a href="#caminos" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-caminos">Ver mis caminos</a></div>';
+
+    [['mes-arriendo', 'arriendoActual'], ['mes-otras', 'otrasCuotas'], ['mes-ahorro', 'ahorroActual'],
+      ['mes-ahorro-mensual', 'ahorroMensual']].forEach(function (x) {
+      var input = $(x[0]);
+      if (!input) return;
+      input.addEventListener('input', function () {
+        estado[x[1]] = formatearCampo(input);
+        guardarEstado();
+        renderResultadoMesReal();
+      });
+    });
+    renderResultadoMesReal();
+  }
+
+  function filaCuenta(signo, texto, monto, apoyo) {
+    return '<li><span class="cuenta-signo" aria-hidden="true">' + signo + '</span>' +
+      '<span>' + texto + (apoyo ? '<small>' + apoyo + '</small>' : '') + '</span>' +
+      '<span class="monto">' + (signo === '−' ? '<span class="oculto-visual">menos </span>' : '') + formatoPesos(monto) + '</span></li>';
+  }
+
+  function renderResultadoMesReal() {
+    var r = recomendarCamino(perfilActual());
+    var n = r.numeros, ev = n.evaluacion, m = ev.mes;
+    var ok = ev.cumple;
+    var motivo = !ev.cumpleCarga
+      ? 'El dividendo pasa del límite del banco: ' + formatoPorcentaje(ev.cargaDividendo) + ' de su ingreso' +
+        ((estado.otrasCuotas || 0) > 0 ? ', y ' + formatoPorcentaje(ev.cargaTotal) + ' con las otras cuotas' : '') +
+        ' (máximo 25 % y 30 %).'
+      : 'Les quedaría menos del 40 % de su ingreso para vivir.';
+    $('mes-resultado').innerHTML =
+      '<div class="tarjeta protagonista">' +
+        '<p class="etiqueta">Te quedan al mes para vivir</p>' +
+        '<strong class="numero display-2">' + formatoPesos(m.queda) + '</strong>' +
+        '<p class="texto-apoyo">Es el ' + formatoPorcentaje(Math.max(0, m.pctQueda), 0) + ' de su ingreso, con un departamento de ' +
+          formatoUF(LISTA_REFERENCIA_UF) + ' de lista, con el camino ' + CAMINOS[r.id].corto + '.</p>' +
+        (ok ? '<p class="aviso aviso-ok aviso-icono"><svg aria-hidden="true"><use href="#i-ok"/></svg>Les alcanza: queda más del 40 % para vivir.</p>'
+          : '<p class="aviso aviso-alerta aviso-icono"><svg aria-hidden="true"><use href="#i-alerta"/></svg><span><strong>Ojo:</strong> ' + motivo + '</span></p>') +
+        '<ul class="cuentas">' +
+          filaCuenta('+', 'Ingreso líquido de los dos', m.ingreso) +
+          (estado.modo === 'arrendar' ? filaCuenta('−', 'Arriendo que sigues pagando', m.arriendo) : '') +
+          filaCuenta('−', 'Otras cuotas', m.otras) +
+          filaCuenta('−', 'Dividendo', m.dividendo, 'Con subsidio a la tasa. Sin subsidio: ' + formatoPesos(n.dividendoSinSubsidio)) +
+          '<li class="cuenta-total"><span class="cuenta-signo" aria-hidden="true">=</span><span>Te queda</span><span class="monto">' + formatoPesos(m.queda) + '</span></li>' +
+        '</ul>' +
+        (estado.modo === 'arrendar' ? '<p class="texto-apoyo nota">No contamos el arriendo que recibirías: es el peor caso.</p>' : '') +
+        '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
+      '</div>';
+  }
+
+  // ----- Tus caminos (S9-F2) y Todavía no (S9-F3) -----
+  var RAZONES = {
+    'vivir-grupo': 'es para vivir y hay un grupo que les alcanza: pagan 5 % menos.',
+    'vivir-sin-grupo': 'es para vivir y hoy no hay un grupo que les alcance. El Estado garantiza el 90 % y tú pones el 10 %.',
+    'invertir-poco-ahorro': 'inviertes y tu ahorro es menor al 20 % del precio: el grupo baja el precio y los inversionistas ponen el 15 %.',
+    'invertir-poco-ahorro-sin-grupo': 'inviertes, tu ahorro es menor al 20 % y hoy no hay un grupo que les alcance.',
+    'invertir-ahorro': 'inviertes y ya tienes el 20 % del precio: no necesitas inversionistas y el grupo baja el precio.',
+    'invertir-ahorro-sin-grupo': 'inviertes y ya tienes el 20 % del precio: no necesitas inversionistas.'
+  };
+
+  function textoMesesCamino(n) {
+    if (n.meses === 0) return 'Ya lo tienes';
+    if (n.meses === null) return 'Escribe cuánto ahorras al mes';
+    return textoMeses(n.meses) + ' ahorrando ' + formatoPesos(estado.ahorroMensual);
+  }
+
+  function peorCaso(id, n) {
+    var c = CAMINOS[id];
+    var partes = [];
+    if (c.grupo) partes.push('Si el grupo no se completa, compras a precio de lista: ' + formatoPesos(n.dividendoSinGrupo) + ' al mes, o sales sin costo.');
+    if (c.inversionistas > 0) partes.push('Si el arriendo baja 10 %, la recompra toma ' + n.mesesRecompraPeor + ' meses en vez de ' + n.mesesRecompra +
+      '. Tu sueldo no responde por la parte de los inversionistas.');
+    if (!c.grupo) partes.push('Si se acaban los cupos del subsidio a la tasa: ' + formatoPesos(n.dividendoSinSubsidio) + ' al mes.');
+    return partes.join(' ');
+  }
+
+  function chipExiste(id) {
+    return CAMINOS[id].existeHoy
+      ? '<span class="chip chip-existe">Existe hoy</span>'
+      : '<span class="chip chip-propuesta">Propuesta</span>';
+  }
+
+  function datosCamino(id, n, sinPie) {
+    var c = CAMINOS[id];
+    return '<ul class="datos-inversion">' +
+      (sinPie ? '' : '<li><span>Pones al escriturar</span><strong>' + formatoPesos(n.alEscriturar) + '</strong></li>') +
+      (c.inversionistas > 0 ? '<li><span>Ponen inversionistas</span><strong>' + formatoPesos(n.inversionistas) + '</strong></li>' : '') +
+      '<li><span>Dividendo al mes</span><strong>' + formatoPesos(n.dividendo) + '</strong></li>' +
+      '<li><span>Para juntar lo que falta</span><strong>' + textoMesesCamino(n) + '</strong></li>' +
+      '</ul>' +
+      '<p class="peor-caso"><strong>Peor caso:</strong> ' + peorCaso(id, n) + '</p>';
+  }
+
+  // Resumen de una ficha informativa, para la lista de caminos.
+  function resumenFicha(id) {
+    if (id === 'arriendo-opcion') {
+      var a = arriendoConOpcion(LISTA_REFERENCIA_UF);
+      return '<p class="texto-apoyo">Pagas ' + formatoPesos(a.mensualidad) + ' al mes y ' + formatoPesos(a.alPie) +
+        ' van a tu pie: juntas el 10 % en ' + a.meses + ' meses.</p>';
+    }
+    var r = respaldoFamiliar(LISTA_REFERENCIA_UF);
+    return '<p class="texto-apoyo">Tú pones ' + formatoPesos(r.pie) + ' y un familiar deja ' + formatoPesos(r.deposito) +
+      ' en Bci como respaldo, que recupera con intereses.</p>';
+  }
+
+  function tarjetaCamino(id, n, perfil) {
+    var c = CAMINOS[id];
+    if (c.ficha) {
+      return '<li class="tarjeta camino-opcion">' +
+        '<div class="camino-cabeza"><h3 class="h5">' + c.nombre + '</h3>' + chipExiste(id) + '</div>' +
+        resumenFicha(id) +
+        '<a class="btn btn-secundario-dark btn-bloque" href="#ficha/' + id + '">Ver cómo funciona</a>' +
+        '</li>';
+    }
+    var noConviene = n.evaluacion && !n.evaluacion.cumple;
+    return '<li class="tarjeta camino-opcion">' +
+      '<div class="camino-cabeza"><h3 class="h5">' + c.nombre + '</h3>' + chipExiste(id) + '</div>' +
+      (noConviene ? '<p class="aviso aviso-alerta aviso-icono"><svg aria-hidden="true"><use href="#i-alerta"/></svg>Con tus números de hoy, todavía no te conviene.</p>' : '') +
+      datosCamino(id, n) +
+      '<button type="button" class="btn btn-secundario-dark btn-bloque" data-elegir="' + id + '">Elegir este camino</button>' +
+      '</li>';
+  }
+
+  function textoCambio(x) {
+    if (x.tipo === 'cuotas') {
+      return 'Si terminas de pagar tus otras cuotas (' + formatoPesos(x.otras) + ' al mes), tu carga baja a ' +
+        formatoPorcentaje(x.cargaTotal) + ' y te quedan ' + formatoPesos(x.queda) + ' para vivir' +
+        (x.cumple ? ': ya te conviene.' : '.');
+    }
+    if (x.tipo === 'estudio') {
+      return 'Con un estudio de ' + formatoUF(x.listaUF) + ', pones ' + formatoPesos(x.alEscriturar) + ' al escriturar y pagas ' +
+        formatoPesos(x.dividendo) + ' al mes' + (x.cumple ? ': ya te conviene' : '') +
+        (x.meses ? '. Ahorrando ' + formatoPesos(estado.ahorroMensual) + ' al mes, lo juntas en ' + textoMeses(x.meses) : '') + '.';
+    }
+    return x.falta > 0
+      ? 'Con una renta familiar de ' + formatoPesos(x.ingreso) + ' (' + formatoPesos(x.falta) + ' más al mes, por ejemplo sumando a tu pareja), este camino ya te conviene.'
+      : 'Con su renta de hoy ya alcanza si bajan las otras cuotas o el arriendo.';
+  }
+
+  function bloqueTodaviaNo(r, perfil) {
+    var cambios = cambiosTodaviaNo(perfil, r.id);
+    var meses = mesesRecordar(perfil, r.id);
+    var avisado = registro.recordarme;
+    return '<section class="tarjeta todavia-no" aria-labelledby="titulo-todavia-no">' +
+      '<p class="estado-semaforo"><svg aria-hidden="true"><use href="#i-pronto"/></svg>Todavía no</p>' +
+      '<h2 class="h3" id="titulo-todavia-no">Todavía no te conviene</h2>' +
+      '<p class="texto-apoyo">Con tus números de hoy, un departamento de ' + formatoUF(LISTA_REFERENCIA_UF) +
+        ' te dejaría muy justo. No es un no para siempre: esto lo cambia.</p>' +
+      '<ul class="lista-check">' + cambios.map(function (x) {
+        return '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>' + textoCambio(x) + '</span></li>';
+      }).join('') + '</ul>' +
+      '<div class="acciones">' +
+        (avisado
+          ? '<p class="aviso aviso-ok aviso-icono" id="recordarme-listo"><svg aria-hidden="true"><use href="#i-ok"/></svg>Listo: te avisamos en ' + avisado + ' meses (simulado).</p>'
+          : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-recordarme" data-meses="' + meses + '">Recordarme en ' + meses + ' meses</button>') +
+        '<button type="button" class="btn btn-terciario btn-bloque" id="btn-ver-estudios">Ver estudios</button>' +
+      '</div>' +
+      '</section>';
+  }
+
+  function renderCaminos() {
+    var cont = $('caminos-contenido');
+    if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return sinSueldos(cont, 'Tus caminos', 'titulo-caminos');
+    var perfil = perfilActual();
+    var r = recomendarCamino(perfil);
+    var n = r.numeros;
+    var otros = r.todaviaNo ? caminosDelModo(perfil.modo) : r.otros;
+
+    var principal = r.todaviaNo ? bloqueTodaviaNo(r, perfil) :
+      '<section class="tarjeta protagonista camino-recomendado" aria-labelledby="titulo-recomendado">' +
+        '<div class="camino-cabeza"><p class="etiqueta">Te recomendamos</p>' + chipExiste(r.id) + '</div>' +
+        '<h2 class="h3" id="titulo-recomendado">' + CAMINOS[r.id].nombre + '</h2>' +
+        '<p class="razon">Porque ' + RAZONES[r.razon] + '</p>' +
+        '<p class="etiqueta">Pones al escriturar</p>' +
+        '<strong class="numero display-3">' + formatoPesos(n.alEscriturar) + '</strong>' +
+        datosCamino(r.id, n, true) +
+        '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" data-elegir="' + r.id + '">Elegir este camino</button></div>' +
+      '</section>';
+
+    cont.innerHTML =
+      '<a href="#mes-real" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Tu mes real</a>' +
+      '<header class="encabezado">' +
+        '<h1 id="titulo-caminos" class="h2">Tus caminos</h1>' +
+        '<p class="texto-apoyo">' + (perfil.modo === 'vivir' ? 'Para vivir' : 'Para arrendar') + ', con un departamento de ' +
+          formatoUF(LISTA_REFERENCIA_UF) + ' de lista. <a href="#perfil" class="enlace">Cambiar</a></p>' +
+      '</header>' +
+      (estado.caminoElegido && !r.todaviaNo ? '<p class="aviso aviso-ok aviso-icono"><svg aria-hidden="true"><use href="#i-ok"/></svg>Elegiste ' + CAMINOS[estado.caminoElegido].nombre + '.</p>' : '') +
+      principal +
+      '<button type="button" class="enlace desplegar" id="btn-otros-caminos" aria-expanded="' + estado.verOtros + '" aria-controls="otros-caminos">' +
+        (r.todaviaNo ? 'Ver los caminos' : 'Ver otros caminos') + ' (' + otros.length + ')<svg aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
+      '<ul class="lista-caminos" id="otros-caminos"' + (estado.verOtros ? '' : ' hidden') + '>' +
+        otros.map(function (id) {
+          return tarjetaCamino(id, CAMINOS[id].ficha ? null : numerosCamino(id, LISTA_REFERENCIA_UF, perfil), perfil);
+        }).join('') +
+      '</ul>' +
+      '<p class="texto-apoyo nota">Las recomendaciones salen de reglas fijas, no de la IA. La IA solo estima el arriendo de cada departamento.</p>';
+
+    $('btn-otros-caminos').addEventListener('click', function () {
+      estado.verOtros = !estado.verOtros;
+      $('btn-otros-caminos').setAttribute('aria-expanded', String(estado.verOtros));
+      $('otros-caminos').hidden = !estado.verOtros;
+    });
+    cont.querySelectorAll('[data-elegir]').forEach(function (b) {
+      b.addEventListener('click', function () { elegirCamino(b.dataset.elegir); });
+    });
+    if ($('btn-recordarme')) $('btn-recordarme').addEventListener('click', function () {
+      registro.recordarme = Number($('btn-recordarme').dataset.meses);
+      guardarRegistro();
+      renderCaminos();
+      $('recordarme-listo').setAttribute('tabindex', '-1');
+      $('recordarme-listo').focus();
+      anunciar('Listo: te avisamos en ' + registro.recordarme + ' meses.');
+    });
+    if ($('btn-ver-estudios')) $('btn-ver-estudios').addEventListener('click', function () {
+      estado.masBaratoTipo = 'estudio';
+      estado.meAlcanza = false;
+      estado.pestana = estado.modo === 'arrendar' ? 'financiamiento' : 'conjunto';
+      location.hash = '#proyectos';
+    });
+  }
+
+  // Elegir un camino: se anota en el registro y lleva a los proyectos de ese camino.
+  function elegirCamino(id) {
+    estado.caminoElegido = id;
+    guardarEstado();
+    registro.camino = id;
+    guardarRegistro();
+    estado.meAlcanza = true;
+    estado.pestana = id === 'pie-compartido' ? 'financiamiento' : 'conjunto';
+    location.hash = '#proyectos';
+  }
+
+  // ----- Fichas de caminos informativos (S9-F4) -----
+  function renderFicha(id) {
+    var cont = $('ficha-contenido');
+    if (id !== 'arriendo-opcion' && id !== 'respaldo-familiar') { location.replace('#caminos'); return; }
+    var c = CAMINOS[id];
+    var pasos, numeros, peor, referente;
+    if (id === 'arriendo-opcion') {
+      var a = arriendoConOpcion(LISTA_REFERENCIA_UF);
+      pasos = ['Una empresa compra el departamento y te lo arrienda.',
+        'Cada mes pagas el arriendo y un monto extra que se guarda como tu pie.',
+        'Cuando juntas el 10 %, pides el crédito con garantía del Estado y lo compras a un precio fijado al inicio.'];
+      numeros = '<li><span>Arriendo</span><strong>' + formatoPesos(a.arriendo) + '</strong></li>' +
+        '<li><span>Va a tu pie</span><strong>' + formatoPesos(a.alPie) + '</strong></li>' +
+        '<li><span>Pagas al mes</span><strong>' + formatoPesos(a.mensualidad) + '</strong></li>' +
+        '<li><span>Juntas el 10 % (' + formatoPesos(a.meta) + ') en</span><strong>' + a.meses + ' meses</strong></li>' +
+        '<li><span>Después, dividendo</span><strong>' + formatoPesos(a.dividendoDespues) + '</strong></li>';
+      var carga = ingresoTotal(estado.sueldoPropio, estado.sueldoPareja);
+      if (carga) numeros += '<li><span>Es de su ingreso</span><strong>' + formatoPorcentaje(a.mensualidad / carga, 0) + '</strong></li>';
+      peor = 'La mensualidad es alta. Si al final no compras, puedes perder parte de lo que pagaste como multa, y igual necesitas que el banco te apruebe el crédito.';
+      referente = 'Hogarízate, en Chile: "el arriendo es el pie". Cifras llevadas a un departamento de ' + formatoUF(LISTA_REFERENCIA_UF) + ' con su proporción (DF, 2023).';
+    } else {
+      var f = respaldoFamiliar(LISTA_REFERENCIA_UF);
+      pasos = ['Un familiar deja el 10 % del precio en una cuenta bloqueada de Bci, con intereses.',
+        'Con ese respaldo, Bci te presta el 95 % y tú pones solo el 5 %.',
+        'Cuando la deuda baja al 80 % del precio, el dinero vuelve a tu familiar con sus intereses.'];
+      numeros = '<li><span>Pones tú</span><strong>' + formatoPesos(f.pie) + '</strong></li>' +
+        '<li><span>Deja tu familiar</span><strong>' + formatoPesos(f.deposito) + '</strong></li>' +
+        '<li><span>Dividendo al mes</span><strong>' + formatoPesos(f.dividendo) + '</strong></li>' +
+        '<li><span>Tu familiar lo recupera en</span><strong>' + textoMeses(f.mesesLibera) + ' (' + (f.mesesLibera / 12).toFixed(1).replace('.', ',') + ' años)</strong></li>';
+      peor = 'Si dejas de pagar y el departamento se remata por menos de lo que se debe, tu familiar puede perder parte o todo su depósito.';
+      referente = 'Family Springboard de Barclays, en el Reino Unido desde 2013. En Chile no existe hoy: el familiar tendría que ser codeudor.';
+    }
+    var interesa = registro.meInteresa.indexOf(id) !== -1;
+    cont.innerHTML =
+      '<a href="#caminos" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Tus caminos</a>' +
+      '<header class="encabezado">' +
+        '<div class="camino-cabeza">' + chipExiste(id) + '</div>' +
+        '<h1 id="titulo-ficha" class="h2">' + c.nombre + '</h1>' +
+        '<p class="texto-apoyo">Un camino que no se compra en la app: te contamos cómo funciona.</p>' +
+      '</header>' +
+      '<section class="tarjeta" aria-labelledby="titulo-como">' +
+        '<h2 class="h5" id="titulo-como">Cómo funciona</h2>' +
+        '<ol class="lista-numerada">' + pasos.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ol>' +
+      '</section>' +
+      '<section class="tarjeta bloque" aria-labelledby="titulo-numeros">' +
+        '<h2 class="h5" id="titulo-numeros">Con un departamento de ' + formatoUF(LISTA_REFERENCIA_UF) + '</h2>' +
+        '<ul class="datos-inversion">' + numeros + '</ul>' +
+        '<p class="peor-caso"><strong>Peor caso:</strong> ' + peor + '</p>' +
+        '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
+      '</section>' +
+      '<section class="tarjeta bloque" aria-labelledby="titulo-referente">' +
+        '<h2 class="h5" id="titulo-referente">Dónde existe</h2>' +
+        '<p class="texto-apoyo">' + referente + '</p>' +
+      '</section>' +
+      '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-me-interesa" aria-pressed="' + interesa + '">' +
+        (interesa ? 'Te interesa' : 'Me interesa') + '</button></div>' +
+      '<p class="aviso aviso-ok" id="interesa-aviso" aria-live="polite"' + (interesa ? '' : ' hidden') + '>Lo anotamos. Puedes tocar de nuevo para quitarlo.</p>';
+
+    $('btn-me-interesa').addEventListener('click', function () {
+      var i = registro.meInteresa.indexOf(id);
+      if (i === -1) registro.meInteresa.push(id); else registro.meInteresa.splice(i, 1);
+      guardarRegistro();
+      var ahora = i === -1;
+      $('btn-me-interesa').setAttribute('aria-pressed', String(ahora));
+      $('btn-me-interesa').textContent = ahora ? 'Te interesa' : 'Me interesa';
+      $('interesa-aviso').hidden = !ahora;
+    });
+  }
+
+  // ----- Registro de la sesión de prueba (S9-F6) -----
+  function renderRegistro() {
+    var cont = $('registro-contenido');
+    var escala = function (nombre, desde, hasta, valor, legend, extremos) {
+      var html = '<fieldset class="escala"><legend>' + legend + '</legend><div class="escala-opciones">';
+      for (var v = desde; v <= hasta; v++) {
+        html += '<input type="radio" name="' + nombre + '" id="' + nombre + '-' + v + '" value="' + v + '"' + (valor === v ? ' checked' : '') + '>' +
+          '<label for="' + nombre + '-' + v + '">' + v + '</label>';
+      }
+      return html + '</div><p class="texto-apoyo escala-extremos"><span>' + extremos[0] + '</span><span>' + extremos[1] + '</span></p></fieldset>';
+    };
+    var campoAnios = function (id, etiqueta, valor) {
+      return '<div class="campo"><label for="' + id + '">' + etiqueta + '</label>' +
+        '<div class="campo-caja campo-anios"><input id="' + id + '" type="text" inputmode="numeric" autocomplete="off" maxlength="2" value="' +
+        (valor === null ? '' : valor) + '"><span class="sufijo" aria-hidden="true">años</span></div></div>';
+    };
+    var opcionesCamino = Object.keys(CAMINOS).map(function (id) {
+      return '<option value="' + id + '"' + (registro.camino === id ? ' selected' : '') + '>' + CAMINOS[id].nombre + '</option>';
+    }).join('');
+    cont.innerHTML =
+      '<a href="#perfil" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Perfil</a>' +
+      '<header class="encabezado">' +
+        '<h1 id="titulo-registro" class="h2">Sesión de prueba</h1>' +
+        '<p class="texto-apoyo">Para la facilitadora. Se guarda solo en este teléfono.</p>' +
+      '</header>' +
+      '<form id="form-registro" class="tarjeta" novalidate>' +
+        '<div class="campos-dos">' +
+          campoAnios('reg-antes', 'Plazo que cree necesitar, antes', registro.plazoAntes) +
+          campoAnios('reg-despues', 'Plazo que cree necesitar, después', registro.plazoDespues) +
+        '</div>' +
+        '<div class="campo"><label for="reg-camino">Camino elegido</label>' +
+          '<select id="reg-camino" class="campo-select"><option value="">Sin elegir</option>' + opcionesCamino + '</select></div>' +
+        escala('reg-explicacion', 0, 3, registro.explicacion, '¿Explica el camino con sus palabras? (0 a 3)', ['0: no lo explica', '3: lo explica completo']) +
+        escala('reg-confianza', 1, 5, registro.confianza, 'Confianza en el camino (1 a 5)', ['1: nada', '5: mucha']) +
+        '<p class="etiqueta">Me interesa</p>' +
+        '<p class="texto-apoyo">' + (registro.meInteresa.length ? registro.meInteresa.map(function (id) { return CAMINOS[id].nombre; }).join(', ') : 'Todavía nada. Se anota solo desde las fichas.') + '</p>' +
+      '</form>' +
+      '<section class="tarjeta bloque" aria-labelledby="titulo-exportar">' +
+        '<h2 class="h5" id="titulo-exportar">Para copiar</h2>' +
+        '<label class="oculto-visual" for="reg-texto">Registro en texto</label>' +
+        '<textarea id="reg-texto" class="registro-texto" rows="9" readonly></textarea>' +
+        '<div class="acciones">' +
+          '<button type="button" class="btn btn-primario btn-bloque" id="btn-copiar-registro">Copiar el registro</button>' +
+          '<p class="aviso aviso-ok" id="registro-copiado" aria-live="polite" hidden></p>' +
+          '<button type="button" class="btn btn-terciario btn-bloque" id="btn-nueva-sesion">Nueva sesión: borrar el registro</button>' +
+        '</div>' +
+      '</section>';
+
+    var hoy = new Date();
+    var fecha = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+    var actualizar = function () { $('reg-texto').value = textoRegistro(registro, fecha); };
+    [['reg-antes', 'plazoAntes'], ['reg-despues', 'plazoDespues']].forEach(function (x) {
+      $(x[0]).addEventListener('input', function () {
+        var limpio = $(x[0]).value.replace(/\D/g, '').slice(0, 2);
+        $(x[0]).value = limpio;
+        registro[x[1]] = limpio === '' ? null : Number(limpio);
+        guardarRegistro(); actualizar();
+      });
+    });
+    $('reg-camino').addEventListener('change', function () {
+      registro.camino = $('reg-camino').value || null;
+      guardarRegistro(); actualizar();
+    });
+    [['reg-explicacion', 'explicacion'], ['reg-confianza', 'confianza']].forEach(function (x) {
+      document.querySelectorAll('input[name="' + x[0] + '"]').forEach(function (r) {
+        r.addEventListener('change', function () { registro[x[1]] = Number(r.value); guardarRegistro(); actualizar(); });
+      });
+    });
+    $('btn-copiar-registro').addEventListener('click', function () {
+      var aviso = $('registro-copiado');
+      var listo = function () { aviso.textContent = 'Copiado. Pégalo en tus notas de la sesión.'; aviso.hidden = false; };
+      var aMano = function () {
+        $('reg-texto').focus(); $('reg-texto').select();
+        aviso.textContent = 'Texto seleccionado: cópialo con el menú del teléfono.'; aviso.hidden = false;
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText($('reg-texto').value).then(listo, aMano);
+      else aMano();
+    });
+    $('btn-nueva-sesion').addEventListener('click', function () {
+      registro = Object.assign({}, REGISTRO_VACIO, { meInteresa: [] });
+      try { localStorage.removeItem(CLAVE_REGISTRO); } catch (e) { /* nada guardado */ }
+      renderRegistro();
+      anunciar('Registro borrado. Lista para una nueva sesión.');
+    });
+    actualizar();
+  }
+
   // ---------- Perfil (S3-F5) ----------
   function renderPerfil() {
     var opcion = function (valor, texto) {
@@ -1911,6 +2447,11 @@
         '<p class="texto-apoyo">Las palabras de la app, en una frase.</p>' +
         glosarioCompleto() +
         '<a class="enlace" href="#bienvenida">Ver de nuevo la introducción</a>' +
+      '</section>' +
+      '<section class="tarjeta bloque" aria-labelledby="titulo-sesion">' +
+        '<h2 class="h4" id="titulo-sesion">Sesión de prueba</h2>' +
+        '<p class="texto-apoyo">Para la facilitadora: plazo, camino elegido, explicación, confianza y lo que le interesó.</p>' +
+        '<a class="btn btn-secundario-dark btn-bloque" href="#registro">Abrir el registro</a>' +
       '</section>' +
       '<section class="tarjeta bloque" aria-labelledby="titulo-reinicio">' +
         '<h2 class="h4" id="titulo-reinicio">Empezar de nuevo</h2>' +
@@ -2009,6 +2550,10 @@
     }
     if (destino.pantalla === 'invertir') renderInvertir(ruta.param);
     if (destino.pantalla === 'perfil') renderPerfil();
+    if (destino.pantalla === 'mes-real') renderMesReal();
+    if (destino.pantalla === 'caminos') { estado.verOtros = false; renderCaminos(); }
+    if (destino.pantalla === 'ficha') renderFicha(ruta.param);
+    if (destino.pantalla === 'registro') renderRegistro();
 
     document.querySelectorAll('main > .pantalla').forEach(function (s) {
       s.hidden = s.id !== 'pantalla-' + destino.pantalla;

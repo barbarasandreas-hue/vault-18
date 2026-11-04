@@ -538,7 +538,289 @@ function preaprobacion(sueldoPropio, sueldoPareja, otrasCuotas, tasa) {
   };
 }
 
+// ---------- Sprint 9: Tu mes real, Tus caminos y Todavía no ----------
+
+// Departamento de referencia (CLAUDE.md) y supuestos de diseño de los caminos.
+var LISTA_REFERENCIA_UF = 2500;
+var MINIMO_PARA_VIVIR = 0.40;   // supuesto de diseño: queda al menos 40 % del ingreso (a validar)
+var UMBRAL_AHORRO = 0.20;       // con 20 % del precio ahorrado no necesita el pie compartido
+var ESTUDIO_UF = 1200;          // estudio de referencia para "Todavía no"
+var ARRIENDO_REFERENCIA = 420000; // arriendo bruto de referencia del pie compartido (SPEC.md, sección 0)
+var PEOR_CASO_ARRIENDO = 0.9;   // peor caso: arriendo 10 % más bajo
+
+// Cada camino: cuánto presta Bci, cuánto pone el usuario y cuánto los inversionistas.
+// grupo: compra en grupo (5 % de descuento, lote de 10). existeHoy: si se puede hacer hoy en Chile.
+// ficha: camino informativo (no se compra desde la app).
+var CAMINOS = {
+  'grupo-vivir': { nombre: 'A · Compra en grupo', corto: 'Compra en grupo', modo: 'vivir', grupo: true,
+    credito: 0.90, usuario: 0.10, inversionistas: 0, existeHoy: false },
+  'individual-vivir': { nombre: 'Crédito con garantía del Estado', corto: 'Crédito con FOGAES', modo: 'vivir', grupo: false,
+    credito: 0.90, usuario: 0.10, inversionistas: 0, existeHoy: true },
+  'grupo-pie-compartido': { nombre: 'A + B · Grupo y pie compartido', corto: 'Grupo y pie compartido', modo: 'arrendar', grupo: true,
+    credito: 0.80, usuario: 0.05, inversionistas: 0.15, existeHoy: false },
+  'pie-compartido': { nombre: 'B · Pie compartido', corto: 'Pie compartido', modo: 'arrendar', grupo: false,
+    credito: 0.80, usuario: 0.05, inversionistas: 0.15, existeHoy: false },
+  'grupo-invertir': { nombre: 'A · Compra en grupo', corto: 'Compra en grupo', modo: 'arrendar', grupo: true,
+    credito: 0.80, usuario: 0.20, inversionistas: 0, existeHoy: false },
+  'individual-invertir': { nombre: 'Crédito al 80 %', corto: 'Crédito al 80 %', modo: 'arrendar', grupo: false,
+    credito: 0.80, usuario: 0.20, inversionistas: 0, existeHoy: true },
+  'arriendo-opcion': { nombre: 'Arriendo con opción de compra', corto: 'Arriendo con opción de compra', modo: 'vivir',
+    ficha: true, existeHoy: true },
+  'respaldo-familiar': { nombre: 'Respaldo familiar', corto: 'Respaldo familiar', modo: 'ambos',
+    ficha: true, existeHoy: false }
+};
+
+// Los caminos de cada modo, en el orden en que se muestran.
+function caminosDelModo(modo) {
+  return modo === 'vivir'
+    ? ['grupo-vivir', 'individual-vivir', 'arriendo-opcion', 'respaldo-familiar']
+    : ['grupo-pie-compartido', 'pie-compartido', 'grupo-invertir', 'individual-invertir', 'respaldo-familiar'];
+}
+
+// Tu mes real: ingreso − arriendo que sigue pagando − otras cuotas − dividendo.
+// En modo vivir se muda al departamento: deja de pagar arriendo.
+// En modo arrendar sigue arrendando donde vive, y no se cuenta el arriendo que recibe (peor caso).
+function mesReal(perfil, dividendo) {
+  var ingreso = ingresoTotal(perfil.sueldoPropio, perfil.sueldoPareja);
+  if (!ingreso) return null;
+  var arriendo = perfil.modo === 'vivir' ? 0 : (perfil.arriendoActual || 0);
+  var otras = perfil.otrasCuotas || 0;
+  var queda = ingreso - arriendo - otras - dividendo;
+  return {
+    ingreso: ingreso, arriendo: arriendo, otras: otras, dividendo: dividendo, queda: queda,
+    pctQueda: queda / ingreso,
+    alcanzaParaVivir: queda / ingreso >= MINIMO_PARA_VIVIR - TOLERANCIA
+  };
+}
+
+// ¿El camino es sostenible? Dividendo ≤ 25 %, dividendo + otras cuotas ≤ 30 % y queda ≥ 40 % para vivir.
+// Se comparan las cargas redondeadas que ve el usuario.
+function sostenible(perfil, dividendo) {
+  var ingreso = ingresoTotal(perfil.sueldoPropio, perfil.sueldoPareja);
+  if (!ingreso) return null;
+  var otras = perfil.otrasCuotas || 0;
+  var cargaDividendo = cargaRedondeada(dividendo / ingreso);
+  var cargaTotal = cargaRedondeada((dividendo + otras) / ingreso);
+  var m = mesReal(perfil, dividendo);
+  var cumpleCarga = cargaDividendo <= LIMITE_HOLGADO + TOLERANCIA && cargaTotal <= LIMITE_MAXIMO + TOLERANCIA;
+  return {
+    cargaDividendo: cargaDividendo, cargaTotal: cargaTotal, cumpleCarga: cumpleCarga,
+    mes: m, cumple: cumpleCarga && m.alcanzaParaVivir
+  };
+}
+
+// Todos los números de un camino de compra para un precio de lista, en pesos.
+// tasa: por defecto con subsidio; el usado no tiene subsidio a la tasa.
+function numerosCamino(id, listaUF, perfil, tasa) {
+  var c = CAMINOS[id];
+  var precio = c.grupo ? listaUF * (1 - descuentoGrupo(10)) : listaUF;
+  var dividendo = ufAPesos(cuotaFija(precio * c.credito, tasa || SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
+  var sinSubsidio = ufAPesos(cuotaFija(precio * c.credito, SUPUESTOS.tasaSinSubsidio, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
+  var pie = ufAPesos(precio * c.usuario);
+  var gastos = ufAPesos(gastosUF(precio));
+  var alEscriturar = pie + gastos;
+  var p = perfil || {};
+  var falta = Math.max(0, alEscriturar - (p.ahorroActual || 0));
+  var r = {
+    id: id, precioUF: precio, precio: ufAPesos(precio), credito: c.credito, usuario: c.usuario,
+    inversionistas: ufAPesos(precio * c.inversionistas),
+    pie: pie, gastos: gastos, alEscriturar: alEscriturar,
+    dividendo: dividendo, dividendoSinSubsidio: sinSubsidio,
+    faltaJuntar: falta,
+    meses: falta === 0 ? 0 : mesesParaMeta(falta, p.ahorroMensual),
+    existeHoy: c.existeHoy
+  };
+  // Peor caso de cada camino.
+  if (c.grupo) {
+    // Si el grupo no se completa: compra a precio de lista.
+    r.dividendoSinGrupo = ufAPesos(cuotaFija(listaUF * c.credito, tasa || SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
+  }
+  if (c.inversionistas > 0) {
+    // Arriendo 10 % más bajo: la recompra toma más meses (con todo el arriendo a la recompra).
+    var arriendo = ARRIENDO_REFERENCIA * (listaUF / LISTA_REFERENCIA_UF);
+    r.mesesRecompra = mesesRecompra(precio * c.inversionistas, arriendoNeto(arriendo) / SUPUESTOS.uf, 1);
+    r.mesesRecompraPeor = mesesRecompra(precio * c.inversionistas, arriendoNeto(arriendo * PEOR_CASO_ARRIENDO) / SUPUESTOS.uf, 1);
+  }
+  if (perfil) r.evaluacion = sostenible(perfil, dividendo);
+  return r;
+}
+
+// Las reglas de recomendación (SPEC.md, sección 0). Son reglas, no IA.
+// perfil: { modo, sueldoPropio, sueldoPareja, arriendoActual, otrasCuotas, ahorroActual, ahorroMensual, hayGrupo }
+// Devuelve { id, regla, razon, numeros, todaviaNo, otros } o null si no hay sueldos.
+// razon: 'vivir-grupo' | 'vivir-sin-grupo' | 'invertir-poco-ahorro' | 'invertir-poco-ahorro-sin-grupo'
+//        | 'invertir-ahorro' | 'invertir-ahorro-sin-grupo'
+function recomendarCamino(perfil) {
+  if (!ingresoTotal(perfil.sueldoPropio, perfil.sueldoPareja)) return null;
+  var lista = perfil.listaUF || LISTA_REFERENCIA_UF;
+  var id, regla, razon;
+  if (perfil.modo === 'vivir') {
+    regla = 2;
+    id = perfil.hayGrupo ? 'grupo-vivir' : 'individual-vivir';
+    razon = perfil.hayGrupo ? 'vivir-grupo' : 'vivir-sin-grupo';
+  } else {
+    var ahorroPct = (perfil.ahorroActual || 0) / ufAPesos(lista);
+    if (ahorroPct < UMBRAL_AHORRO - TOLERANCIA) {
+      regla = 3;
+      id = perfil.hayGrupo ? 'grupo-pie-compartido' : 'pie-compartido';
+      razon = perfil.hayGrupo ? 'invertir-poco-ahorro' : 'invertir-poco-ahorro-sin-grupo';
+    } else {
+      regla = 4;
+      id = perfil.hayGrupo ? 'grupo-invertir' : 'individual-invertir';
+      razon = perfil.hayGrupo ? 'invertir-ahorro' : 'invertir-ahorro-sin-grupo';
+    }
+  }
+  var numeros = numerosCamino(id, lista, perfil);
+  // Regla 1: si no cumple la carga o Tu mes real, Todavía no.
+  var todaviaNo = !numeros.evaluacion.cumple;
+  return {
+    id: id,
+    regla: todaviaNo ? 1 : regla,
+    razon: razon,
+    numeros: numeros,
+    todaviaNo: todaviaNo,
+    otros: caminosDelModo(perfil.modo).filter(function (x) { return x !== id; })
+  };
+}
+
+// Renta familiar con la que un dividendo ya es sostenible (hacia arriba, en miles).
+function ingresoNecesario(perfil, dividendo) {
+  var arriendo = perfil.modo === 'vivir' ? 0 : (perfil.arriendoActual || 0);
+  var otras = perfil.otrasCuotas || 0;
+  var r = Math.max(dividendo / LIMITE_HOLGADO, (dividendo + otras) / LIMITE_MAXIMO,
+    (arriendo + otras + dividendo) / (1 - MINIMO_PARA_VIVIR));
+  return Math.ceil(r / 1000) * 1000;
+}
+
+// Todavía no: hasta 3 cambios calculados que lo harían sostenible.
+// Devuelve una lista de { tipo, ... } en este orden: cuotas, estudio, renta.
+function cambiosTodaviaNo(perfil, id) {
+  var lista = perfil.listaUF || LISTA_REFERENCIA_UF;
+  var actual = numerosCamino(id, lista, perfil);
+  var cambios = [];
+  if ((perfil.otrasCuotas || 0) > 0) {
+    var sinCuotas = Object.assign({}, perfil, { otrasCuotas: 0 });
+    var ev = sostenible(sinCuotas, actual.dividendo);
+    cambios.push({ tipo: 'cuotas', otras: perfil.otrasCuotas, cargaTotal: ev.cargaTotal,
+      queda: ev.mes.queda, cumple: ev.cumple });
+  }
+  if (lista > ESTUDIO_UF) {
+    var e = numerosCamino(id, ESTUDIO_UF, perfil);
+    cambios.push({ tipo: 'estudio', listaUF: ESTUDIO_UF, alEscriturar: e.alEscriturar, dividendo: e.dividendo,
+      cumple: e.evaluacion.cumple, meses: e.meses });
+  }
+  var necesario = ingresoNecesario(perfil, actual.dividendo);
+  var ingreso = ingresoTotal(perfil.sueldoPropio, perfil.sueldoPareja);
+  cambios.push({ tipo: 'renta', ingreso: necesario, falta: Math.max(0, necesario - ingreso) });
+  return cambios.slice(0, 3);
+}
+
+// "Recordarme en N meses": lo que tarda en juntar su parte de un estudio, entre 3 y 24 meses.
+// Sin ahorro mensual, 6 meses.
+function mesesRecordar(perfil, id) {
+  var e = numerosCamino(id, ESTUDIO_UF, perfil);
+  if (e.meses === null) return 6;
+  return Math.min(24, Math.max(3, e.meses));
+}
+
+// ---------- Fichas informativas (S9-F4) ----------
+
+// Arriendo con opción de compra, con las proporciones de Hogarízate (DF, 2023):
+// en UF 3.500, mensualidad de UF 23,8 = 12,1 de arriendo + 11,7 que va al pie.
+// La meta es el pie de 10 % (crédito con FOGAES), sin aporte inicial.
+function arriendoConOpcion(listaUF) {
+  var arriendo = ufAPesos(listaUF * 12.1 / 3500);
+  var alPie = ufAPesos(listaUF * 11.7 / 3500);
+  var meta = ufAPesos(listaUF * 0.10);
+  return {
+    arriendo: arriendo, alPie: alPie, mensualidad: arriendo + alPie, meta: meta,
+    meses: mesesParaMeta(meta, alPie),
+    dividendoDespues: ufAPesos(dividendoUF(listaUF, 'vivir'))
+  };
+}
+
+// Respaldo familiar (referente: Barclays Family Springboard). El comprador pone 5 %, Bci presta 95 %
+// y un familiar deja 10 % del precio en una cuenta bloqueada de Bci, que se libera cuando la deuda
+// baja al 80 % del precio (sin plusvalía).
+var RESPALDO = { credito: 0.95, usuario: 0.05, deposito: 0.10, liberaBajoDe: 0.80 };
+function respaldoFamiliar(listaUF) {
+  var credito = listaUF * RESPALDO.credito;
+  var meses = 0;
+  while (meses < SUPUESTOS.mesesBci &&
+    saldoDeuda(credito, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci, meses, []) > listaUF * RESPALDO.liberaBajoDe) meses++;
+  return {
+    pie: ufAPesos(listaUF * RESPALDO.usuario),
+    deposito: ufAPesos(listaUF * RESPALDO.deposito),
+    dividendo: ufAPesos(cuotaFija(credito, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF),
+    mesesLibera: meses
+  };
+}
+
+// ---------- Comprar más barato (S9-F5) ----------
+
+// Ajustes de precio: usado (−17,6 %, TOCTOC 2024) e IVA cero (−6,5 %, estimación de Hacienda).
+// El usado no tiene subsidio a la tasa (exige primera venta) ni IVA cero.
+var MAS_BARATO = {
+  usado: { descuento: 0.176, sinSubsidio: true },
+  'iva-cero': { descuento: 0.065, sinSubsidio: false, desde: '2026-12-01', hasta: '2027-12-01' }
+};
+
+// Pie y dividendo de un departamento con un ajuste (o ninguno), comparado con el de referencia.
+function pieMasBarato(listaUF, tipoCompra, modo, unidades, ajuste) {
+  var a = MAS_BARATO[ajuste];
+  var lista = a ? listaUF * (1 - a.descuento) : listaUF;
+  var precio = precioUF(lista, tipoCompra, unidades);
+  var tasa = a && a.sinSubsidio ? SUPUESTOS.tasaSinSubsidio : SUPUESTOS.tasaBci;
+  var pie = ufAPesos(pieUF(precio, modo));
+  var pieReferencia = ufAPesos(pieUF(LISTA_REFERENCIA_UF, modo));
+  return {
+    precio: ufAPesos(precio), pie: pie, pieReferencia: pieReferencia,
+    baja: pieReferencia - pie,
+    dividendo: ufAPesos(dividendoUF(precio, modo, tasa)),
+    sinSubsidio: !!(a && a.sinSubsidio)
+  };
+}
+
+// ---------- Registro de la sesión de prueba (S9-F6) ----------
+
+// Texto para copiar. registro: { plazoAntes, plazoDespues, camino, explicacion, confianza, meInteresa, recordarme }.
+function textoRegistro(registro, fechaISO) {
+  var r = registro || {};
+  var nombre = function (id) { return CAMINOS[id] ? CAMINOS[id].nombre : 'sin elegir'; };
+  var valor = function (v, sufijo) { return v === null || v === undefined || v === '' ? 'sin dato' : v + (sufijo || ''); };
+  return [
+    'Primer Peldaño · Sesión de prueba',
+    'Fecha: ' + (fechaISO ? formatoFecha(fechaISO) : 'sin dato'),
+    'Plazo que cree necesitar antes: ' + valor(r.plazoAntes, ' años'),
+    'Plazo que cree necesitar después: ' + valor(r.plazoDespues, ' años'),
+    'Camino elegido: ' + nombre(r.camino),
+    'Explicación del camino (0 a 3): ' + valor(r.explicacion),
+    'Confianza (1 a 5): ' + valor(r.confianza),
+    'Me interesa: ' + ((r.meInteresa || []).length ? r.meInteresa.map(nombre).join(', ') : 'nada'),
+    'Pidió que le recordemos: ' + (r.recordarme ? 'en ' + r.recordarme + ' meses' : 'no')
+  ].join('\n');
+}
+
 if (typeof module !== 'undefined') module.exports = {
+  LISTA_REFERENCIA_UF: LISTA_REFERENCIA_UF,
+  MINIMO_PARA_VIVIR: MINIMO_PARA_VIVIR,
+  UMBRAL_AHORRO: UMBRAL_AHORRO,
+  ESTUDIO_UF: ESTUDIO_UF,
+  CAMINOS: CAMINOS,
+  caminosDelModo: caminosDelModo,
+  mesReal: mesReal,
+  sostenible: sostenible,
+  numerosCamino: numerosCamino,
+  recomendarCamino: recomendarCamino,
+  ingresoNecesario: ingresoNecesario,
+  cambiosTodaviaNo: cambiosTodaviaNo,
+  mesesRecordar: mesesRecordar,
+  arriendoConOpcion: arriendoConOpcion,
+  RESPALDO: RESPALDO,
+  respaldoFamiliar: respaldoFamiliar,
+  MAS_BARATO: MAS_BARATO,
+  pieMasBarato: pieMasBarato,
+  textoRegistro: textoRegistro,
   MODOS: MODOS,
   descuentoGrupo: descuentoGrupo,
   rentaParticipacionUF: rentaParticipacionUF,

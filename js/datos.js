@@ -17,6 +17,8 @@ var PROYECTOS = [
     cupos: 10, cuposTomados: 6, ufFinanciadas: 0, cierre: '2026-12-15' },
   { id: 'parque-quinta-normal', nombre: 'Edificio Parque Quinta Normal', comuna: 'Quinta Normal', tipo: 'conjunto',
     cupos: 8, cuposTomados: 5, ufFinanciadas: 0, cierre: '2027-01-20' },
+  { id: 'portal-estacion', nombre: 'Edificio Portal Estación', comuna: 'Estación Central', tipo: 'conjunto',
+    cupos: 10, cuposTomados: 4, ufFinanciadas: 0, cierre: '2027-02-26' },
   { id: 'altos-recoleta', nombre: 'Edificio Altos de Recoleta', comuna: 'Recoleta', tipo: 'conjunto',
     cupos: 10, cuposTomados: 3, ufFinanciadas: 0, cierre: '2026-12-30' },
   { id: 'plaza-estacion', nombre: 'Edificio Plaza Estación', comuna: 'Estación Central', tipo: 'financiamiento',
@@ -41,6 +43,9 @@ var DEPARTAMENTOS = [
   { id: 'pq-302', proyectoId: 'parque-quinta-normal', comuna: 'Quinta Normal', piso: 3, m2: 38, dormitorios: 1, banos: 1, listaUF: 1750, arriendoBruto: 280000 },
   { id: 'pq-704', proyectoId: 'parque-quinta-normal', comuna: 'Quinta Normal', piso: 7, m2: 38, dormitorios: 1, banos: 1, listaUF: 1750, arriendoBruto: 280000 },
   { id: 'pq-1201', proyectoId: 'parque-quinta-normal', comuna: 'Quinta Normal', piso: 12, m2: 38, dormitorios: 1, banos: 1, listaUF: 1750, arriendoBruto: 285000 },
+  // Portal Estación (lote de 10, 5 % de descuento): estudios, rinden 4,0 % neto
+  { id: 'pt-208', proyectoId: 'portal-estacion', comuna: 'Estación Central', piso: 2, m2: 22, dormitorios: 0, banos: 1, listaUF: 1200, arriendoBruto: 190000 },
+  { id: 'pt-715', proyectoId: 'portal-estacion', comuna: 'Estación Central', piso: 7, m2: 22, dormitorios: 0, banos: 1, listaUF: 1200, arriendoBruto: 195000 },
   // Altos de Recoleta: rinde menos de 3,9 % neto (la IA lo saca en modo arrendar)
   { id: 'ar-502', proyectoId: 'altos-recoleta', comuna: 'Recoleta', piso: 5, m2: 52, dormitorios: 2, banos: 2, listaUF: 2600, arriendoBruto: 370000 },
   { id: 'ar-901', proyectoId: 'altos-recoleta', comuna: 'Recoleta', piso: 9, m2: 52, dormitorios: 2, banos: 2, listaUF: 2600, arriendoBruto: 380000 },

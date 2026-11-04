@@ -79,6 +79,17 @@
           </div>
         </header>
 
+        <div class="mas-barato" id="mas-barato" role="group" aria-labelledby="titulo-mas-barato">
+          <p class="etiqueta" id="titulo-mas-barato">Comprar más barato</p>
+          <div class="chips-mas-barato">
+            <button type="button" class="chip chip-filtro" data-tipo="estudio" aria-pressed="false">Estudio</button>
+            <button type="button" class="chip chip-filtro" data-tipo="1d" aria-pressed="false">1 dormitorio</button>
+            <button type="button" class="chip chip-filtro" data-ajuste="usado" aria-pressed="false">Usado (−17,6&nbsp;%)</button>
+            <button type="button" class="chip chip-filtro" data-ajuste="iva-cero" aria-pressed="false">IVA cero (−6,5&nbsp;%)</button>
+          </div>
+          <p class="texto-apoyo nota" id="mas-barato-nota" hidden></p>
+        </div>
+
         <div class="pestanas" role="tablist" aria-label="Tipo de proyecto">
           <button type="button" role="tab" id="tab-conjunto" data-pestana="conjunto" aria-controls="panel-proyectos">Compra en grupo</button>
           <button type="button" role="tab" id="tab-financiamiento" data-pestana="financiamiento" aria-controls="panel-proyectos">Pie compartido</button>
@@ -135,6 +146,19 @@
 
           <div id="panel-inversiones" role="tabpanel" aria-labelledby="tab-inversiones" hidden></div>
         </div>
+      </section>
+      <!-- ===== Sprint 9: Tu mes real, Tus caminos, fichas y registro (se dibujan desde app.js) ===== -->
+      <section id="pantalla-mes-real" class="pantalla" aria-labelledby="titulo-mes-real" hidden>
+        <div id="mes-real-contenido"></div>
+      </section>
+      <section id="pantalla-caminos" class="pantalla" aria-labelledby="titulo-caminos" hidden>
+        <div id="caminos-contenido"></div>
+      </section>
+      <section id="pantalla-ficha" class="pantalla" aria-labelledby="titulo-ficha" hidden>
+        <div id="ficha-contenido"></div>
+      </section>
+      <section id="pantalla-registro" class="pantalla" aria-labelledby="titulo-registro" hidden>
+        <div id="registro-contenido"></div>
       </section>
       <!-- ===== Perfil (se dibuja desde app.js) ===== -->
       <section id="pantalla-perfil" class="pantalla" aria-labelledby="titulo-perfil" hidden>

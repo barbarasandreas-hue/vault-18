@@ -399,6 +399,7 @@ button { font: inherit; }
 }
 .chip svg { width: 16px; height: 16px; flex: none; }
 .chip-ia { background: var(--green-20); color: var(--green-dark); }
+.chip[hidden] { display: none; }
 
 /* ---------- Pestañas ---------- */
 .pestanas {
@@ -878,3 +879,84 @@ body.en-intro .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
 }
 .lista-numerada { margin: 8px 0 0; padding-left: 22px; color: var(--gray-dark); }
 .lista-numerada li { margin-bottom: 6px; }
+
+/* ---------- Sprint 9: Tu mes real, Tus caminos, Todavía no, fichas y registro ---------- */
+.aviso-icono { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; }
+.aviso-icono svg { width: 22px; height: 22px; flex: none; }
+/* Alerta: texto gris oscuro sobre amarillo 20; el amarillo nunca es texto */
+.aviso-alerta { background: var(--yellow-20); color: var(--gray-dark); border: 1px solid var(--yellow-normal); font-weight: 400; }
+.aviso-alerta svg { color: var(--gray-dark); }
+.nota { font-size: 14px; margin: 8px 0 0; }
+
+/* La cuenta de Tu mes real: + ingreso, − gastos, = te queda */
+.cuentas { list-style: none; margin: 16px 0 0; padding: 0; }
+.cuentas li {
+  display: grid; grid-template-columns: 20px 1fr auto; gap: 8px; align-items: baseline;
+  padding: 10px 0; border-top: 1px solid var(--gray-light);
+}
+.cuentas li:first-child { border-top: 0; }
+.cuentas small { display: block; color: var(--gray-semidark); font-size: 14px; }
+.cuentas .monto { font-weight: 700; white-space: nowrap; text-align: right; }
+.cuenta-signo { font-weight: 700; color: var(--gray-semidark); text-align: center; }
+.cuentas li.cuenta-total { background: var(--green-20); border-radius: var(--radio); border-top: 0; padding: 10px 8px; margin-top: 4px; }
+.cuentas li.cuenta-total span { color: var(--green-dark); font-weight: 700; }
+
+/* Tus caminos */
+.camino-cabeza { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; }
+.camino-cabeza .h5, .camino-cabeza .etiqueta { margin: 0; }
+.chip-existe { background: var(--green-20); color: var(--green-dark); }
+.chip-propuesta { background: var(--blue-20); color: var(--blue-dark); }
+.camino-recomendado .h3 { margin: 6px 0 4px; }
+.razon { margin: 0 0 12px; color: var(--gray-dark); }
+.camino-recomendado .numero { margin-bottom: 8px; }
+.peor-caso { margin: 0 0 12px; padding: 10px 12px; border-radius: var(--radio-campo); background: var(--gray-light); color: var(--gray-dark); font-size: 15px; }
+.tarjeta .accion-fija { background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--white) 30%); margin-bottom: 0; }
+#btn-otros-caminos { margin-top: 16px; }
+.lista-caminos { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 12px; }
+.lista-caminos[hidden] { display: none; }
+.camino-opcion .datos-inversion { margin-top: 8px; }
+.camino-opcion > .texto-apoyo { margin: 8px 0 12px; }
+
+/* Todavía no: sin juicio, con ícono y palabra (no solo color) */
+.todavia-no { border-left: 8px solid var(--blue-normal); }
+.todavia-no .estado-semaforo { background: var(--blue-20); color: var(--blue-dark); }
+.todavia-no .h3 { margin: 12px 0 4px; }
+.todavia-no .lista-check { margin-top: 12px; }
+.todavia-no .lista-check li { grid-template-columns: 24px 1fr; }
+
+/* Comprar más barato (Proyectos) */
+.mas-barato { margin: 0 0 12px; }
+.mas-barato .etiqueta { margin: 0 0 6px; font-size: 14px; font-weight: 600; color: var(--gray-semidark); }
+.chips-mas-barato { display: flex; flex-wrap: wrap; gap: 8px; }
+.mas-barato-linea { margin: 6px 0 0; padding: 8px 10px; border-radius: var(--radio-campo); background: var(--green-20); color: var(--gray-dark); font-size: 15px; }
+
+/* Registro de la sesión de prueba */
+.campo-anios input { padding-left: 14px; padding-right: 64px; }
+.campo-caja .sufijo {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 18px; color: var(--gray-semidark); pointer-events: none;
+}
+.campo-select {
+  width: 100%; height: 50px; padding: 0 14px;
+  border: 1px solid var(--gray-semidark); border-radius: var(--radio-campo);
+  background: var(--white); color: var(--gray-dark);
+  font-family: var(--font); font-size: 18px;
+}
+.campo-select:focus { outline: 3px solid var(--blue-normal); outline-offset: 1px; }
+.escala { border: 0; margin: 0 0 16px; padding: 0; }
+.escala legend { font-weight: 600; margin-bottom: 6px; padding: 0; }
+.escala-opciones { display: flex; gap: 8px; }
+.escala input { position: absolute; opacity: 0; pointer-events: none; }
+.escala label {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  min-height: var(--toque); border: 1px solid var(--gray-semidark); border-radius: var(--radio-campo);
+  background: var(--white); color: var(--gray-dark); font-weight: 700; cursor: pointer;
+}
+.escala input:checked + label { background: var(--green-dark); border-color: var(--green-dark); color: var(--white); }
+.escala input:focus-visible + label { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.escala-extremos { display: flex; justify-content: space-between; gap: 8px; margin: 4px 0 0; font-size: 14px; }
+.registro-texto {
+  width: 100%; margin-top: 8px; padding: 12px;
+  border: 1px solid var(--gray-semidark); border-radius: var(--radio-campo);
+  font-family: var(--font); font-size: 15px; color: var(--gray-dark); background: var(--white); resize: vertical;
+}

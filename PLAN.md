@@ -333,12 +333,12 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 8 | S8-F2 Postula con preaprobación | aprobada |
 | 8 | S8-F3 Documentos de ejemplo precargados | aprobada |
 | 8 | S8-F4 Resultado de la preaprobación | aprobada |
-| 9 | S9-F1 Tu mes real | pendiente |
-| 9 | S9-F2 Tus caminos | pendiente |
-| 9 | S9-F3 Todavía no | pendiente |
-| 9 | S9-F4 Fichas de caminos informativos | pendiente |
-| 9 | S9-F5 Comprar más barato | pendiente |
-| 9 | S9-F6 Registro de la sesión de prueba | pendiente |
+| 9 | S9-F1 Tu mes real | en progreso |
+| 9 | S9-F2 Tus caminos | en progreso |
+| 9 | S9-F3 Todavía no | en progreso |
+| 9 | S9-F4 Fichas de caminos informativos | en progreso |
+| 9 | S9-F5 Comprar más barato | en progreso |
+| 9 | S9-F6 Registro de la sesión de prueba | en progreso |
 | 10 | S10-F1 Pie compartido en Mi departamento | pendiente |
 | 10 | S10-F2 Comprador de respaldo y ¿Y si me arrepiento? | pendiente |
 | 10 | S10-F3 Pie en cuotas | pendiente |
