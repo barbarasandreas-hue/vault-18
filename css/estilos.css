@@ -356,9 +356,9 @@ button { font: inherit; }
   overflow: hidden;
   margin: 8px 0 16px;
 }
-.reparto-barra span:nth-child(1) { width: 80%; background: var(--blue-normal); }
-.reparto-barra span:nth-child(2) { width: 15%; background: var(--blue-40); }
-.reparto-barra span:nth-child(3) { width: 5%; background: var(--yellow-normal); }
+.reparto-barra span:nth-child(1) { background: var(--blue-normal); }
+.reparto-barra span:nth-child(2) { background: var(--blue-40); }
+.reparto-barra span:nth-child(3) { background: var(--yellow-normal); }
 
 .lista-check { list-style: none; margin: 0; padding: 0; }
 .lista-check li {
@@ -823,3 +823,58 @@ body.en-intro .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
 @media (max-width: 370px) {
   .display-3 { font-size: 38px; }
 }
+
+/* ---------- Sprint 8: preaprobación simulada ---------- */
+.partes-postula {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: var(--gray-semidark);
+}
+.partes-postula .actual { color: var(--gray-dark); font-weight: 700; }
+.partes-postula .hecha { color: var(--green-dark); }
+.selector-tres .selector-opciones { grid-template-columns: 1fr 1fr 1fr; }
+.selector-tres label { font-size: 14px; }
+.opciones-cliente { display: grid; gap: 8px; margin: 16px 0; }
+.opciones-cliente .texto-apoyo { margin: 0 0 8px; }
+.btn-terciario[aria-pressed="true"] { border-color: var(--green-dark); color: var(--green-dark); }
+.lista-documentos { list-style: none; margin: 8px 0 16px; padding: 0; display: grid; gap: 8px; }
+.documento { background: var(--white); border: 1px solid var(--gray-semilight); border-radius: var(--radio); padding: 12px; }
+.documento.listo { border-color: var(--green-40); }
+.documento-fila { display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center; }
+.documento-icono { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--gray-neutral); display: flex; align-items: center; justify-content: center; }
+.documento.listo .documento-icono { border-color: var(--green-normal); background: var(--green-normal); }
+.documento-icono svg { width: 16px; height: 16px; color: var(--white); }
+.documento-texto strong { display: block; font-size: 15px; color: var(--gray-dark); }
+.documento-texto small { display: block; font-size: 14px; color: var(--gray-semidark); overflow-wrap: anywhere; }
+.btn-subir { min-width: 44px; }
+.hoja-archivos { margin-top: 12px; padding: 12px; border-radius: var(--radio); background: var(--gray-light); }
+.hoja-archivos[hidden] { display: none; }
+.hoja-titulo { margin: 0 0 8px; font-weight: 600; color: var(--gray-dark); font-size: 15px; }
+.archivos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.archivo {
+  width: 100%; min-height: 44px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 8px; background: var(--white); border: 1px solid var(--gray-semilight); border-radius: var(--radio-campo);
+  font: inherit; color: var(--gray-dark); cursor: pointer;
+}
+.archivo:hover { border-color: var(--blue-normal); }
+.archivo:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.archivo-nombre { font-size: 12px; line-height: 1.3; overflow-wrap: anywhere; text-align: center; }
+.miniatura-doc { width: 60px; height: 78px; }
+.md-hoja { fill: var(--white); stroke: var(--gray-neutral); }
+.md-titulo { fill: var(--gray-semidark); }
+.md-linea { fill: var(--gray-semilight); }
+.md-marca { fill: var(--yellow-20); }
+.md-texto { fill: var(--gray-dark); font-size: 5.2px; font-weight: 700; }
+.subiendo { margin: 0 0 8px; color: var(--gray-dark); font-weight: 600; }
+.barra-subida { height: 8px; border-radius: 999px; background: var(--gray-semilight); overflow: hidden; }
+.barra-subida span { display: block; height: 100%; width: 100%; background: var(--green-normal); transform-origin: left; animation: subir 1s linear forwards; }
+@keyframes subir { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .barra-subida span { animation: none; }
+}
+.lista-numerada { margin: 8px 0 0; padding-left: 22px; color: var(--gray-dark); }
+.lista-numerada li { margin-bottom: 6px; }

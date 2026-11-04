@@ -3,27 +3,43 @@
 // Las pantallas solo llaman a estas funciones; nunca calculan por su cuenta.
 
 var SUPUESTOS = {
-  uf: 41065,              // pesos por UF
-  descuentoLote: 0.10,    // 10 % de descuento en compra en lote
-  pctBci: 0.80,           // crédito hipotecario Bci
-  pctInversionistas: 0.15,
-  pctUsuario: 0.05,       // pie que pone el usuario
-  pctGastos: 0.02,        // gastos de escritura
-  tasaBci: 0.045,         // anual
+  uf: 41065,                // pesos por UF
+  pctGastos: 0.02,          // gastos de escritura
+  tasaBci: 0.039,           // anual, con subsidio a la tasa (4,5 % − 0,6; Ley 21.836)
+  tasaSinSubsidio: 0.045,   // anual, si se acaban los cupos del subsidio
   mesesBci: 360,
-  segurosUF: 0.7,         // al mes
-  tasaInversionistas: 0.08, // anual, sobre UF
-  mesesInversionistas: 120
+  segurosUF: 0.7,           // al mes
+  rentaParticipacion: 0.06, // anual en UF, sobre la parte de los inversionistas (pie compartido)
+  topeRecompraMeses: 84,    // si a los 84 meses no recompró todo, refinancia o vende
+  topeFogaesUF: 4500        // la garantía FOGAES llega a viviendas de hasta UF 4.500
 };
 
-// Precio que paga el usuario: en lote se aplica el descuento.
-function precioUF(listaUF, tipo) {
-  return tipo === 'lote' ? listaUF * (1 - SUPUESTOS.descuentoLote) : listaUF;
+// Cómo se reparte el precio según para qué compra (modelo v3, CLAUDE.md).
+// vivir: 90 % Bci con FOGAES + 10 % de pie del usuario.
+// arrendar (invertir): 80 % Bci + 15 % de participación de inversionistas + 5 % del usuario.
+var MODOS = {
+  vivir: { credito: 0.90, usuario: 0.10, inversionistas: 0 },
+  arrendar: { credito: 0.80, usuario: 0.05, inversionistas: 0.15 }
+};
+function modoDe(modo) { return MODOS[modo] || MODOS.arrendar; }
+
+// Descuento de la compra en grupo: 3 % desde 5 unidades, 5 % desde 10.
+function descuentoGrupo(unidades) {
+  if (unidades >= 10) return 0.05;
+  if (unidades >= 5) return 0.03;
+  return 0;
 }
 
-function pieUF(precio) { return precio * SUPUESTOS.pctUsuario; }
+// Precio que paga el usuario. En lote (compra en grupo) se aplica el descuento según las unidades del lote.
+function precioUF(listaUF, tipo, unidades) {
+  if (tipo !== 'lote') return listaUF;
+  var u = unidades === undefined ? 10 : unidades;
+  return listaUF * (1 - descuentoGrupo(u));
+}
+
+function pieUF(precio, modo) { return precio * modoDe(modo).usuario; }
 function gastosUF(precio) { return precio * SUPUESTOS.pctGastos; }
-function alEscriturarUF(precio) { return pieUF(precio) + gastosUF(precio); }
+function alEscriturarUF(precio, modo) { return pieUF(precio, modo) + gastosUF(precio); }
 
 // Cuota fija (sistema francés). Tasa mensual = tasa anual / 12.
 function cuotaFija(monto, tasaAnual, meses) {
@@ -32,27 +48,18 @@ function cuotaFija(monto, tasaAnual, meses) {
   return monto * i / (1 - Math.pow(1 + i, -meses));
 }
 
-// Dividendo Bci sobre el 80 % del precio, más seguros.
-function dividendoUF(precio) {
-  return cuotaFija(precio * SUPUESTOS.pctBci, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF;
+// Dividendo Bci sobre el crédito del modo, más seguros. Por defecto, con subsidio a la tasa.
+function dividendoUF(precio, modo, tasa) {
+  return cuotaFija(precio * modoDe(modo).credito, tasa || SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF;
 }
 
-// Cuota a los inversionistas sobre el 15 % del precio.
-function cuotaInversionistasUF(precio) {
-  return cuotaFija(precio * SUPUESTOS.pctInversionistas, SUPUESTOS.tasaInversionistas, SUPUESTOS.mesesInversionistas);
-}
+// En v3 el usuario paga solo el dividendo: los inversionistas no cobran una cuota de su sueldo.
+function totalMesUF(precio, modo) { return dividendoUF(precio, modo); }
 
-function totalMesUF(precio) {
-  return dividendoUF(precio) + cuotaInversionistasUF(precio);
-}
-
-// De dónde sale el precio: 80 % Bci, 15 % inversionistas, 5 % usuario.
-function repartoUF(precio) {
-  return {
-    bci: precio * SUPUESTOS.pctBci,
-    inversionistas: precio * SUPUESTOS.pctInversionistas,
-    usuario: precio * SUPUESTOS.pctUsuario
-  };
+// De dónde sale el precio según el modo.
+function repartoUF(precio, modo) {
+  var m = modoDe(modo);
+  return { bci: precio * m.credito, inversionistas: precio * m.inversionistas, usuario: precio * m.usuario };
 }
 
 function ufAPesos(uf) { return Math.round(uf * SUPUESTOS.uf); }
@@ -70,36 +77,37 @@ function formatoPesos(pesos) {
 }
 
 // Todos los números de un escenario, en pesos, listos para mostrar.
-// listaUF: precio de lista del departamento; tipo: 'lote' o 'individual'.
-// Las cifras cuadran a la vista: el total al mes es la suma de sus partes
-// redondeadas, y el 80 % de Bci (la parte más grande) absorbe el redondeo
-// para que 80 + 15 + 5 sume exactamente el precio.
-function escenario(listaUF, tipo) {
-  var precio = precioUF(listaUF, tipo);
+// listaUF: precio de lista; tipo: 'lote' o 'individual'; modo: 'vivir' o 'arrendar';
+// unidades: unidades del lote (define el descuento de grupo).
+// Las cifras cuadran a la vista: Bci (la parte más grande) absorbe el redondeo del reparto.
+function escenario(listaUF, tipo, modo, unidades) {
+  var m = modoDe(modo);
+  var precio = precioUF(listaUF, tipo, unidades);
   var precioPesos = ufAPesos(precio);
-  var dividendo = ufAPesos(dividendoUF(precio));
-  var cuota = ufAPesos(cuotaInversionistasUF(precio));
-  var reparto = repartoUF(precio);
+  var dividendo = ufAPesos(dividendoUF(precio, modo));
+  var reparto = repartoUF(precio, modo);
   var inversionistas = ufAPesos(reparto.inversionistas);
   var usuario = ufAPesos(reparto.usuario);
   var bci = precioPesos - inversionistas - usuario;
   var gastos = ufAPesos(gastosUF(precio));
   return {
+    modo: modo === 'vivir' ? 'vivir' : 'arrendar',
     listaUF: listaUF,
     precioUF: precio,
     precioLista: ufAPesos(listaUF),
     precio: precioPesos,
+    descuento: tipo === 'lote' ? descuentoGrupo(unidades === undefined ? 10 : unidades) : 0,
+    pctCredito: m.credito,
+    pctUsuario: m.usuario,
+    pctInversionistas: m.inversionistas,
     pie: usuario,
     gastos: gastos,
     alEscriturar: usuario + gastos,
     dividendo: dividendo,
-    cuotaInversionistas: cuota,
-    totalMes: dividendo + cuota,
-    reparto: {
-      bci: bci,
-      inversionistas: inversionistas,
-      usuario: usuario
-    }
+    dividendoSinSubsidio: ufAPesos(dividendoUF(precio, modo, SUPUESTOS.tasaSinSubsidio)),
+    totalMes: dividendo,
+    participacionUF: reparto.inversionistas,
+    reparto: { bci: bci, inversionistas: inversionistas, usuario: usuario }
   };
 }
 
@@ -115,15 +123,18 @@ function rentabilidad(arriendoBruto, precioPagadoUF) {
   return arriendoNeto(arriendoBruto) * 12 / (precioPagadoUF * SUPUESTOS.uf);
 }
 
-// La IA solo muestra departamentos que rinden 4,5 % o más al año.
-var RENTABILIDAD_MINIMA = 0.045;
+// En modo arrendar la IA solo muestra departamentos con rentabilidad neta de 3,9 % o más
+// (la tasa con subsidio: bajo eso, el crédito cuesta más de lo que rinde el arriendo).
+var RENTABILIDAD_MINIMA = 0.039;
 function pasaFiltroIA(rent) { return rent >= RENTABILIDAD_MINIMA; }
 
-// Ahorro por unirse a una compra en conjunto: 10 % del precio de lista.
-function ahorroPorUnirseUF(listaUF) { return listaUF * SUPUESTOS.descuentoLote; }
+// Ahorro por unirse a una compra en grupo: el descuento según las unidades del lote.
+function ahorroPorUnirseUF(listaUF, unidades) {
+  return listaUF * descuentoGrupo(unidades === undefined ? 10 : unidades);
+}
 
-// Lo que se reúne con inversionistas: 15 % del precio pagado.
-function porFinanciarUF(precio) { return precio * SUPUESTOS.pctInversionistas; }
+// Lo que se reúne con inversionistas: la participación de 15 % del precio pagado.
+function porFinanciarUF(precio) { return precio * MODOS.arrendar.inversionistas; }
 
 // Avance entre 0 y 1 (6 de 10 → 0.6).
 function avance(parte, total) {
@@ -150,18 +161,19 @@ function formatoFecha(iso) {
 }
 
 // Todo lo que se muestra de un proyecto, ya calculado.
-// proyecto.tipo: 'conjunto' (compra en conjunto, con 10 % de descuento)
-// o 'financiamiento' (financiamiento del pie, a precio de lista).
+// proyecto.tipo: 'conjunto' (compra en grupo, con descuento según las unidades del lote)
+// o 'financiamiento' (pie compartido, a precio de lista).
 // departamentos: los disponibles del proyecto (misma tipología y precio).
 // cuposExtra: cupos que tomó el usuario en este teléfono (0 o 1).
 // invertidoUF: lo que el usuario invirtió en este proyecto desde este teléfono.
-function resumenProyecto(proyecto, departamentos, cuposExtra, invertidoUF) {
+// modo: 'vivir' o 'arrendar' (por defecto 'arrendar').
+function resumenProyecto(proyecto, departamentos, cuposExtra, invertidoUF, modo) {
   var tipoCompra = proyecto.tipo === 'conjunto' ? 'lote' : 'individual';
   var listaUF = departamentos[0].listaUF;
-  var e = escenario(listaUF, tipoCompra);
+  var e = escenario(listaUF, tipoCompra, modo, proyecto.cupos);
 
   var rentabilidades = departamentos.map(function (d) {
-    return rentabilidad(d.arriendoBruto, precioUF(d.listaUF, tipoCompra));
+    return rentabilidad(d.arriendoBruto, precioUF(d.listaUF, tipoCompra, proyecto.cupos));
   });
   var rentMinima = Math.min.apply(null, rentabilidades);
 
@@ -172,7 +184,10 @@ function resumenProyecto(proyecto, departamentos, cuposExtra, invertidoUF) {
   return {
     tipoCompra: tipoCompra,
     escenario: e,
-    ahorro: proyecto.tipo === 'conjunto' ? ufAPesos(ahorroPorUnirseUF(listaUF)) : 0,
+    ahorro: proyecto.tipo === 'conjunto' ? ufAPesos(ahorroPorUnirseUF(listaUF, proyecto.cupos)) : 0,
+    descuento: e.descuento,
+    arriendoBruto: departamentos[0].arriendoBruto,
+    netoMensualUF: arriendoNeto(departamentos[0].arriendoBruto) / SUPUESTOS.uf,
     rentabilidad: rentMinima,
     pasaFiltro: pasaFiltroIA(rentMinima),
     cuposTomados: tomados,
@@ -290,16 +305,17 @@ function sumarMes(ahorrado, ahorroMensual, meta) {
 
 // ---------- Inicio: ¿cuánto puedo comprar? (S5-F0) ----------
 
-// Mayor precio, en UF enteras hacia abajo, con una carga de 25 % o menos (holgado).
-// Total al mes = dividendo (80 %, 4,5 %, 360 meses) + seguros + cuota inversionistas (15 %, 8 %, 120 meses).
-function capacidadCompraUF(sueldoPropio, sueldoPareja) {
+// Mayor precio, en UF enteras hacia abajo, con un dividendo de 25 % o menos del ingreso (holgado).
+// Dividendo = crédito del modo (90 % vivir, 80 % arrendar) a 3,9 % y 360 meses + seguros.
+// En modo vivir no pasa del tope del FOGAES (UF 4.500).
+function capacidadCompraUF(sueldoPropio, sueldoPareja, modo) {
   var ingreso = ingresoTotal(sueldoPropio, sueldoPareja);
   if (!ingreso || ingreso <= 0) return null;
   var presupuestoUF = LIMITE_HOLGADO * ingreso / SUPUESTOS.uf - SUPUESTOS.segurosUF;
   if (presupuestoUF <= 0) return 0;
-  var factor = SUPUESTOS.pctBci * cuotaFija(1, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) +
-    SUPUESTOS.pctInversionistas * cuotaFija(1, SUPUESTOS.tasaInversionistas, SUPUESTOS.mesesInversionistas);
-  return Math.floor(presupuestoUF / factor + 1e-9);
+  var factor = modoDe(modo).credito * cuotaFija(1, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci);
+  var cap = Math.floor(presupuestoUF / factor + 1e-9);
+  return modo === 'vivir' ? Math.min(cap, SUPUESTOS.topeFogaesUF) : cap;
 }
 
 // 2472 → "UF 2.472"; 337.5 → "UF 337,5".
@@ -312,33 +328,83 @@ function formatoUF(uf) {
 
 // ---------- Mi departamento: el mes (S5-F1) ----------
 
-// Cómo se reparte el arriendo de un mes en la cuenta custodia (modo arrendar).
-// Primero se descuentan la administración (10 %) y el mes vacío del año (1/12 de lo que queda),
-// después se paga el dividendo, luego a los inversionistas, y el usuario completa la diferencia.
-function cascadaMes(dividendo, cuotaInversionistas, arriendoBruto) {
+// ---------- Pie compartido: participación y recompra (modelo v3) ----------
+
+// Renta de un mes para los inversionistas: 6 % anual sobre lo que aún es de ellos (en UF).
+function rentaParticipacionUF(saldoUF) {
+  return Math.max(0, saldoUF) * SUPUESTOS.rentaParticipacion / 12;
+}
+
+// Un mes de recompra: del arriendo neto que va a la recompra (fraccion = 1 o 0,8),
+// primero se paga la renta y con el resto el comprador recompra parte de la participación.
+function pasoRecompra(saldoUF, netoUF, fraccion) {
+  var flujo = Math.max(0, netoUF) * (fraccion === undefined ? 1 : fraccion);
+  var renta = Math.min(rentaParticipacionUF(saldoUF), flujo);
+  var recompra = Math.min(Math.max(0, flujo - renta), Math.max(0, saldoUF));
+  return { renta: renta, recompra: recompra, pagado: renta + recompra, saldo: Math.max(0, saldoUF - recompra) };
+}
+
+// Los primeros N meses de recompra, mes a mes (todo en UF).
+function simularRecompra(participacionUF, netoUF, fraccion, meses) {
+  var saldo = participacionUF;
+  var lista = [];
+  for (var m = 1; m <= meses; m++) {
+    var p = pasoRecompra(saldo, netoUF, fraccion);
+    saldo = p.saldo;
+    lista.push(p);
+  }
+  return lista;
+}
+
+// Lo que aún es de los inversionistas después de N meses de recompra (en UF).
+function saldoParticipacionUF(participacionUF, netoUF, meses, fraccion) {
+  var lista = simularRecompra(participacionUF, netoUF, fraccion, Math.max(0, meses || 0));
+  return lista.length ? lista[lista.length - 1].saldo : participacionUF;
+}
+
+// Meses hasta que el comprador es dueño del 100 % (null si el arriendo no alcanza ni para la renta).
+function mesesRecompra(participacionUF, netoUF, fraccion) {
+  if (participacionUF <= 0) return 0;
+  var saldo = participacionUF;
+  for (var m = 1; m <= 1200; m++) {
+    var p = pasoRecompra(saldo, netoUF, fraccion);
+    if (p.recompra <= 0) return null;
+    saldo = p.saldo;
+    if (saldo <= 1e-9) return m;
+  }
+  return null;
+}
+
+// Cómo se reparte el arriendo de un mes en la cuenta custodia (modo arrendar, v3).
+// Bruto − 10 % de administración − 1 mes vacío al año = neto. Mientras haya participación,
+// la fracción elegida del neto va a los inversionistas (renta y recompra) y el resto al usuario.
+// El usuario paga el dividendo con su sueldo y recibe lo que le toca del arriendo.
+function cascadaMes(dividendo, saldoParticipacionUF, arriendoBruto, fraccion) {
   var bruto = Math.max(0, arriendoBruto || 0);
   var administracion = Math.round(bruto * 0.10);
   var vacancia = Math.round((bruto - administracion) / 12);
   var neto = bruto - administracion - vacancia;
-  var total = dividendo + cuotaInversionistas;
+  var fr = fraccion === undefined ? 1 : fraccion;
+  var hayParticipacion = saldoParticipacionUF > 1e-9;
+  var paso = hayParticipacion ? pasoRecompra(saldoParticipacionUF, neto / SUPUESTOS.uf, fr) : null;
+  var renta = paso ? ufAPesos(paso.renta) : 0;
+  var recompra = paso ? ufAPesos(paso.recompra) : 0;
+  var aInversionistas = renta + recompra;
+  var aUsuario = neto - aInversionistas;
   return {
     bruto: bruto,
     administracion: administracion,
     vacancia: vacancia,
     neto: neto,
+    renta: renta,
+    recompra: recompra,
+    aInversionistas: aInversionistas,
+    aUsuario: aUsuario,
     dividendo: dividendo,
-    cubreDividendo: Math.min(neto, dividendo),
-    cuotaInversionistas: cuotaInversionistas,
-    cubreCuota: Math.min(Math.max(0, neto - dividendo), cuotaInversionistas),
-    total: total,
-    pone: Math.max(0, total - neto),        // lo que completa el usuario
-    excedente: Math.max(0, neto - total)    // lo que sobra (se puede abonar)
+    pone: Math.max(0, dividendo - aUsuario),     // lo que pone de su bolsillo para el dividendo
+    excedente: Math.max(0, aUsuario - dividendo), // lo que le sobra
+    saldoDespuesUF: paso ? paso.saldo : 0
   };
-}
-
-// Lo que pone el usuario un mes en modo arrendar (negativo = recibe la diferencia).
-function loQuePoneUsuario(totalMes, arriendoBruto) {
-  return totalMes - Math.round(arriendoNeto(arriendoBruto));
 }
 
 // Saldo de una deuda en cuota fija después de N cuotas pagadas (todo en UF).
@@ -356,13 +422,8 @@ function saldoDeuda(montoUF, tasaAnual, meses, cuotasPagadas, abonos) {
   return Math.max(0, saldo - descuento);
 }
 
-function saldoBciUF(precio, cuotasPagadas) {
-  return saldoDeuda(precio * SUPUESTOS.pctBci, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci, cuotasPagadas, []);
-}
-
-function saldoInversionistasUF(precio, cuotasPagadas, abonos) {
-  return saldoDeuda(precio * SUPUESTOS.pctInversionistas, SUPUESTOS.tasaInversionistas,
-    SUPUESTOS.mesesInversionistas, cuotasPagadas, abonos);
+function saldoBciUF(precio, cuotasPagadas, modo) {
+  return saldoDeuda(precio * modoDe(modo).credito, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci, cuotasPagadas, []);
 }
 
 // Pesos a UF (para registrar un abono).
@@ -385,9 +446,12 @@ function faltaFinanciarUF(porFinanciar, financiadas) {
   return Math.max(0, porFinanciar - (financiadas || 0));
 }
 
-// Cuota mensual que recibe el inversionista: cuota fija a UF + 8 % en 120 meses, en UF.
-function cuotaInversionUF(montoUF) {
-  return cuotaFija(montoUF, SUPUESTOS.tasaInversionistas, SUPUESTOS.mesesInversionistas);
+// Lo que recibe un inversionista en un mes: su parte (monto / participación total)
+// de lo que pagó la recompra ese mes (renta + recompra), en UF.
+function flujoInversionUF(montoUF, participacionUF, netoUF, mes, fraccion) {
+  if (!(participacionUF > 0) || mes < 1) return 0;
+  var lista = simularRecompra(participacionUF, netoUF, fraccion, mes);
+  return montoUF / participacionUF * lista[mes - 1].pagado;
 }
 
 // Mínimo para invertir: UF 10, o lo que falta si queda menos (así el proyecto se puede completar).
@@ -425,24 +489,67 @@ function leerMontoUF(texto) {
   return isNaN(n) ? null : n;
 }
 
-// Lo cobrado a la fecha por una lista de inversiones { montoUF, cuotasCobradas }, en UF.
+// Lo cobrado a la fecha por una lista de inversiones
+// { montoUF, participacionUF, netoUF, cuotasCobradas }, en UF.
 function cobradoUF(inversiones) {
   return (inversiones || []).reduce(function (suma, x) {
-    return suma + cuotaInversionUF(x.montoUF) * Math.min(x.cuotasCobradas || 0, SUPUESTOS.mesesInversionistas);
+    if (!(x.participacionUF > 0)) return suma;
+    var lista = simularRecompra(x.participacionUF, x.netoUF, 1, x.cuotasCobradas || 0);
+    var total = lista.reduce(function (s, p) { return s + p.pagado; }, 0);
+    return suma + x.montoUF / x.participacionUF * total;
   }, 0);
 }
 
-// Lo que recibe al mes por todas sus inversiones que aún no terminan, en UF.
+// Lo que recibe el próximo mes por todas sus inversiones (0 cuando ya recuperó todo), en UF.
 function cuotaMensualTotalUF(inversiones) {
   return (inversiones || []).reduce(function (suma, x) {
-    return suma + ((x.cuotasCobradas || 0) < SUPUESTOS.mesesInversionistas ? cuotaInversionUF(x.montoUF) : 0);
+    return suma + flujoInversionUF(x.montoUF, x.participacionUF, x.netoUF, (x.cuotasCobradas || 0) + 1, 1);
   }, 0);
+}
+
+// ---------- Preaprobación simulada (S8-F1) ----------
+
+// Requisito de renta (referencial, Bci): el titular gana al menos UF 23, o la renta familiar
+// es de al menos UF 39 y la pareja gana al menos UF 16.
+var RENTA_MINIMA_TITULAR_UF = 23;
+var RENTA_MINIMA_FAMILIAR_UF = 39;
+var RENTA_MINIMA_PAREJA_UF = 16;
+
+// Dividendo máximo = el menor entre 25 % de la renta y 30 % de la renta menos otras cuotas.
+// Devuelve null sin sueldos, o { cumple, motivo, creditoUF, dividendoMax, dividendo }.
+// motivo: null, 'renta' (no llega a la renta mínima) o 'carga' (las otras cuotas no dejan espacio).
+function preaprobacion(sueldoPropio, sueldoPareja, otrasCuotas, tasa) {
+  var propio = sueldoPropio || 0, pareja = sueldoPareja || 0;
+  var renta = propio + pareja;
+  if (!(renta > 0)) return null;
+  var uf = SUPUESTOS.uf;
+  var cumpleRenta = propio >= RENTA_MINIMA_TITULAR_UF * uf ||
+    (renta >= RENTA_MINIMA_FAMILIAR_UF * uf && pareja >= RENTA_MINIMA_PAREJA_UF * uf);
+  var dividendoMax = Math.min(LIMITE_HOLGADO * renta, LIMITE_MAXIMO * renta - (otrasCuotas || 0));
+  var t = tasa || SUPUESTOS.tasaBci;
+  var creditoUF = Math.max(0, Math.floor((dividendoMax / uf - SUPUESTOS.segurosUF) / cuotaFija(1, t, SUPUESTOS.mesesBci) + 1e-9));
+  var motivo = !cumpleRenta ? 'renta' : (creditoUF <= 0 ? 'carga' : null);
+  return {
+    cumple: motivo === null,
+    motivo: motivo,
+    creditoUF: motivo === null ? creditoUF : 0,
+    dividendoMax: Math.max(0, Math.round(dividendoMax)),
+    dividendo: motivo === null ? ufAPesos(cuotaFija(creditoUF, t, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF) : 0
+  };
 }
 
 if (typeof module !== 'undefined') module.exports = {
+  MODOS: MODOS,
+  descuentoGrupo: descuentoGrupo,
+  rentaParticipacionUF: rentaParticipacionUF,
+  pasoRecompra: pasoRecompra,
+  simularRecompra: simularRecompra,
+  saldoParticipacionUF: saldoParticipacionUF,
+  mesesRecompra: mesesRecompra,
+  flujoInversionUF: flujoInversionUF,
+  preaprobacion: preaprobacion,
   INVERSION_MINIMA_UF: INVERSION_MINIMA_UF,
   faltaFinanciarUF: faltaFinanciarUF,
-  cuotaInversionUF: cuotaInversionUF,
   inversionMinimaUF: inversionMinimaUF,
   validarInversion: validarInversion,
   limpiarCampoUF: limpiarCampoUF,
@@ -452,10 +559,8 @@ if (typeof module !== 'undefined') module.exports = {
   capacidadCompraUF: capacidadCompraUF,
   formatoUF: formatoUF,
   cascadaMes: cascadaMes,
-  loQuePoneUsuario: loQuePoneUsuario,
   saldoDeuda: saldoDeuda,
   saldoBciUF: saldoBciUF,
-  saldoInversionistasUF: saldoInversionistasUF,
   pesosAUF: pesosAUF,
   diasEntre: diasEntre,
   mesesParaMeta: mesesParaMeta,
@@ -490,7 +595,6 @@ if (typeof module !== 'undefined') module.exports = {
   alEscriturarUF: alEscriturarUF,
   cuotaFija: cuotaFija,
   dividendoUF: dividendoUF,
-  cuotaInversionistasUF: cuotaInversionistasUF,
   totalMesUF: totalMesUF,
   repartoUF: repartoUF,
   ufAPesos: ufAPesos,

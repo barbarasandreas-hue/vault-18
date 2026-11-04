@@ -315,7 +315,7 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 5 | S5-F2 Cascada de la cuenta custodia | aprobada |
 | 5 | S5-F3 Modo vivir | aprobada |
 | 5 | S5-F4 Avance de la deuda | aprobada |
-| 5 | S5-F5 Aviso de abono | aprobada |
+| 5 | S5-F5 Aviso de abono | retirada en v3 (la participación se recompra sola con el arriendo) |
 | 5 | S5-F6 Inicio: Mi camino | aprobada |
 | 6 | S6-F1 Invertir aquí | aprobada |
 | 6 | S6-F2 Información para invertir | aprobada |
@@ -327,12 +327,12 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 7 | S7-F4 Explicaciones a un toque | rechazada |
 | 7 | S7-F5 Revisión en 360 px | aprobada |
 | 7 | S7-F6 Introducción | aprobada |
-| 8 | S8-F0 Modelo v3 en las fórmulas | pendiente |
-| 8 | S8-F5 Datos de ejemplo v3 | pendiente |
-| 8 | S8-F1 Fórmula de preaprobación | pendiente |
-| 8 | S8-F2 Postula con preaprobación | pendiente |
-| 8 | S8-F3 Documentos de ejemplo precargados | pendiente |
-| 8 | S8-F4 Resultado de la preaprobación | pendiente |
+| 8 | S8-F0 Modelo v3 en las fórmulas | aprobada |
+| 8 | S8-F5 Datos de ejemplo v3 | aprobada |
+| 8 | S8-F1 Fórmula de preaprobación | aprobada |
+| 8 | S8-F2 Postula con preaprobación | aprobada |
+| 8 | S8-F3 Documentos de ejemplo precargados | aprobada |
+| 8 | S8-F4 Resultado de la preaprobación | aprobada |
 | 9 | S9-F1 Tu mes real | pendiente |
 | 9 | S9-F2 Tus caminos | pendiente |
 | 9 | S9-F3 Todavía no | pendiente |

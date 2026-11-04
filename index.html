@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#28892B">
-  <meta name="description" content="Primer Peldaño de Bci: tu primer departamento poniendo el 5&nbsp;% del precio.">
+  <meta name="description" content="Primer Peldaño de Bci: tu primer departamento, con el pie en cuotas que sí puedes pagar.">
   <title>Primer Peldaño · Bci</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2328892B'/%3E%3Cpath d='M8 24h6v-5h5v-5h5V8' fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="manifest" href="manifest.webmanifest">
@@ -43,17 +43,16 @@
 
   <div class="app">
     <main>
-      <!-- ===== Inicio: simulador ===== -->
       <!-- ===== Introducción (S7-F6): solo la primera vez, antes de Inicio ===== -->
       <section id="pantalla-intro" class="pantalla intro" aria-labelledby="titulo-intro" hidden>
         <div class="figuras" aria-hidden="true"><span class="f-cuadrado"></span><span class="f-circulo"></span><span class="f-triangulo"></span><span class="f-rectangulo"></span></div>
         <p class="marca-intro">Bci<span class="sep" aria-hidden="true">·</span>Primer Peldaño</p>
-        <h1 id="titulo-intro" class="display-4">Tu departamento con el 5&nbsp;% del precio</h1>
-        <p class="texto-apoyo">Lo pagan entre tres partes, y tú pones la más chica.</p>
+        <h1 id="titulo-intro" class="display-4">Tu primer departamento, con el pie en cuotas</h1>
+        <p class="texto-apoyo">Te mostramos con tus números el camino que te sirve.</p>
         <ul class="lista-check intro-lista">
-          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Bci te presta el 80&nbsp;%<small>Un crédito hipotecario a 30 años, que pagas junto a tu pareja.</small></span></li>
-          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Inversionistas te prestan el 15&nbsp;%<small>A 10 años, con la garantía de una segunda hipoteca.</small></span></li>
-          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Tú pones el 5&nbsp;% y los gastos<small>Con tu ahorro, propio o grupal: nadie lo pone por ti.</small></span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Bci te presta el 80 o 90&nbsp;%<small>Un crédito a 30 años con subsidio a la tasa, que pagas junto a tu pareja.</small></span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Para arrendar, inversionistas ponen el 15&nbsp;%<small>No te cobran cuota: el arriendo les recompra su parte.</small></span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Tú pones el 5 o 10&nbsp;% y los gastos<small>En cuotas, en una cuenta de Bci: tu dinero queda protegido.</small></span></li>
         </ul>
         <p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Sin promesas de plusvalía</p>
         <div class="accion"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-empezar-intro">Empezar</button></div>
@@ -73,7 +72,7 @@
           <h1 id="titulo-proyectos" class="h2">Proyectos</h1>
           <p class="texto-apoyo">Únete a una compra o financia tu pie.</p>
           <div class="filtro">
-            <span class="chip chip-ia" id="proyectos-ia"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Filtrado por IA: 4,5&nbsp;% o más</span>
+            <span class="chip chip-ia" id="proyectos-ia"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Filtrado por IA: rinde 3,9&nbsp;% o más</span>
             <p class="texto-apoyo" id="proyectos-modo"></p>
             <a href="#perfil" class="enlace">Cambiar</a>
             <button type="button" class="chip chip-filtro" id="filtro-alcanza" aria-pressed="false" hidden></button>
@@ -81,8 +80,8 @@
         </header>
 
         <div class="pestanas" role="tablist" aria-label="Tipo de proyecto">
-          <button type="button" role="tab" id="tab-conjunto" data-pestana="conjunto" aria-controls="panel-proyectos">Compra en conjunto</button>
-          <button type="button" role="tab" id="tab-financiamiento" data-pestana="financiamiento" aria-controls="panel-proyectos">Financiamiento del pie</button>
+          <button type="button" role="tab" id="tab-conjunto" data-pestana="conjunto" aria-controls="panel-proyectos">Compra en grupo</button>
+          <button type="button" role="tab" id="tab-financiamiento" data-pestana="financiamiento" aria-controls="panel-proyectos">Pie compartido</button>
         </div>
 
         <div id="panel-proyectos" role="tabpanel">
@@ -90,8 +89,8 @@
           <ul class="lista-proyectos" id="lista-proyectos"></ul>
           <div class="vacio" id="proyectos-vacio" hidden>
             <svg aria-hidden="true"><use href="#i-proyectos"/></svg>
-            <h2 class="h3" id="vacio-titulo">Ningún proyecto rinde 4,5&nbsp;% hoy</h2>
-            <p class="texto-apoyo" id="vacio-texto">Para arrendar, la IA solo muestra departamentos que rinden 4,5&nbsp;% o más al año.</p>
+            <h2 class="h3" id="vacio-titulo">Ningún proyecto rinde 3,9&nbsp;% hoy</h2>
+            <p class="texto-apoyo" id="vacio-texto">Para arrendar, la IA solo muestra departamentos cuyo arriendo neto rinde 3,9&nbsp;% o más al año.</p>
             <div class="acciones">
               <button type="button" class="btn btn-primario btn-bloque" id="btn-vacio-accion" data-accion="vivir">Cambiar a modo vivir</button>
             </div>
