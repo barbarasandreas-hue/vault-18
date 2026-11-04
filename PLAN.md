@@ -349,6 +349,49 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
   - Revisión de todas las pantallas a 360 y 390 px, con movimiento reducido y con lector de pantalla.
   - Con un script de Playwright, se cuenta el texto visible antes y después: cada pantalla con una visualización nueva debe tener menos palabras que antes.
 
+
+## Sprint 13 · Volver a la app
+
+**Objetivo:** que haya una razón concreta para abrir la app cada mes durante los meses de ahorro y de obra, y después de comprar. Sin cobrar por ahorrar, sin culpa y sin promesas de plusvalía.
+
+> Referentes (investigación del 4-nov-2026, `claude/retencion-referentes-nov2026.md` en el proyecto):
+> - **Recordatorios:** los que nombran la meta concreta suben el ahorro 16 %; los genéricos no tienen efecto (Karlan y otros, NBER 16205).
+> - **Nuevo comienzo:** al inicio de mes, los compromisos con una meta suben 23,6 % (Dai, Milkman y Riis, 2014).
+> - **Progreso regalado y rachas:** Nunes y Drèze; Duolingo.
+> - **Ahorro de a dos y aportes de la familia:** Moneybox (Housemates y Gifts), Nude (Team up) y HomeFundIt.
+> - **Avance de obra con fotos, cuotas y avisos:** MobySuite, la app que usan inmobiliarias chilenas.
+> - **Ver crecer lo tuyo:** Zillow.
+> - **Lo que ahuyenta:** cobrar por ahorrar, no poder pausar y retiros lentos.
+
+- **S13-F1 Avisos con tu meta.**
+  - Una campana en el encabezado abre "Avisos", con una lista de avisos simulados en el formato de una notificación del teléfono.
+  - Cada aviso nombra la meta concreta: "Faltan 7 meses para tu departamento en Independencia". Nunca dice "Recuerda ahorrar".
+  - Los avisos de cuota llegan el día 1 de cada mes ("Nuevo mes: tu cuota de $800.000"). Si se usó "Este mes no pude", el aviso dice "Nuevo mes, nueva racha", sin culpa.
+  - Máximo 1 aviso por semana. En Perfil se pueden apagar por tipo: cuota, grupo, obra y departamento.
+  - Las reglas de qué aviso toca viven en `js/calculos.js` (`avisosDelMes`), con pruebas.
+- **S13-F2 Cuota automática y pausa.**
+  - En Tu pie, el interruptor "Pagar mi cuota sola el día 5" (simulado) lleva un ícono de calendario.
+  - Si está activo, "Simular un mes" cuenta la cuota sola, y "Este mes no pude" actúa como pausa.
+  - La salida sin multa se ve siempre, con un toque.
+- **S13-F3 Juntos.**
+  - **"Invita a tu pareja"** (simulado): la pareja ve el mismo avance porque el crédito es de los dos. Se muestran dos avatares en la alcancía.
+  - **"Regalo para tu pie"** (simulado): un enlace para que la familia aporte a la cuenta Bci del usuario. Se ve como una tarjeta con el monto aportado y quién aportó, con la relación (por ejemplo, "mamá") y nunca con nombres.
+  - Es la puerta de entrada al respaldo familiar.
+- **S13-F4 Tu grupo y tu obra** (compra en grupo).
+  - **Más cupos, más descuento:** "Con 1 persona más, el descuento sube a 5 %" (`cuposParaMasDescuento`, con pruebas) y un botón para compartir el proyecto (simulado). Así, invitar tiene un motivo real.
+  - **Avance de obra:** una línea de tiempo con 5 hitos (excavación, obra gruesa, terminaciones, recepción y escritura). Cada hito lleva una ilustración, la fecha estimada y la etapa actual marcada.
+  - En `js/datos.js`, cada proyecto en grupo agrega `etapaObra` y `entregaEstimada`.
+- **S13-F5 Lo tuyo creció este mes** (después de comprar).
+  - En Mi departamento, la tarjeta de cada mes dice "Lo tuyo creció $X": la recompra más lo que bajó la deuda con Bci, **sin plusvalía**.
+  - Junto a la tarjeta se ve el total "Lo tuyo hoy" (`patrimonioUF`: precio − saldo Bci − parte de los inversionistas, con pruebas).
+  - El aviso mensual del departamento usa esta cifra.
+  - Para quien invierte, el aviso es "Recibiste $9.204 de Edificio Jardín Independencia".
+- **S13-F6 Medición en la sesión de prueba.**
+  - Se agregan dos preguntas al registro:
+    - "¿Volverías a abrir la app el próximo mes?" (sí, tal vez, no);
+    - "¿Qué aviso te haría volver?", para elegir entre los de S13-F1.
+  - El texto exportado las incluye.
+
 ---
 
 ## Estado
@@ -425,3 +468,9 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 12 | S12-F4 Firma y Mi departamento | pendiente |
 | 12 | S12-F5 Invertir y Mis inversiones | pendiente |
 | 12 | S12-F6 Errores y revisión final | pendiente |
+| 13 | S13-F1 Avisos con tu meta | pendiente |
+| 13 | S13-F2 Cuota automática y pausa | pendiente |
+| 13 | S13-F3 Juntos | pendiente |
+| 13 | S13-F4 Tu grupo y tu obra | pendiente |
+| 13 | S13-F5 Lo tuyo creció este mes | pendiente |
+| 13 | S13-F6 Medición en la sesión de prueba | pendiente |
