@@ -210,6 +210,37 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 - **S7-F5 Revisión en 360 px.** Ningún texto cortado ni scroll horizontal en ninguna pantalla.
 - **S7-F6 Introducción.** Una primera pantalla, solo la primera vez y antes de Inicio, con el mensaje "Tu departamento con el 5 % del precio" y una lista con check de las 3 partes (Bci, inversionistas, tú). No repite el cálculo de cuánto puede comprar, que es lo que hace Inicio.
 
+## Sprint 8 · Preaprobación simulada
+
+**Objetivo:** que el usuario viva la preaprobación del crédito como en un banco, sin entregar datos reales. Sube documentos de ejemplo que ya vienen cargados en la app y obtiene un monto preaprobado (simulado), con lo que falta para la aprobación final.
+
+> Los demás ítems del Sprint 8 (pantalla "Tus caminos", crédito según el modo y registro de la sesión de prueba) se agregan cuando `CLAUDE.md` y `SPEC.md` se actualicen al modelo del brief común (v3).
+
+- **S8-F1 Fórmula de preaprobación.** `preaprobacion(sueldoPropio, sueldoPareja, otrasCuotas)` en `js/calculos.js`, con pruebas.
+  - Dividendo máximo = el menor entre 25 % de la renta (propio + pareja) y 30 % de la renta menos las otras cuotas.
+  - Crédito máximo en UF enteras, hacia abajo, con la tasa, el plazo y los seguros de `SUPUESTOS` (4,5 %, 360 meses, UF 0,7).
+  - $1.500.000 + $1.000.000, sin otras cuotas → UF 2.865 (dividendo de $624.867).
+  - $1.500.000 + $1.000.000, con $200.000 de otras cuotas → UF 2.505.
+  - $1.500.000 + $1.000.000, con $500.000 de otras cuotas → UF 1.063.
+  - Requisito de renta (referencial, Bci): el titular gana al menos UF 23, **o** la renta familiar es de al menos UF 39 y la pareja gana al menos UF 16. Si no cumple, devuelve `{ cumple: false, motivo }`. $800.000 sin pareja → no cumple; $800.000 + $900.000 → cumple.
+  - Sin sueldos → `null`.
+- **S8-F2 Postula con preaprobación.** El paso 1 de Mi compra pasa a tener tres partes: Tus datos → Tus documentos → Resultado.
+  - Tus datos: los sueldos (prellenados, como hoy), un campo nuevo "Otras cuotas al mes" (teclado numérico, $0 por defecto) y el tipo de contrato (indefinido, plazo fijo o independiente).
+  - Dos caminos: **"Soy cliente Bci"** (se salta los documentos y muestra un estado de carga de ≈ 1 s) o **"No soy cliente: subir documentos"**.
+- **S8-F3 Documentos de ejemplo precargados.**
+  - Lista con check: últimas 3 liquidaciones de sueldo, certificado de cotizaciones de la AFP (12 meses), contrato de trabajo o certificado de antigüedad, y carnet de identidad por ambos lados. Cada uno con una frase sobre para qué lo pide el banco.
+  - "Subir" abre una hoja inferior con 2 o 3 archivos **ya cargados en la app** (por ejemplo, `liquidacion_septiembre.pdf`). Sus miniaturas son SVG dibujados en el código: un rectángulo con líneas grises, el título del documento y la marca "DOCUMENTO DE EJEMPLO".
+  - Los documentos no muestran nombres de personas, RUT, montos ni logos de empresas reales. La preaprobación usa los sueldos que escribió el usuario.
+  - Al elegir uno: barra de carga de ≈ 1 s (sin animación con `prefers-reduced-motion`), luego el check y el nombre del archivo. Se puede cambiar.
+  - No usa `<input type="file">`: nada se lee, se guarda ni se envía. Se lee la frase "En esta demo tus archivos no se guardan ni se envían".
+  - Zonas táctiles de 44 × 44 px. Al completar la lista, el foco pasa al botón "Ver mi preaprobación" y se anuncia.
+- **S8-F4 Resultado de la preaprobación.**
+  - Número protagonista: "Preaprobado (simulado) hasta UF 2.865" y, debajo, "Dividendo de hasta $624.867 al mes".
+  - Si no cumple: un mensaje sin juicio (palabra + ícono, no solo color) y qué cambiar (sumar la renta de la pareja, bajar otras cuotas), con la opción de editar los datos.
+  - Se lee "La aprobación final depende de la tasación y del estudio de títulos del departamento", y una lista numerada de lo que falta: tasación, estudio de títulos y escritura.
+  - Acción principal: seguir al paso siguiente (Tu 5 %).
+  - Los documentos marcados y el resultado se guardan en `localStorage`. "Empezar de nuevo" los borra.
+
 ---
 
 ## Estado
@@ -258,3 +289,7 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 7 | S7-F4 Explicaciones a un toque | rechazada |
 | 7 | S7-F5 Revisión en 360 px | aprobada |
 | 7 | S7-F6 Introducción | aprobada |
+| 8 | S8-F1 Fórmula de preaprobación | pendiente |
+| 8 | S8-F2 Postula con preaprobación | pendiente |
+| 8 | S8-F3 Documentos de ejemplo precargados | pendiente |
+| 8 | S8-F4 Resultado de la preaprobación | pendiente |
