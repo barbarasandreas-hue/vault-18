@@ -2,30 +2,58 @@
 
 App de Bci para que jóvenes profesionales compren su primer departamento sin tener que juntar el pie completo. Es un prototipo para el Taller de Interacción IV (UDD), desafío Bci Labs. El dinero, los inversionistas y la parte legal son simulados; los cálculos son reales. La app debe ser facil de comprender para el usuario. La idea es que sea un marketplace de departamentos en done el usario vea proyectos donde se puede unir, tanto de compras en junto como de financiamiento para el pie.
 
-## El modelo
+## El modelo (v3, 4-nov-2026)
 
-- **Bci** presta el 80% del precio con un crédito hipotecario mancomunado (el usuario y su pareja postulan juntos), a 30 años y 4,5%.
-- **Inversionistas** del marketplace prestan el 15% del precio a 10 años, a UF + 8%, con segunda hipoteca: el usuario reúne ese 15% con su ayuda.
-- **El usuario** pone por sí solo el 5% del precio más ≈ 2% de gastos de escritura, con ahorro propio o un ahorro grupal corto donde cada uno junta su propio 5% y nadie queda debiendo.
-- **Compra en lote** (10% de descuento sobre el precio total) o **individual** (precio de lista).
-- **Para arrendar** (el arriendo entra a una cuenta custodia de Bci, que paga primero el dividendo, luego a los inversionistas, y el usuario completa la diferencia) o **para vivir** (el usuario paga todo, en vez de su arriendo actual).
-- La IA arma los lotes, filtra departamentos donde el arriendo rinde 4,5% o más al año y avisa cuándo conviene abonar. Nunca promete plusvalía.
+Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el pie a cuotas que el usuario sí puede pagar, compara con sus números los caminos reales que existen y lo acompaña hasta escriturar. El recorrido tiene cuatro pasos: **Traducir → Elegir → Sostener → Llegar**.
+
+### Crédito según el modo
+
+- **Para vivir:** Bci presta el 90% con la garantía estatal FOGAES (primera vivienda, intención de habitarla, hasta UF 4.500) y el subsidio a la tasa (Ley 21.836). El usuario pone el 10% de pie.
+- **Para invertir:** Bci presta el 80% con el subsidio a la tasa (exige primera venta, no primera vivienda, así que sirve para invertir). **Sin FOGAES**, que queda guardado para la vivienda futura del usuario.
+- Crédito mancomunado (usuario y pareja), a 30 años. Tasa con subsidio: 3,9% (4,5% − 0,6). Si se acaban los cupos del subsidio, 4,5%.
+
+### Los caminos
+
+| Camino | Modo | Qué hace |
+|---|---|---|
+| **A · Compra en grupo** | Vivir o invertir | Bci reúne compradores preaprobados. Descuento real de 3% (5 unidades) a 5% (10 unidades), en uno o varios proyectos de la misma inmobiliaria en una zona. El pie se paga en cuotas durante la construcción, en una **cuenta de ahorro bloqueada en Bci** (art. 138 bis de la LGUC); la inmobiliaria lo recibe solo al escriturar. Salida sin multa si Bci no aprueba el crédito final o si la tasación sale menor que el precio. |
+| **B · Pie compartido** | Invertir | Inversionistas ponen el 15% como **participación en el valor** (no es un préstamo). Reciben una renta de 6% anual en UF sobre su parte, y con el resto del arriendo el comprador les **recompra** su parte cada mes. Ganancias y pérdidas se reparten según la parte de cada uno; **sin recurso al sueldo** del comprador. El comprador pone el 5% con ahorro propio. Comprador de respaldo y venta asistida antes del remate. |
+| **A + B** | Invertir | Grupo + pie compartido: el comprador pone el 5% del precio con descuento. |
+| **Arriendo con opción de compra** | Vivir | Ficha informativa: parte de la mensualidad va al pie (referente: Hogarízate). |
+| **Respaldo familiar** | Vivir o invertir | Ficha informativa: un familiar deja el 10% en una cuenta bloqueada en Bci ≈ 5 años y lo recupera con intereses (referente: Barclays Family Springboard). |
+| **Todavía no** | Los dos | Cuando ningún camino es sostenible, la app lo dice y muestra qué cambiar (ver "Tu mes real"). |
+
+**Comprar más barato** es un filtro sobre todos los caminos: estudio, 1 dormitorio, usado, IVA cero (Ley 21.850, del 1-dic-2026 al 1-dic-2027).
+
+### Reglas que no se rompen
+
+- **Nunca bono pie:** el precio de la escritura es siempre el real.
+- **Nunca un préstamo de inversionistas a UF + 8%:** supera la tasa máxima convencional (6,51% en UF hasta UF 2.000 y 6,03% sobre ese monto; CMF, 15-sep-2026).
+- La inmobiliaria **no puede ser inversionista** de sus propias unidades.
+- El dinero del usuario siempre está en cuentas de Bci; nunca en un fondo común de la app (art. 39 de la Ley General de Bancos).
+- Siempre se muestra el escenario sin plusvalía y el peor caso.
+
+### La IA
+
+- **Recomendar el camino = reglas transparentes**, escritas en `js/calculos.js` y explicadas en pantalla ("Te recomendamos B porque…"). No se llama IA a una regla.
+- **Estimar el arriendo de cada departamento = el modelo de IA** (en la demo, valores precalculados por comuna y tipología, con un error de 10% o menos como hipótesis). Con ese arriendo se calcula la rentabilidad y el plazo de recompra.
 
 ## Supuestos de cálculo
 
 - UF de referencia: $41.065.
 - Seguros del crédito: ≈ UF 0,7 al mes.
-- Arriendo neto = arriendo bruto − 10% de administración − 1 mes vacío al año.
-- Límite de carga: dividendo + cuota a inversionistas ≤ 25% del ingreso es holgado; hasta 30% está en el límite; sobre 30% no aprueba.
-- Departamento de referencia: UF 2.500 para arrendar, UF 3.000 para vivir.
-
+- Arriendo neto = arriendo bruto × 0,9 (administración) × 11/12 (1 mes vacío al año). Peor caso: arriendo 10% más bajo.
+- Rentabilidad neta = arriendo neto × 12 / precio. En modo invertir la IA solo muestra departamentos con rentabilidad neta ≥ 3,9% (la tasa con subsidio).
+- Límite de carga: dividendo ≤ 25% del ingreso líquido familiar, y dividendo + otras cuotas ≤ 30%. Sobre eso, no aprueba.
+- **Tu mes real:** ingreso líquido − arriendo que paga hoy (si sigue arrendando) − otras cuotas − dividendo. Si no cumple el límite de carga, o si queda menos del 40% del ingreso para vivir (supuesto de diseño, a validar en las sesiones), el camino es "Todavía no".
+- Departamento de referencia: UF 2.500 de lista. Comunas de los ejemplos: Independencia, Quinta Normal, Recoleta y Estación Central.
 
 ## Reglas de diseño y contenido
 
 - Interfaz en español de Chile. Usar "dinero", nunca "plata".
 - Escribir siempre "departamento" completo, nunca "depto." ni "dpto.".
 - No usar nombres de personas en la interfaz; hablar de "usuario" o "cliente" O "inversionista".
-- No usar el auto como forma de juntar el pie.
+- No usar el auto como forma de juntar el pie. Sí se puede mostrar, en "Todavía no", que terminar de pagar una cuota libera capacidad.
 - Seguir el **Bci Kit**, la guía de diseño de Bci: https://www.bci.cl/corporativo/documentacion
   - Colores: cuatro familias (azul, verde, amarillo y rojo) más grises. Cada familia tiene tonos `dark`, `normal`, `80`, `60`, `40` y `20`, y los grises van de `dark` a `light`. Usar variables con esos nombres: `--blue-dark`, `--blue-normal`, `--blue-80` … `--blue-20`, `--green-*`, `--yellow-*`, `--red-*`, `--gray-dark`, `--gray-semidark`, `--gray-neutral`, `--gray-semilight`, `--gray-light`, `--white`.
   - Los valores oficiales (colores, tipografía, botones, formularios) están en `docs/bci-kit.md`, tomados de la página del Bci Kit. Rojo y amarillo no tienen tono `dark` en la guía: se usan los derivados de ese documento.

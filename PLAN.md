@@ -210,18 +210,31 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 - **S7-F5 Revisión en 360 px.** Ningún texto cortado ni scroll horizontal en ninguna pantalla.
 - **S7-F6 Introducción.** Una primera pantalla, solo la primera vez y antes de Inicio, con el mensaje "Tu departamento con el 5 % del precio" y una lista con check de las 3 partes (Bci, inversionistas, tú). No repite el cálculo de cuánto puede comprar, que es lo que hace Inicio.
 
-## Sprint 8 · Preaprobación simulada
+## Sprint 8 · Modelo v3 y preaprobación simulada
 
 **Objetivo:** que el usuario viva la preaprobación del crédito como en un banco, sin entregar datos reales. Sube documentos de ejemplo que ya vienen cargados en la app y obtiene un monto preaprobado (simulado), con lo que falta para la aprobación final.
 
-> Los demás ítems del Sprint 8 (pantalla "Tus caminos", crédito según el modo y registro de la sesión de prueba) se agregan cuando `CLAUDE.md` y `SPEC.md` se actualicen al modelo del brief común (v3).
+> Modelo v3 en `CLAUDE.md` y números de referencia en `SPEC.md`, sección 0. **S8-F0 va primero:** hasta que esté aprobado, la app muestra un préstamo a UF + 8% que supera la tasa máxima legal.
+
+- **S8-F0 Modelo v3 en las fórmulas (hacer primero).** `js/calculos.js` y sus pruebas pasan al modelo v3.
+  - Se elimina el préstamo de inversionistas con cuota fija a UF + 8% (`tasaInversionistas`, `cuotaInversionistas` y donde se usen). `grep -rn "0.08\|UF + 8" js/ index.html` sale vacío.
+  - Crédito según el modo: vivir = 90% (FOGAES) y pie de 10%; invertir = 80% y pie del usuario de 5% + 15% de participación de inversionistas. Tasa con subsidio 3,9%; `SUPUESTOS.tasaSinSubsidio` = 4,5%.
+  - Descuento de grupo: 3% desde 5 unidades y 5% desde 10 (reemplaza el 10% fijo).
+  - Nuevas fórmulas: `participacionUF(precio)`, `rentaParticipacionUF(saldo)` (6% anual / 12), `mesesRecompra(precio, arriendoBruto, fraccion)` con tope de 84 meses.
+  - Pruebas con la tabla de `SPEC.md`, sección 0: dividendos $464.549 / $442.759 / $416.127 / $396.758; sin subsidio $496.904 / $473.496 / $444.886 / $424.079; recompra 51, 66, 57 y 74 meses (individual) y 48, 62, 54 y 70 (grupo). Diferencia aceptada: ±$1 y ±1 mes.
+  - Filtro de rentabilidad: neta ≥ 3,9% en modo invertir.
+  - Las pantallas existentes que usaban la cuota de inversionistas pasan a mostrar "Participación de inversionistas: 15% (sin cuota para ti)", hasta que el Sprint 10 haga la recompra completa.
+- **S8-F5 Datos de ejemplo v3.** `js/datos.js` con proyectos en Independencia, Quinta Normal, Recoleta y Estación Central (sin Ñuñoa, Santiago Centro, La Florida ni Las Condes).
+  - Rentabilidad bruta entre 4,0% y 5,0% (referencia: 4,5–4,7% en 1 dormitorio, Transsa 2025); al menos 2 departamentos bajo el filtro de 3,9% neto.
+  - Al menos un estudio (≈ UF 1.200) y un 1 dormitorio (≈ UF 1.750) para el filtro "Comprar más barato".
+  - Cada departamento tiene `arriendoEstimadoIA` y `origenArriendo: 'estimación IA (demo)'`.
 
 - **S8-F1 Fórmula de preaprobación.** `preaprobacion(sueldoPropio, sueldoPareja, otrasCuotas)` en `js/calculos.js`, con pruebas.
   - Dividendo máximo = el menor entre 25 % de la renta (propio + pareja) y 30 % de la renta menos las otras cuotas.
-  - Crédito máximo en UF enteras, hacia abajo, con la tasa, el plazo y los seguros de `SUPUESTOS` (4,5 %, 360 meses, UF 0,7).
-  - $1.500.000 + $1.000.000, sin otras cuotas → UF 2.865 (dividendo de $624.867).
-  - $1.500.000 + $1.000.000, con $200.000 de otras cuotas → UF 2.505.
-  - $1.500.000 + $1.000.000, con $500.000 de otras cuotas → UF 1.063.
+  - Crédito máximo en UF enteras, hacia abajo, a 360 meses con seguros UF 0,7. Por defecto con la tasa con subsidio (3,9%); la pantalla dice "con subsidio a la tasa".
+  - $1.500.000 + $1.000.000, sin otras cuotas → UF 3.078 (sin subsidio: UF 2.865).
+  - $1.500.000 + $1.000.000, con $200.000 de otras cuotas → UF 2.691 (sin subsidio: UF 2.505).
+  - $1.500.000 + $1.000.000, con $500.000 de otras cuotas → UF 1.142 (sin subsidio: UF 1.063).
   - Requisito de renta (referencial, Bci): el titular gana al menos UF 23, **o** la renta familiar es de al menos UF 39 y la pareja gana al menos UF 16. Si no cumple, devuelve `{ cumple: false, motivo }`. $800.000 sin pareja → no cumple; $800.000 + $900.000 → cumple.
   - Sin sueldos → `null`.
 - **S8-F2 Postula con preaprobación.** El paso 1 de Mi compra pasa a tener tres partes: Tus datos → Tus documentos → Resultado.
@@ -235,11 +248,36 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
   - No usa `<input type="file">`: nada se lee, se guarda ni se envía. Se lee la frase "En esta demo tus archivos no se guardan ni se envían".
   - Zonas táctiles de 44 × 44 px. Al completar la lista, el foco pasa al botón "Ver mi preaprobación" y se anuncia.
 - **S8-F4 Resultado de la preaprobación.**
-  - Número protagonista: "Preaprobado (simulado) hasta UF 2.865" y, debajo, "Dividendo de hasta $624.867 al mes".
+  - Número protagonista: "Preaprobado (simulado) hasta UF 3.078 de crédito" y, debajo, "Dividendo de hasta $624.925 al mes, con subsidio a la tasa".
   - Si no cumple: un mensaje sin juicio (palabra + ícono, no solo color) y qué cambiar (sumar la renta de la pareja, bajar otras cuotas), con la opción de editar los datos.
   - Se lee "La aprobación final depende de la tasación y del estudio de títulos del departamento", y una lista numerada de lo que falta: tasación, estudio de títulos y escritura.
   - Acción principal: seguir al paso siguiente (Tu 5 %).
   - Los documentos marcados y el resultado se guardan en `localStorage`. "Empezar de nuevo" los borra.
+
+## Sprint 9 · Tus caminos y Todavía no
+
+**Objetivo:** que el usuario vea con sus números un camino recomendado (o "Todavía no"), lo entienda y lo elija; y que la sesión de prueba quede registrada.
+
+- **S9-F1 Tu mes real.** Ingreso líquido familiar − arriendo actual (en modo invertir sigue arrendando donde vive) − otras cuotas − dividendo = lo que queda para vivir, en pesos y en %.
+  - Número protagonista: lo que queda al mes. Si es menos del 40% del ingreso, aviso (supuesto de diseño; ver `CLAUDE.md`).
+- **S9-F2 Tus caminos.** Las reglas de recomendación de `SPEC.md`, sección 0, en `js/calculos.js` (`recomendarCamino(perfil)`), con pruebas de cada regla.
+  - Arriba, **un** camino recomendado con su razón en una frase ("Te recomendamos A + B porque inviertes y tu ahorro es menor al 20%"). Debajo, "Ver otros caminos".
+  - Cada camino: pie que pone el usuario, cuota mensual, meses, peor caso y si existe hoy o es una propuesta.
+  - Nunca se dice "la IA recomienda" para una regla: se dice "Te recomendamos… porque…".
+- **S9-F3 Todavía no.** Si no cumple la carga o "Tu mes real": título "Todavía no te conviene", sin juicio, y hasta 3 cambios calculados (por ejemplo, "Si terminas una cuota de $500.000, tu carga baja a X%", "Con un estudio de UF 1.200, tu pie es $Y", "Ahorrando $Z durante N meses llegas"). Acción: "Recordarme en N meses" (simulado).
+- **S9-F4 Fichas de caminos informativos.** Arriendo con opción de compra y respaldo familiar: cómo funciona en 3 pasos, números con el departamento de referencia, peor caso, referente real y "Me interesa" (se guarda en el registro).
+- **S9-F5 Comprar más barato.** Filtro en Proyectos: estudio, 1 dormitorio, usado (−17,6%) e IVA cero (−6,5%, del 1-dic-2026 al 1-dic-2027). Muestra cuánto baja el pie.
+- **S9-F6 Registro de la sesión de prueba.** Pantalla para la facilitadora (acceso desde Perfil): plazo que la usuaria cree necesitar antes y después, camino elegido, explicación (0–3), confianza (1–5) y los "Me interesa". Se exporta como texto para copiar.
+
+## Sprint 10 · Pie compartido, pie en cuotas y Sostener
+
+**Objetivo:** que los dos caminos propios (A y B) se puedan recorrer completos y que el usuario sostenga el ahorro.
+
+- **S10-F1 Pie compartido (B) en Mi departamento.** Cascada de la cuenta custodia: arriendo → administración → dividendo (lo paga el usuario) → renta de los inversionistas → recompra. "Casa que se va pintando" con el % que ya es tuyo, "te faltan X meses", selector 100% / 80% del arriendo y escenario peor caso.
+- **S10-F2 Comprador de respaldo y "¿Y si me arrepiento?".** Para el inversionista, la casilla "Quiero ser comprador de respaldo". Para el comprador, el orden de pago si vende en el mes actual (Bci, inversionistas según su parte, costos, el resto para él) y la venta asistida si atrasa 2 dividendos.
+- **S10-F3 Pie en cuotas (A).** Cuotas mensuales en la cuenta bloqueada de Bci, "Tu dinero está en Bci, no en la inmobiliaria", salida sin multa (crédito no aprobado o tasación menor) y avance del grupo.
+- **S10-F4 Sostener.** Racha de cuotas, avance con hitos y "Este mes no pude" como protector de racha (una vez cada 6 meses), sin castigo.
+- **S10-F5 Pendientes del Sprint 7.** El "?" responde al primer toque y tiene una zona tocable de 44 px; la carga no secuestra la navegación ni cambia el alto del botón; `location.replace` al empezar.
 
 ---
 
@@ -289,7 +327,20 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 7 | S7-F4 Explicaciones a un toque | rechazada |
 | 7 | S7-F5 Revisión en 360 px | aprobada |
 | 7 | S7-F6 Introducción | aprobada |
+| 8 | S8-F0 Modelo v3 en las fórmulas | pendiente |
+| 8 | S8-F5 Datos de ejemplo v3 | pendiente |
 | 8 | S8-F1 Fórmula de preaprobación | pendiente |
 | 8 | S8-F2 Postula con preaprobación | pendiente |
 | 8 | S8-F3 Documentos de ejemplo precargados | pendiente |
 | 8 | S8-F4 Resultado de la preaprobación | pendiente |
+| 9 | S9-F1 Tu mes real | pendiente |
+| 9 | S9-F2 Tus caminos | pendiente |
+| 9 | S9-F3 Todavía no | pendiente |
+| 9 | S9-F4 Fichas de caminos informativos | pendiente |
+| 9 | S9-F5 Comprar más barato | pendiente |
+| 9 | S9-F6 Registro de la sesión de prueba | pendiente |
+| 10 | S10-F1 Pie compartido en Mi departamento | pendiente |
+| 10 | S10-F2 Comprador de respaldo y ¿Y si me arrepiento? | pendiente |
+| 10 | S10-F3 Pie en cuotas | pendiente |
+| 10 | S10-F4 Sostener | pendiente |
+| 10 | S10-F5 Pendientes del Sprint 7 | pendiente |

@@ -4,9 +4,64 @@ Especificación del producto. La fuente de verdad del modelo y de las reglas es 
 
 ---
 
+## 0. Versión 3: qué cambia
+
+### Pantallas nuevas o cambiadas
+
+| Pantalla | Qué hace | Sprint |
+|---|---|---|
+| Inicio · Traducir | Modo (vivir o invertir), sueldos, arriendo actual y otras cuotas → "Puedes comprar hasta UF X pagando $Y al mes" | 8 |
+| Postula con preaprobación | Tus datos → documentos de ejemplo precargados (o "Soy cliente Bci") → "Preaprobado (simulado) hasta UF X" | 8 |
+| Tu mes real | Ingreso − arriendo actual − otras cuotas − dividendo: cuánto le queda para vivir | 9 |
+| Tus caminos | **Un camino recomendado** arriba, con su razón en una frase; los demás detrás de "Ver otros caminos". Tiempo, cuota y peor caso de cada uno | 9 |
+| Todavía no | Cuando ningún camino es sostenible: qué cambiar (terminar una cuota, ahorrar N meses más, una tipología más chica) y cuándo volver a mirar | 9 |
+| Fichas | Arriendo con opción de compra y respaldo familiar: cómo funciona, números y "Me interesa" (se registra) | 9 |
+| Proyectos | Filtro "Comprar más barato" (estudio, 1 dormitorio, usado, IVA cero). Comunas: Independencia, Quinta Normal, Recoleta, Estación Central | 9 |
+| Registro de la sesión de prueba | Plazo percibido antes y después, camino elegido, explicación (0–3), confianza (1–5), "Me interesa" | 9 |
+| Mi departamento (B) | Participación de los inversionistas, recompra con el arriendo (casa que se va pintando), comprador de respaldo, "¿Y si me arrepiento?" | 10 |
+| Tu pie (A) | Cuotas en la cuenta bloqueada de Bci, salida sin multa, avance del grupo | 10 |
+| Sostener | Racha, avance visible y protector de racha ("Este mes no pude") | 10 |
+
+### Reglas de recomendación (transparentes, en `js/calculos.js`)
+
+1. Si no cumple el límite de carga o "Tu mes real" → **Todavía no**.
+2. Modo vivir → **A · Compra en grupo** si hay un grupo en su zona y presupuesto; si no, crédito individual con FOGAES. Arriendo con opción de compra y respaldo familiar, como alternativas.
+3. Modo invertir y ahorro menor al 20% del precio → **A + B** si hay grupo; si no, **B**.
+4. Modo invertir y ahorro del 20% o más → **A** (o crédito individual al 80%).
+
+### Números de referencia v3 (UF $41.065, UF 2.500 de lista, tasa con subsidio 3,9%, 30 años, seguros UF 0,7)
+
+| Escenario | Precio | Crédito | Pie del usuario | Dividendo + seguros | Sin subsidio (4,5%) |
+|---|---|---|---|---|---|
+| Vivir individual (FOGAES 90%) | UF 2.500 | UF 2.250 | 10% = $10.266.250 | $464.549 | $496.904 |
+| Vivir en grupo (−5%) | UF 2.375 | UF 2.137,5 | 10% = $9.752.938 | $442.759 | $473.496 |
+| Invertir individual (80%) + B | UF 2.500 | UF 2.000 | 5% = $5.133.125 (15% de inversionistas = $15.399.375) | $416.127 | $444.886 |
+| Invertir en grupo + B | UF 2.375 | UF 1.900 | 5% = $4.876.469 (15% = $14.629.406) | $396.758 | $424.079 |
+
+**Recompra del pie compartido** (15%, renta de 6% anual en UF, arriendo bruto → neto × 0,9 × 11/12):
+
+| Arriendo bruto | 100% del arriendo a recompra | 80% del arriendo a recompra |
+|---|---|---|
+| $420.000 (individual / grupo) | 51 / 48 meses | 66 / 62 meses |
+| $380.000, peor caso (individual / grupo) | 57 / 54 meses | 74 / 70 meses |
+
+Tope de la recompra: 84 meses. Renta inicial de los inversionistas en UF 2.500: UF 1,875 al mes ($76.997).
+
+**Preaprobación** (dividendo máximo = el menor entre 25% de la renta y 30% de la renta menos otras cuotas):
+
+| Renta familiar | Otras cuotas | Con subsidio (3,9%) | Sin subsidio (4,5%) |
+|---|---|---|---|
+| $2.500.000 | $0 | UF 3.078 | UF 2.865 |
+| $2.500.000 | $200.000 | UF 2.691 | UF 2.505 |
+| $2.500.000 | $500.000 | UF 1.142 | UF 1.063 |
+
+---
+
 ## 1. Resumen
 
-Primer Peldaño es un marketplace de departamentos de Bci, para el teléfono, que permite a jóvenes profesionales comprar su primer departamento poniendo solo el 5 % del precio (más gastos), en vez del 20 %. En el marketplace el usuario ve proyectos y se une a ellos: **compras en conjunto** (varios compradores compran un lote con 10 % de descuento) o **financiamiento del pie** (inversionistas prestan el 15 % y el usuario pone el 5 %); Bci presta el 80 % restante. La app debe ser fácil de comprender: cada pantalla se entiende en 10 segundos.
+Primer Peldaño es una app de Bci, para el teléfono, que **traduce el pie a cuotas que el usuario sí puede pagar, compara con sus números los caminos reales para llegar a su primer departamento y lo acompaña hasta escriturar**. Los caminos son: compra en grupo (A), pie compartido con inversionistas (B), A + B, arriendo con opción de compra, respaldo familiar y "todavía no". El modelo está en `CLAUDE.md` (v3). La app debe ser fácil de comprender: cada pantalla se entiende en 10 segundos.
+
+> **Versión 3 (4-nov-2026).** La sección 0 manda sobre el resto de este documento. Lo que contradiga la sección 0 en las secciones 3 a 6 (préstamo de inversionistas a UF + 8%, crédito siempre al 80%, lote con 10% de descuento, filtro de 4,5%) es de la versión 2 y se reemplaza en los Sprints 8 a 10.
 
 ## 2. Usuario objetivo
 
