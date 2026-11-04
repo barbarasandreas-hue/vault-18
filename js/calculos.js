@@ -11,15 +11,19 @@ var SUPUESTOS = {
   segurosUF: 0.7,           // al mes
   rentaParticipacion: 0.06, // anual en UF, sobre la parte de los inversionistas (pie compartido)
   topeRecompraMeses: 84,    // si a los 84 meses no recompró todo, refinancia o vende
-  topeFogaesUF: 4500        // la garantía FOGAES llega a viviendas de hasta UF 4.500
+  topeFogaesUF: 4500,       // la garantía FOGAES llega a viviendas de hasta UF 4.500
+  pctCostosVenta: 0.02,     // supuesto de diseño: corretaje y gastos si el comprador vende
+  protectorCadaMeses: 6     // "Este mes no pude": una vez cada 6 meses
 };
 
 // Cómo se reparte el precio según para qué compra (modelo v3, CLAUDE.md).
 // vivir: 90 % Bci con FOGAES + 10 % de pie del usuario.
 // arrendar (invertir): 80 % Bci + 15 % de participación de inversionistas + 5 % del usuario.
+// propio (S10): para arrendar sin pie compartido (camino A solo o crédito al 80 %): el usuario pone el 20 %.
 var MODOS = {
   vivir: { credito: 0.90, usuario: 0.10, inversionistas: 0 },
-  arrendar: { credito: 0.80, usuario: 0.05, inversionistas: 0.15 }
+  arrendar: { credito: 0.80, usuario: 0.05, inversionistas: 0.15 },
+  propio: { credito: 0.80, usuario: 0.20, inversionistas: 0 }
 };
 function modoDe(modo) { return MODOS[modo] || MODOS.arrendar; }
 
@@ -829,6 +833,41 @@ function textoRegistro(registro, fechaISO) {
   ].join('\n');
 }
 
+// ---------- Sprint 10: ¿Y si me arrepiento?, Sostener ----------
+
+// Si el comprador vende este mes, sin plusvalía: el orden de pago de la venta.
+// 1) Bci cobra lo que se le debe; 2) los inversionistas reciben su parte del valor neto de costos
+// (ganancias y pérdidas según la parte de cada uno); 3) los costos de venta; 4) el resto es del comprador.
+function ventaHoy(precioUF, saldoBciUF, saldoParticipacionUF) {
+  var costos = precioUF * SUPUESTOS.pctCostosVenta;
+  var parteInversionistas = precioUF > 0 ? (saldoParticipacionUF || 0) / precioUF : 0;
+  var inversionistas = (precioUF - costos) * parteInversionistas;
+  var bci = Math.min(saldoBciUF, precioUF - costos - inversionistas);
+  var usuario = precioUF - costos - inversionistas - bci;
+  return {
+    valor: ufAPesos(precioUF), bci: ufAPesos(bci), inversionistas: ufAPesos(inversionistas),
+    costos: ufAPesos(costos), usuario: ufAPesos(usuario), faltaParaBci: ufAPesos(Math.max(0, saldoBciUF - bci))
+  };
+}
+
+// Sostener: un mes de ahorro. pago = true si ahorró, false si tocó "Este mes no pude".
+// Si no pudo y tiene el protector (una vez cada 6 meses), la racha se mantiene; si no, vuelve a 0.
+// Lo ahorrado nunca se pierde: solo cambia la racha.
+function protectorDisponible(mes, ultimoProtector) {
+  return ultimoProtector === null || ultimoProtector === undefined || mes - ultimoProtector >= SUPUESTOS.protectorCadaMeses;
+}
+function mesesParaProtector(mes, ultimoProtector) {
+  return protectorDisponible(mes, ultimoProtector) ? 0 : SUPUESTOS.protectorCadaMeses - (mes - ultimoProtector);
+}
+function registrarMes(r, pago) {
+  var mes = (r.mes || 0) + 1;
+  if (pago) return { mes: mes, racha: (r.racha || 0) + 1, ultimoProtector: r.ultimoProtector === undefined ? null : r.ultimoProtector, resultado: 'pago' };
+  if (protectorDisponible(mes, r.ultimoProtector)) {
+    return { mes: mes, racha: r.racha || 0, ultimoProtector: mes, resultado: 'protector' };
+  }
+  return { mes: mes, racha: 0, ultimoProtector: r.ultimoProtector, resultado: 'reinicio' };
+}
+
 if (typeof module !== 'undefined') module.exports = {
   LISTA_REFERENCIA_UF: LISTA_REFERENCIA_UF,
   MINIMO_PARA_VIVIR: MINIMO_PARA_VIVIR,
@@ -857,6 +896,10 @@ if (typeof module !== 'undefined') module.exports = {
   saldoParticipacionUF: saldoParticipacionUF,
   mesesRecompra: mesesRecompra,
   plazoRecompra: plazoRecompra,
+  ventaHoy: ventaHoy,
+  protectorDisponible: protectorDisponible,
+  mesesParaProtector: mesesParaProtector,
+  registrarMes: registrarMes,
   participacionUF: participacionUF,
   evaluarCarga: evaluarCarga,
   flujoInversionUF: flujoInversionUF,

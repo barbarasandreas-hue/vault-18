@@ -46,6 +46,8 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 - Rentabilidad neta = arriendo neto × 12 / precio. En modo invertir la IA solo muestra departamentos con rentabilidad neta ≥ 3,9% (la tasa con subsidio).
 - Límite de carga: dividendo ≤ 25% del ingreso líquido familiar, y dividendo + otras cuotas ≤ 30%. Sobre eso, no aprueba.
 - **Tu mes real:** ingreso líquido − arriendo que paga hoy (si sigue arrendando) − otras cuotas − dividendo. Si no cumple el límite de carga, o si queda menos del 40% del ingreso para vivir (supuesto de diseño, a validar en las sesiones), el camino es "Todavía no".
+- Si el comprador vende (¿Y si me arrepiento?): costos de venta de 2 % del precio (supuesto de diseño). Orden de pago: Bci, inversionistas según su parte del valor neto de costos, costos y el resto para el comprador. Siempre sin plusvalía.
+- Sostener: "Este mes no pude" mantiene la racha una vez cada 6 meses. Lo ahorrado nunca se pierde.
 - Departamento de referencia: UF 2.500 de lista. Comunas de los ejemplos: Independencia, Quinta Normal, Recoleta y Estación Central.
 
 ## Reglas de diseño y contenido

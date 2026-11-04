@@ -339,8 +339,8 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 9 | S9-F4 Fichas de caminos informativos | aprobada |
 | 9 | S9-F5 Comprar más barato | en progreso |
 | 9 | S9-F6 Registro de la sesión de prueba | aprobada |
-| 10 | S10-F1 Pie compartido en Mi departamento | pendiente |
-| 10 | S10-F2 Comprador de respaldo y ¿Y si me arrepiento? | pendiente |
-| 10 | S10-F3 Pie en cuotas | pendiente |
-| 10 | S10-F4 Sostener | pendiente |
-| 10 | S10-F5 Pendientes del Sprint 7 | pendiente |
+| 10 | S10-F1 Pie compartido en Mi departamento | en progreso |
+| 10 | S10-F2 Comprador de respaldo y ¿Y si me arrepiento? | en progreso |
+| 10 | S10-F3 Pie en cuotas | en progreso |
+| 10 | S10-F4 Sostener | en progreso |
+| 10 | S10-F5 Pendientes del Sprint 7 | en progreso |

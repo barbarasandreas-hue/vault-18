@@ -41,17 +41,21 @@
     caminoElegido: null,     // S9-F2: id del camino que eligió (ver CAMINOS en calculos.js)
     verOtros: false,         // S9-F2: "Ver otros caminos" abierto
     masBaratoTipo: null,     // S9-F5: 'estudio', '1d' o null
-    masBaratoAjuste: null    // S9-F5: 'usado', 'iva-cero' o null
+    masBaratoAjuste: null,   // S9-F5: 'usado', 'iva-cero' o null
+    mesAhorro: 0,            // S10-F4: meses simulados de ahorro
+    racha: 0,                // S10-F4: meses seguidos ahorrando
+    ultimoProtector: null    // S10-F4: mes en que usó "Este mes no pude"
   };
 
   // ---------- Elecciones que se recuerdan entre visitas (S3-F3) ----------
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
-    'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido'];
+    'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
-    ahorroActual: null, caminoElegido: null, verOtros: false, masBaratoTipo: null, masBaratoAjuste: null };
+    ahorroActual: null, caminoElegido: null, verOtros: false, masBaratoTipo: null, masBaratoAjuste: null,
+    mesAhorro: 0, racha: 0, ultimoProtector: null };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -73,6 +77,9 @@
       estado.ahorrado = montoValido(g.ahorrado) || 0;
       estado.ahorroIniciado = g.ahorroIniciado === true && estado.ahorroMensual > 0;
       estado.ahorroActual = montoValido(g.ahorroActual);
+      estado.mesAhorro = montoValido(g.mesAhorro) || 0;
+      estado.racha = Math.min(montoValido(g.racha) || 0, estado.mesAhorro);
+      estado.ultimoProtector = montoValido(g.ultimoProtector);
       if (typeof CAMINOS !== 'undefined' && CAMINOS[g.caminoElegido] && !CAMINOS[g.caminoElegido].ficha) estado.caminoElegido = g.caminoElegido;
     } catch (e) { /* sin localStorage: valores por defecto */ }
   }
@@ -109,12 +116,15 @@
   function conCarga(boton, accion) {
     if (boton.classList.contains('is-cargando')) return;
     boton.style.minWidth = boton.offsetWidth + 'px';
+    boton.style.minHeight = boton.offsetHeight + 'px';
+    var ruta = location.hash;
     boton.classList.add('is-cargando');
     boton.setAttribute('aria-busy', 'true');
     boton.setAttribute('aria-disabled', 'true');
     boton.textContent = 'Cargando…';
     anunciar('Cargando…');
-    setTimeout(accion, ESPERA_CARGA);
+    // Si el usuario se fue a otra pantalla mientras cargaba, la acción no lo devuelve.
+    setTimeout(function () { if (location.hash === ruta) accion(); }, ESPERA_CARGA);
   }
 
   // Avisa a los lectores de pantalla sin mover el foco (región aria-live fija en index.html).
@@ -158,7 +168,7 @@
         return lista.filter(function (x) {
           return x && buscarProyecto(x.proyectoId) && typeof x.montoUF === 'number' && x.montoUF > 0;
         }).map(function (x) {
-          return Object.assign({}, x, { cuotasCobradas: Math.max(0, Math.min(600, Number(x.cuotasCobradas) || 0)) });
+          return Object.assign({}, x, { cuotasCobradas: Math.max(0, Math.min(600, Number(x.cuotasCobradas) || 0)), respaldo: x.respaldo === true });
         });
       }
     } catch (e) { /* sin localStorage o dato dañado */ }
@@ -215,8 +225,16 @@
     return estado.compra && estado.compra.proyectoId === proyecto.id ? 1 : 0;
   }
 
+  // S10: si para arrendar eligió un camino sin pie compartido (A solo o crédito al 80 %), en los proyectos
+  // en grupo pone el 20 % y no hay inversionistas. El pie compartido siempre lleva inversionistas.
+  var CAMINOS_PROPIOS = ['grupo-invertir', 'individual-invertir'];
+  function modoFinanciero(proyecto) {
+    if (estado.modo === 'arrendar' && proyecto.tipo === 'conjunto' && CAMINOS_PROPIOS.indexOf(estado.caminoElegido) !== -1) return 'propio';
+    return estado.modo;
+  }
+
   function resumen(proyecto) {
-    return resumenProyecto(proyecto, departamentosDe(proyecto.id), cuposExtra(proyecto), invertidoEn(proyecto.id), estado.modo);
+    return resumenProyecto(proyecto, departamentosDe(proyecto.id), cuposExtra(proyecto), invertidoEn(proyecto.id), modoFinanciero(proyecto));
   }
 
   function barraAvance(texto, detalle, fraccion) {
@@ -249,6 +267,10 @@
       texto: 'Es una cuenta de Bci donde entra el arriendo y desde la que se paga a los inversionistas y se recompra su parte.' },
     'compra-conjunto': { termino: 'Compra en grupo', pregunta: '¿Qué es la compra en grupo?',
       texto: 'Varias personas compran juntas en un proyecto y todas pagan menos: 3 % desde 5 unidades y 5 % desde 10.' },
+    'comprador-respaldo': { termino: 'Comprador de respaldo', pregunta: '¿Qué es el comprador de respaldo?',
+      texto: 'Si el comprador se baja antes de escriturar, puedes tomar su lugar y comprar ese departamento.' },
+    'salida-sin-multa': { termino: 'Salida sin multa', pregunta: '¿Cuándo puedo salir sin multa?',
+      texto: 'Si Bci no aprueba el crédito final o si la tasación sale menor que el precio, recuperas tus cuotas completas.' },
     'mas-barato': { termino: 'Comprar más barato', pregunta: '¿Cómo baja el precio?',
       texto: 'Un usado parecido cuesta cerca de 17,6 % menos, pero no tiene subsidio a la tasa. IVA cero baja cerca de 6,5 % los departamentos nuevos, del 1-dic-2026 al 1-dic-2027.' },
     'financiamiento-pie': { termino: 'Pie compartido', pregunta: '¿Qué es el pie compartido?',
@@ -264,6 +286,11 @@
   // Un solo manejador para todos los botones de ayuda: abre o cierra la explicación debajo del término.
   var contadorAyuda = 0;
   function iniciarAyudas() {
+    // El "?" responde al primer toque: el campo con el cursor no pierde el foco, así no se vuelve
+    // a dibujar el bloque (y el botón) antes del clic.
+    document.addEventListener('mousedown', function (ev) {
+      if (ev.target.closest('.btn-ayuda')) ev.preventDefault();
+    });
     document.addEventListener('click', function (ev) {
       var boton = ev.target.closest('.btn-ayuda');
       if (!boton) return;
@@ -305,7 +332,7 @@
   function iniciarIntro() {
     $('btn-empezar-intro').addEventListener('click', function () {
       marcarIntroVista();
-      location.hash = '#inicio';
+      location.replace('#inicio');
     });
   }
 
@@ -553,8 +580,8 @@
           barraReparto(e) +
           '<ul class="lista-check">' +
             (vivir
-              ? filaReparto('90\u00a0% lo presta Bci', 'Con la garantía del Estado (FOGAES), a 30 años, junto a tu pareja', e.reparto.bci) +
-                filaReparto('10\u00a0% lo pones tú', 'Con tu ahorro, en cuotas mientras se construye', e.reparto.usuario)
+              ? filaReparto('90\u00a0% lo presta Bci', 'Con garantía del Estado (FOGAES)', e.reparto.bci) +
+                filaReparto('10\u00a0% lo pones tú', '', e.reparto.usuario)
               : filaReparto('80\u00a0% lo presta Bci', 'A 30 años', e.reparto.bci) +
                 filaReparto('15\u00a0% lo ponen inversionistas', 'Sin cuota para ti', e.reparto.inversionistas) +
                 filaReparto('5\u00a0% lo pones tú', '', e.reparto.usuario)) +
@@ -803,11 +830,14 @@
         '<h2 class="h5">De dónde sale el precio</h2>' +
         '<ul class="lista-check">' +
           (e.modo === 'vivir'
-            ? filaReparto('90\u00a0% lo presta Bci', 'Con la garantía del Estado (FOGAES), a 30 años, junto a tu pareja', e.reparto.bci) +
-              filaReparto('10\u00a0% lo pones tú', conjunto ? 'En cuotas mientras se construye' : 'Con tu ahorro', e.reparto.usuario)
-            : filaReparto('80\u00a0% lo presta Bci', 'A 30 años', e.reparto.bci) +
-              filaReparto('15\u00a0% lo ponen inversionistas', 'Sin cuota para ti', e.reparto.inversionistas) +
-              filaReparto('5\u00a0% lo pones tú', '', e.reparto.usuario)) +
+            ? filaReparto('90\u00a0% lo presta Bci', 'Con garantía del Estado (FOGAES)', e.reparto.bci) +
+              filaReparto('10\u00a0% lo pones tú', conjunto ? 'En cuotas mientras se construye' : '', e.reparto.usuario)
+            : (e.pctInversionistas > 0
+              ? filaReparto('80\u00a0% lo presta Bci', 'A 30 años', e.reparto.bci) +
+                filaReparto('15\u00a0% lo ponen inversionistas', 'Sin cuota para ti', e.reparto.inversionistas) +
+                filaReparto('5\u00a0% lo pones tú', '', e.reparto.usuario)
+              : filaReparto('80\u00a0% lo presta Bci', 'A 30 años', e.reparto.bci) +
+                filaReparto('20\u00a0% lo pones tú', conjunto ? 'En cuotas mientras se construye' : '', e.reparto.usuario))) +
         '</ul>' +
         '<ul class="datos-inversion">' +
           '<li><span>Gastos de escritura</span><strong>' + formatoPesos(e.gastos) + '</strong></li>' +
@@ -901,6 +931,7 @@
         '<p class="error" id="monto-uf-error" hidden><svg aria-hidden="true"><use href="#i-no"/></svg><span></span></p>' +
       '</div>' +
       '<div id="invertir-resultado" aria-live="polite"></div>' +
+      '<p class="casilla"><input type="checkbox" id="respaldo"><label for="respaldo">Quiero ser comprador de respaldo</label> ' + ayuda('comprador-respaldo') + '</p>' +
       '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-confirmar" aria-describedby="confirmar-explica">Confirmar</button></div>' +
       '<p class="texto-apoyo" id="confirmar-explica">Inversión simulada.</p>';
 
@@ -953,8 +984,9 @@
       dibujar();
       if ($('btn-confirmar').disabled) { $('monto-uf').focus(); return; }
       var invertido = monto;
+      var respaldo = $('respaldo').checked;
       conCarga($('btn-confirmar'), function () {
-        agregarInversion({ id: 'inv-' + Date.now(), proyectoId: p.id, montoUF: invertido, fecha: FECHA_REFERENCIA, cuotasCobradas: 0 });
+        agregarInversion({ id: 'inv-' + Date.now(), proyectoId: p.id, montoUF: invertido, fecha: FECHA_REFERENCIA, cuotasCobradas: 0, respaldo: respaldo });
         anunciar('Invertiste ' + formatoUF(invertido) + ' en ' + p.nombre + '.');
         location.hash = '#mis-proyectos/inversiones';
       });
@@ -983,6 +1015,7 @@
       var proximo = ufAPesos(cuotaMensualTotalUF([dc]));
       return '<li class="tarjeta inversion">' +
         '<a class="enlace" href="#proyecto/' + esc(p.id) + '">' + esc(p.nombre) + '</a>' +
+        (x.respaldo ? '<p class="chip-fila"><span class="chip chip-propuesta">Comprador de respaldo</span></p>' : '') +
         '<p class="inversion-fila"><span>Invertiste</span><strong>' + formatoUF(x.montoUF) + '</strong></p>' +
         '<p class="inversion-fila"><span>Recibes el próximo mes</span><strong>' + formatoPesos(proximo) + '</strong></p>' +
         barraAvance('Meses de recompra', Math.min(x.cuotasCobradas, total) + ' de ' + total, avance(x.cuotasCobradas, total)) +
@@ -1530,16 +1563,21 @@
   function renderTu5(p, d) {
     var meta = resumen(p).escenario.alEscriturar;
     // Si ya se juntó todo (por ejemplo, al cambiar a un proyecto más barato), se pasa a la firma.
-    var pctPie = estado.modo === 'vivir' ? '10' : '5';
+    var enGrupo = p.tipo === 'conjunto';
     var cabecera = tarjetaCompacta(p, 'Meta al escriturar', meta) + listaPasos(2) +
-      '<h2 class="h3 bloque" id="titulo-tu5">Tu pie ' + ayuda('pie') + '</h2>';
+      '<h2 class="h3 bloque" id="titulo-tu5">' + (enGrupo ? 'Tu pie en cuotas ' : 'Tu pie ') + ayuda('pie') + '</h2>';
+    // S10-F3: en la compra en grupo, el pie va a una cuenta bloqueada de Bci y se puede salir sin multa.
+    var cuentaGrupo = !enGrupo ? '' :
+      '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Tu dinero está en Bci, no en la inmobiliaria</p>' +
+      '<p class="texto-apoyo">Salida sin multa ' + ayuda('salida-sin-multa') + '</p>';
 
     if (!estado.ahorroIniciado) {
       $('panel-compra').innerHTML = cabecera +
         '<section aria-labelledby="titulo-tu5">' +
           selectorAhorro() +
-          campoDinero('ahorro-mensual', '¿Cuánto puedes ahorrar al mes?', estado.ahorroMensual) +
+          campoDinero('ahorro-mensual', enGrupo ? 'Tu cuota al mes' : '¿Cuánto puedes ahorrar al mes?', estado.ahorroMensual) +
           '<div id="meses-resultado" aria-live="polite"></div>' +
+          cuentaGrupo +
           '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-empezar">Empezar a ahorrar</button></div>' +
             '<div class="acciones">' +
             '<button type="button" class="btn btn-terciario btn-bloque" id="btn-salir">Salir de esta compra</button>' +
@@ -1597,25 +1635,46 @@
 
     // Ya empezó a ahorrar: el número es lo que falta, y la acción es simular un mes.
     var faltan = mesesRestantes(meta, estado.ahorrado, estado.ahorroMensual);
+    var protector = protectorDisponible(estado.mesAhorro + 1, estado.ultimoProtector);
     $('panel-compra').innerHTML = cabecera +
       '<section aria-labelledby="titulo-tu5">' +
         '<div class="tarjeta resultado-meses">' +
           '<p class="etiqueta">Te faltan</p>' +
           '<strong class="numero display-2">' + textoMeses(faltan) + '</strong>' +
-          '<p class="texto-apoyo">' + (estado.tipoAhorro === 'grupal' ? 'Ahorro grupal' : 'Ahorro propio') +
+          '<p class="texto-apoyo">' + (enGrupo ? 'Cuota' : (estado.tipoAhorro === 'grupal' ? 'Ahorro grupal' : 'Ahorro propio')) +
             ' de ' + formatoPesos(estado.ahorroMensual) + ' al mes.</p>' +
+          (estado.racha > 0 ? '<p class="racha"><svg aria-hidden="true"><use href="#i-ok"/></svg>' + plural(estado.racha, 'mes', 'meses') + ' seguidos</p>' : '') +
           barraHitos(estado.ahorrado, meta) +
-          '<p class="aviso aviso-ok" id="aviso-hito" hidden></p>' +
+          '<p class="aviso aviso-ok" id="aviso-hito" tabindex="-1" hidden></p>' +
+          cuentaGrupo +
         '</div>' +
+        (enGrupo ? '<div class="tarjeta bloque">' + avanceDe(p, resumen(p)) + '</div>' : '') +
         '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-simular-mes">Simular un mes</button></div>' +
           '<div class="acciones">' +
+          '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-no-pude">Este mes no pude</button>' +
+          '<p class="texto-apoyo texto-centro">' + (protector ? 'Tu protector de racha está disponible.'
+            : 'Protector de racha: de nuevo en ' + textoMeses(mesesParaProtector(estado.mesAhorro + 1, estado.ultimoProtector)) + '.') + '</p>' +
           '<button type="button" class="btn btn-terciario btn-bloque" id="btn-cambiar-ahorro">Cambiar mi ahorro mensual</button>' +
         '</div>' +
       '</section>';
 
+    $('btn-no-pude').addEventListener('click', function () {
+      var r = registrarMes({ mes: estado.mesAhorro, racha: estado.racha, ultimoProtector: estado.ultimoProtector }, false);
+      estado.mesAhorro = r.mes; estado.racha = r.racha; estado.ultimoProtector = r.ultimoProtector;
+      guardarEstado();
+      renderTu5(p, d);
+      var texto = r.resultado === 'protector' ? 'Usaste tu protector: tu racha sigue.' : 'Tu racha vuelve a empezar. Lo ahorrado sigue ahí.';
+      $('aviso-hito').textContent = texto;
+      $('aviso-hito').hidden = false;
+      anunciar(texto);
+      $('btn-no-pude').focus();
+    });
+
     $('btn-simular-mes').addEventListener('click', function () {
       var antes = hitosAlcanzados(estado.ahorrado, meta);
       estado.ahorrado = sumarMes(estado.ahorrado, estado.ahorroMensual, meta);
+      var r = registrarMes({ mes: estado.mesAhorro, racha: estado.racha, ultimoProtector: estado.ultimoProtector }, true);
+      estado.mesAhorro = r.mes; estado.racha = r.racha; estado.ultimoProtector = r.ultimoProtector;
       guardarEstado();
       if (estado.ahorrado >= meta) {
         guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
@@ -1648,7 +1707,8 @@
     var arrendar = estado.modo === 'arrendar';
     var credito = filaFirma('Crédito hipotecario Bci ' + ayuda('dividendo'),
       Math.round(e.pctCredito * 100) + ' % (' + formatoPesos(e.reparto.bci) + ') a 30 años, al 3,9 %: ' + formatoPesos(e.dividendo) + ' al mes.');
-    var segunda = arrendar
+    var segunda = arrendar && e.pctInversionistas === 0 ? ''
+      : arrendar
       ? filaFirma('Participación de los inversionistas ' + ayuda('participacion'),
           '15 % (' + formatoPesos(e.reparto.inversionistas) + '). Sin cuota para ti: el arriendo les paga 6 % al año en UF y recompra su parte.') +
         filaFirma('Cuenta custodia Bci ' + ayuda('cuenta-custodia'),
@@ -1717,6 +1777,8 @@
       porcentajeTuyo: Math.floor(100 * (1 - saldo / e.precioUF) + 1e-9),
       faltanRecompra: saldo > 0 ? mesesRecompra(saldo, netoUF, fraccion) : 0,
       plazo: plazoRecompra(saldo, netoUF, fraccion, mes - 1),
+      plazoPeor: plazoRecompra(saldo, arriendoNeto(arriendo * 0.9) / SUPUESTOS.uf, fraccion, mes - 1),
+      conInversionistas: arrendar && e.pctInversionistas > 0,
       pone: arrendar ? cascada.pone : e.totalMes,
       excedente: arrendar ? cascada.excedente : 0,
       saldoBci: ufAPesos(saldoBciUF(e.precioUF, mes, estado.modo)),
@@ -1741,19 +1803,61 @@
   }
 
   // Cuánto del departamento ya es tuyo (modo arrendar): la parte de los inversionistas se recompra con el arriendo.
+  // S10-F2: si vende este mes, en qué orden se paga (sin plusvalía) y la venta asistida.
+  function seccionArrepiento(m) {
+    var v = ventaHoy(m.e.precioUF, saldoBciUF(m.e.precioUF, m.mes, modoFinanciero(buscarProyecto(estado.compra.proyectoId))), m.saldoParticipacionUF);
+    var n = 1;
+    return '<section class="tarjeta bloque" aria-labelledby="btn-arrepiento">' +
+      '<button type="button" class="enlace desplegar" id="btn-arrepiento" aria-expanded="false" aria-controls="arrepiento">' +
+        '¿Y si me arrepiento?<svg aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
+      '<div id="arrepiento" hidden>' +
+        '<p class="texto-apoyo">Si vendes este mes en ' + formatoPesos(v.valor) + ':</p>' +
+        '<ol class="cascada">' +
+          pasoCascada(n++, 'Bci', 'Lo que queda del crédito', formatoPesos(v.bci)) +
+          (v.inversionistas > 0 ? pasoCascada(n++, 'Inversionistas', 'Según su parte', formatoPesos(v.inversionistas)) : '') +
+          pasoCascada(n++, 'Costos de venta', null, formatoPesos(v.costos)) +
+          pasoCascada(n++, 'Para ti', null, formatoPesos(v.usuario), 'cascada-final') +
+        '</ol>' +
+        (v.faltaParaBci > 0 ? '<p class="aviso aviso-alerta">Faltan ' + formatoPesos(v.faltaParaBci) + ' para pagar el crédito.</p>' : '') +
+        '<p class="texto-apoyo nota">Si atrasas 2 dividendos, Bci te acompaña a vender antes de un remate.</p>' +
+        '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
+      '</div>' +
+    '</section>';
+  }
+
+  // S10-F1: la casa se va pintando desde abajo con la parte que ya es tuya.
+  function casaPintada(pct) {
+    var alto = 76 * pct / 100;
+    var forma = 'M50 4 L94 40 L86 40 L86 80 L14 80 L14 40 L6 40 Z';
+    return '<svg class="casa" viewBox="0 0 100 84" aria-hidden="true">' +
+      '<defs><clipPath id="clip-casa"><path d="' + forma + '"/></clipPath></defs>' +
+      '<path class="casa-fondo" d="' + forma + '"/>' +
+      '<rect class="casa-pintura" x="0" y="' + (80 - alto).toFixed(1) + '" width="100" height="' + alto.toFixed(1) + '" clip-path="url(#clip-casa)"/>' +
+      '<path class="casa-borde" d="' + forma + '"/>' +
+      '<rect class="casa-puerta" x="42" y="56" width="16" height="24" rx="2"/>' +
+      '</svg>';
+  }
+
+  function textoPlazoCasa(pl, faltan) {
+    if (faltan === 0) return 'Ya es 100 % tuyo.';
+    if (pl.noAlcanza) return 'El arriendo de hoy no alcanza para recomprar.';
+    if (pl.superaTope) return 'No llegas al 100 %: en el mes 84 refinancias o vendes.';
+    return 'Te faltan ' + textoMeses(pl.meses) + '.';
+  }
+
+  // Cuánto del departamento ya es tuyo (pie compartido): la parte de los inversionistas se recompra con el arriendo.
   function barraParticipacion(m) {
     var pct = Math.max(0, Math.min(100, m.porcentajeTuyo));
-    var faltan = m.faltanRecompra === 0 ? 'Ya es 100 % tuyo.'
-      : (m.plazo.noAlcanza ? 'El arriendo de hoy no alcanza para recomprar.'
-        : (m.plazo.superaTope ? 'Con este arriendo no llegas al 100 %: en el mes 84 refinancias o vendes.'
-          : 'Te faltan ' + textoMeses(m.faltanRecompra) + '.'));
-    return '<div class="deuda">' +
-      '<p class="avance-texto"><span><strong>Ya es tuyo</strong></span><span>' + pct + ' %</span></p>' +
-      '<div class="avance-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="Parte del departamento que ya es tuya">' +
-        '<span style="width:' + Math.max(pct, 1) + '%"></span></div>' +
-      '<p class="cierre">' + faltan + '</p>' +
-    '</div>';
+    var peor = m.faltanRecompra === 0 ? ''
+      : '<p class="peor-caso"><strong>Peor caso:</strong> con 10\u00a0% menos de arriendo, ' +
+        (m.plazoPeor.superaTope ? 'en el mes 84 refinancias o vendes.' : textoMeses(m.plazoPeor.meses) + '.') + '</p>';
+    return '<div class="casa-avance" role="img" aria-label="Ya es tuyo el ' + pct + ' % del departamento">' +
+      casaPintada(pct) +
+      '<div><p class="etiqueta">Ya es tuyo</p><strong class="numero display-3">' + pct + ' %</strong>' +
+      '<p class="cierre">' + textoPlazoCasa(m.plazo, m.faltanRecompra) + '</p></div>' +
+    '</div>' + peor;
   }
+
 
   function renderMiDepartamento(p, d) {
     var m = mesDelDepartamento(p, d);
@@ -1763,11 +1867,11 @@
     var cuerpo;
 
     if (arrendar) {
+      // S10-F1: arriendo → administración → dividendo (lo pagas tú) → renta → recompra.
       var pasos = conParticipacion
-        ? pasoCascada(3, 'Renta de los inversionistas', '6 % al año en UF', formatoPesos(c.renta)) +
-          pasoCascada(4, 'Recompras su parte', null, formatoPesos(c.recompra)) +
-          (m.fraccion < 1 ? pasoCascada(5, 'Te ayuda con el dividendo', 'El 20 % del arriendo neto que elegiste dejar para ti.', formatoPesos(c.aUsuario)) : '') +
-          pasoCascada(m.fraccion < 1 ? 6 : 5, 'Pagas tu dividendo', 'Con tu sueldo' + (m.fraccion < 1 ? ', menos lo que te dejó el arriendo.' : '.'), formatoPesos(m.pone), 'cascada-final')
+        ? pasoCascada(3, 'Pagas tu dividendo', 'Con tu sueldo' + (m.fraccion < 1 ? ', menos el 20 % del arriendo.' : '.'), formatoPesos(m.pone)) +
+          pasoCascada(4, 'Renta de los inversionistas', '6 % al año en UF', formatoPesos(c.renta)) +
+          pasoCascada(5, 'Recompras su parte', null, formatoPesos(c.recompra), 'cascada-final')
         : pasoCascada(3, 'Va a tu dividendo', 'El departamento ya es 100 % tuyo.', formatoPesos(c.aUsuario)) +
           (m.excedente > 0
             ? pasoCascada(4, 'Te sobra', null, formatoPesos(m.excedente), 'cascada-final')
@@ -1826,13 +1930,20 @@
       cuerpo +
       '<section class="tarjeta bloque" aria-labelledby="titulo-deudas">' +
         '<h2 class="h4" id="titulo-deudas">Tu avance</h2>' +
-        (arrendar ? barraParticipacion(m) : '') +
+        (m.conInversionistas ? barraParticipacion(m) : '') +
         barraDeuda('Crédito Bci (30 años)', m.mes, SUPUESTOS.mesesBci, m.saldoBci, m.avanceBci) +
         '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
       '</section>' +
+      seccionArrepiento(m) +
       '<div class="acciones">' +
         '<button type="button" class="btn btn-terciario btn-bloque" id="btn-otro-mes">Simular otro mes</button>' +
       '</div>';
+    $('btn-arrepiento').addEventListener('click', function () {
+      var b = $('btn-arrepiento');
+      var abierto = b.getAttribute('aria-expanded') === 'true';
+      b.setAttribute('aria-expanded', String(!abierto));
+      $('arrepiento').hidden = abierto;
+    });
 
     if (arrendar) {
       $('arriendo-mes').addEventListener('change', function () {

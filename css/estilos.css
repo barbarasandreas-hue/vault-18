@@ -723,6 +723,7 @@ button { font: inherit; }
   display: inline-flex; align-items: center; justify-content: center;
   width: 44px; height: 44px; margin: -12px -10px -12px -6px; padding: 0;
   vertical-align: middle;
+  position: relative; z-index: 1; /* que el bloque de abajo no tape su zona táctil */
   border: 0; border-radius: 50%; background: transparent;
   color: var(--blue-dark); cursor: pointer;
 }
@@ -965,3 +966,23 @@ body.en-intro .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
 .lista-cambios li.cambio-no svg { color: var(--gray-semidark); }
 .lista-cambios small strong { color: var(--gray-dark); }
 #capacidad-resultado .datos-inversion { margin-top: 8px; }
+
+/* ---------- Sprint 10 ---------- */
+/* Casa que se va pintando (pie compartido) */
+.casa-avance { display: flex; align-items: center; gap: 16px; margin: 4px 0 12px; }
+.casa { width: 96px; height: auto; flex: none; }
+.casa-fondo { fill: var(--gray-light); }
+.casa-pintura { fill: var(--green-normal); }
+.casa-borde { fill: none; stroke: var(--green-dark); stroke-width: 3; stroke-linejoin: round; }
+.casa-puerta { fill: var(--white); stroke: var(--green-dark); stroke-width: 2; }
+.casa-avance .numero { display: block; margin: 0; }
+.casa-avance .etiqueta { margin: 0; font-weight: 600; color: var(--gray-semidark); }
+.casa-avance .cierre { margin: 2px 0 0; }
+/* Sostener */
+.racha { display: inline-flex; align-items: center; gap: 6px; margin: 4px 0 8px; padding: 4px 12px; border-radius: 999px; background: var(--green-20); color: var(--green-dark); font-weight: 700; font-size: 15px; }
+.racha svg { width: 18px; height: 18px; }
+/* Comprador de respaldo */
+.casilla { display: flex; align-items: center; gap: 10px; margin: 12px 0 0; min-height: var(--toque); font-weight: 600; }
+.casilla input { width: 24px; height: 24px; accent-color: var(--green-dark); flex: none; }
+.casilla label { cursor: pointer; padding: 10px 0; }
+#proyectos-explica { margin-bottom: 14px; }
