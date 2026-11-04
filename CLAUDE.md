@@ -99,6 +99,7 @@ js/app.js           estado y render de las pantallas
 - En el teléfono, misma red wifi: con el servidor anterior corriendo, buscar la IP del computador con `ipconfig` ("Dirección IPv4", por ejemplo `192.168.1.20`) y abrir `http://192.168.1.20:8000` en el teléfono. Si no carga, permitir Python en el firewall de Windows para redes privadas.
 - En el teléfono, desde cualquier lugar: publicarla en GitHub Pages desde la rama `main` y abrir la dirección `https://<usuario>.github.io/<repositorio>/`. Desde el menú del navegador, "Agregar a pantalla de inicio" la deja como un ícono de app.
 - Pruebas de las fórmulas: `node --test tests/` (Node ya viene instalado; no hace falta `npm install`).
+- Interacción y movimiento (Sprints 11 y 12): seguir la skill `interaccion-bci-vanilla` (tokens de movimiento, catálogo de patrones, íconos y accesibilidad). Si no está disponible, sus reglas están resumidas en `PLAN.md`, Sprint 11.
 - Roles de Claude Code en `.claude/agents/`: `planner` (escribe SPEC.md y PLAN.md), `generator` (programa un sprint) y `evaluator` (revisa el sprint y lo aprueba o rechaza).
 
 ## Forma de trabajo
