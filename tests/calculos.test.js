@@ -158,9 +158,11 @@ test('datos de ejemplo v3 (S8-F5)', () => {
     const p = datos.buscarProyecto(d.proyectoId);
     const tipo = p.tipo === 'conjunto' ? 'lote' : 'individual';
     const precio = c.precioUF(d.listaUF, tipo, p.cupos);
-    const bruta = d.arriendoBruto * 12 / (precio * c.SUPUESTOS.uf);
+    assert.ok(d.arriendoEstimadoIA > 0, `${d.id} sin arriendoEstimadoIA`);
+    assert.strictEqual(d.origenArriendo, 'estimación IA (demo)');
+    const bruta = d.arriendoEstimadoIA * 12 / (precio * c.SUPUESTOS.uf);
     assert.ok(bruta >= 0.04 && bruta <= 0.05, `${d.id}: rentabilidad bruta ${bruta}`);
-    return !c.pasaFiltroIA(c.rentabilidad(d.arriendoBruto, precio));
+    return !c.pasaFiltroIA(c.rentabilidad(d.arriendoEstimadoIA, precio));
   });
   assert.ok(bajos.length >= 2, `solo ${bajos.length} departamentos bajo 3,9 % neto`);
   assert.ok(datos.DEPARTAMENTOS.some((d) => d.dormitorios === 0 && Math.abs(d.listaUF - 1200) <= 100), 'falta un estudio de ≈ UF 1.200');
@@ -189,62 +191,59 @@ test('carga: invertir en grupo con $1.500.000 + $1.000.000 → 15,9 %, holgado',
   assert.strictEqual(c.nivelCarga(k), 'holgado');
 });
 
-test('carga: invertir en grupo con $900.000 + $500.000 → 28,3 %, en el límite', () => {
+test('carga v3: dividendo de 28,3 % no aprueba (máximo 25 %)', () => {
   const total = c.escenario(2500, 'lote', 'arrendar', 10).totalMes;
   const k = c.carga(total, 900000, 500000);
   assert.strictEqual(c.formatoPorcentaje(k, 1), '28,3\u00a0%');
-  assert.strictEqual(c.nivelCarga(k), 'limite');
+  assert.strictEqual(c.nivelCarga(k), 'no-aprueba');
 });
 
-test('carga: vivir individual UF 2.500 con $1.000.000 + $500.000 → 31,0 %, no aprueba', () => {
+test('carga v3: vivir individual con $1.000.000 + $500.000 → 31,0 %, no aprueba', () => {
   const total = c.escenario(2500, 'individual', 'vivir').totalMes;
   const k = c.carga(total, 1000000, 500000);
   assert.strictEqual(c.formatoPorcentaje(k, 1), '31,0\u00a0%');
   assert.strictEqual(c.nivelCarga(k), 'no-aprueba');
 });
 
-test('carga: exactamente 25 % es holgado y exactamente 30 % es en el límite', () => {
-  assert.strictEqual(c.nivelCarga(c.carga(250000, 600000, 400000)), 'holgado');
-  assert.strictEqual(c.nivelCarga(c.carga(300000, 600000, 400000)), 'limite');
-  assert.strictEqual(c.nivelCarga(c.carga(301000, 600000, 400000)), 'no-aprueba');
-  assert.strictEqual(c.nivelCarga(c.carga(251000, 600000, 400000)), 'limite');
+test('carga v3: con otras cuotas, hasta 30 % es en el límite y sobre 30 % no aprueba', () => {
+  // ingreso $1.000.000: dividendo 20 %
+  assert.strictEqual(c.evaluarCarga(200000, 0, 600000, 400000).nivel, 'holgado');
+  assert.strictEqual(c.evaluarCarga(200000, 50000, 600000, 400000).nivel, 'holgado');   // 25,0 %
+  assert.strictEqual(c.evaluarCarga(200000, 51000, 600000, 400000).nivel, 'limite');    // 25,1 %
+  assert.strictEqual(c.evaluarCarga(200000, 100000, 600000, 400000).nivel, 'limite');   // 30,0 %
+  assert.strictEqual(c.evaluarCarga(200000, 101000, 600000, 400000).nivel, 'no-aprueba'); // 30,1 %
+  // dividendo sobre 25 % no aprueba aunque no tenga cuotas
+  assert.strictEqual(c.evaluarCarga(251000, 0, 600000, 400000).nivel, 'no-aprueba');
+  const ev = c.evaluarCarga(396758, 500000, 1500000, 1000000);
+  assert.strictEqual(c.formatoPorcentaje(ev.cargaDividendo, 1), '15,9\u00a0%');
+  assert.strictEqual(c.formatoPorcentaje(ev.cargaTotal, 1), '35,9\u00a0%');
+  assert.strictEqual(ev.nivel, 'no-aprueba');
+  assert.strictEqual(c.evaluarCarga(400000, 0, null, null), null);
 });
 
-test('el semáforo usa la misma carga redondeada que muestra la pantalla', () => {
-  const total = c.escenario(2500, 'lote', 'arrendar', 10).totalMes; // $396.758
-  // 30,04 % se muestra "30,0 %": es "en el límite", no "no aprueba".
-  const k30 = c.carga(total, 320713, 1000000);
-  assert.ok(k30 > 0.30);
-  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(k30), 1), '30,0\u00a0%');
-  assert.strictEqual(c.nivelCarga(k30), 'limite');
-  // 25,03 % se muestra "25,0 %": es "holgado".
-  const k25 = c.carga(250300, 600000, 400000);
-  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(k25), 1), '25,0\u00a0%');
-  assert.strictEqual(c.nivelCarga(k25), 'holgado');
-  // 30,06 % se muestra "30,1 %": no aprueba.
-  const k301 = c.carga(300600, 600000, 400000);
-  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(k301), 1), '30,1\u00a0%');
-  assert.strictEqual(c.nivelCarga(k301), 'no-aprueba');
+test('carga v3: el semáforo usa la carga redondeada que muestra la pantalla', () => {
+  // 25,03 % se ve "25,0 %": holgado. 25,05 % se ve "25,1 %": no aprueba (dividendo).
+  assert.strictEqual(c.nivelCarga(c.carga(250300, 600000, 400000)), 'holgado');
+  assert.strictEqual(c.nivelCarga(c.carga(250499, 600000, 400000)), 'holgado');
+  assert.strictEqual(c.nivelCarga(c.carga(250500, 600000, 400000)), 'no-aprueba');
+  // con cuotas: 30,0499 % se ve "30,0 %" (límite); 30,05 % se ve "30,1 %" (no aprueba)
+  assert.strictEqual(c.evaluarCarga(200000, 100499, 600000, 400000).nivel, 'limite');
+  assert.strictEqual(c.evaluarCarga(200000, 100500, 600000, 400000).nivel, 'no-aprueba');
   assert.strictEqual(c.cargaRedondeada(null), null);
 });
 
-test('carga: corte exacto del redondeo en 25 % y 30 %', () => {
-  // 30,0499 % se ve "30,0 %" (en el límite); 30,05 % se ve "30,1 %" (no aprueba).
-  assert.strictEqual(c.nivelCarga(c.carga(300499, 600000, 400000)), 'limite');
-  assert.strictEqual(c.nivelCarga(c.carga(300500, 600000, 400000)), 'no-aprueba');
-  assert.strictEqual(c.formatoPorcentaje(c.cargaRedondeada(c.carga(300500, 600000, 400000)), 1), '30,1\u00a0%');
-  assert.strictEqual(c.nivelCarga(c.carga(250499, 600000, 400000)), 'holgado');
-  assert.strictEqual(c.nivelCarga(c.carga(250500, 600000, 400000)), 'limite');
-});
-
-test('ingreso total, mínimo y faltante', () => {
+test('ingreso total, mínimo y faltante (v3)', () => {
   assert.strictEqual(c.ingresoTotal(900000, 800000), 1700000);
   assert.strictEqual(c.ingresoTotal(900000, null), 900000);
-  const total = c.escenario(2500, 'lote', 'arrendar', 10).totalMes; // Mirador Independencia: $396.758
-  assert.strictEqual(c.ingresoMinimo(total), 1322527);
-  assert.strictEqual(c.ingresoFaltante(total, 700000, 500000), 122527);
+  const total = c.escenario(2500, 'lote', 'arrendar', 10).totalMes; // $396.758
+  // sin cuotas manda el 25 %: 396.758 / 0,25
+  assert.strictEqual(c.ingresoMinimo(total), 1587032);
+  assert.strictEqual(c.ingresoFaltante(total, 700000, 500000), 387032);
   assert.strictEqual(c.ingresoFaltante(total, 1500000, 1000000), 0);
-  assert.strictEqual(c.nivelCarga(c.carga(total, 1322527, 0)), 'limite');
+  assert.strictEqual(c.evaluarCarga(total, 0, 1587032, null).nivel, 'holgado');
+  // con $200.000 de cuotas manda el 30 %: 596.758 / 0,30
+  assert.strictEqual(c.ingresoMinimo(total, 200000), 1989194);
+  assert.notStrictEqual(c.evaluarCarga(total, 200000, 1989194, null).nivel, 'no-aprueba');
 });
 
 test('carga: sin ingreso no calcula', () => {
@@ -253,7 +252,7 @@ test('carga: sin ingreso no calcula', () => {
   assert.strictEqual(c.nivelCarga(null), null);
 });
 
-test('mejor alternativa: elige la opción con la carga más baja, solo si mejora', () => {
+test('mejor alternativa: la carga más baja con cuotas, solo si mejora', () => {
   const opciones = [{ id: 'a', totalMes: 700000 }, { id: 'b', totalMes: 520000 }, { id: 'c', totalMes: 600000 }];
   const actual = c.carga(752318, 1500000, 1000000);
   const m = c.mejorAlternativa(actual, opciones, 1500000, 1000000);
@@ -261,6 +260,9 @@ test('mejor alternativa: elige la opción con la carga más baja, solo si mejora
   assert.strictEqual(c.formatoPorcentaje(m.carga, 1), '20,8\u00a0%');
   assert.strictEqual(m.nivel, 'holgado');
   assert.strictEqual(c.mejorAlternativa(0.1, opciones, 1500000, 1000000), null);
+  // con $200.000 de cuotas, la carga de b es 28,8 %: en el límite
+  const conCuotas = c.mejorAlternativa(0.5, opciones, 1500000, 1000000, 200000);
+  assert.strictEqual(conCuotas.nivel, 'limite');
 });
 
 test('leer y mostrar montos de un campo', () => {
@@ -387,6 +389,25 @@ for (const [nombre, participacion, bruto, fraccion, meses] of [
     assert.ok(c.saldoParticipacionUF(participacion, neto, m - 1, fraccion) > 0);
   });
 }
+
+test('participación de inversionistas: 15 % del precio', () => {
+  assert.strictEqual(c.participacionUF(2500), 375);
+  assert.strictEqual(c.porFinanciarUF(2375), c.participacionUF(2375));
+});
+
+test('recompra con tope de 84 meses: con $250.000 de arriendo no alcanza a terminar', () => {
+  const neto = c.arriendoNeto(250000) / c.SUPUESTOS.uf;
+  const pl = c.plazoRecompra(375, neto, 1);
+  assert.ok(pl.meses > 84);
+  assert.strictEqual(pl.superaTope, true);
+  assert.strictEqual(pl.noAlcanza, false);
+  const ok = c.plazoRecompra(375, c.arriendoNeto(420000) / c.SUPUESTOS.uf, 1);
+  assert.strictEqual(ok.superaTope, false);
+  assert.strictEqual(ok.meses, 51);
+  // el tope cuenta los meses que ya pasaron: en el mes 40, quedan 44 de tope
+  assert.strictEqual(c.plazoRecompra(375, c.arriendoNeto(420000) / c.SUPUESTOS.uf, 1, 40).superaTope, true);
+  assert.strictEqual(c.plazoRecompra(375, 1, 1).noAlcanza, true);
+});
 
 test('recompra: si el arriendo no alcanza ni para la renta, no termina (null)', () => {
   assert.strictEqual(c.mesesRecompra(375, 1, 1), null);

@@ -150,7 +150,7 @@ button { font: inherit; }
 }
 .btn-sm { min-height: 36px; padding: 6px 24px; }
 /* Zona táctil de 44 px para el botón small */
-.btn-sm::before { content: ''; position: absolute; left: 0; right: 0; top: -4px; bottom: -4px; }
+.btn-sm::before { content: ''; position: absolute; left: 0; right: 0; top: -6px; bottom: -6px; }
 .btn-lg { min-height: 56px; padding: 16px 35px; }
 .btn-bloque { display: flex; width: 100%; }
 
@@ -851,7 +851,7 @@ body.en-intro .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
 .documento-icono svg { width: 16px; height: 16px; color: var(--white); }
 .documento-texto strong { display: block; font-size: 15px; color: var(--gray-dark); }
 .documento-texto small { display: block; font-size: 14px; color: var(--gray-semidark); overflow-wrap: anywhere; }
-.btn-subir { min-width: 44px; }
+.btn-subir { min-width: 44px; min-height: 44px; }
 .hoja-archivos { margin-top: 12px; padding: 12px; border-radius: var(--radio); background: var(--gray-light); }
 .hoja-archivos[hidden] { display: none; }
 .hoja-titulo { margin: 0 0 8px; font-weight: 600; color: var(--gray-dark); font-size: 15px; }
@@ -866,10 +866,10 @@ body.en-intro .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
 .archivo-nombre { font-size: 12px; line-height: 1.3; overflow-wrap: anywhere; text-align: center; }
 .miniatura-doc { width: 60px; height: 78px; }
 .md-hoja { fill: var(--white); stroke: var(--gray-neutral); }
-.md-titulo { fill: var(--gray-semidark); }
 .md-linea { fill: var(--gray-semilight); }
 .md-marca { fill: var(--yellow-20); }
-.md-texto { fill: var(--gray-dark); font-size: 5.2px; font-weight: 700; }
+.md-texto { fill: var(--gray-dark); font-size: 6px; font-weight: 700; }
+.md-nombre { fill: var(--gray-dark); font-size: 7px; font-weight: 700; }
 .subiendo { margin: 0 0 8px; color: var(--gray-dark); font-weight: 600; }
 .barra-subida { height: 8px; border-radius: 999px; background: var(--gray-semilight); overflow: hidden; }
 .barra-subida span { display: block; height: 100%; width: 100%; background: var(--green-normal); transform-origin: left; animation: subir 1s linear forwards; }

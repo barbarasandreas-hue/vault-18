@@ -317,13 +317,12 @@
     var paso = pasoEfectivo();
 
     if (paso === 1) {
-      var k = carga(e.totalMes, estado.sueldoPropio, estado.sueldoPareja);
-      var nivel = nivelCarga(k);
+      var ev = evaluarCarga(e.totalMes, estado.otrasCuotas, estado.sueldoPropio, estado.sueldoPareja);
       return {
         p: p, paso: 1, etapa: 'Paso 2 de 5' + SEP + 'Postula',
-        etiqueta: nivel ? 'Tu carga' : 'Revisa si califican',
-        numero: nivel ? formatoPorcentaje(cargaRedondeada(k), 1) : null,
-        detalle: nivel ? SEMAFORO[nivel].palabra : 'Escribe los sueldos de los dos para ver tu carga.',
+        etiqueta: ev ? 'Tu carga' : 'Revisa si califican',
+        numero: ev ? formatoPorcentaje(ev.cargaTotal, 1) : null,
+        detalle: ev ? SEMAFORO[ev.nivel].palabra : 'Escribe tu sueldo para ver tu carga.',
         accion: 'Ir a Postula'
       };
     }
@@ -379,7 +378,7 @@
     }).join('') + '</ol>';
   }
 
-  // Avisos de la IA: máximo 2, calculados con datos reales del proyecto y del ahorro.
+  // Avisos: máximo 2, calculados con reglas fijas sobre datos del proyecto y del ahorro.
   function avisosIA(x) {
     var p = x.p;
     var r = resumen(p);
@@ -403,7 +402,7 @@
       if (aviso.cierre) avisos.push(aviso.cierre);
     } else if (x.paso === 4) {
       var m = mesDelDepartamento(p, departamentoDeMiCompra(p));
-      if (estado.modo === 'arrendar' && m.porcentajeTuyo < 100 && m.faltanRecompra) {
+      if (estado.modo === 'arrendar' && m.porcentajeTuyo < 100 && m.faltanRecompra && !m.plazo.superaTope) {
         avisos.push('Con este arriendo, en ' + textoMeses(m.faltanRecompra) + ' el departamento es 100\u00a0% tuyo.');
       }
     } else {
@@ -433,7 +432,7 @@
       recorridoCamino(x.paso) +
       (avisos.length
         ? '<section class="tarjeta bloque avisos" aria-labelledby="titulo-avisos">' +
-            '<h2 class="h5" id="titulo-avisos">Avisos de la IA</h2>' +
+            '<h2 class="h5" id="titulo-avisos">Avisos</h2>' +
             '<ul class="lista-check">' + avisos.map(function (a) {
               return '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>' + a + '</span></li>';
             }).join('') + '</ul>' +
@@ -827,7 +826,7 @@
         '<h2 class="h5" id="titulo-para-invertir">Para invertir</h2>' +
         '<ul class="datos-inversion">' +
           '<li><span>Rentabilidad</span><strong>6\u00a0% al año en UF</strong></li>' +
-          '<li><span>Plazo</span><strong>≈ ' + textoMeses(mesesRecompra(r.porFinanciarUF, r.netoMensualUF, 1) || SUPUESTOS.topeRecompraMeses) + '</strong></li>' +
+          '<li><span>Plazo</span><strong>' + textoPlazo(plazoRecompra(r.porFinanciarUF, r.netoMensualUF, 1)) + '</strong></li>' +
           '<li><span>Tu respaldo</span><strong>Parte del departamento ' + ayuda('participacion') + '</strong></li>' +
           '<li><span>Falta por financiar</span><strong>' + formatoUF(r.faltaUF) + ' = ' + formatoPesos(ufAPesos(r.faltaUF)) + '</strong></li>' +
         '</ul>' +
@@ -928,13 +927,13 @@
         return;
       }
       var primero = flujoInversionUF(monto, r.porFinanciarUF, r.netoMensualUF, 1, 1);
-      var meses = mesesRecompra(r.porFinanciarUF, r.netoMensualUF, 1);
+      var pl = plazoRecompra(r.porFinanciarUF, r.netoMensualUF, 1);
       $('invertir-resultado').innerHTML =
         '<div class="tarjeta protagonista">' +
           '<p class="etiqueta">Recibirás el primer mes</p>' +
           '<strong class="numero display-2">' + formatoPesos(ufAPesos(primero)) + '</strong>' +
-          '<p class="texto-apoyo">Recuperas ' + formatoUF(monto) + ' (' + formatoPesos(ufAPesos(monto)) + ') más 6\u00a0% al año en UF en ≈ ' +
-            textoMeses(meses || SUPUESTOS.topeRecompraMeses) + '.</p>' +
+          '<p class="texto-apoyo">Recuperas ' + formatoUF(monto) + ' (' + formatoPesos(ufAPesos(monto)) + ') más 6\u00a0% al año en UF' +
+            (pl.superaTope ? ' a más tardar en 84 meses, con refinanciamiento o venta.' : ' en ≈ ' + textoMeses(pl.meses) + '.') + '</p>' +
         '</div>';
     };
 
@@ -979,7 +978,8 @@
     var tarjetas = lista.map(function (x) {
       var p = buscarProyecto(x.proyectoId);
       var dc = datosCobro([x])[0];
-      var total = mesesRecompra(dc.participacionUF, dc.netoUF, 1) || SUPUESTOS.topeRecompraMeses;
+      var pl = plazoRecompra(dc.participacionUF, dc.netoUF, 1);
+      var total = pl.superaTope ? SUPUESTOS.topeRecompraMeses : pl.meses;
       var proximo = ufAPesos(cuotaMensualTotalUF([dc]));
       return '<li class="tarjeta inversion">' +
         '<a class="enlace" href="#proyecto/' + esc(p.id) + '">' + esc(p.nombre) + '</a>' +
@@ -1020,9 +1020,9 @@
   ];
 
   var SEMAFORO = {
-    'holgado': { palabra: 'Holgado', icono: 'i-ok', explica: 'Hasta 25\u00a0%: cómodo.' },
-    'limite': { palabra: 'En el límite', icono: 'i-alerta', explica: 'Bci aprueba hasta 30\u00a0%, con poco margen.' },
-    'no-aprueba': { palabra: 'No aprueba', icono: 'i-no', explica: 'Sobre 30\u00a0%, Bci no aprueba.' }
+    'holgado': { palabra: 'Holgado', icono: 'i-ok', explica: 'Dentro de lo cómodo.' },
+    'limite': { palabra: 'En el límite', icono: 'i-alerta', explica: 'Con cuotas, hasta 30\u00a0%: poco margen.' },
+    'no-aprueba': { palabra: 'No aprueba', icono: 'i-no', explica: 'Máximo: dividendo 25\u00a0% y con cuotas 30\u00a0%.' }
   };
 
   function departamentoDeMiCompra(p) {
@@ -1079,12 +1079,13 @@
   // Busca otro proyecto que deje la carga en verde o amarillo, con los mismos sueldos.
   // Si ninguno aprueba, dice cuánto ingreso falta para este proyecto.
   // Devuelve { html, aprueba } (aprueba = la sugerencia permite postular).
-  function sugerencia(p, cargaActual) {
+  function sugerencia(p, ev) {
+    var cargaActual = ev.cargaTotal;
     var total = resumen(p).escenario.totalMes;
     var opciones = PROYECTOS.filter(function (x) {
       return x.id !== p.id && invertidoEn(x.id) === 0 && resumen(x).cuposLibres > 0 && (estado.modo !== 'arrendar' || resumen(x).pasaFiltro);
     }).map(function (x) { return { id: x.id, totalMes: resumen(x).escenario.totalMes }; });
-    var mejor = mejorAlternativa(cargaActual, opciones, estado.sueldoPropio, estado.sueldoPareja);
+    var mejor = mejorAlternativa(cargaActual, opciones, estado.sueldoPropio, estado.sueldoPareja, estado.otrasCuotas);
 
     if (mejor && mejor.nivel !== 'no-aprueba') {
       var otro = buscarProyecto(mejor.id);
@@ -1100,12 +1101,11 @@
       };
     }
 
-    if (nivelCarga(cargaActual) === 'no-aprueba') {
+    if (ev.nivel === 'no-aprueba') {
       return {
         aprueba: false,
         html: '<div class="sugerencia"><p>Para postular aquí, a su ingreso le faltan <strong>' +
-          formatoPesos(ingresoFaltante(total, estado.sueldoPropio, estado.sueldoPareja)) + '</strong> al mes: ' +
-          'necesitan ' + formatoPesos(ingresoMinimo(total)) + ' entre los dos.</p>' +
+          formatoPesos(ingresoFaltante(total, estado.sueldoPropio, estado.sueldoPareja, estado.otrasCuotas)) + '</strong> al mes.</p>' +
           '<a class="enlace" href="#proyectos">Ver proyectos más baratos</a></div>'
       };
     }
@@ -1122,39 +1122,42 @@
   function renderCarga(p, mostrarVacios) {
     var total = resumen(p).escenario.totalMes;
     var okPropio = validarSueldo($('sueldo-propio'), estado.sueldoPropio, mostrarVacios.propio);
-    var okPareja = validarSueldo($('sueldo-pareja'), estado.sueldoPareja, mostrarVacios.pareja);
+    // La pareja es opcional: solo se marca error si escribió $0.
+    var okPareja = estado.sueldoPareja === null || validarSueldo($('sueldo-pareja'), estado.sueldoPareja, false);
+    if (estado.sueldoPareja === null) validarSueldo($('sueldo-pareja'), null, false);
     var boton = $('btn-postular');
     var resultado = $('carga-resultado');
 
     if (!okPropio || !okPareja) {
-      resultado.innerHTML = '<p class="texto-apoyo">Escribe los dos sueldos para ver tu carga.</p>';
+      resultado.innerHTML = '<p class="texto-apoyo">Escribe tu sueldo para ver tu carga.</p>';
       boton.disabled = true;
-      $('postular-explica').textContent = 'Para postular, completa los dos sueldos.';
+      $('postular-explica').textContent = 'Para postular, escribe tu sueldo.';
       return false;
     }
 
-    var k = carga(total, estado.sueldoPropio, estado.sueldoPareja);
-    var nivel = nivelCarga(k);
-    var s = SEMAFORO[nivel];
-    var sug = nivel === 'holgado' ? null : sugerencia(p, k);
+    var ev = evaluarCarga(total, estado.otrasCuotas, estado.sueldoPropio, estado.sueldoPareja);
+    var s = SEMAFORO[ev.nivel];
+    var hayCuotas = (estado.otrasCuotas || 0) > 0;
+    var sug = ev.nivel === 'holgado' ? null : sugerencia(p, ev);
     resultado.innerHTML =
-      '<div class="tarjeta semaforo semaforo-' + nivel + '">' +
+      '<div class="tarjeta semaforo semaforo-' + ev.nivel + '">' +
         '<p class="etiqueta">Tu carga ' + ayuda('carga') + '</p>' +
         '<div class="semaforo-fila">' +
-          '<strong class="numero display-2">' + formatoPorcentaje(cargaRedondeada(k), 1) + '</strong>' +
+          '<strong class="numero display-2">' + formatoPorcentaje(hayCuotas ? ev.cargaTotal : ev.cargaDividendo, 1) + '</strong>' +
           '<p class="estado-semaforo"><svg aria-hidden="true"><use href="#' + s.icono + '"/></svg>' + s.palabra + '</p>' +
         '</div>' +
-        '<p class="texto-apoyo">' + s.explica + '</p>' +
+        '<p class="texto-apoyo">' + (hayCuotas
+          ? 'Dividendo ' + formatoPorcentaje(ev.cargaDividendo, 1) + ' · con cuotas ' + formatoPorcentaje(ev.cargaTotal, 1) + '. '
+          : '') + s.explica + '</p>' +
       '</div>' +
       (sug ? sug.html : '');
 
-    boton.disabled = nivel === 'no-aprueba';
-    $('postular-explica').textContent = nivel !== 'no-aprueba' ? ''
-      : (sug && sug.aprueba
-        ? 'Con una carga sobre 30\u00a0% no puedes postular aquí. Revisa la sugerencia de arriba.'
-        : 'Con una carga sobre 30\u00a0% no puedes postular aquí: falta ingreso o un departamento más barato.');
+    boton.disabled = ev.nivel === 'no-aprueba';
+    $('postular-explica').textContent = ev.nivel !== 'no-aprueba' ? ''
+      : (sug && sug.aprueba ? 'Así no puedes postular aquí. Revisa la sugerencia.' : 'Así no puedes postular aquí.');
     return true;
   }
+
 
   function campoContrato() {
     var opcion = function (valor) {
@@ -1231,6 +1234,7 @@
     $('otras-cuotas').addEventListener('input', function () {
       estado.otrasCuotas = formatearCampo($('otras-cuotas'));
       guardarEstado();
+      renderCarga(p, tocados);
     });
     document.querySelectorAll('input[name="contrato"]').forEach(function (r) {
       r.addEventListener('change', function () { estado.contrato = r.value; guardarEstado(); });
@@ -1240,7 +1244,7 @@
       tocados = { propio: true, pareja: true };
       renderCarga(p, tocados);
       if ($('btn-postular').disabled) return;
-      var k = carga(e.totalMes, estado.sueldoPropio, estado.sueldoPareja);
+      var k = evaluarCarga(e.totalMes, estado.otrasCuotas, estado.sueldoPropio, estado.sueldoPareja).cargaTotal;
       conCarga($('btn-postular'), function () {
         guardarCompra(Object.assign({}, estado.compra, { subpaso: 'documentos', carga: k }));
         renderMiCompra();
@@ -1257,27 +1261,28 @@
   // ---------- Tus documentos: archivos de ejemplo precargados (S8-F3) ----------
   // Los archivos ya vienen en la app: nada se lee, se guarda ni se envía.
   var DOCUMENTOS = [
-    { id: 'liquidaciones', nombre: 'Últimas 3 liquidaciones de sueldo', para: 'Muestran tu sueldo líquido de los últimos meses.',
+    { id: 'liquidaciones', corto: 'Liquidación', nombre: 'Últimas 3 liquidaciones de sueldo', para: 'Muestran tu sueldo líquido de los últimos meses.',
       archivos: ['liquidacion_septiembre.pdf', 'liquidacion_agosto.pdf', 'liquidacion_julio.pdf'] },
-    { id: 'afp', nombre: 'Certificado de cotizaciones de la AFP', para: 'Muestra 12 meses de cotizaciones: que tu ingreso es estable.',
+    { id: 'afp', corto: 'AFP', nombre: 'Certificado de cotizaciones de la AFP', para: 'Muestra 12 meses de cotizaciones: que tu ingreso es estable.',
       archivos: ['certificado_cotizaciones_12_meses.pdf', 'certificado_cotizaciones_24_meses.pdf'] },
-    { id: 'contrato', nombre: 'Contrato de trabajo o certificado de antigüedad', para: 'Muestra tu tipo de contrato y desde cuándo trabajas.',
+    { id: 'contrato', corto: 'Contrato', nombre: 'Contrato de trabajo o certificado de antigüedad', para: 'Muestra tu tipo de contrato y desde cuándo trabajas.',
       archivos: ['contrato_de_trabajo.pdf', 'certificado_de_antiguedad.pdf'] },
-    { id: 'carnet', nombre: 'Carnet de identidad por ambos lados', para: 'Confirma tu identidad.',
+    { id: 'carnet', corto: 'Carnet', nombre: 'Carnet de identidad por ambos lados', para: 'Confirma tu identidad.',
       archivos: ['carnet_ambos_lados.pdf', 'carnet_frente_y_reverso.jpg'] }
   ];
 
   // Miniatura dibujada: rectángulo, líneas grises, título y la marca "DOCUMENTO DE EJEMPLO".
-  function miniaturaDoc(titulo) {
+  function miniaturaDoc(titulo, corto) {
     return '<svg class="miniatura-doc" viewBox="0 0 60 78" aria-hidden="true">' +
       '<rect class="md-hoja" x="1" y="1" width="58" height="76" rx="4"/>' +
-      '<rect class="md-titulo" x="8" y="9" width="30" height="4" rx="2"/>' +
+      '<text class="md-nombre" x="8" y="13">' + esc(corto) + '</text>' +
       '<rect class="md-linea" x="8" y="18" width="44" height="3" rx="1.5"/>' +
       '<rect class="md-linea" x="8" y="25" width="40" height="3" rx="1.5"/>' +
       '<rect class="md-linea" x="8" y="32" width="44" height="3" rx="1.5"/>' +
       '<rect class="md-linea" x="8" y="39" width="34" height="3" rx="1.5"/>' +
-      '<rect class="md-marca" x="4" y="52" width="52" height="12" rx="2"/>' +
-      '<text class="md-texto" x="30" y="60" text-anchor="middle">DOCUMENTO DE EJEMPLO</text>' +
+      '<rect class="md-marca" x="4" y="49" width="52" height="18" rx="2"/>' +
+      '<text class="md-texto" x="30" y="57" text-anchor="middle">DOCUMENTO</text>' +
+      '<text class="md-texto" x="30" y="64" text-anchor="middle">DE EJEMPLO</text>' +
       '</svg><span class="oculto-visual">' + esc(titulo) + '</span>';
   }
 
@@ -1375,7 +1380,7 @@
     if (abierta) return;
     hoja.innerHTML = '<p class="hoja-titulo">Elige un archivo de ejemplo</p>' +
       '<ul class="archivos">' + x.archivos.map(function (nombre) {
-        return '<li><button type="button" class="archivo" data-archivo="' + esc(nombre) + '">' + miniaturaDoc(nombre) +
+        return '<li><button type="button" class="archivo" data-archivo="' + esc(nombre) + '">' + miniaturaDoc(nombre, x.corto) +
           '<span class="archivo-nombre">' + esc(nombre) + '</span></button></li>';
       }).join('') + '</ul>';
     hoja.hidden = false;
@@ -1387,7 +1392,7 @@
         hoja.innerHTML = '<p class="subiendo" role="status">Subiendo ' + esc(nombre) + '…</p>' +
           '<div class="barra-subida" aria-hidden="true"><span></span></div>';
         setTimeout(function () {
-          if (!estado.compra || subpasoPostula() !== 'documentos') return;
+          if (!estado.compra || subpasoPostula() !== 'documentos' || $('pantalla-mis-proyectos').hidden || !document.body.contains(hoja)) return;
           var docs = Object.assign({}, estado.compra.documentos || {});
           docs[id] = nombre;
           guardarCompra(Object.assign({}, estado.compra, { documentos: docs }));
@@ -1514,6 +1519,13 @@
   }
 
   function textoMeses(n) { return n === 1 ? '1 mes' : n + ' meses'; }
+
+  // Plazo de la recompra para mostrar: con el tope de 84 meses.
+  function textoPlazo(pl) {
+    if (pl.noAlcanza) return 'El arriendo no alcanza';
+    if (pl.superaTope) return 'Mes 84: refinancias o vendes';
+    return '≈ ' + textoMeses(pl.meses);
+  }
 
   function renderTu5(p, d) {
     var meta = resumen(p).escenario.alEscriturar;
@@ -1667,7 +1679,7 @@
         estado.ahorroIniciado = false;
         guardarEstado();
         guardarCompra(Object.assign({}, estado.compra, {
-          paso: 4, mes: 1, arriendoMes: d.arriendoBruto, saldoParticipacionUF: e.participacionUF, fraccion: 1
+          paso: 4, mes: 1, arriendoMes: d.arriendoEstimadoIA, saldoParticipacionUF: e.participacionUF, fraccion: 1
         }));
         renderMiCompra();
         window.scrollTo(0, 0);
@@ -1689,7 +1701,7 @@
     var e = resumen(p).escenario;
     var c = estado.compra;
     var mes = c.mes || 1;
-    var arriendo = c.arriendoMes === undefined || c.arriendoMes === null ? d.arriendoBruto : c.arriendoMes;
+    var arriendo = c.arriendoMes === undefined || c.arriendoMes === null ? d.arriendoEstimadoIA : c.arriendoMes;
     var arrendar = estado.modo === 'arrendar';
     var saldo = arrendar ? (typeof c.saldoParticipacionUF === 'number' ? c.saldoParticipacionUF : e.participacionUF) : 0;
     var fraccion = c.fraccion === 0.8 ? 0.8 : 1;
@@ -1704,6 +1716,7 @@
       saldoParticipacionUF: saldo,
       porcentajeTuyo: Math.floor(100 * (1 - saldo / e.precioUF) + 1e-9),
       faltanRecompra: saldo > 0 ? mesesRecompra(saldo, netoUF, fraccion) : 0,
+      plazo: plazoRecompra(saldo, netoUF, fraccion, mes - 1),
       pone: arrendar ? cascada.pone : e.totalMes,
       excedente: arrendar ? cascada.excedente : 0,
       saldoBci: ufAPesos(saldoBciUF(e.precioUF, mes, estado.modo)),
@@ -1730,8 +1743,10 @@
   // Cuánto del departamento ya es tuyo (modo arrendar): la parte de los inversionistas se recompra con el arriendo.
   function barraParticipacion(m) {
     var pct = Math.max(0, Math.min(100, m.porcentajeTuyo));
-    var faltan = m.faltanRecompra === null ? 'El arriendo de hoy no alcanza para recomprar: revisa el arriendo.'
-      : (m.faltanRecompra > 0 ? 'Te faltan ' + textoMeses(m.faltanRecompra) + '.' : 'Ya es 100 % tuyo.');
+    var faltan = m.faltanRecompra === 0 ? 'Ya es 100 % tuyo.'
+      : (m.plazo.noAlcanza ? 'El arriendo de hoy no alcanza para recomprar.'
+        : (m.plazo.superaTope ? 'Con este arriendo no llegas al 100 %: en el mes 84 refinancias o vendes.'
+          : 'Te faltan ' + textoMeses(m.faltanRecompra) + '.'));
     return '<div class="deuda">' +
       '<p class="avance-texto"><span><strong>Ya es tuyo</strong></span><span>' + pct + ' %</span></p>' +
       '<div class="avance-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="Parte del departamento que ya es tuya">' +
@@ -2493,10 +2508,9 @@
   function recalcularPostulacion() {
     if (!estado.compra || (estado.compra.paso !== 2 && estado.compra.paso !== 3)) return;
     var p = buscarProyecto(estado.compra.proyectoId);
-    var k = carga(resumen(p).escenario.totalMes, estado.sueldoPropio, estado.sueldoPareja);
-    var nivel = nivelCarga(k);
-    if (!nivel || nivel === 'no-aprueba') guardarCompra(Object.assign({}, estado.compra, { paso: 1, carga: null }));
-    else guardarCompra(Object.assign({}, estado.compra, { carga: k }));
+    var ev = evaluarCarga(resumen(p).escenario.totalMes, estado.otrasCuotas, estado.sueldoPropio, estado.sueldoPareja);
+    if (!ev || ev.nivel === 'no-aprueba') guardarCompra(Object.assign({}, estado.compra, { paso: 1, carga: null }));
+    else guardarCompra(Object.assign({}, estado.compra, { carga: ev.cargaTotal }));
   }
 
   // ---------- Navegación ----------

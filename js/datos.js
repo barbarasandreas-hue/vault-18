@@ -30,30 +30,30 @@ var PROYECTOS = [
 ];
 
 // Departamentos disponibles de cada proyecto (los que aún no tienen comprador).
-// arriendoBruto: arriendo mensual estimado por la IA, en pesos (en la demo, valores precalculados
-// por comuna y tipología; ver origenArriendo).
+// arriendoEstimadoIA: arriendo mensual bruto estimado por la IA, en pesos. En la demo son valores
+// precalculados por comuna y tipología, y origenArriendo lo dice.
 var ORIGEN_ARRIENDO = 'estimación IA (demo)';
 var DEPARTAMENTOS = [
   // Mirador Independencia (lote de 10, 5 % de descuento): rinde 4,0 % a 4,1 % neto
-  { id: 'mi-401', proyectoId: 'mirador-independencia', comuna: 'Independencia', piso: 4, m2: 48, dormitorios: 2, banos: 1, listaUF: 2500, arriendoBruto: 395000 },
-  { id: 'mi-603', proyectoId: 'mirador-independencia', comuna: 'Independencia', piso: 6, m2: 48, dormitorios: 2, banos: 1, listaUF: 2500, arriendoBruto: 400000 },
-  { id: 'mi-805', proyectoId: 'mirador-independencia', comuna: 'Independencia', piso: 8, m2: 48, dormitorios: 2, banos: 1, listaUF: 2500, arriendoBruto: 400000 },
-  { id: 'mi-1102', proyectoId: 'mirador-independencia', comuna: 'Independencia', piso: 11, m2: 48, dormitorios: 2, banos: 1, listaUF: 2500, arriendoBruto: 405000 },
+  { id: 'mi-401', proyectoId: 'mirador-independencia', comuna: 'Independencia', piso: 4, m2: 48, dormitorios: 2, banos: 1, listaUF: 2500, arriendoEstimadoIA: 395000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'mi-603', proyectoId: 'mirador-independencia', comuna: 'Independencia', piso: 6, m2: 48, dormitorios: 2, banos: 1, listaUF: 2500, arriendoEstimadoIA: 400000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'mi-805', proyectoId: 'mirador-independencia', comuna: 'Independencia', piso: 8, m2: 48, dormitorios: 2, banos: 1, listaUF: 2500, arriendoEstimadoIA: 400000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'mi-1102', proyectoId: 'mirador-independencia', comuna: 'Independencia', piso: 11, m2: 48, dormitorios: 2, banos: 1, listaUF: 2500, arriendoEstimadoIA: 405000, origenArriendo: ORIGEN_ARRIENDO },
   // Parque Quinta Normal (lote de 8, 3 % de descuento): 1 dormitorio, rinde 4,0 % neto
-  { id: 'pq-302', proyectoId: 'parque-quinta-normal', comuna: 'Quinta Normal', piso: 3, m2: 38, dormitorios: 1, banos: 1, listaUF: 1750, arriendoBruto: 280000 },
-  { id: 'pq-704', proyectoId: 'parque-quinta-normal', comuna: 'Quinta Normal', piso: 7, m2: 38, dormitorios: 1, banos: 1, listaUF: 1750, arriendoBruto: 280000 },
-  { id: 'pq-1201', proyectoId: 'parque-quinta-normal', comuna: 'Quinta Normal', piso: 12, m2: 38, dormitorios: 1, banos: 1, listaUF: 1750, arriendoBruto: 285000 },
+  { id: 'pq-302', proyectoId: 'parque-quinta-normal', comuna: 'Quinta Normal', piso: 3, m2: 38, dormitorios: 1, banos: 1, listaUF: 1750, arriendoEstimadoIA: 280000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'pq-704', proyectoId: 'parque-quinta-normal', comuna: 'Quinta Normal', piso: 7, m2: 38, dormitorios: 1, banos: 1, listaUF: 1750, arriendoEstimadoIA: 280000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'pq-1201', proyectoId: 'parque-quinta-normal', comuna: 'Quinta Normal', piso: 12, m2: 38, dormitorios: 1, banos: 1, listaUF: 1750, arriendoEstimadoIA: 285000, origenArriendo: ORIGEN_ARRIENDO },
   // Portal Estación (lote de 10, 5 % de descuento): estudios, rinden 4,0 % neto
-  { id: 'pt-208', proyectoId: 'portal-estacion', comuna: 'Estación Central', piso: 2, m2: 22, dormitorios: 0, banos: 1, listaUF: 1200, arriendoBruto: 190000 },
-  { id: 'pt-715', proyectoId: 'portal-estacion', comuna: 'Estación Central', piso: 7, m2: 22, dormitorios: 0, banos: 1, listaUF: 1200, arriendoBruto: 195000 },
+  { id: 'pt-208', proyectoId: 'portal-estacion', comuna: 'Estación Central', piso: 2, m2: 22, dormitorios: 0, banos: 1, listaUF: 1200, arriendoEstimadoIA: 190000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'pt-715', proyectoId: 'portal-estacion', comuna: 'Estación Central', piso: 7, m2: 22, dormitorios: 0, banos: 1, listaUF: 1200, arriendoEstimadoIA: 195000, origenArriendo: ORIGEN_ARRIENDO },
   // Altos de Recoleta: rinde menos de 3,9 % neto (la IA lo saca en modo arrendar)
-  { id: 'ar-502', proyectoId: 'altos-recoleta', comuna: 'Recoleta', piso: 5, m2: 52, dormitorios: 2, banos: 2, listaUF: 2600, arriendoBruto: 370000 },
-  { id: 'ar-901', proyectoId: 'altos-recoleta', comuna: 'Recoleta', piso: 9, m2: 52, dormitorios: 2, banos: 2, listaUF: 2600, arriendoBruto: 380000 },
+  { id: 'ar-502', proyectoId: 'altos-recoleta', comuna: 'Recoleta', piso: 5, m2: 52, dormitorios: 2, banos: 2, listaUF: 2600, arriendoEstimadoIA: 370000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ar-901', proyectoId: 'altos-recoleta', comuna: 'Recoleta', piso: 9, m2: 52, dormitorios: 2, banos: 2, listaUF: 2600, arriendoEstimadoIA: 380000, origenArriendo: ORIGEN_ARRIENDO },
   // Pie compartido: un departamento por proyecto
-  { id: 'pe-601', proyectoId: 'plaza-estacion', comuna: 'Estación Central', piso: 6, m2: 22, dormitorios: 0, banos: 1, listaUF: 1200, arriendoBruto: 200000 },
-  { id: 'ji-303', proyectoId: 'jardin-independencia', comuna: 'Independencia', piso: 3, m2: 50, dormitorios: 2, banos: 1, listaUF: 2450, arriendoBruto: 410000 },
+  { id: 'pe-601', proyectoId: 'plaza-estacion', comuna: 'Estación Central', piso: 6, m2: 22, dormitorios: 0, banos: 1, listaUF: 1200, arriendoEstimadoIA: 200000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ji-303', proyectoId: 'jardin-independencia', comuna: 'Independencia', piso: 3, m2: 50, dormitorios: 2, banos: 1, listaUF: 2450, arriendoEstimadoIA: 410000, origenArriendo: ORIGEN_ARRIENDO },
   // Barrio Recoleta: rinde menos de 3,9 % neto
-  { id: 'br-1004', proyectoId: 'barrio-recoleta', comuna: 'Recoleta', piso: 10, m2: 40, dormitorios: 1, banos: 1, listaUF: 1950, arriendoBruto: 285000 }
+  { id: 'br-1004', proyectoId: 'barrio-recoleta', comuna: 'Recoleta', piso: 10, m2: 40, dormitorios: 1, banos: 1, listaUF: 1950, arriendoEstimadoIA: 285000, origenArriendo: ORIGEN_ARRIENDO }
 ];
 
 function departamentosDe(proyectoId) {

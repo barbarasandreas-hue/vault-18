@@ -134,7 +134,8 @@ function ahorroPorUnirseUF(listaUF, unidades) {
 }
 
 // Lo que se reúne con inversionistas: la participación de 15 % del precio pagado.
-function porFinanciarUF(precio) { return precio * MODOS.arrendar.inversionistas; }
+function participacionUF(precio) { return precio * MODOS.arrendar.inversionistas; }
+function porFinanciarUF(precio) { return participacionUF(precio); }
 
 // Avance entre 0 y 1 (6 de 10 → 0.6).
 function avance(parte, total) {
@@ -173,7 +174,7 @@ function resumenProyecto(proyecto, departamentos, cuposExtra, invertidoUF, modo)
   var e = escenario(listaUF, tipoCompra, modo, proyecto.cupos);
 
   var rentabilidades = departamentos.map(function (d) {
-    return rentabilidad(d.arriendoBruto, precioUF(d.listaUF, tipoCompra, proyecto.cupos));
+    return rentabilidad(d.arriendoEstimadoIA, precioUF(d.listaUF, tipoCompra, proyecto.cupos));
   });
   var rentMinima = Math.min.apply(null, rentabilidades);
 
@@ -186,8 +187,9 @@ function resumenProyecto(proyecto, departamentos, cuposExtra, invertidoUF, modo)
     escenario: e,
     ahorro: proyecto.tipo === 'conjunto' ? ufAPesos(ahorroPorUnirseUF(listaUF, proyecto.cupos)) : 0,
     descuento: e.descuento,
-    arriendoBruto: departamentos[0].arriendoBruto,
-    netoMensualUF: arriendoNeto(departamentos[0].arriendoBruto) / SUPUESTOS.uf,
+    arriendoBruto: departamentos[0].arriendoEstimadoIA,
+    origenArriendo: departamentos[0].origenArriendo,
+    netoMensualUF: arriendoNeto(departamentos[0].arriendoEstimadoIA) / SUPUESTOS.uf,
     rentabilidad: rentMinima,
     pasaFiltro: pasaFiltroIA(rentMinima),
     cuposTomados: tomados,
@@ -226,37 +228,48 @@ function cargaRedondeada(c) {
   return Math.round(c * 1000 + 1e-7) / 1000;
 }
 
-// Hasta 25 %: holgado. Sobre 25 % y hasta 30 %: en el límite. Sobre 30 %: no aprueba.
+// Regla v3: el dividendo hasta 25 % del ingreso y el dividendo + otras cuotas hasta 30 %.
+// Si se cumplen las dos: holgado (con cuotas hasta 25 %) o en el límite (con cuotas entre 25 y 30 %). Si no: no aprueba.
 // Se compara la carga redondeada que ve el usuario.
 var LIMITE_HOLGADO = 0.25;
 var LIMITE_MAXIMO = 0.30;
 var TOLERANCIA = 1e-9; // para que 0,25 y 0,30 no se pasen por redondeo binario
-function nivelCarga(c) {
-  var r = cargaRedondeada(c);
-  if (r === null) return null;
-  if (r <= LIMITE_HOLGADO + TOLERANCIA) return 'holgado';
-  if (r <= LIMITE_MAXIMO + TOLERANCIA) return 'limite';
-  return 'no-aprueba';
+function nivelCarga(cargaDividendo, cargaTotal) {
+  var d = cargaRedondeada(cargaDividendo);
+  if (d === null) return null;
+  var t = cargaTotal === undefined || cargaTotal === null ? d : cargaRedondeada(cargaTotal);
+  if (d > LIMITE_HOLGADO + TOLERANCIA || t > LIMITE_MAXIMO + TOLERANCIA) return 'no-aprueba';
+  if (t > LIMITE_HOLGADO + TOLERANCIA) return 'limite';
+  return 'holgado';
+}
+
+// La carga v3 completa: dividendo solo y dividendo + otras cuotas, con su nivel.
+function evaluarCarga(dividendo, otrasCuotas, sueldoPropio, sueldoPareja) {
+  var cd = carga(dividendo, sueldoPropio, sueldoPareja);
+  if (cd === null) return null;
+  var ct = carga(dividendo + (otrasCuotas || 0), sueldoPropio, sueldoPareja);
+  return { cargaDividendo: cargaRedondeada(cd), cargaTotal: cargaRedondeada(ct), nivel: nivelCarga(cd, ct) };
 }
 
 // Ingreso del hogar mínimo para que la carga no pase de 30 %.
-function ingresoMinimo(totalMes) {
-  return Math.ceil(totalMes / LIMITE_MAXIMO);
+function ingresoMinimo(dividendo, otrasCuotas) {
+  var otras = otrasCuotas || 0;
+  return Math.ceil(Math.max(dividendo / LIMITE_HOLGADO, (dividendo + otras) / LIMITE_MAXIMO));
 }
 
 // Cuánto ingreso al mes le falta al hogar para postular (0 si ya alcanza).
-function ingresoFaltante(totalMes, sueldoPropio, sueldoPareja) {
-  return Math.max(0, ingresoMinimo(totalMes) - ingresoTotal(sueldoPropio, sueldoPareja));
+function ingresoFaltante(dividendo, sueldoPropio, sueldoPareja, otrasCuotas) {
+  return Math.max(0, ingresoMinimo(dividendo, otrasCuotas) - ingresoTotal(sueldoPropio, sueldoPareja));
 }
 
 // De varias opciones { id, totalMes }, la que deja la carga más baja,
 // solo si mejora la carga actual. Devuelve { id, carga, nivel } o null.
-function mejorAlternativa(cargaActual, opciones, sueldoPropio, sueldoPareja) {
+function mejorAlternativa(cargaActual, opciones, sueldoPropio, sueldoPareja, otrasCuotas) {
   var mejor = null;
   opciones.forEach(function (o) {
-    var c = carga(o.totalMes, sueldoPropio, sueldoPareja);
-    if (c !== null && c < cargaActual && (!mejor || c < mejor.carga)) {
-      mejor = { id: o.id, carga: c, nivel: nivelCarga(c) };
+    var ev = evaluarCarga(o.totalMes, otrasCuotas, sueldoPropio, sueldoPareja);
+    if (ev !== null && ev.cargaTotal < cargaActual && (!mejor || ev.cargaTotal < mejor.carga)) {
+      mejor = { id: o.id, carga: ev.cargaTotal, nivel: ev.nivel };
     }
   });
   return mejor;
@@ -373,6 +386,15 @@ function mesesRecompra(participacionUF, netoUF, fraccion) {
     if (saldo <= 1e-9) return m;
   }
   return null;
+}
+
+// Plazo de la recompra con el tope de 84 meses (contando los meses que ya pasaron).
+// meses: los que faltan, o null si el arriendo no alcanza ni para la renta.
+// superaTope: si no se termina antes del mes 84; ahí el comprador refinancia o vende.
+function plazoRecompra(participacionUF, netoUF, fraccion, mesesPasados) {
+  var meses = mesesRecompra(participacionUF, netoUF, fraccion);
+  var tope = SUPUESTOS.topeRecompraMeses - (mesesPasados || 0);
+  return { meses: meses, noAlcanza: meses === null, superaTope: meses === null || meses > tope, tope: tope };
 }
 
 // Cómo se reparte el arriendo de un mes en la cuenta custodia (modo arrendar, v3).
@@ -599,10 +621,11 @@ function sostenible(perfil, dividendo) {
   var ingreso = ingresoTotal(perfil.sueldoPropio, perfil.sueldoPareja);
   if (!ingreso) return null;
   var otras = perfil.otrasCuotas || 0;
-  var cargaDividendo = cargaRedondeada(dividendo / ingreso);
-  var cargaTotal = cargaRedondeada((dividendo + otras) / ingreso);
+  var ev = evaluarCarga(dividendo, otras, perfil.sueldoPropio, perfil.sueldoPareja);
+  var cargaDividendo = ev.cargaDividendo;
+  var cargaTotal = ev.cargaTotal;
   var m = mesReal(perfil, dividendo);
-  var cumpleCarga = cargaDividendo <= LIMITE_HOLGADO + TOLERANCIA && cargaTotal <= LIMITE_MAXIMO + TOLERANCIA;
+  var cumpleCarga = ev.nivel !== 'no-aprueba';
   return {
     cargaDividendo: cargaDividendo, cargaTotal: cargaTotal, cumpleCarga: cumpleCarga,
     mes: m, cumple: cumpleCarga && m.alcanzaParaVivir
@@ -833,6 +856,9 @@ if (typeof module !== 'undefined') module.exports = {
   simularRecompra: simularRecompra,
   saldoParticipacionUF: saldoParticipacionUF,
   mesesRecompra: mesesRecompra,
+  plazoRecompra: plazoRecompra,
+  participacionUF: participacionUF,
+  evaluarCarga: evaluarCarga,
   flujoInversionUF: flujoInversionUF,
   preaprobacion: preaprobacion,
   INVERSION_MINIMA_UF: INVERSION_MINIMA_UF,

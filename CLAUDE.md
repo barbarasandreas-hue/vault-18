@@ -64,6 +64,15 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
   - Íconos: Bci usa una fuente propia que no es pública; usar íconos SVG de línea dibujados en el código.
 - Fondos claros. Tipografía: **Overpass** (la del Bci Kit) para títulos y textos, desde Google Fonts. Los títulos van en peso 400, no en negrita.
 - Mobile first (390 px de ancho). Un número y una acción por pantalla. Se entiende en 10 segundos. Siempre mostrar el escenario sin plusvalía.
+- **Textos mínimos, al estilo Bci** (sin explicaciones innecesarias):
+  - Cada pantalla lleva título, número protagonista, a lo más una línea de apoyo y la acción.
+  - No se explica lo que ya dice un número, un título, una etiqueta o un botón.
+  - Lo que explica un término va en el botón "?" del glosario, no en un párrafo.
+  - Los botones y los chips no llevan porcentajes ni paréntesis: "Usado", no "Usado (−17,6 %)".
+  - Cada frase cabe en una línea del teléfono. Si necesita dos, primero revisar qué sobra.
+  - Los datos se muestran en filas (etiqueta y monto), no dentro de una oración.
+  - No se repite "Es una simulación…": basta una palabra ("simulado") donde haga falta.
+  - Se mantienen siempre, aunque sean texto: el sello sin plusvalía, el peor caso (por ejemplo, el dividendo sin subsidio), si un camino existe hoy o es una propuesta, y los avisos de la demo que pide el plan.
 - Los montos se muestran en pesos chilenos, con punto de miles (es-CL).
 
 ## Stack técnico
