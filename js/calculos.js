@@ -754,6 +754,23 @@ function mesesRecordar(perfil, id) {
   return Math.min(24, Math.max(3, e.meses));
 }
 
+// S11-F3: Todavía no con interruptores. Aplica los cambios activos y devuelve los números del camino.
+// activos: { cuotas: terminar las otras cuotas, estudio: un estudio de UF 1.200, renta: la renta necesaria }.
+// La renta se calcula después de los otros cambios, sobre lo que queda.
+function simularCambios(perfil, id, activos) {
+  var a = activos || {};
+  var p = Object.assign({}, perfil);
+  var lista = a.estudio ? ESTUDIO_UF : (perfil.listaUF || LISTA_REFERENCIA_UF);
+  if (a.cuotas) p.otrasCuotas = 0;
+  if (a.renta) {
+    var antes = numerosCamino(id, lista, p);
+    var necesario = ingresoNecesario(p, antes.dividendo);
+    if (necesario > ingresoTotal(p.sueldoPropio, p.sueldoPareja)) { p.sueldoPropio = necesario; p.sueldoPareja = null; }
+  }
+  var n = numerosCamino(id, lista, p);
+  return { numeros: n, perfil: p, listaUF: lista, cumple: n.evaluacion.cumple };
+}
+
 // ---------- Fichas informativas (S9-F4) ----------
 
 // Arriendo con opción de compra, con las proporciones de Hogarízate (DF, 2023):
@@ -881,6 +898,7 @@ if (typeof module !== 'undefined') module.exports = {
   recomendarCamino: recomendarCamino,
   ingresoNecesario: ingresoNecesario,
   cambiosTodaviaNo: cambiosTodaviaNo,
+  simularCambios: simularCambios,
   mesesRecordar: mesesRecordar,
   arriendoConOpcion: arriendoConOpcion,
   RESPALDO: RESPALDO,

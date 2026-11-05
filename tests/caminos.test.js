@@ -182,3 +182,25 @@ test('Registro: el texto para copiar', () => {
 test('Ninguna regla se presenta como IA', () => {
   for (const id of Object.keys(c.CAMINOS)) assert.doesNotMatch(c.CAMINOS[id].nombre, /IA/);
 });
+
+test('Todavía no con interruptores: cada cambio recalcula el camino', () => {
+  const p = { ...base, modo: 'vivir', sueldoPropio: 1200000, sueldoPareja: null, otrasCuotas: 200000, ahorroActual: 0, ahorroMensual: 200000, hayGrupo: true };
+  const nada = c.simularCambios(p, 'grupo-vivir', {});
+  assert.strictEqual(nada.cumple, false);
+  assert.strictEqual(nada.numeros.dividendo, 442759);
+  // Sin cuotas: la carga baja pero el dividendo sigue sobre 25 %
+  const sinCuotas = c.simularCambios(p, 'grupo-vivir', { cuotas: true });
+  assert.strictEqual(sinCuotas.perfil.otrasCuotas, 0);
+  assert.strictEqual(sinCuotas.cumple, false);
+  // Estudio + sin cuotas: 227.472 / 1.200.000 = 19 % y queda más de 40 %
+  const estudio = c.simularCambios(p, 'grupo-vivir', { cuotas: true, estudio: true });
+  assert.strictEqual(estudio.listaUF, 1200);
+  assert.strictEqual(estudio.cumple, true);
+  // La renta siempre resuelve, y con el estudio pide menos renta que sin él
+  const renta = c.simularCambios(p, 'grupo-vivir', { renta: true });
+  assert.strictEqual(renta.cumple, true);
+  const rentaEstudio = c.simularCambios(p, 'grupo-vivir', { renta: true, estudio: true });
+  assert.ok(rentaEstudio.perfil.sueldoPropio <= Math.max(renta.perfil.sueldoPropio, 1200000));
+  // No toca el perfil original
+  assert.strictEqual(p.otrasCuotas, 200000);
+});

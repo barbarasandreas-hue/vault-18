@@ -38,6 +38,7 @@ const combinaciones = [
   ['blue-dark', 'blue-20', false, 'chips y avisos'],
   ['gray-dark', 'blue-20', false, 'explicaciones a un toque'],
   ['gray-dark', 'red-20', false, 'mensajes de error'],
+  ['white', 'gray-dark', false, 'toast (S11)'],
   ['red-dark', 'red-20', false, 'semáforo No aprueba'],
   ['red-dark', 'white', false, 'botón de borrar'],
   ['gray-dark', 'yellow-normal', false, 'semáforo En el límite'],

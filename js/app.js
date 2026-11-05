@@ -11,7 +11,7 @@
     'mis-proyectos': { pantalla: 'mis-proyectos', seccion: 'mis-proyectos' },
     'invertir': { pantalla: 'invertir', seccion: 'proyectos' },
     'perfil': { pantalla: 'perfil', seccion: 'perfil' },
-    'mes-real': { pantalla: 'mes-real', seccion: 'inicio' },
+    'mes-real': { pantalla: 'caminos', seccion: 'inicio' },
     'caminos': { pantalla: 'caminos', seccion: 'inicio' },
     'ficha': { pantalla: 'ficha', seccion: 'inicio' },
     'registro': { pantalla: 'registro', seccion: 'perfil' }
@@ -39,23 +39,25 @@
     introVista: false,       // S7-F6: si ya vio la introducción
     ahorroActual: null,      // S9: lo que tiene ahorrado hoy, en pesos
     caminoElegido: null,     // S9-F2: id del camino que eligió (ver CAMINOS en calculos.js)
-    verOtros: false,         // S9-F2: "Ver otros caminos" abierto
     masBaratoTipo: null,     // S9-F5: 'estudio', '1d' o null
     masBaratoAjuste: null,   // S9-F5: 'usado', 'iva-cero' o null
     mesAhorro: 0,            // S10-F4: meses simulados de ahorro
     racha: 0,                // S10-F4: meses seguidos ahorrando
-    ultimoProtector: null    // S10-F4: mes en que usó "Este mes no pude"
+    ultimoProtector: null,   // S10-F4: mes en que usó "Este mes no pude"
+    historialMeses: [],      // S11-F4: últimos 6 meses ('pago', 'protector' o 'reinicio')
+    preguntasListas: false,  // S11-F0: si ya respondió las 3 preguntas de Inicio
+    pregunta: 1              // S11-F0: pregunta que se está mostrando (1 a 3)
   };
 
   // ---------- Elecciones que se recuerdan entre visitas (S3-F3) ----------
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
-    'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector'];
+    'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
-    ahorroActual: null, caminoElegido: null, verOtros: false, masBaratoTipo: null, masBaratoAjuste: null,
-    mesAhorro: 0, racha: 0, ultimoProtector: null };
+    ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
+    mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1 };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -80,6 +82,11 @@
       estado.mesAhorro = montoValido(g.mesAhorro) || 0;
       estado.racha = Math.min(montoValido(g.racha) || 0, estado.mesAhorro);
       estado.ultimoProtector = montoValido(g.ultimoProtector);
+      estado.historialMeses = Array.isArray(g.historialMeses)
+        ? g.historialMeses.filter(function (x) { return x === 'pago' || x === 'protector' || x === 'reinicio'; }).slice(-6) : [];
+      // Quien ya tenía sueldos y ahorro mensual guardados no repite las preguntas.
+      estado.preguntasListas = g.preguntasListas === true ||
+        (g.preguntasListas === undefined && estado.sueldoPropio > 0 && estado.ahorroMensual > 0);
       if (typeof CAMINOS !== 'undefined' && CAMINOS[g.caminoElegido] && !CAMINOS[g.caminoElegido].ficha) estado.caminoElegido = g.caminoElegido;
     } catch (e) { /* sin localStorage: valores por defecto */ }
   }
@@ -346,28 +353,28 @@
     if (paso === 1) {
       var ev = evaluarCarga(e.totalMes, estado.otrasCuotas, estado.sueldoPropio, estado.sueldoPareja);
       return {
-        p: p, paso: 1, etapa: 'Paso 2 de 5' + SEP + 'Postula',
+        p: p, paso: 1, etapa: 'Paso 2 de 5' + SEP + 'Postular',
         etiqueta: ev ? 'Tu carga' : 'Revisa si califican',
         numero: ev ? formatoPorcentaje(ev.cargaTotal, 1) : null,
         detalle: ev ? SEMAFORO[ev.nivel].palabra : 'Escribe tu sueldo para ver tu carga.',
-        accion: 'Ir a Postula'
+        accion: 'Seguir postulación'
       };
     }
     if (paso === 2) {
       var meta = e.alEscriturar;
       var n = mesesRestantes(meta, estado.ahorrado, estado.ahorroMensual);
       return {
-        p: p, paso: 2, etapa: 'Paso 3 de 5' + SEP + 'Ahorra',
+        p: p, paso: 2, etapa: 'Paso 3 de 5' + SEP + 'Juntar el pie',
         etiqueta: n === null ? 'Tu meta al escriturar' : 'Te faltan',
         numero: n === null ? formatoPesos(meta) : textoMeses(n),
-        detalle: n === null ? 'Calcula en cuántos meses la juntas.'
-          : 'Llevas ' + formatoPesos(estado.ahorrado) + ' de ' + formatoPesos(meta) + '.',
-        accion: estado.ahorroIniciado ? 'Seguir ahorrando' : 'Ir a Tu pie'
+        visual: estado.ahorroIniciado ? '<strong class="numero display-2">' + textoMeses(n) + '</strong>' + barraHitos(estado.ahorrado, meta) : null,
+        detalle: n === null ? 'Calcula en cuántos meses la juntas.' : '',
+        accion: estado.ahorroIniciado ? 'Pagar mi cuota' : 'Calcular mi cuota'
       };
     }
     if (paso === 3) {
       return {
-        p: p, paso: 3, etapa: 'Paso 4 de 5' + SEP + 'Firma',
+        p: p, paso: 3, etapa: 'Paso 4 de 5' + SEP + 'Firmar',
         etiqueta: 'Ya juntaste', numero: formatoPesos(e.alEscriturar),
         detalle: 'Revisa lo que firmas en palabras simples.',
         accion: 'Ir a firmar'
@@ -375,7 +382,7 @@
     }
     var m = mesDelDepartamento(p, departamentoDeMiCompra(p));
     return {
-      p: p, paso: 4, etapa: 'Paso 5 de 5' + SEP + 'Departamento, mes ' + m.mes,
+      p: p, paso: 4, etapa: 'Paso 5 de 5' + SEP + 'Mi departamento, mes ' + m.mes,
       etiqueta: m.excedente > 0 ? 'Este mes te sobraron' : (estado.modo === 'arrendar' ? 'Este mes pusiste' : 'Este mes pagaste'),
       numero: formatoPesos(m.excedente > 0 ? m.excedente : m.pone),
       detalle: estado.modo !== 'arrendar' ? 'Tu dividendo, en vez del arriendo que pagabas.'
@@ -386,10 +393,10 @@
   }
 
   // Recorrido de 5 pasos de Mi camino.
-  var CAMINO = ['Únete', 'Postula', 'Ahorra', 'Firma', 'Departamento'];
+  var CAMINO = ['Elegir', 'Postular', 'Juntar el pie', 'Firmar', 'Mi departamento'];
 
   function recorridoCamino(paso) {
-    // El paso de la compra (1 a 4) corresponde a los puntos 2 a 5 del camino; "Únete" siempre está hecho.
+    // El paso de la compra (1 a 4) corresponde a los puntos 2 a 5; sin compra (0), el actual es "Elegir".
     var actual = paso + 1;
     return '<ol class="camino" aria-label="Tu camino">' + CAMINO.map(function (nombre, i) {
       var n = i + 1;
@@ -442,16 +449,16 @@
   function renderCamino() {
     var x = proximoPaso();
     var avisos = avisosIA(x);
-    $('inicio-camino').innerHTML =
+    $('inicio-principal').innerHTML =
       '<header class="encabezado">' + FIGURAS +
-        '<h1 id="titulo-inicio" class="h2">Mi camino</h1>' +
+        '<h1 id="titulo-inicio" class="h2" tabindex="-1">Tu camino</h1>' +
         '<p class="texto-apoyo">' + esc(x.p.nombre) + SEP + esc(x.p.comuna) + '</p>' +
       '</header>' +
       '<section class="tarjeta proximo" aria-label="Dónde vas">' +
         '<p class="chip">' + x.etapa + '</p>' +
         '<p class="etiqueta">' + x.etiqueta + '</p>' +
-        (x.numero ? '<strong class="numero display-2">' + x.numero + '</strong>' : '') +
-        '<p class="texto-apoyo">' + x.detalle + '</p>' +
+        (x.visual ? x.visual : (x.numero ? '<strong class="numero display-2">' + x.numero + '</strong>' : '')) +
+        (x.detalle ? '<p class="texto-apoyo">' + x.detalle + '</p>' : '') +
       '</section>' +
       '<div class="accion">' +
         '<a href="#mis-proyectos" class="btn btn-primario btn-lg btn-bloque">' + x.accion + '</a>' +
@@ -465,20 +472,15 @@
             }).join('') + '</ul>' +
           '</section>'
         : '');
-    if (estado.inversiones.length) {
-      $('inicio-camino').insertAdjacentHTML('beforeend',
-        '<a class="linea-inversiones bloque" href="#mis-proyectos/inversiones"><span>Tus inversiones: cobrado a la fecha</span> <strong>' +
-        formatoPesos(ufAPesos(cobradoUF(datosCobro(estado.inversiones)))) + '</strong>' +
-        '<span class="linea-ver">Ver <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span></a>');
-    }
+    $('inicio-principal').insertAdjacentHTML('beforeend', lineaInversiones());
   }
 
   // Solo inversiones, sin compra: el número es lo cobrado a la fecha (S6-F4).
   function renderSoloInversiones() {
     var lista = estado.inversiones;
-    $('inicio-camino').innerHTML =
+    $('inicio-principal').innerHTML =
       '<header class="encabezado">' + FIGURAS +
-        '<h1 id="titulo-inicio" class="h2">Tus inversiones</h1>' +
+        '<h1 id="titulo-inicio" class="h2" tabindex="-1">Tus inversiones</h1>' +
         '<p class="texto-apoyo">Tienes parte del 15\u00a0% de departamentos de otros compradores: 6\u00a0% al año en UF.</p>' +
       '</header>' +
       '<section class="tarjeta proximo" aria-label="Lo cobrado">' +
@@ -490,121 +492,259 @@
       '<div class="accion">' +
         '<a href="#mis-proyectos/inversiones" class="btn btn-primario btn-lg btn-bloque">Ver mis inversiones</a>' +
       '</div>' +
-      '<p class="texto-centro"><a class="enlace" href="#proyectos">Ver proyectos para comprar</a></p>';
+      '<p class="texto-centro"><button type="button" class="enlace" id="btn-mi-camino">Ver mi camino para comprar</button></p>';
+    $('btn-mi-camino').addEventListener('click', function () { estado.preguntasListas = false; estado.pregunta = 1; renderPreguntas(); });
   }
 
-  // ---------- Inicio: ¿Cuánto puedo comprar? (S5-F0) ----------
+  // ---------- Inicio = Tu camino (S11-F0 y S11-F2) ----------
+  // Siempre responde "¿cuánto falta y cuándo llegas?", con un número y una acción según la etapa.
   var FIGURAS = '<div class="figuras" aria-hidden="true"><span class="f-cuadrado"></span><span class="f-circulo"></span>' +
     '<span class="f-triangulo"></span><span class="f-rectangulo"></span></div>';
 
-  function renderCapacidad() {
-    var opcion = function (valor, texto) {
-      return '<input type="radio" name="modo" id="modo-' + valor + '" value="' + valor + '"' +
-        (estado.modo === valor ? ' checked' : '') + '><label for="modo-' + valor + '">' + texto + '</label>';
-    };
-    $('inicio-capacidad').innerHTML =
-      '<header class="encabezado">' + FIGURAS +
-        '<h1 id="titulo-inicio" class="h2">Tu primer departamento</h1>' +
-        '<p class="texto-apoyo">¿Hasta cuánto pueden comprar?</p>' +
-      '</header>' +
-      '<fieldset class="selector"><legend class="oculto-visual">¿Para vivir o para arrendar?</legend>' +
-        '<div class="selector-opciones">' + opcion('arrendar', 'Para arrendar') + opcion('vivir', 'Para vivir') + '</div>' +
-      '</fieldset>' +
-      '<div class="campos-dos">' +
-        campoDinero('inicio-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
-        campoDinero('inicio-pareja', 'Sueldo de tu pareja', estado.sueldoPareja) +
-      '</div>' +
-      '<div id="capacidad-resultado" aria-live="polite"></div>' +
-      '<div class="accion-fija"><a href="#mes-real" class="btn btn-primario btn-lg btn-bloque" id="btn-mes-real">Ver mi mes real</a></div>' +
-      '<p class="texto-centro"><a href="#proyectos" class="enlace" id="btn-me-alcanza">Ver proyectos que me alcanzan</a></p>';
+  function icono(id, clase) { return '<svg class="' + (clase || 'icono') + '" aria-hidden="true"><use href="#' + id + '"/></svg>'; }
 
-    document.querySelectorAll('input[name="modo"]').forEach(function (r) {
-      r.addEventListener('change', function () { estado.modo = r.value; guardarEstado(); renderResultadoCapacidad(false); });
-    });
-    var habia = capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo) !== null;
-    [['inicio-propio', 'sueldoPropio'], ['inicio-pareja', 'sueldoPareja']].forEach(function (c) {
-      var input = $(c[0]);
-      input.addEventListener('input', function () {
-        estado[c[1]] = formatearCampo(input);
-        guardarEstado();
-        var hay = renderResultadoCapacidad(false);
-        if (hay && !habia) $('capacidad-resultado').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        habia = hay;
-      });
-      input.addEventListener('blur', function () { renderResultadoCapacidad(false); });
-    });
-    // Sin sueldos, las dos acciones piden escribirlos primero.
-    var pedirSueldos = function (ev) {
-      if (capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo) !== null) return false;
-      ev.preventDefault();
-      renderResultadoCapacidad(true);
-      $(estado.sueldoPropio ? 'inicio-pareja' : 'inicio-propio').focus();
-      return true;
+  // S11-F1: número que cuenta (con movimiento reducido, va directo al valor final).
+  function contarHasta(el, desde, hasta, formato) {
+    if (!el) return;
+    var reducir = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducir || desde === null || desde === undefined || desde === hasta || typeof hasta !== 'number') {
+      el.textContent = formato(hasta);
+      return;
+    }
+    var inicio = null;
+    var paso = function (t) {
+      if (inicio === null) inicio = t;
+      var k = Math.min(1, (t - inicio) / 700);
+      var suave = 1 - Math.pow(1 - k, 3);
+      el.textContent = formato(Math.round(desde + (hasta - desde) * suave));
+      if (k < 1 && document.body.contains(el)) requestAnimationFrame(paso);
     };
-    $('btn-mes-real').addEventListener('click', pedirSueldos);
-    $('btn-me-alcanza').addEventListener('click', function (ev) {
-      if (!pedirSueldos(ev)) estado.meAlcanza = true;
-    });
-    renderResultadoCapacidad(false);
+    el.textContent = formato(desde);
+    requestAnimationFrame(paso);
   }
 
-  // Dibuja solo el resultado (para no perder el foco de los campos). Devuelve true si hay número.
-  function renderResultadoCapacidad(mostrarVacios) {
-    validarSueldo($('inicio-propio'), estado.sueldoPropio, mostrarVacios);
-    validarSueldo($('inicio-pareja'), estado.sueldoPareja, mostrarVacios);
-    var cap = estado.sueldoPropio > 0 || estado.sueldoPareja > 0
-      ? capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo) : null;
-    var resultado = $('capacidad-resultado');
-    $('btn-mes-real').setAttribute('aria-disabled', String(cap === null));
+  // S11-F1: aviso flotante que confirma lo que pasó (role="status": también lo lee el lector de pantalla).
+  var temporizadorToast = null;
+  function toast(texto) {
+    var t = $('toast');
+    t.textContent = texto;
+    t.hidden = false;
+    t.classList.remove('toast-entra');
+    void t.offsetWidth;
+    t.classList.add('toast-entra');
+    clearTimeout(temporizadorToast);
+    temporizadorToast = setTimeout(function () { t.hidden = true; }, 3000);
+  }
 
-    if (cap === null) {
-      resultado.innerHTML = '<p class="sin-numero">Escribe los sueldos para saber cuánto puedes comprar.</p>';
-      return false;
+  function barraPreguntas(n) {
+    return '<div class="barra-preguntas" role="progressbar" aria-valuemin="1" aria-valuemax="3" aria-valuenow="' + n +
+      '" aria-label="Pregunta ' + n + ' de 3">' +
+      [1, 2, 3].map(function (i) { return '<span class="' + (i <= n ? 'lleno' : '') + '"></span>'; }).join('') + '</div>';
+  }
+
+  // Plazo del camino recomendado con los datos de hoy (null si falta el ahorro mensual).
+  function plazoActual() {
+    if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return null;
+    return recomendarCamino(perfilActual());
+  }
+
+  function textoPlazoMeses(n) { return n === 0 ? 'Ya lo tienes' : textoMeses(n); }
+
+  // Las 3 preguntas de la primera vez: para qué, sus ingresos y su ahorro.
+  function renderPreguntas() {
+    var n = estado.pregunta || 1;
+    var c = $('inicio-principal');
+    var cabeza = function (titulo) {
+      return '<header class="encabezado">' + FIGURAS + barraPreguntas(n) +
+        '<h1 id="titulo-inicio" class="h2" tabindex="-1">' + titulo + '</h1></header>';
+    };
+    var atras = n > 1 ? '<p class="texto-centro"><button type="button" class="enlace" id="btn-atras-pregunta">Atrás</button></p>' : '';
+
+    if (n === 1) {
+      var opcion = function (modo, ic, texto) {
+        return '<button type="button" class="opcion-grande" role="radio" aria-checked="' + (estado.modo === modo) + '" data-modo="' + modo + '">' +
+          icono(ic, 'opcion-icono') + '<span>' + texto + '</span></button>';
+      };
+      c.innerHTML = cabeza('¿Para qué quieres tu departamento?') +
+        '<div class="opciones-grandes" role="radiogroup" aria-labelledby="titulo-inicio">' +
+          opcion('vivir', 'i-casa', 'Para vivir') + opcion('arrendar', 'i-llave', 'Para arrendar') +
+        '</div>';
+      c.querySelectorAll('.opcion-grande').forEach(function (b) {
+        b.addEventListener('click', function () {
+          estado.modo = b.dataset.modo;
+          guardarEstado();
+          estado.pregunta = 2;
+          renderPreguntas();
+          $('titulo-inicio').focus();
+        });
+      });
+      return;
     }
-    var e = escenario(cap, 'individual', estado.modo);
-    var vivir = estado.modo === 'vivir';
-    resultado.innerHTML =
-      '<div class="tarjeta protagonista">' +
-        '<p class="etiqueta">Puedes comprar hasta</p>' +
-        '<strong class="numero display-2">' + formatoUF(cap) + '</strong>' +
-        '<p class="texto-apoyo">' + formatoPesos(e.precio) + '</p>' +
-        '<ul class="datos-inversion">' +
-          '<li><span>Al escriturar ' + ayuda('pie') + '</span><strong>' + formatoPesos(e.alEscriturar) + '</strong></li>' +
-          '<li><span>Dividendo al mes</span><strong>' + formatoPesos(e.totalMes) + '</strong></li>' +
-          '<li><span>Sin subsidio a la tasa</span><strong>' + formatoPesos(e.dividendoSinSubsidio) + '</strong></li>' +
-        '</ul>' +
-        '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
-        '<button type="button" class="enlace desplegar" id="btn-reparto" aria-expanded="false" aria-controls="reparto">' +
-          '¿De dónde sale el resto?<svg aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
-        '<div class="reparto" id="reparto" hidden>' +
-          barraReparto(e) +
-          '<ul class="lista-check">' +
-            (vivir
-              ? filaReparto('90\u00a0% lo presta Bci', 'Con garantía del Estado (FOGAES)', e.reparto.bci) +
-                filaReparto('10\u00a0% lo pones tú', '', e.reparto.usuario)
-              : filaReparto('80\u00a0% lo presta Bci', 'A 30 años', e.reparto.bci) +
-                filaReparto('15\u00a0% lo ponen inversionistas', 'Sin cuota para ti', e.reparto.inversionistas) +
-                filaReparto('5\u00a0% lo pones tú', '', e.reparto.usuario)) +
-          '</ul>' +
-          '<p class="reparto-total">Además pones ' + formatoPesos(e.gastos) + ' de gastos de escritura (≈ 2\u00a0%).</p>' +
+
+    if (n === 2) {
+      c.innerHTML = cabeza('¿Cuánto ganan?') +
+        '<div class="formulario">' +
+          campoDinero('q-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
+          campoDinero('q-pareja', 'Sueldo de tu pareja', estado.sueldoPareja) +
+          campoDinero('q-otras', 'Otras cuotas al mes', estado.otrasCuotas) +
         '</div>' +
-      '</div>';
-    var boton = $('btn-reparto');
-    boton.addEventListener('click', function () {
-      var abierto = boton.getAttribute('aria-expanded') === 'true';
-      boton.setAttribute('aria-expanded', String(!abierto));
-      $('reparto').hidden = abierto;
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-siguiente">Siguiente</button></div>' +
+        atras;
+      [['q-propio', 'sueldoPropio'], ['q-pareja', 'sueldoPareja'], ['q-otras', 'otrasCuotas']].forEach(function (x) {
+        $(x[0]).addEventListener('input', function () {
+          estado[x[1]] = formatearCampo($(x[0]));
+          guardarEstado();
+          if (x[1] !== 'otrasCuotas') validarSueldo($(x[0]), estado[x[1]], false);
+        });
+      });
+      $('btn-siguiente').addEventListener('click', function () {
+        if (!validarSueldo($('q-propio'), estado.sueldoPropio, true)) { temblar($('q-propio')); $('q-propio').focus(); return; }
+        if (estado.sueldoPareja === 0) { validarSueldo($('q-pareja'), 0, false); $('q-pareja').focus(); return; }
+        estado.pregunta = 3;
+        renderPreguntas();
+        $('titulo-inicio').focus();
+      });
+    } else {
+      var arrendar = estado.modo === 'arrendar';
+      var valorRango = Math.min(2000000, Math.max(50000, estado.ahorroMensual || 300000));
+      c.innerHTML = cabeza('¿Cuánto ahorras?') +
+        '<div class="formulario">' +
+          campoDinero('q-ahorro', 'Lo que tienes ahorrado', estado.ahorroActual) +
+          '<div class="campo-rango">' +
+            campoDinero('q-mensual', 'Lo que puedes juntar al mes', estado.ahorroMensual) +
+            '<input type="range" id="q-rango" min="50000" max="2000000" step="10000" value="' + valorRango + '" aria-label="Lo que puedes juntar al mes" aria-valuetext="' + formatoPesos(valorRango) + '">' +
+          '</div>' +
+          (arrendar ? campoDinero('q-arriendo', 'Arriendo que pagas hoy', estado.arriendoActual) : '') +
+        '</div>' +
+        '<div id="q-vista" class="tarjeta protagonista" aria-live="polite"></div>' +
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-camino">Ver mi camino</button></div>' +
+        atras;
+      var anterior = null;
+      var vista = function () {
+        var r = plazoActual();
+        var listo = estado.ahorroMensual > 0;
+        $('btn-ver-camino').disabled = !listo;
+        if (!listo || !r) { $('q-vista').innerHTML = '<p class="sin-numero">Mueve el deslizador para ver tu plazo.</p>'; anterior = null; return; }
+        if (r.todaviaNo) {
+          $('q-vista').innerHTML = '<p class="estado-semaforo estado-pronto">' + icono('i-pronto') + 'Todavía no</p>';
+          anterior = null;
+          return;
+        }
+        var meses = r.numeros.meses;
+        $('q-vista').innerHTML = '<p class="etiqueta">Podrías tenerlo en</p><strong class="numero display-2" id="q-meses"></strong>';
+        contarHasta($('q-meses'), anterior, meses, textoPlazoMeses);
+        anterior = meses;
+      };
+      $('q-ahorro').addEventListener('input', function () { estado.ahorroActual = formatearCampo($('q-ahorro')); guardarEstado(); vista(); });
+      $('q-mensual').addEventListener('input', function () {
+        estado.ahorroMensual = formatearCampo($('q-mensual'));
+        if (estado.ahorroMensual) { $('q-rango').value = Math.min(2000000, Math.max(50000, estado.ahorroMensual)); }
+        guardarEstado(); vista();
+      });
+      $('q-rango').addEventListener('input', function () {
+        estado.ahorroMensual = Number($('q-rango').value);
+        $('q-mensual').value = formatoMiles(estado.ahorroMensual);
+        $('q-rango').setAttribute('aria-valuetext', formatoPesos(estado.ahorroMensual));
+        guardarEstado(); vista();
+      });
+      if (arrendar) $('q-arriendo').addEventListener('input', function () { estado.arriendoActual = formatearCampo($('q-arriendo')); guardarEstado(); vista(); });
+      $('btn-ver-camino').addEventListener('click', function () {
+        if (!(estado.ahorroMensual > 0)) { temblar($('q-mensual')); $('q-mensual').focus(); return; }
+        estado.preguntasListas = true;
+        estado.pregunta = 1;
+        guardarEstado();
+        renderInicio();
+        window.scrollTo(0, 0);
+        $('titulo-inicio').focus();
+      });
+      vista();
+    }
+    if ($('btn-atras-pregunta')) $('btn-atras-pregunta').addEventListener('click', function () {
+      estado.pregunta = n - 1;
+      renderPreguntas();
+      $('titulo-inicio').focus();
     });
-    return true;
+  }
+
+  // S12-F6 adelantado: el campo inválido tiembla (siempre junto a su mensaje de error).
+  function temblar(el) {
+    if (!el) return;
+    var caja = el.closest('.campo') || el;
+    caja.classList.remove('temblar');
+    void caja.offsetWidth;
+    caja.classList.add('temblar');
+  }
+
+  // Tu camino antes de comprar: el plazo del camino recomendado y la acción que toca.
+  var plazoMostrado = null;
+  function renderTuCamino() {
+    var perfil = perfilActual();
+    var r = recomendarCamino(perfil);
+    var n = r.numeros;
+    var c = $('inicio-principal');
+    var eligio = !!estado.caminoElegido;
+    var idCamino = eligio ? estado.caminoElegido : r.id;
+    var numCamino = eligio && !CAMINOS[idCamino].ficha ? numerosCamino(idCamino, LISTA_REFERENCIA_UF, perfil) : n;
+    var protagonista = r.todaviaNo && !eligio
+      ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo">' +
+          '<p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
+          '<h2 class="h3" id="titulo-plazo">Hoy te dejaría muy justo</h2>' +
+        '</section>'
+      : '<section class="tarjeta protagonista" aria-labelledby="titulo-plazo">' +
+          '<p class="etiqueta" id="titulo-plazo">Podrías tener tu departamento en</p>' +
+          '<strong class="numero display-1" id="numero-plazo"></strong>' +
+          '<p class="chip-fila"><span class="chip ' + (eligio ? 'chip-existe' : 'chip-propuesta') + '">' + (eligio ? 'Tu camino' : 'Te recomendamos') + '</span> ' +
+            '<strong>' + CAMINOS[idCamino].nombre + '</strong></p>' +
+          '<ul class="datos-inversion">' +
+            '<li><span>' + icono('i-alcancia') + 'Juntas al mes</span><strong>' + formatoPesos(estado.ahorroMensual) + '</strong></li>' +
+            '<li><span>' + icono('i-banco') + 'Dividendo después</span><strong>' + formatoPesos(numCamino.dividendo) + '</strong></li>' +
+          '</ul>' +
+          '<p class="sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
+        '</section>';
+    c.innerHTML =
+      '<header class="encabezado">' + FIGURAS +
+        '<h1 id="titulo-inicio" class="h2" tabindex="-1">Tu camino</h1>' +
+        '<p class="texto-apoyo">' + (estado.modo === 'vivir' ? 'Para vivir' : 'Para arrendar') + ' · ' + formatoUF(LISTA_REFERENCIA_UF) +
+          ' <button type="button" class="enlace" id="btn-cambiar-datos">Cambiar mis datos</button></p>' +
+      '</header>' +
+      protagonista +
+      '<div class="accion-fija">' + (eligio
+        ? '<a href="#proyectos" class="btn btn-primario btn-lg btn-bloque" id="btn-elegir-departamento">Elegir departamento</a>'
+        : '<a href="#caminos" class="btn btn-primario btn-lg btn-bloque">' + (r.todaviaNo ? 'Ver qué lo cambia' : 'Ver mi camino') + '</a>') +
+      '</div>' +
+      (eligio ? '<p class="texto-centro"><a href="#caminos" class="enlace">Ver mis caminos</a></p>' : '') +
+      recorridoCamino(0) +
+      lineaInversiones();
+    if ($('numero-plazo')) {
+      contarHasta($('numero-plazo'), plazoMostrado, numCamino.meses, function (v) { return v === null ? '—' : textoPlazoMeses(v); });
+      plazoMostrado = numCamino.meses;
+    }
+    $('btn-cambiar-datos').addEventListener('click', function () {
+      estado.preguntasListas = false;
+      estado.pregunta = 1;
+      guardarEstado();
+      renderInicio();
+      $('titulo-inicio').focus();
+    });
+    if ($('btn-elegir-departamento')) $('btn-elegir-departamento').addEventListener('click', function () { prepararProyectos(estado.caminoElegido); });
+  }
+
+  function lineaInversiones() {
+    if (!estado.inversiones.length) return '';
+    return '<a class="linea-inversiones bloque" href="#mis-proyectos/inversiones"><span>Tus inversiones: cobrado a la fecha</span> <strong>' +
+      formatoPesos(ufAPesos(cobradoUF(datosCobro(estado.inversiones)))) + '</strong>' +
+      '<span class="linea-ver">Ver <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span></a>';
   }
 
   function renderInicio() {
-    var conCompra = !!estado.compra || estado.inversiones.length > 0;
-    $('inicio-capacidad').hidden = conCompra;
-    $('inicio-camino').hidden = !conCompra;
-    // Solo un bloque existe a la vez, para que no se repita el título de la pantalla.
-    if (conCompra) { $('inicio-capacidad').innerHTML = ''; estado.compra ? renderCamino() : renderSoloInversiones(); }
-    else { $('inicio-camino').innerHTML = ''; renderCapacidad(); }
+    // Etapas: con compra → Tu camino de la compra; solo inversiones (sin preguntas) → lo cobrado;
+    // primera vez → las 3 preguntas; si no → el plazo de su camino.
+    var c = $('inicio-principal');
+    c.innerHTML = '';
+    if (estado.compra) return renderCamino();
+    if (estado.inversiones.length && !estado.preguntasListas) return renderSoloInversiones();
+    if (!estado.preguntasListas) return renderPreguntas();
+    renderTuCamino();
   }
 
   // ---------- Proyectos: el marketplace ----------
@@ -636,6 +776,7 @@
 
   function renderProyectos() {
     var arrendar = estado.modo === 'arrendar';
+    $('proyectos-primero').hidden = !!estado.caminoElegido || !!estado.compra;
     $('proyectos-ia').hidden = !arrendar;
     $('proyectos-modo').textContent = arrendar ? 'Para arrendar' : 'Para vivir: todos';
 
@@ -987,7 +1128,7 @@
       var respaldo = $('respaldo').checked;
       conCarga($('btn-confirmar'), function () {
         agregarInversion({ id: 'inv-' + Date.now(), proyectoId: p.id, montoUF: invertido, fecha: FECHA_REFERENCIA, cuotasCobradas: 0, respaldo: respaldo });
-        anunciar('Invertiste ' + formatoUF(invertido) + ' en ' + p.nombre + '.');
+        toast('Invertiste ' + formatoUF(invertido) + ' en ' + p.nombre + '.');
         location.hash = '#mis-proyectos/inversiones';
       });
     });
@@ -1046,10 +1187,13 @@
   }
 
   // ---------- Mis proyectos ----------
+  // Los mismos 5 pasos de Inicio (S11-F0). El paso de la compra (1 a 4) es el punto 2 a 5.
   var PASOS = [
-    { titulo: 'Postula', apoyo: 'Revisamos si tú y tu pareja califican.' },
-    { titulo: 'Tu pie', apoyo: 'Juntas lo que pones al escriturar.' },
-    { titulo: 'Firma', apoyo: 'Firmas la escritura y recibes tu departamento.' }
+    { titulo: 'Elegir', apoyo: 'Eliges tu camino y tu departamento.' },
+    { titulo: 'Postular', apoyo: 'Revisamos si califican.' },
+    { titulo: 'Juntar el pie', apoyo: 'Juntas lo que pones al escriturar.' },
+    { titulo: 'Firmar', apoyo: 'Firmas la escritura.' },
+    { titulo: 'Mi departamento', apoyo: 'Ya es tuyo.' }
   ];
 
   var SEMAFORO = {
@@ -1063,7 +1207,8 @@
       departamentosDe(p.id)[0];
   }
 
-  function listaPasos(pasoActual) {
+  function listaPasos(pasoCompra) {
+    var pasoActual = pasoCompra + 1;
     return '<ol class="pasos">' + PASOS.map(function (paso, i) {
       var n = i + 1;
       var clase = n === pasoActual ? 'actual' : (n < pasoActual ? 'hecho' : '');
@@ -1163,6 +1308,7 @@
 
     if (!okPropio || !okPareja) {
       resultado.innerHTML = '<p class="texto-apoyo">Escribe tu sueldo para ver tu carga.</p>';
+      resultado.dataset.html = '';
       boton.disabled = true;
       $('postular-explica').textContent = 'Para postular, escribe tu sueldo.';
       return false;
@@ -1172,7 +1318,7 @@
     var s = SEMAFORO[ev.nivel];
     var hayCuotas = (estado.otrasCuotas || 0) > 0;
     var sug = ev.nivel === 'holgado' ? null : sugerencia(p, ev);
-    resultado.innerHTML =
+    var html =
       '<div class="tarjeta semaforo semaforo-' + ev.nivel + '">' +
         '<p class="etiqueta">Tu carga ' + ayuda('carga') + '</p>' +
         '<div class="semaforo-fila">' +
@@ -1184,6 +1330,9 @@
           : '') + s.explica + '</p>' +
       '</div>' +
       (sug ? sug.html : '');
+    // Solo se vuelve a dibujar si algo cambió: así, al salir de un campo, nada se mueve bajo el dedo
+    // (un "?" abierto o el botón Postular quedan donde estaban).
+    if (resultado.dataset.html !== html) { resultado.innerHTML = html; resultado.dataset.html = html; }
 
     boton.disabled = ev.nivel === 'no-aprueba';
     $('postular-explica').textContent = ev.nivel !== 'no-aprueba' ? ''
@@ -1521,24 +1670,57 @@
   };
 
   // Barra de avance con hitos al 25\u00a0%, 50\u00a0%, 75\u00a0% y 100\u00a0%.
+  // S11-F4: la alcancía que se llena (desde el % anterior), con los hitos a su lado.
+  var pctAlcanciaMostrado = null;
+  var hitoNuevo = null;
   function barraHitos(ahorrado, meta) {
     var pct = porcentajeEntero(avance(ahorrado, meta));
+    var desde = pctAlcanciaMostrado === null ? 0 : pctAlcanciaMostrado;
+    pctAlcanciaMostrado = pct;
     var logrados = hitosAlcanzados(ahorrado, meta);
+    var forma = 'M18 22 Q18 16 24 16 L56 16 Q62 16 62 22 L66 34 Q70 40 70 50 L70 90 Q70 96 64 96 L16 96 Q10 96 10 90 L10 50 Q10 40 14 34 Z';
     var marcas = HITOS_AHORRO.map(function (h) {
-      var ok = logrados.indexOf(h) !== -1;
-      return '<li class="hito hito-' + porcentajeEntero(h) + (ok ? ' logrado' : '') + '">' +
-        '<span class="hito-punto" aria-hidden="true">' + (ok ? '<svg><use href="#i-ok"/></svg>' : '') + '</span>' +
-        '<span class="hito-texto">' + porcentajeEntero(h) + NBSP + '%' +
-        '<span class="oculto-visual">' + (ok ? ', logrado' : ', pendiente') + '</span></span></li>';
+      var y = 96 - 74 * h;
+      return '<line class="alcancia-marca" x1="64" x2="74" y1="' + y + '" y2="' + y + '"/>';
     }).join('');
-    return '<div class="hitos">' +
-      '<p class="avance-texto"><span>Llevas ' + formatoPesos(ahorrado) + ' de ' + formatoPesos(meta) + '</span>' +
-        '<strong>' + pct + NBSP + '%</strong></p>' +
-      '<div class="avance-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="Avance de tu ahorro">' +
-        '<span style="width:' + pct + '%"></span></div>' +
-      '<ol class="hitos-marcas" aria-label="Hitos">' + marcas + '</ol>' +
+    var hitos = HITOS_AHORRO.map(function (h) {
+      var ok = logrados.indexOf(h) !== -1;
+      return '<li class="hito-chip' + (ok ? ' logrado' : '') + (hitoNuevo === h ? ' nuevo' : '') + '">' +
+        '<span class="hito-sello" aria-hidden="true">' + (ok ? '<svg><use href="#i-ok"/></svg>' : '') + '</span>' +
+        porcentajeEntero(h) + NBSP + '%' + '<span class="oculto-visual">' + (ok ? ', logrado' : ', pendiente') + '</span></li>';
+    }).join('');
+    hitoNuevo = null;
+    return '<div class="alcancia-avance">' +
+      '<svg class="alcancia" viewBox="0 0 80 100" role="img" aria-label="Llevas ' + pct + ' % de tu meta">' +
+        '<defs><clipPath id="clip-alcancia"><path d="' + forma + '"/></clipPath></defs>' +
+        '<rect class="alcancia-tapa" x="22" y="6" width="36" height="8" rx="3"/>' +
+        '<path class="alcancia-fondo" d="' + forma + '"/>' +
+        '<rect class="alcancia-relleno" x="0" y="22" width="80" height="74" clip-path="url(#clip-alcancia)" style="--desde:' + (desde / 100) + ';transform:scaleY(' + (pct / 100) + ')"/>' +
+        '<path class="alcancia-borde" d="' + forma + '"/>' + marcas +
+      '</svg>' +
+      '<div class="alcancia-datos">' +
+        '<strong class="numero display-3">' + pct + NBSP + '%</strong>' +
+        '<p class="avance-texto">Llevas ' + formatoPesos(ahorrado) + ' de ' + formatoPesos(meta) + '</p>' +
+        '<ol class="hitos-lista" aria-label="Hitos">' + hitos + '</ol>' +
+      '</div>' +
     '</div>';
   }
+
+  // S11-F4: la racha como 6 puntos de calendario (los últimos meses simulados).
+  function puntosRacha() {
+    var h = (estado.historialMeses || []).slice(-6);
+    var puntos = [];
+    for (var i = 0; i < 6; i++) {
+      var r = h[i];
+      var clase = r === 'pago' ? 'pagado' : (r === 'protector' ? 'protegido' : (r === 'reinicio' ? 'perdido' : 'vacio'));
+      var ic = r === 'pago' ? '<svg aria-hidden="true"><use href="#i-check"/></svg>' : (r === 'protector' ? '<svg aria-hidden="true"><use href="#i-escudo"/></svg>' : '');
+      puntos.push('<li class="punto-mes ' + clase + '">' + ic + '</li>');
+    }
+    var texto = estado.racha > 0 ? plural(estado.racha, 'mes seguido', 'meses seguidos') : 'Tu racha empieza este mes';
+    return '<div class="racha-meses"><ol class="puntos-racha" aria-hidden="true">' + puntos.join('') + '</ol>' +
+      '<p class="racha-texto">' + texto + '</p></div>';
+  }
+
 
   function selectorAhorro() {
     var opcion = function (valor, texto) {
@@ -1643,9 +1825,8 @@
           '<strong class="numero display-2">' + textoMeses(faltan) + '</strong>' +
           '<p class="texto-apoyo">' + (enGrupo ? 'Cuota' : (estado.tipoAhorro === 'grupal' ? 'Ahorro grupal' : 'Ahorro propio')) +
             ' de ' + formatoPesos(estado.ahorroMensual) + ' al mes.</p>' +
-          (estado.racha > 0 ? '<p class="racha"><svg aria-hidden="true"><use href="#i-ok"/></svg>' + plural(estado.racha, 'mes', 'meses') + ' seguidos</p>' : '') +
           barraHitos(estado.ahorrado, meta) +
-          '<p class="aviso aviso-ok" id="aviso-hito" tabindex="-1" hidden></p>' +
+          puntosRacha() +
           cuentaGrupo +
         '</div>' +
         (enGrupo ? '<div class="tarjeta bloque">' + avanceDe(p, resumen(p)) + '</div>' : '') +
@@ -1661,12 +1842,10 @@
     $('btn-no-pude').addEventListener('click', function () {
       var r = registrarMes({ mes: estado.mesAhorro, racha: estado.racha, ultimoProtector: estado.ultimoProtector }, false);
       estado.mesAhorro = r.mes; estado.racha = r.racha; estado.ultimoProtector = r.ultimoProtector;
+      estado.historialMeses = (estado.historialMeses || []).concat([r.resultado]).slice(-6);
       guardarEstado();
       renderTu5(p, d);
-      var texto = r.resultado === 'protector' ? 'Usaste tu protector: tu racha sigue.' : 'Tu racha vuelve a empezar. Lo ahorrado sigue ahí.';
-      $('aviso-hito').textContent = texto;
-      $('aviso-hito').hidden = false;
-      anunciar(texto);
+      toast(r.resultado === 'protector' ? 'Usaste tu protector: tu racha sigue.' : 'Tu racha vuelve a empezar. Lo ahorrado sigue ahí.');
       $('btn-no-pude').focus();
     });
 
@@ -1675,6 +1854,7 @@
       estado.ahorrado = sumarMes(estado.ahorrado, estado.ahorroMensual, meta);
       var r = registrarMes({ mes: estado.mesAhorro, racha: estado.racha, ultimoProtector: estado.ultimoProtector }, true);
       estado.mesAhorro = r.mes; estado.racha = r.racha; estado.ultimoProtector = r.ultimoProtector;
+      estado.historialMeses = (estado.historialMeses || []).concat([r.resultado]).slice(-6);
       guardarEstado();
       if (estado.ahorrado >= meta) {
         guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
@@ -1683,15 +1863,11 @@
         return;
       }
       var nuevos = hitosAlcanzados(estado.ahorrado, meta).filter(function (h) { return antes.indexOf(h) === -1; });
+      if (nuevos.length) hitoNuevo = nuevos[nuevos.length - 1];
       renderTu5(p, d);
       var faltanAhora = mesesRestantes(meta, estado.ahorrado, estado.ahorroMensual);
-      var mensaje = 'Sumaste un mes. Te faltan ' + textoMeses(faltanAhora) + '.';
-      if (nuevos.length) {
-        $('aviso-hito').textContent = '¡Llegaste al ' + porcentajeEntero(nuevos[nuevos.length - 1]) + '\u00a0% de tu meta! Sigue así.';
-        $('aviso-hito').hidden = false;
-        mensaje = $('aviso-hito').textContent + ' ' + mensaje;
-      }
-      anunciar(mensaje);
+      if (nuevos.length) toast('¡Llegaste al ' + porcentajeEntero(nuevos[nuevos.length - 1]) + '\u00a0% de tu meta!');
+      else anunciar('Sumaste un mes. Te faltan ' + textoMeses(faltanAhora) + '.');
       $('btn-simular-mes').focus();
     });
     $('btn-cambiar-ahorro').addEventListener('click', function () {
@@ -2119,92 +2295,26 @@
       '</div>';
   }
 
-  // ----- Tu mes real (S9-F1) -----
-  function renderMesReal() {
-    var c = $('mes-real-contenido');
-    if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return sinSueldos(c, 'Tu mes real', 'titulo-mes-real');
-    var arrendar = estado.modo === 'arrendar';
-    c.innerHTML =
-      '<a href="#inicio" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Inicio</a>' +
-      '<header class="encabezado">' +
-        '<h1 id="titulo-mes-real" class="h2">Tu mes real</h1>' +
-
-      '</header>' +
-      '<div class="formulario campos-dos">' +
-        (arrendar ? campoDinero('mes-arriendo', 'Arriendo que pagas hoy', estado.arriendoActual) : '') +
-        campoDinero('mes-otras', 'Otras cuotas al mes', estado.otrasCuotas) +
-      '</div>' +
-      '<div id="mes-resultado" aria-live="polite"></div>' +
-      '<section class="tarjeta bloque" aria-labelledby="titulo-ahorro-camino">' +
-        '<h2 class="h5" id="titulo-ahorro-camino">Tu ahorro</h2>' +
-        '<div class="campos-dos">' +
-          campoDinero('mes-ahorro', 'Lo que tienes ahorrado', estado.ahorroActual) +
-          campoDinero('mes-ahorro-mensual', 'Lo que puedes ahorrar al mes', estado.ahorroMensual) +
-        '</div>' +
-      '</section>' +
-      '<div class="accion-fija"><a href="#caminos" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-caminos">Ver mis caminos</a></div>';
-
-    [['mes-arriendo', 'arriendoActual'], ['mes-otras', 'otrasCuotas'], ['mes-ahorro', 'ahorroActual'],
-      ['mes-ahorro-mensual', 'ahorroMensual']].forEach(function (x) {
-      var input = $(x[0]);
-      if (!input) return;
-      input.addEventListener('input', function () {
-        estado[x[1]] = formatearCampo(input);
-        guardarEstado();
-        renderResultadoMesReal();
-      });
-    });
-    renderResultadoMesReal();
-  }
-
-  function filaCuenta(signo, texto, monto, apoyo) {
-    return '<li><span class="cuenta-signo" aria-hidden="true">' + signo + '</span>' +
-      '<span>' + texto + (apoyo ? '<small>' + apoyo + '</small>' : '') + '</span>' +
-      '<span class="monto">' + (signo === '−' ? '<span class="oculto-visual">menos </span>' : '') + formatoPesos(monto) + '</span></li>';
-  }
-
-  function renderResultadoMesReal() {
-    var r = recomendarCamino(perfilActual());
-    var n = r.numeros, ev = n.evaluacion, m = ev.mes;
-    var ok = ev.cumple;
-    var motivo = motivoNoConviene(ev);
-    $('mes-resultado').innerHTML =
-      '<div class="tarjeta protagonista">' +
-        '<p class="etiqueta">Te quedan al mes para vivir</p>' +
-        '<strong class="numero display-2">' + formatoPesos(m.queda) + '</strong>' +
-        '<p class="texto-apoyo">' + formatoPorcentaje(Math.max(0, m.pctQueda), 0) + ' de su ingreso</p>' +
-        (ok ? '' : '<p class="aviso aviso-alerta aviso-icono"><svg aria-hidden="true"><use href="#i-alerta"/></svg><span><strong>Ojo:</strong> ' + motivo + '</span></p>') +
-        '<ul class="cuentas">' +
-          filaCuenta('+', 'Ingreso líquido', m.ingreso) +
-          (estado.modo === 'arrendar' ? filaCuenta('−', 'Arriendo', m.arriendo) : '') +
-          filaCuenta('−', 'Otras cuotas', m.otras) +
-          filaCuenta('−', 'Dividendo', m.dividendo, 'Sin subsidio: ' + formatoPesos(n.dividendoSinSubsidio)) +
-          '<li class="cuenta-total"><span class="cuenta-signo" aria-hidden="true">=</span><span>Te queda</span><span class="monto">' + formatoPesos(m.queda) + '</span></li>' +
-        '</ul>' +
-        '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
-      '</div>';
-  }
-
-  // ----- Tus caminos (S9-F2) y Todavía no (S9-F3) -----
+  // ----- Tus caminos (S11-F3): tarjetas que se deslizan, Todavía no con interruptores y Tu mes -----
   var RAZONES = {
     'vivir-grupo': 'es para vivir y hay un grupo a tu alcance.',
     'vivir-sin-grupo': 'es para vivir y hoy no hay un grupo a tu alcance.',
-    'invertir-poco-ahorro': 'inviertes y tienes menos del 20\u00a0% del precio.',
-    'invertir-poco-ahorro-sin-grupo': 'inviertes, tienes menos del 20\u00a0% y no hay un grupo a tu alcance.',
-    'invertir-ahorro': 'inviertes y ya tienes el 20\u00a0% del precio.',
-    'invertir-ahorro-sin-grupo': 'inviertes, ya tienes el 20\u00a0% y no hay un grupo a tu alcance.'
+    'invertir-poco-ahorro': 'inviertes y tienes menos del 20 % del precio.',
+    'invertir-poco-ahorro-sin-grupo': 'inviertes, tienes menos del 20 % y no hay un grupo a tu alcance.',
+    'invertir-ahorro': 'inviertes y ya tienes el 20 % del precio.',
+    'invertir-ahorro-sin-grupo': 'inviertes, ya tienes el 20 % y no hay un grupo a tu alcance.'
   };
 
   // Por qué un camino todavía no conviene, en una frase corta.
   function motivoNoConviene(ev) {
-    if (ev.cargaDividendo > LIMITE_HOLGADO + TOLERANCIA) return 'el dividendo es el ' + formatoPorcentaje(ev.cargaDividendo) + ' de su ingreso (máximo 25\u00a0%).';
-    if (!ev.cumpleCarga) return 'con sus cuotas, la carga es ' + formatoPorcentaje(ev.cargaTotal) + ' (máximo 30\u00a0%).';
-    return 'les quedaría menos del 40\u00a0% para vivir.';
+    if (ev.cargaDividendo > LIMITE_HOLGADO + TOLERANCIA) return 'el dividendo es el ' + formatoPorcentaje(ev.cargaDividendo) + ' de su ingreso (máximo 25 %).';
+    if (!ev.cumpleCarga) return 'con sus cuotas, la carga es ' + formatoPorcentaje(ev.cargaTotal) + ' (máximo 30 %).';
+    return 'les quedaría menos del 40 % para vivir.';
   }
 
   function textoMesesCamino(n) {
     if (n.meses === 0) return 'Ya lo tienes';
-    if (n.meses === null) return 'Escribe tu ahorro';
+    if (n.meses === null) return 'Falta tu ahorro';
     return textoMeses(n.meses);
   }
 
@@ -2212,7 +2322,7 @@
     var c = CAMINOS[id];
     var partes = [];
     if (c.grupo) partes.push('sin grupo, ' + formatoPesos(n.dividendoSinGrupo) + ' al mes');
-    if (c.inversionistas > 0) partes.push('con 10\u00a0% menos de arriendo, ' + n.mesesRecompraPeor + ' meses de recompra');
+    if (c.inversionistas > 0) partes.push('con 10 % menos de arriendo, ' + n.mesesRecompraPeor + ' meses de recompra');
     if (!c.grupo) partes.push('sin subsidio, ' + formatoPesos(n.dividendoSinSubsidio) + ' al mes');
     return partes.join('; ');
   }
@@ -2223,79 +2333,185 @@
       : '<span class="chip chip-propuesta">Propuesta</span>';
   }
 
-  function datosCamino(id, n, sinPie) {
-    var c = CAMINOS[id];
-    return '<ul class="datos-inversion">' +
-      (sinPie ? '' : '<li><span>Pones al escriturar</span><strong>' + formatoPesos(n.alEscriturar) + '</strong></li>') +
-      (c.inversionistas > 0 ? '<li><span>Ponen inversionistas</span><strong>' + formatoPesos(n.inversionistas) + '</strong></li>' : '') +
-      '<li><span>Dividendo al mes</span><strong>' + formatoPesos(n.dividendo) + '</strong></li>' +
-      '<li><span>Juntas lo que falta en</span><strong>' + textoMesesCamino(n) + '</strong></li>' +
-      '</ul>' +
-      '<p class="peor-caso"><strong>Peor caso:</strong> ' + peorCaso(id, n) + '.</p>';
+  // S11-F2: reparto visual. Una casa en franjas (desde abajo: Bci, inversionistas, tú), con su leyenda.
+  var FORMA_CASA = 'M50 4 L94 40 L86 40 L86 80 L14 80 L14 40 L6 40 Z';
+  var idCasa = 0;
+  function repartoCasa(partes) {
+    var id = 'clip-reparto-' + (++idCasa);
+    var y = 80;
+    var franjas = partes.map(function (x, i) {
+      var alto = 76 * x.pct;
+      y -= alto;
+      return '<rect class="franja franja-' + x.clave + '" style="animation-delay:' + (i * 60) + 'ms" x="0" y="' + y.toFixed(1) +
+        '" width="100" height="' + alto.toFixed(1) + '" clip-path="url(#' + id + ')"/>';
+    }).join('');
+    return '<div class="reparto-casa">' +
+      '<svg class="casa-reparto" viewBox="0 0 100 84" aria-hidden="true">' +
+        '<defs><clipPath id="' + id + '"><path d="' + FORMA_CASA + '"/></clipPath></defs>' +
+        franjas + '<path class="casa-borde" d="' + FORMA_CASA + '"/></svg>' +
+      '<ul class="reparto-leyenda">' + partes.slice().reverse().map(function (x) {
+        return '<li><span class="punto punto-' + x.clave + '" aria-hidden="true"></span>' +
+          '<span>' + Math.round(x.pct * 100) + NBSP + '% ' + x.nombre + '</span><strong>' + formatoPesos(x.monto) + '</strong></li>';
+      }).join('') + '</ul>' +
+    '</div>';
   }
 
-  // Resumen de una ficha informativa, para la lista de caminos.
+  function partesCamino(id, n) {
+    var c = CAMINOS[id];
+    var partes = [{ clave: 'bci', icono: 'i-banco', nombre: 'Bci', pct: c.credito, monto: Math.round(n.precio * c.credito) }];
+    if (c.inversionistas > 0) partes.push({ clave: 'inversionistas', icono: 'i-inversionistas', nombre: 'inversionistas', pct: c.inversionistas, monto: n.inversionistas });
+    partes.push({ clave: 'tu', icono: 'i-persona', nombre: 'tú', pct: c.usuario, monto: n.pie });
+    return partes;
+  }
+
+  var ICONOS_FICHA = { 'arriendo-opcion': ['i-llave', 'i-casa'], 'respaldo-familiar': ['i-grupo', 'i-escudo'] };
+
   function resumenFicha(id) {
     if (id === 'arriendo-opcion') {
       var a = arriendoConOpcion(LISTA_REFERENCIA_UF);
-      return '<p class="texto-apoyo">' + formatoPesos(a.mensualidad) + ' al mes. Juntas el 10\u00a0% en ' + a.meses + ' meses.</p>';
+      return '<ul class="datos-inversion"><li><span>Pagas al mes</span><strong>' + formatoPesos(a.mensualidad) + '</strong></li>' +
+        '<li><span>Juntas el 10 % en</span><strong>' + textoMeses(a.meses) + '</strong></li></ul>';
     }
     var r = respaldoFamiliar(LISTA_REFERENCIA_UF);
-    return '<p class="texto-apoyo">Tú pones ' + formatoPesos(r.pie) + '. Un familiar deja ' + formatoPesos(r.deposito) + ' como respaldo.</p>';
+    return '<ul class="datos-inversion"><li><span>Pones tú</span><strong>' + formatoPesos(r.pie) + '</strong></li>' +
+      '<li><span>Deja tu familiar</span><strong>' + formatoPesos(r.deposito) + '</strong></li></ul>';
   }
 
-  function tarjetaCamino(id, n, perfil) {
+  function tarjetaCamino(id, perfil, recomendado, razon, i, total) {
     var c = CAMINOS[id];
+    var cabeza = '<div class="camino-cabeza"><h3 class="h4">' + c.nombre + '</h3>' + chipExiste(id) + '</div>';
+    var atributos = ' class="tarjeta camino-slide' + (recomendado ? ' recomendado' : '') + '" aria-roledescription="diapositiva" aria-label="' +
+      (i + 1) + ' de ' + total + ': ' + c.nombre + '"';
     if (c.ficha) {
-      return '<li class="tarjeta camino-opcion">' +
-        '<div class="camino-cabeza"><h3 class="h5">' + c.nombre + '</h3>' + chipExiste(id) + '</div>' +
-        resumenFicha(id) +
-        '<a class="btn btn-secundario-dark btn-bloque" href="#ficha/' + id + '">Ver cómo funciona</a>' +
-        '</li>';
+      return '<li' + atributos + '>' +
+        '<div class="ilustracion-ficha" aria-hidden="true">' + ICONOS_FICHA[id].map(function (x) { return icono(x, 'icono-grande'); }).join('') + '</div>' +
+        cabeza + resumenFicha(id) +
+        '<a class="btn btn-secundario-dark btn-bloque" href="#ficha/' + id + '">Ver cómo funciona</a></li>';
     }
-    var noConviene = n.evaluacion && !n.evaluacion.cumple;
-    return '<li class="tarjeta camino-opcion">' +
-      '<div class="camino-cabeza"><h3 class="h5">' + c.nombre + '</h3>' + chipExiste(id) + '</div>' +
-      (noConviene ? '<p class="aviso aviso-alerta aviso-icono"><svg aria-hidden="true"><use href="#i-alerta"/></svg>Todavía no te conviene.</p>' : '') +
-      datosCamino(id, n) +
-      '<button type="button" class="btn btn-secundario-dark btn-bloque" data-elegir="' + id + '">Elegir este camino</button>' +
-      '</li>';
+    var n = numerosCamino(id, LISTA_REFERENCIA_UF, perfil);
+    var noConviene = !n.evaluacion.cumple;
+    return '<li' + atributos + '>' +
+      (recomendado ? '<p class="chip chip-recomendado">' + icono('i-ok') + 'Te recomendamos</p>' : '') +
+      repartoCasa(partesCamino(id, n)) +
+      cabeza +
+      (recomendado && razon ? '<p class="razon">Porque ' + RAZONES[razon] + '</p>' : '') +
+      (noConviene ? '<p class="aviso aviso-alerta aviso-icono">' + icono('i-alerta') + 'Todavía no te conviene.</p>' : '') +
+      '<ul class="datos-inversion">' +
+        '<li><span>Al escriturar</span><strong>' + formatoPesos(n.alEscriturar) + '</strong></li>' +
+        '<li><span>Dividendo al mes</span><strong>' + formatoPesos(n.dividendo) + '</strong></li>' +
+        '<li><span>' + icono('i-calendario') + 'Llegas en</span><strong>' + textoMesesCamino(n) + '</strong></li>' +
+      '</ul>' +
+      '<p class="peor-caso"><strong>Peor caso:</strong> ' + peorCaso(id, n) + '.</p>' +
+      '<button type="button" class="btn ' + (recomendado ? 'btn-primario' : 'btn-secundario-dark') + ' btn-bloque" data-elegir="' + id + '">' +
+        (estado.caminoElegido === id ? 'Tu camino ✓' : 'Elegir este camino') + '</button>' +
+    '</li>';
   }
 
-  // Un cambio de Todavía no: check solo si con ese cambio ya conviene; si no, dice cuánto queda.
-  function filaCambio(x) {
-    var titulo, detalle;
-    if (x.tipo === 'cuotas') {
-      titulo = 'Terminar tus otras cuotas';
-      detalle = 'Te quedan ' + formatoPesos(x.queda) + ' al mes.';
-    } else if (x.tipo === 'estudio') {
-      titulo = 'Un estudio de ' + formatoUF(x.listaUF);
-      detalle = 'Pones ' + formatoPesos(x.alEscriturar) + ' y pagas ' + formatoPesos(x.dividendo) + ' al mes.';
-    } else {
-      titulo = 'Una renta familiar de ' + formatoPesos(x.ingreso);
-      detalle = formatoPesos(x.falta) + ' más al mes.';
-    }
-    var estadoCambio = x.cumple ? 'Ya te conviene.' : 'Aún no: ' + motivoNoConviene(x.evaluacion);
-    return '<li class="' + (x.cumple ? 'cambio-si' : 'cambio-no') + '"><svg aria-hidden="true"><use href="#' + (x.cumple ? 'i-check' : 'i-pronto') + '"/></svg>' +
-      '<span>' + titulo + '<small>' + detalle + ' <strong>' + estadoCambio + '</strong></small></span></li>';
+  function carruselCaminos(ids, perfil, r) {
+    var total = ids.length;
+    return '<section class="carrusel" aria-roledescription="carrusel" aria-label="Caminos">' +
+      '<ul class="carrusel-pista" id="carrusel-pista" tabindex="0">' +
+        ids.map(function (id, i) { return tarjetaCamino(id, perfil, !r.todaviaNo && i === 0, r.razon, i, total); }).join('') +
+      '</ul>' +
+      '<div class="carrusel-control">' +
+        '<button type="button" class="carrusel-boton" id="carrusel-anterior" aria-label="Camino anterior">' + icono('i-flecha', 'flecha-izquierda') + '</button>' +
+        '<div class="carrusel-puntos" aria-hidden="true">' + ids.map(function (x, i) { return '<span class="' + (i === 0 ? 'activo' : '') + '"></span>'; }).join('') + '</div>' +
+        '<button type="button" class="carrusel-boton" id="carrusel-siguiente" aria-label="Camino siguiente">' + icono('i-flecha', 'flecha-derecha') + '</button>' +
+      '</div>' +
+    '</section>';
   }
 
+  function iniciarCarrusel() {
+    var pista = $('carrusel-pista');
+    if (!pista) return;
+    var puntos = document.querySelectorAll('.carrusel-puntos span');
+    var actual = function () { return Math.round(pista.scrollLeft / pista.clientWidth); };
+    var marcar = function () {
+      var i = actual();
+      puntos.forEach(function (p, k) { p.classList.toggle('activo', k === i); });
+      $('carrusel-anterior').disabled = i === 0;
+      $('carrusel-siguiente').disabled = i === puntos.length - 1;
+    };
+    var ir = function (delta) {
+      var reducir = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      pista.scrollTo({ left: (actual() + delta) * pista.clientWidth, behavior: reducir ? 'auto' : 'smooth' });
+    };
+    $('carrusel-anterior').addEventListener('click', function () { ir(-1); });
+    $('carrusel-siguiente').addEventListener('click', function () { ir(1); });
+    pista.addEventListener('scroll', function () { window.requestAnimationFrame(marcar); });
+    marcar();
+  }
+
+  // S11-F3: Todavía no con interruptores. Cada cambio recalcula en vivo (simularCambios).
+  var cambiosActivos = {};
+  function tituloCambio(x) {
+    if (x.tipo === 'cuotas') return 'Terminar tus otras cuotas';
+    if (x.tipo === 'estudio') return 'Un estudio de ' + formatoUF(x.listaUF);
+    return 'Una renta de ' + formatoPesos(x.ingreso);
+  }
   function bloqueTodaviaNo(r, perfil) {
     var cambios = cambiosTodaviaNo(perfil, r.id);
     var meses = mesesRecordar(perfil, r.id);
     var avisado = registro.recordarme;
     return '<section class="tarjeta todavia-no" aria-labelledby="titulo-todavia-no">' +
-      '<p class="estado-semaforo"><svg aria-hidden="true"><use href="#i-pronto"/></svg>Todavía no</p>' +
-      '<h2 class="h3" id="titulo-todavia-no">Todavía no te conviene</h2>' +
-      '<p class="texto-apoyo">Hoy te dejaría muy justo.</p>' +
-      '<ul class="lista-check lista-cambios">' + cambios.map(filaCambio).join('') + '</ul>' +
+      '<p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
+      '<h2 class="h3" id="titulo-todavia-no">Hoy te dejaría muy justo</h2>' +
+      '<p class="etiqueta">Prueba qué lo cambia</p>' +
+      '<ul class="interruptores">' + cambios.map(function (x) {
+        return '<li><button type="button" class="interruptor" role="switch" aria-checked="' + !!cambiosActivos[x.tipo] + '" data-cambio="' + x.tipo + '">' +
+          '<span>' + tituloCambio(x) + '</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button></li>';
+      }).join('') + '</ul>' +
+      '<div id="simulacion" aria-live="polite"></div>' +
       '<div class="acciones">' +
-        (avisado
-          ? '<p class="aviso aviso-ok aviso-icono" id="recordarme-listo"><svg aria-hidden="true"><use href="#i-ok"/></svg>Listo: te avisamos en ' + avisado + ' meses (simulado).</p>'
-          : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-recordarme" data-meses="' + meses + '">Recordarme en ' + meses + ' meses</button>') +
+        (avisado ? ''
+          : '<button type="button" class="btn btn-primario btn-bloque" id="btn-recordarme" data-meses="' + meses + '">Recordarme en ' + meses + ' meses</button>') +
         '<button type="button" class="btn btn-terciario btn-bloque" id="btn-ver-estudios">Ver estudios</button>' +
       '</div>' +
-      '</section>';
+    '</section>';
+  }
+  function dibujarSimulacion(r, perfil) {
+    var s = simularCambios(perfil, r.id, cambiosActivos);
+    var ev = s.numeros.evaluacion;
+    $('simulacion').innerHTML =
+      '<div class="simulacion ' + (s.cumple ? 'simulacion-ok' : '') + '">' +
+        '<p class="estado-semaforo">' + icono(s.cumple ? 'i-ok' : 'i-pronto') + (s.cumple ? 'Ya te conviene' : 'Todavía no') + '</p>' +
+        '<ul class="datos-inversion">' +
+          '<li><span>Carga</span><strong>' + formatoPorcentaje(ev.cargaTotal) + '</strong></li>' +
+          '<li><span>Te queda al mes</span><strong>' + formatoPesos(ev.mes.queda) + '</strong></li>' +
+          '<li><span>Llegas en</span><strong>' + textoMesesCamino(s.numeros) + '</strong></li>' +
+        '</ul>' +
+      '</div>';
+  }
+
+  // S11-F2: Tu mes, como una barra del ingreso partida en tramos, con la marca del 40 % para vivir.
+  function barraMes(n) {
+    var m = n.evaluacion.mes;
+    var total = m.ingreso;
+    var tramos = [
+      { clave: 'dividendo', icono: 'i-banco', nombre: 'Dividendo', monto: m.dividendo },
+      { clave: 'cuotas', icono: 'i-documento', nombre: 'Otras cuotas', monto: m.otras },
+      { clave: 'arriendo', icono: 'i-llave', nombre: 'Arriendo', monto: m.arriendo },
+      { clave: 'queda', icono: 'i-persona', nombre: 'Te queda', monto: Math.max(0, m.queda) }
+    ].filter(function (t) { return t.monto > 0; });
+    var alerta = !m.alcanzaParaVivir;
+    var etiqueta = tramos.map(function (t) { return t.nombre + ' ' + Math.round(100 * t.monto / total) + ' %'; }).join(', ');
+    return '<section class="tarjeta bloque tu-mes" id="tu-mes" aria-labelledby="titulo-tu-mes">' +
+      '<h2 class="h4" id="titulo-tu-mes">Tu mes</h2>' +
+      '<p class="etiqueta">Te quedan para vivir</p>' +
+      '<strong class="numero display-3' + (alerta ? ' numero-alerta' : '') + '">' + formatoPesos(m.queda) + '</strong>' +
+      '<div class="barra-mes" role="img" aria-label="De su ingreso: ' + etiqueta + '. Mínimo para vivir: 40 %.">' +
+        tramos.map(function (t) {
+          return '<span class="tramo tramo-' + t.clave + (alerta && t.clave === 'queda' ? ' tramo-alerta' : '') + '" style="flex-basis:' + (100 * t.monto / total).toFixed(2) + '%"></span>';
+        }).join('') +
+        '<span class="marca-40" aria-hidden="true"><span>40 % para vivir</span></span>' +
+      '</div>' +
+      (alerta ? '<p class="aviso aviso-alerta aviso-icono">' + icono('i-alerta') + '<span><strong>Ojo:</strong> ' + motivoNoConviene(n.evaluacion) + '</span></p>' : '') +
+      '<ul class="leyenda-mes">' + tramos.map(function (t) {
+        return '<li><span class="punto tramo-' + t.clave + '" aria-hidden="true"></span>' + icono(t.icono) + '<span>' + t.nombre + '</span><strong>' + formatoPesos(t.monto) + '</strong></li>';
+      }).join('') + '</ul>' +
+      '<ul class="datos-inversion"><li><span>Te prestan hasta</span><strong>' +
+        formatoUF(capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo) || 0) + '</strong></li></ul>' +
+    '</section>';
   }
 
   function renderCaminos() {
@@ -2303,54 +2519,39 @@
     if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return sinSueldos(cont, 'Tus caminos', 'titulo-caminos');
     var perfil = perfilActual();
     var r = recomendarCamino(perfil);
-    var n = r.numeros;
-    var otros = r.todaviaNo ? caminosDelModo(perfil.modo) : r.otros;
-
-    var principal = r.todaviaNo ? bloqueTodaviaNo(r, perfil) :
-      '<section class="tarjeta protagonista camino-recomendado" aria-labelledby="titulo-recomendado">' +
-        '<div class="camino-cabeza"><p class="etiqueta">Te recomendamos</p>' + chipExiste(r.id) + '</div>' +
-        '<h2 class="h3" id="titulo-recomendado">' + CAMINOS[r.id].nombre + '</h2>' +
-        '<p class="razon">Porque ' + RAZONES[r.razon] + '</p>' +
-        '<p class="etiqueta">Pones al escriturar</p>' +
-        '<strong class="numero display-3">' + formatoPesos(n.alEscriturar) + '</strong>' +
-        datosCamino(r.id, n, true) +
-        '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
-        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" data-elegir="' + r.id + '">Elegir este camino</button></div>' +
-      '</section>';
+    var ids = r.todaviaNo ? caminosDelModo(perfil.modo) : [r.id].concat(r.otros);
 
     cont.innerHTML =
-      '<a href="#mes-real" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Tu mes real</a>' +
+      '<a href="#inicio" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Tu camino</a>' +
       '<header class="encabezado">' +
         '<h1 id="titulo-caminos" class="h2">Tus caminos</h1>' +
-        '<p class="texto-apoyo">' + (perfil.modo === 'vivir' ? 'Para vivir' : 'Para arrendar') + ' · ' +
-          formatoUF(LISTA_REFERENCIA_UF) + ' <a href="#perfil" class="enlace">Cambiar</a></p>' +
+        '<p class="texto-apoyo">' + (perfil.modo === 'vivir' ? 'Para vivir' : 'Para arrendar') + ' · ' + formatoUF(LISTA_REFERENCIA_UF) + '</p>' +
       '</header>' +
-      (estado.caminoElegido && !r.todaviaNo ? '<p class="aviso aviso-ok aviso-icono"><svg aria-hidden="true"><use href="#i-ok"/></svg>Elegiste ' + CAMINOS[estado.caminoElegido].nombre + '.</p>' : '') +
-      principal +
-      '<button type="button" class="enlace desplegar" id="btn-otros-caminos" aria-expanded="' + estado.verOtros + '" aria-controls="otros-caminos">' +
-        (r.todaviaNo ? 'Ver los caminos' : 'Ver otros caminos') + ' (' + otros.length + ')<svg aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
-      '<ul class="lista-caminos" id="otros-caminos"' + (estado.verOtros ? '' : ' hidden') + '>' +
-        otros.map(function (id) {
-          return tarjetaCamino(id, CAMINOS[id].ficha ? null : numerosCamino(id, LISTA_REFERENCIA_UF, perfil), perfil);
-        }).join('') +
-      '</ul>' +
-      '';
+      (r.todaviaNo ? bloqueTodaviaNo(r, perfil) : '') +
+      carruselCaminos(ids, perfil, r) +
+      barraMes(r.numeros) +
+      '<p class="sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>';
 
-    $('btn-otros-caminos').addEventListener('click', function () {
-      estado.verOtros = !estado.verOtros;
-      $('btn-otros-caminos').setAttribute('aria-expanded', String(estado.verOtros));
-      $('otros-caminos').hidden = !estado.verOtros;
-    });
+    iniciarCarrusel();
     cont.querySelectorAll('[data-elegir]').forEach(function (b) {
       b.addEventListener('click', function () { elegirCamino(b.dataset.elegir); });
     });
+    if (r.todaviaNo) {
+      dibujarSimulacion(r, perfil);
+      cont.querySelectorAll('.interruptor').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var tipo = b.dataset.cambio;
+          cambiosActivos[tipo] = !cambiosActivos[tipo];
+          b.setAttribute('aria-checked', String(!!cambiosActivos[tipo]));
+          dibujarSimulacion(r, perfil);
+        });
+      });
+    }
     if ($('btn-recordarme')) $('btn-recordarme').addEventListener('click', function () {
       registro.recordarme = Number($('btn-recordarme').dataset.meses);
       guardarRegistro();
-      renderCaminos();
-      $('recordarme-listo').setAttribute('tabindex', '-1');
-      $('recordarme-listo').focus();
-      anunciar('Listo: te avisamos en ' + registro.recordarme + ' meses.');
+      $('btn-recordarme').remove();
+      toast('Listo: te avisamos en ' + registro.recordarme + ' meses (simulado).');
     });
     if ($('btn-ver-estudios')) $('btn-ver-estudios').addEventListener('click', function () {
       estado.masBaratoTipo = 'estudio';
@@ -2360,14 +2561,20 @@
     });
   }
 
+  // Proyectos se abre con los filtros del camino.
+  function prepararProyectos(id) {
+    estado.meAlcanza = true;
+    estado.pestana = id === 'pie-compartido' ? 'financiamiento' : 'conjunto';
+  }
+
   // Elegir un camino: se anota en el registro y lleva a los proyectos de ese camino.
   function elegirCamino(id) {
     estado.caminoElegido = id;
     guardarEstado();
     registro.camino = id;
     guardarRegistro();
-    estado.meAlcanza = true;
-    estado.pestana = id === 'pie-compartido' ? 'financiamiento' : 'conjunto';
+    prepararProyectos(id);
+    toast('Elegiste ' + CAMINOS[id].nombre + '.');
     location.hash = '#proyectos';
   }
 
@@ -2435,7 +2642,7 @@
       var ahora = i === -1;
       $('btn-me-interesa').setAttribute('aria-pressed', String(ahora));
       $('btn-me-interesa').textContent = ahora ? 'Te interesa ✓' : 'Me interesa';
-      anunciar(ahora ? 'Anotado: te interesa.' : 'Quitado.');
+      toast(ahora ? 'Anotado: te interesa.' : 'Quitado de lo que te interesa.');
     });
   }
 
@@ -2550,11 +2757,6 @@
         glosarioCompleto() +
         '<a class="enlace" href="#bienvenida">Ver de nuevo la introducción</a>' +
       '</section>' +
-      '<section class="tarjeta bloque" aria-labelledby="titulo-sesion">' +
-        '<h2 class="h4" id="titulo-sesion">Sesión de prueba</h2>' +
-        '<p class="texto-apoyo">Para la facilitadora.</p>' +
-        '<a class="btn btn-secundario-dark btn-bloque" href="#registro">Abrir el registro</a>' +
-      '</section>' +
       '<section class="tarjeta bloque" aria-labelledby="titulo-reinicio">' +
         '<h2 class="h4" id="titulo-reinicio">Empezar de nuevo</h2>' +
         '<p class="texto-apoyo">Borra tus datos de este teléfono.</p>' +
@@ -2566,6 +2768,11 @@
             '<button type="button" class="enlace" id="btn-reiniciar-no">Cancelar</button>' +
           '</div>' +
         '</div>' +
+      '</section>' +
+      '<section class="tarjeta bloque" aria-labelledby="titulo-sesion">' +
+        '<h2 class="h4" id="titulo-sesion">Sesión de prueba</h2>' +
+        '<p class="texto-apoyo">Para la facilitadora.</p>' +
+        '<a class="btn btn-secundario-dark btn-bloque" href="#registro">Abrir el registro</a>' +
       '</section>';
 
     ['perfil-propio', 'perfil-pareja', 'perfil-arriendo'].forEach(function (id) {
@@ -2651,8 +2858,7 @@
     }
     if (destino.pantalla === 'invertir') renderInvertir(ruta.param);
     if (destino.pantalla === 'perfil') renderPerfil();
-    if (destino.pantalla === 'mes-real') renderMesReal();
-    if (destino.pantalla === 'caminos') { estado.verOtros = false; renderCaminos(); }
+    if (destino.pantalla === 'caminos') { cambiosActivos = {}; renderCaminos(); }
     if (destino.pantalla === 'ficha') renderFicha(ruta.param);
     if (destino.pantalla === 'registro') renderRegistro();
 
@@ -2664,6 +2870,12 @@
       else a.removeAttribute('aria-current');
     });
     window.scrollTo(0, 0);
+    // S11-F1: la pantalla que entra hace un fundido corto (la que sale no se anima).
+    var visible = $('pantalla-' + destino.pantalla);
+    visible.classList.remove('entrando');
+    void visible.offsetWidth;
+    visible.classList.add('entrando');
+    if (ruta.nombre === 'mes-real' && $('tu-mes')) $('tu-mes').scrollIntoView();
   }
 
   window.addEventListener('hashchange', mostrar);

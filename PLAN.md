@@ -506,11 +506,11 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 10 | S10-F3 Pie en cuotas | en progreso |
 | 10 | S10-F4 Sostener | en progreso |
 | 10 | S10-F5 Pendientes del Sprint 7 | en progreso |
-| 11 | S11-F0 Estructura: Inicio = Tu camino | pendiente |
-| 11 | S11-F1 Base de interacción | pendiente |
-| 11 | S11-F2 Inicio: las 3 preguntas y Tu camino | pendiente |
-| 11 | S11-F3 Los caminos y Todavía no | pendiente |
-| 11 | S11-F4 Juntar el pie y Sostener | pendiente |
+| 11 | S11-F0 Estructura: Inicio = Tu camino | en progreso |
+| 11 | S11-F1 Base de interacción | en progreso |
+| 11 | S11-F2 Inicio: las 3 preguntas y Tu camino | en progreso |
+| 11 | S11-F3 Los caminos y Todavía no | en progreso |
+| 11 | S11-F4 Juntar el pie y Sostener | en progreso |
 | 12 | S12-F1 Proyectos y Detalle | pendiente |
 | 12 | S12-F2 Postula | pendiente |
 | 12 | S12-F3 Tus documentos | pendiente |
