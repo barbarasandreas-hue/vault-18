@@ -12,14 +12,16 @@ var FECHA_REFERENCIA = '2026-11-03';
 // cupos: compradores que caben en el lote; cuposTomados: los que ya se unieron.
 // ufFinanciadas: parte de la participación de 15 % que ya pusieron inversionistas.
 // cierre: fecha en que se cierra el proyecto.
+// etapaObra (compra en grupo): 0 excavación, 1 obra gruesa, 2 terminaciones, 3 recepción, 4 escritura (ETAPAS_OBRA).
+// entregaEstimada: fecha estimada de entrega del edificio.
 var PROYECTOS = [
-  { id: 'mirador-independencia', nombre: 'Edificio Mirador Independencia', comuna: 'Independencia', tipo: 'conjunto',
+  { id: 'mirador-independencia', etapaObra: 1, entregaEstimada: '2027-12-15', nombre: 'Edificio Mirador Independencia', comuna: 'Independencia', tipo: 'conjunto',
     cupos: 10, cuposTomados: 6, ufFinanciadas: 0, cierre: '2026-12-15' },
-  { id: 'parque-quinta-normal', nombre: 'Edificio Parque Quinta Normal', comuna: 'Quinta Normal', tipo: 'conjunto',
+  { id: 'parque-quinta-normal', etapaObra: 2, entregaEstimada: '2027-06-30', nombre: 'Edificio Parque Quinta Normal', comuna: 'Quinta Normal', tipo: 'conjunto',
     cupos: 8, cuposTomados: 5, ufFinanciadas: 0, cierre: '2027-01-20' },
-  { id: 'portal-estacion', nombre: 'Edificio Portal Estación', comuna: 'Estación Central', tipo: 'conjunto',
+  { id: 'portal-estacion', etapaObra: 0, entregaEstimada: '2028-03-31', nombre: 'Edificio Portal Estación', comuna: 'Estación Central', tipo: 'conjunto',
     cupos: 10, cuposTomados: 4, ufFinanciadas: 0, cierre: '2027-02-26' },
-  { id: 'altos-recoleta', nombre: 'Edificio Altos de Recoleta', comuna: 'Recoleta', tipo: 'conjunto',
+  { id: 'altos-recoleta', etapaObra: 1, entregaEstimada: '2027-10-31', nombre: 'Edificio Altos de Recoleta', comuna: 'Recoleta', tipo: 'conjunto',
     cupos: 10, cuposTomados: 3, ufFinanciadas: 0, cierre: '2026-12-30' },
   { id: 'plaza-estacion', nombre: 'Edificio Plaza Estación', comuna: 'Estación Central', tipo: 'financiamiento',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 108, cierre: '2027-02-10' },

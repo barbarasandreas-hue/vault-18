@@ -1228,3 +1228,51 @@ body.con-hoja { overflow: hidden; }
 .meta-departamento .icono { margin: 0; flex: none; }
 .meta-departamento span { flex: 1; min-width: 0; }
 .meta-departamento small { display: block; color: var(--gray-semidark); font-size: 14px; }
+
+/* ---------- Sprint 13: volver a la app ---------- */
+.encabezado { position: relative; }
+.campana {
+  position: absolute; top: 0; right: 0; z-index: 1;
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--white); border: 1px solid var(--gray-light); color: var(--blue-dark);
+}
+.campana:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.icono-campana { width: 22px; height: 22px; }
+.campana-numero {
+  position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: 10px; background: var(--red-dark); color: var(--white);
+  font-size: 12px; font-weight: 700; line-height: 20px; text-align: center;
+  animation: entrar var(--dur-corta) var(--ease-resorte) both;
+}
+.encabezado:has(.campana) .h2 { padding-right: 52px; }
+
+.notificaciones { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 10px; }
+.notificacion {
+  display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px;
+  background: var(--white); border-radius: 16px; box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+  animation: entrar var(--dur-media) var(--ease-salida) both;
+}
+.notificacion-app { width: 36px; height: 36px; border-radius: 10px; background: var(--blue-dark); display: grid; place-items: center; flex: none; }
+.notificacion-app .icono { color: var(--white); margin: 0; }
+.notificacion-cuerpo { display: grid; gap: 2px; min-width: 0; }
+.notificacion-cuerpo small { font-size: 13px; color: var(--gray-dark); }
+.notificacion-cuerpo strong { font-size: 16px; }
+
+.obra { margin-top: 12px; }
+.interruptor-cuota { width: 100%; margin: 12px 0 0; }
+.juntos-avatares { display: flex; align-items: center; margin: 4px 0 8px; }
+.juntos-avatares span { margin-left: 8px; }
+.avatar {
+  width: 36px; height: 36px; padding: 7px; border-radius: 50%; margin: 0;
+  background: var(--blue-20); border: 2px solid var(--white); box-sizing: border-box;
+}
+.avatar-2 { margin-left: -10px; background: var(--green-20); color: var(--green-dark); animation: entrar var(--dur-media) var(--ease-resorte) both; }
+.regalo { margin-top: 16px; }
+.acciones-dos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.acciones-dos .btn { padding-left: 8px; padding-right: 8px; }
+.lo-tuyo .numero { display: block; margin: 4px 0; }
+.crecio { color: var(--green-dark); font-weight: 600; margin: 0 0 8px; }
+.icono-crecio { width: 20px; height: 20px; vertical-align: -4px; margin-right: 6px; color: var(--green-dark); }
+@media (prefers-reduced-motion: reduce) {
+  .notificacion, .campana-numero, .avatar-2 { animation: none; }
+}

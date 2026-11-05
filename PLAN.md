@@ -522,9 +522,9 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 12 | S12-F4 Firma y Mi departamento | en progreso |
 | 12 | S12-F5 Invertir y Mis inversiones | en progreso |
 | 12 | S12-F6 Errores y revisión final | en progreso |
-| 13 | S13-F1 Avisos con tu meta | pendiente |
-| 13 | S13-F2 Cuota automática y pausa | pendiente |
-| 13 | S13-F3 Juntos | pendiente |
-| 13 | S13-F4 Tu grupo y tu obra | pendiente |
-| 13 | S13-F5 Lo tuyo creció este mes | pendiente |
-| 13 | S13-F6 Medición en la sesión de prueba | pendiente |
+| 13 | S13-F1 Avisos con tu meta | en progreso |
+| 13 | S13-F2 Cuota automática y pausa | en progreso |
+| 13 | S13-F3 Juntos | en progreso |
+| 13 | S13-F4 Tu grupo y tu obra | en progreso |
+| 13 | S13-F5 Lo tuyo creció este mes | en progreso |
+| 13 | S13-F6 Medición en la sesión de prueba | en progreso |

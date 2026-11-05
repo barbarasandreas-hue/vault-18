@@ -871,7 +871,9 @@ function textoRegistro(registro, fechaISO) {
     'Explicación del camino (0 a 3): ' + valor(r.explicacion),
     'Confianza (1 a 5): ' + valor(r.confianza),
     'Me interesa: ' + ((r.meInteresa || []).length ? r.meInteresa.map(nombre).join(', ') : 'nada'),
-    'Pidió que le recordemos: ' + (r.recordarme ? 'en ' + r.recordarme + ' meses' : 'no')
+    'Pidió que le recordemos: ' + (r.recordarme ? 'en ' + r.recordarme + ' meses' : 'no'),
+    '¿Volvería el próximo mes?: ' + valor(r.volveria),
+    'Aviso que la haría volver: ' + valor(r.avisoVolver)
   ].join('\n');
 }
 
@@ -910,6 +912,74 @@ function registrarMes(r, pago) {
   return { mes: mes, racha: 0, ultimoProtector: r.ultimoProtector, resultado: 'reinicio' };
 }
 
+// ---------- Sprint 13: volver a la app ----------
+
+// S13-F4: el descuento del grupo según los cupos ya tomados, y cuántas personas faltan para el siguiente escalón.
+// El descuento que muestra el proyecto supone que el grupo se completa; aquí se ve lo asegurado hoy.
+function cuposParaMasDescuento(tomados, cupos) {
+  var asegurado = descuentoGrupo(tomados);
+  var escalones = [{ desde: 5, descuento: 0.03 }, { desde: 10, descuento: 0.05 }].filter(function (e) {
+    return e.desde <= cupos && e.desde > tomados;
+  });
+  var siguiente = escalones[0] || null;
+  return {
+    asegurado: asegurado,
+    faltan: siguiente ? siguiente.desde - tomados : 0,
+    descuentoSiguiente: siguiente ? siguiente.descuento : null
+  };
+}
+
+// S13-F4: etapas de la obra (la última es la escritura).
+var ETAPAS_OBRA = ['Excavación', 'Obra gruesa', 'Terminaciones', 'Recepción', 'Escritura'];
+
+// S13-F5: lo tuyo en el departamento, sin plusvalía: precio − lo que se debe a Bci − la parte de los inversionistas.
+function patrimonioUF(precioUF, saldoBciUF, saldoParticipacionUF) {
+  return Math.max(0, precioUF - saldoBciUF - (saldoParticipacionUF || 0));
+}
+// Cuánto creció en un mes: lo que se recompró más lo que bajó la deuda con Bci.
+function crecimientoMesUF(precioUF, mes, modo, recompraUF) {
+  var antes = saldoBciUF(precioUF, mes - 1, modo);
+  var despues = saldoBciUF(precioUF, mes, modo);
+  return (recompraUF || 0) + (antes - despues);
+}
+
+// S13-F1: los avisos del mes, según la etapa y lo que la usuaria dejó encendido.
+// Cada aviso nombra la meta concreta. Máximo uno por semana: días 1, 8, 15 y 22. La cuota va el día 1 (nuevo comienzo).
+// c: { etapa: 'camino' | 'pie' | 'departamento' | 'inversion', lugar, meses, cuota, ultimoMes ('pago'|'protector'|'reinicio'),
+//      grupo: { faltan, descuentoSiguiente }, obra: { etapa }, crecioPesos, porcentajeTuyo, inversiones: [{ nombre, pesos }],
+//      apagados: { cuota, grupo, obra, departamento } }
+var TIPOS_AVISO = ['cuota', 'grupo', 'obra', 'departamento'];
+function avisosDelMes(c) {
+  var lista = [];
+  var apagado = function (tipo) { return c.apagados && c.apagados[tipo]; };
+  if (c.etapa === 'camino' && c.meses !== null && c.meses !== undefined) {
+    lista.push({ tipo: 'cuota', titulo: 'Nuevo mes', texto: 'Faltan ' + c.meses + ' meses para tu departamento ' + c.lugar + '.' });
+  }
+  if (c.etapa === 'pie') {
+    var nuevaRacha = c.ultimoMes === 'protector' || c.ultimoMes === 'reinicio';
+    lista.push({ tipo: 'cuota', titulo: nuevaRacha ? 'Nuevo mes, nueva racha' : 'Nuevo mes: tu cuota de ' + formatoPesos(c.cuota),
+      texto: (c.meses === 0 ? 'Ya juntaste tu pie para tu departamento ' : 'Faltan ' + c.meses + ' meses para tu departamento ') + c.lugar + '.' });
+  }
+  if (c.grupo && c.grupo.faltan > 0) {
+    lista.push({ tipo: 'grupo', titulo: 'Tu grupo',
+      texto: 'Con ' + (c.grupo.faltan === 1 ? '1 persona' : c.grupo.faltan + ' personas') + ' más, el descuento sube a ' + formatoPorcentaje(c.grupo.descuentoSiguiente, 0) + '.' });
+  }
+  if (c.obra) {
+    lista.push({ tipo: 'obra', titulo: 'Tu obra', texto: 'Tu edificio va en ' + ETAPAS_OBRA[c.obra.etapa].toLowerCase() + '.' });
+  }
+  if (c.etapa === 'departamento' && c.crecioPesos > 0) {
+    lista.push({ tipo: 'departamento', titulo: 'Lo tuyo creció ' + formatoPesos(c.crecioPesos) + ' este mes',
+      texto: c.porcentajeTuyo < 100 ? 'Ya es tuyo el ' + c.porcentajeTuyo + ' % de tu departamento.' : 'Sin contar plusvalía.' });
+  }
+  (c.inversiones || []).forEach(function (x) {
+    lista.push({ tipo: 'departamento', titulo: 'Recibiste ' + formatoPesos(x.pesos), texto: 'De ' + x.nombre + '.' });
+  });
+  var DIAS = [1, 8, 15, 22];
+  return lista.filter(function (a) { return !apagado(a.tipo); }).slice(0, 4).map(function (a, i) {
+    return Object.assign({}, a, { dia: DIAS[i] });
+  });
+}
+
 if (typeof module !== 'undefined') module.exports = {
   LISTA_REFERENCIA_UF: LISTA_REFERENCIA_UF,
   MINIMO_PARA_VIVIR: MINIMO_PARA_VIVIR,
@@ -944,6 +1014,12 @@ if (typeof module !== 'undefined') module.exports = {
   mesesRecompra: mesesRecompra,
   plazoRecompra: plazoRecompra,
   ventaHoy: ventaHoy,
+  cuposParaMasDescuento: cuposParaMasDescuento,
+  ETAPAS_OBRA: ETAPAS_OBRA,
+  patrimonioUF: patrimonioUF,
+  crecimientoMesUF: crecimientoMesUF,
+  TIPOS_AVISO: TIPOS_AVISO,
+  avisosDelMes: avisosDelMes,
   protectorDisponible: protectorDisponible,
   mesesParaProtector: mesesParaProtector,
   registrarMes: registrarMes,
