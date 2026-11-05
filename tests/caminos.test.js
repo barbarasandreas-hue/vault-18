@@ -221,3 +221,22 @@ test('Departamento elegido: precio, descuento de su grupo y su arriendo', () => 
   // Más barato que el de referencia: llega antes
   assert.ok(r.numeros.meses < c.recomendarCamino(base).numeros.meses);
 });
+
+test('Rango de precio: el plazo va del piso al techo del rango', () => {
+  const r = c.buscarRango('1500-2000');
+  assert.deepStrictEqual([r.desde, r.hasta], [1500, 2000]);
+  assert.strictEqual(c.enRango(1750, r), true);
+  assert.strictEqual(c.enRango(2450, r), false);
+  assert.strictEqual(c.enRango(2500, c.buscarRango('2000-2500')), true);
+  assert.strictEqual(c.enRango(2500, c.buscarRango('2500-3000')), false);
+  const pr = c.plazoRango(base, r);
+  assert.strictEqual(pr.desde.numeros.precioUF, 1500 * 0.95);
+  assert.strictEqual(pr.hasta.numeros.precioUF, 2000 * 0.95);
+  assert.ok(pr.desde.numeros.meses <= pr.hasta.numeros.meses);
+  // El techo del rango es el caso conservador: si no conviene, el piso puede convenir igual
+  const justo = { ...base, modo: 'vivir', sueldoPropio: 1400000, sueldoPareja: null, arriendoActual: 0 };
+  const pj = c.plazoRango(justo, c.buscarRango('1500-2000'));
+  assert.strictEqual(pj.hasta.todaviaNo, true);
+  assert.strictEqual(pj.desde.todaviaNo, false);
+  assert.strictEqual(c.buscarRango('no-existe'), null);
+});

@@ -47,18 +47,19 @@
     historialMeses: [],      // S11-F4: últimos 6 meses ('pago', 'protector' o 'reinicio')
     preguntasListas: false,  // S11-F0: si ya respondió las 3 preguntas de Inicio
     pregunta: 1,             // S11-F0: pregunta que se está mostrando (1 a 4)
-    metaDepartamentoId: null // el departamento que eligió la usuaria: el plazo se calcula con él
+    rangoPrecio: null,       // rango de precio que eligió la usuaria (RANGOS_PRECIO): el plazo se calcula con él
+    filtroRango: false       // Proyectos filtrado por su rango
   };
 
   // ---------- Elecciones que se recuerdan entre visitas (S3-F3) ----------
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
-    'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'metaDepartamentoId'];
+    'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
-    mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, metaDepartamentoId: null };
+    mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -85,7 +86,7 @@
       estado.ultimoProtector = montoValido(g.ultimoProtector);
       estado.historialMeses = Array.isArray(g.historialMeses)
         ? g.historialMeses.filter(function (x) { return x === 'pago' || x === 'protector' || x === 'reinicio'; }).slice(-6) : [];
-      if (DEPARTAMENTOS.some(function (x) { return x.id === g.metaDepartamentoId; })) estado.metaDepartamentoId = g.metaDepartamentoId;
+      if (buscarRango(g.rangoPrecio)) estado.rangoPrecio = g.rangoPrecio;
       // Quien ya tenía sueldos y ahorro mensual guardados no repite las preguntas.
       estado.preguntasListas = g.preguntasListas === true ||
         (g.preguntasListas === undefined && estado.sueldoPropio > 0 && estado.ahorroMensual > 0);
@@ -630,7 +631,7 @@
         $('titulo-inicio').focus();
       });
     } else if (n === 4) {
-      return renderPreguntaDepartamento(cabeza('¿Cuál te gustaría?'), atras);
+      return renderPreguntaRango(cabeza('¿Cuánto quieres que cueste?'), atras);
     } else {
       var arrendar = estado.modo === 'arrendar';
       c.innerHTML = cabeza('¿Cuánto ahorras?') +
@@ -670,32 +671,42 @@
     });
   }
 
-  // Pregunta 4: el departamento que quiere. Uno por proyecto (los de su modo), primero los que le alcanzan.
-  function renderPreguntaDepartamento(cabeza, atras) {
-    var cap = capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo);
-    var opciones = PROYECTOS.filter(function (p) {
+  // Pregunta 4: el rango de precio del departamento. Cada rango dice cuántos departamentos hay
+  // (de los proyectos de su modo) y si le alcanza hoy.
+  function proyectosDelModo() {
+    return PROYECTOS.filter(function (p) {
       if (estado.modo === 'vivir' && p.tipo === 'financiamiento') return false;
       return estado.modo !== 'arrendar' || resumen(p).pasaFiltro;
-    }).map(function (p) {
-      var r = resumen(p);
-      return { p: p, d: departamentosDe(p.id)[0], precio: r.escenario.precio, alcanza: cap !== null && r.escenario.precioUF <= cap };
-    }).sort(function (a, b) { return (b.alcanza - a.alcanza) || (a.precio - b.precio); });
+    });
+  }
+  function departamentosEnRango(rango) {
+    return proyectosDelModo().filter(function (p) { return enRango(departamentosDe(p.id)[0].listaUF, rango); });
+  }
+  function textoRango(rango) {
+    return rango.id === 'hasta-1500' ? 'Hasta ' + formatoUF(rango.hasta) : formatoUF(rango.desde) + ' a ' + formatoMiles(rango.hasta);
+  }
+  function millones(uf) { return '$' + (ufAPesos(uf) / 1e6).toFixed(0) + ' millones'; }
+
+  function renderPreguntaRango(cabeza, atras) {
+    var cap = capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo);
     var c = $('inicio-principal');
     c.innerHTML = cabeza +
-      '<ul class="opciones-departamento" role="radiogroup" aria-labelledby="titulo-inicio">' + opciones.map(function (o) {
-        return '<li><button type="button" class="opcion-departamento" role="radio" aria-checked="' + (estado.metaDepartamentoId === o.d.id) + '" data-departamento="' + o.d.id + '">' +
+      '<ul class="opciones-departamento" role="radiogroup" aria-labelledby="titulo-inicio">' + RANGOS_PRECIO.map(function (rg) {
+        var n = departamentosEnRango(rg).length;
+        var alcanza = cap !== null && rg.desde <= cap;
+        return '<li><button type="button" class="opcion-departamento" role="radio" aria-checked="' + (estado.rangoPrecio === rg.id) + '" data-rango="' + rg.id + '"' +
+          (n === 0 ? ' aria-disabled="true" disabled' : '') + '>' +
           icono('i-casa', 'icono-grande') +
-          '<span class="opcion-texto"><strong>' + esc(o.p.nombre) + '</strong>' +
-            '<small>' + esc(o.p.comuna) + SEP + ficha(o.d) + '</small>' +
-            '<span class="chip-fila"><span class="chip ' + (o.p.tipo === 'conjunto' ? 'chip-existe' : 'chip-propuesta') + '">' + NOMBRE_TIPO[o.p.tipo] + '</span>' +
-              (o.alcanza ? '' : ' <span class="chip chip-no-alcanza">No te alcanza hoy</span>') + '</span></span>' +
-          '<strong class="opcion-precio">' + formatoPesos(o.precio) + '</strong>' +
+          '<span class="opcion-texto"><strong>' + textoRango(rg) + '</strong>' +
+            '<small>' + (rg.id === 'hasta-1500' ? 'Hasta ' + millones(rg.hasta) : millones(rg.desde) + ' a ' + millones(rg.hasta).replace('$', '')) + '</small>' +
+            '<span class="chip-fila"><span class="chip chip-propuesta">' + (n === 0 ? 'Sin departamentos hoy' : plural(n, 'departamento', 'departamentos')) + '</span>' +
+              (n > 0 && !alcanza ? ' <span class="chip chip-no-alcanza">No te alcanza hoy</span>' : '') + '</span></span>' +
         '</button></li>';
       }).join('') + '</ul>' +
       atras;
-    c.querySelectorAll('.opcion-departamento').forEach(function (b) {
+    c.querySelectorAll('.opcion-departamento:not([disabled])').forEach(function (b) {
       b.addEventListener('click', function () {
-        elegirDepartamento(b.dataset.departamento);
+        elegirRango(b.dataset.rango);
         estado.preguntasListas = true;
         estado.pregunta = 1;
         guardarEstado();
@@ -711,10 +722,10 @@
     });
   }
 
-  // Cambiar de departamento borra el camino elegido: el camino depende del departamento.
-  function elegirDepartamento(id) {
-    if (estado.metaDepartamentoId !== id) estado.caminoElegido = null;
-    estado.metaDepartamentoId = id;
+  // Cambiar el rango borra el camino elegido: el camino depende del precio.
+  function elegirRango(id) {
+    if (estado.rangoPrecio !== id) estado.caminoElegido = null;
+    estado.rangoPrecio = id;
     guardarEstado();
   }
 
@@ -737,19 +748,25 @@
     var eligio = !!estado.caminoElegido;
     var idCamino = eligio ? estado.caminoElegido : r.id;
     var numCamino = eligio && !CAMINOS[idCamino].ficha ? numerosCamino(idCamino, listaMeta(), perfil) : n;
-    var meta = departamentoMeta();
-    var protagonista = r.todaviaNo && !eligio
+    var rango = rangoActual();
+    var pr = plazoRango(perfil, rango);
+    var desdeOk = !pr.desde.todaviaNo;
+    var mesesDesde = eligio && !CAMINOS[idCamino].ficha ? numerosCamino(idCamino, rango.desde, perfil).meses : pr.desde.numeros.meses;
+    var mesesHasta = numCamino.meses;
+    var bloqueRango = '<p class="meta-departamento">' + icono('i-casa') + '<span><strong>Departamentos de ' + textoRango(rango) + '</strong>' +
+      '<small>' + plural(departamentosEnRango(rango).length, 'departamento', 'departamentos') + ' en este rango</small></span>' +
+      '<button type="button" class="enlace" id="btn-cambiar-departamento">Cambiar</button></p>';
+    var protagonista = r.todaviaNo && !eligio && !desdeOk
       ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo">' +
           '<p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
           '<h2 class="h3" id="titulo-plazo">Hoy te dejaría muy justo</h2>' +
-          '<p class="texto-apoyo">' + esc(meta.p.nombre) + ' <button type="button" class="enlace" id="btn-cambiar-departamento">Cambiar</button></p>' +
+          bloqueRango +
         '</section>'
       : '<section class="tarjeta protagonista" aria-labelledby="titulo-plazo">' +
-          '<p class="meta-departamento">' + icono('i-casa') + '<span><strong>' + esc(meta.p.nombre) + '</strong>' +
-            '<small>' + esc(meta.p.comuna) + SEP + ficha(meta.d) + SEP + formatoPesos(numCamino.precio) + '</small></span>' +
-            '<button type="button" class="enlace" id="btn-cambiar-departamento">Cambiar</button></p>' +
+          bloqueRango +
           '<p class="etiqueta" id="titulo-plazo">Podrías tenerlo en</p>' +
           '<strong class="numero display-1" id="numero-plazo"></strong>' +
+          (r.todaviaNo && !eligio ? '<p class="aviso aviso-alerta aviso-icono">' + icono('i-alerta') + 'Los de ' + formatoUF(rango.hasta) + ' te dejarían justo.</p>' : '') +
           '<p class="chip-fila"><span class="chip ' + (eligio ? 'chip-existe' : 'chip-propuesta') + '">' + (eligio ? 'Tu camino' : 'Te recomendamos') + '</span> ' +
             '<strong>' + CAMINOS[idCamino].nombre + '</strong></p>' +
           '<ul class="datos-inversion">' +
@@ -766,16 +783,24 @@
       '</header>' +
       protagonista +
       '<div class="accion-fija">' + (eligio
-        ? '<a href="#proyecto/' + esc(meta.p.id) + '" class="btn btn-primario btn-lg btn-bloque">Ver mi departamento</a>'
+        ? '<a href="#proyectos" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-departamentos">Ver departamentos</a>'
         : '<a href="#caminos" class="btn btn-primario btn-lg btn-bloque">' + (r.todaviaNo ? 'Ver qué lo cambia' : 'Ver mi camino') + '</a>') +
       '</div>' +
       (eligio ? '<p class="texto-centro"><a href="#caminos" class="enlace">Ver mis caminos</a></p>' : '') +
       recorridoCamino(0) +
       lineaInversiones();
     if ($('numero-plazo')) {
-      contarHasta($('numero-plazo'), plazoMostrado, numCamino.meses, function (v) { return v === null ? '—' : textoPlazoMeses(v); });
-      plazoMostrado = numCamino.meses;
+      // Con un rango: "N a M meses" (del más barato al más caro). Si el más caro no conviene, solo el más barato.
+      var techo = r.todaviaNo && !eligio ? mesesDesde : mesesHasta;
+      if (mesesDesde !== null && techo !== null && mesesDesde !== techo) {
+        $('numero-plazo').textContent = (mesesDesde === 0 ? 'Ya' : mesesDesde) + ' a ' + textoMeses(techo);
+        $('numero-plazo').classList.replace('display-1', 'display-2');
+      } else {
+        contarHasta($('numero-plazo'), plazoMostrado, techo, function (v) { return v === null ? '—' : textoPlazoMeses(v); });
+      }
+      plazoMostrado = techo;
     }
+    if ($('btn-ver-departamentos')) $('btn-ver-departamentos').addEventListener('click', function () { prepararProyectos(estado.caminoElegido); });
     $('btn-cambiar-datos').addEventListener('click', function () {
       estado.preguntasListas = false;
       estado.pregunta = 1;
@@ -805,7 +830,7 @@
     if (estado.compra) return renderCamino();
     if (estado.inversiones.length && !estado.preguntasListas) return renderSoloInversiones();
     if (!estado.preguntasListas) return renderPreguntas();
-    if (!departamentoMeta()) { estado.pregunta = 4; return renderPreguntas(); }
+    if (!rangoActual()) { estado.pregunta = 4; return renderPreguntas(); }
     renderTuCamino();
   }
 
@@ -872,9 +897,19 @@
     var delTamano = delTipo.filter(function (p) {
       return estado.masBaratoTipo === null || departamentosDe(p.id)[0].dormitorios === DORMITORIOS[estado.masBaratoTipo];
     });
-    var visibles = delTamano.filter(function (p) {
+    var rango = rangoActual();
+    var usarRango = estado.filtroRango && !!rango;
+    var enSuRango = delTamano.filter(function (p) {
+      return !usarRango || enRango(departamentosDe(p.id)[0].listaUF, rango);
+    });
+    var visibles = enSuRango.filter(function (p) {
       return !usarAlcanza || resumen(p).escenario.precioUF <= cap;
     });
+    $('filtro-rango').hidden = !rango;
+    $('filtro-rango').setAttribute('aria-pressed', String(usarRango));
+    $('filtro-rango').innerHTML = rango ? (usarRango
+      ? textoRango(rango) + ' <span class="quitar" aria-hidden="true">×</span><span class="oculto-visual">. Toca para quitar el filtro.</span>'
+      : 'Solo ' + textoRango(rango)) : '';
     document.querySelectorAll('#mas-barato [data-tipo]').forEach(function (b) {
       b.setAttribute('aria-pressed', String(b.dataset.tipo === estado.masBaratoTipo));
     });
@@ -889,20 +924,23 @@
 
     // El estado vacío explica la causa y ofrece la salida que corresponde.
     var porTamano = !soloArrendar && delTipo.length > 0 && delTamano.length === 0;
-    var porAlcanza = !porTamano && usarAlcanza && delTamano.length > 0;
+    var porRango = !porTamano && usarRango && delTamano.length > 0 && enSuRango.length === 0;
+    var porAlcanza = !porTamano && !porRango && usarAlcanza && enSuRango.length > 0;
     var nombreTamano = estado.masBaratoTipo === 'estudio' ? 'estudios' : 'departamentos de 1 dormitorio';
     $('vacio-titulo').textContent = soloArrendar ? 'El pie compartido es para arrendar'
       : (porTamano ? 'No hay ' + nombreTamano + ' en esta pestaña'
-        : (porAlcanza ? 'Ninguno de este tipo te alcanza hoy' : 'Ningún proyecto rinde 3,9\u00a0% hoy'));
+        : (porRango ? 'Ninguno en tu rango en esta pestaña'
+          : (porAlcanza ? 'Ninguno de este tipo te alcanza hoy' : 'Ningún proyecto rinde 3,9\u00a0% hoy')));
     $('vacio-texto').textContent = soloArrendar
       ? 'Los inversionistas recuperan su parte con el arriendo. Para vivir, mira la compra en grupo.'
       : (porTamano ? 'Prueba la otra pestaña o quita el filtro de tamaño.'
+        : porRango ? 'Prueba la otra pestaña o quita el filtro de precio.'
         : (porAlcanza
           ? 'Con sus sueldos pueden comprar hasta ' + formatoUF(cap) + '. Prueba la otra pestaña o quita el filtro.'
           : 'Para arrendar, la IA solo muestra departamentos cuyo arriendo neto rinde 3,9\u00a0% o más al año, la tasa del crédito.'));
     $('btn-vacio-accion').textContent = soloArrendar ? 'Cambiar a modo arrendar'
-      : (porTamano ? 'Quitar el filtro de tamaño' : (porAlcanza ? 'Quitar el filtro Me alcanza' : 'Cambiar a modo vivir'));
-    $('btn-vacio-accion').dataset.accion = soloArrendar ? 'arrendar' : (porTamano ? 'tamano' : (porAlcanza ? 'alcanza' : 'vivir'));
+      : (porTamano ? 'Quitar el filtro de tamaño' : (porRango ? 'Quitar el filtro de precio' : (porAlcanza ? 'Quitar el filtro Me alcanza' : 'Cambiar a modo vivir')));
+    $('btn-vacio-accion').dataset.accion = soloArrendar ? 'arrendar' : (porTamano ? 'tamano' : (porRango ? 'rango' : (porAlcanza ? 'alcanza' : 'vivir')));
   }
 
   function iniciarProyectos() {
@@ -933,6 +971,10 @@
         renderProyectos();
       });
     });
+    $('filtro-rango').addEventListener('click', function () {
+      estado.filtroRango = !estado.filtroRango;
+      renderProyectos();
+    });
     $('filtro-alcanza').addEventListener('click', function () {
       estado.meAlcanza = !estado.meAlcanza;
       renderProyectos();
@@ -941,6 +983,7 @@
       var accion = $('btn-vacio-accion').dataset.accion;
       if (accion === 'alcanza') estado.meAlcanza = false;
       else if (accion === 'tamano') estado.masBaratoTipo = null;
+      else if (accion === 'rango') estado.filtroRango = false;
       else { estado.modo = accion === 'arrendar' ? 'arrendar' : 'vivir'; guardarEstado(); }
       renderProyectos();
     });
@@ -1076,7 +1119,6 @@
     if (botonComprar) {
       botonComprar.addEventListener('click', function () {
         conCarga(botonComprar, function () {
-          estado.metaDepartamentoId = d.id; guardarEstado();
           guardarCompra({ proyectoId: p.id, departamentoId: d.id, paso: 1 });
           location.hash = '#mis-proyectos';
         });
@@ -1086,7 +1128,6 @@
     if (botonCambiar) {
       botonCambiar.addEventListener('click', function () {
         conCarga(botonCambiar, function () {
-          estado.metaDepartamentoId = d.id; guardarEstado();
           guardarCompra({ proyectoId: p.id, departamentoId: d.id, paso: 1 });
           location.hash = '#mis-proyectos';
         });
@@ -2460,28 +2501,22 @@
     });
   }
 
-  // El departamento que eligió la usuaria (si sigue siendo válido para su modo).
-  function departamentoMeta() {
-    var d = DEPARTAMENTOS.filter(function (x) { return x.id === estado.metaDepartamentoId; })[0];
-    if (!d) return null;
-    var p = buscarProyecto(d.proyectoId);
-    if (estado.modo === 'vivir' && p.tipo === 'financiamiento') return null;
-    return { d: d, p: p };
+  // El rango de precio que eligió la usuaria. Los cálculos usan su techo (el caso conservador).
+  function rangoActual() { return buscarRango(estado.rangoPrecio); }
+  function listaMeta() { var r = rangoActual(); return r ? r.hasta : LISTA_REFERENCIA_UF; }
+  function hayGrupoEnRango(rango) {
+    return departamentosEnRango(rango).some(function (p) { return p.tipo === 'conjunto'; });
   }
-  function listaMeta() { var m = departamentoMeta(); return m ? m.d.listaUF : LISTA_REFERENCIA_UF; }
 
-  // Con un departamento elegido, el camino se calcula con su precio, el descuento de su grupo y su arriendo:
-  // si es de una compra en grupo, hay grupo; si es de pie compartido, no.
+  // Con un rango elegido, el camino se calcula con su techo; hay grupo si hay una compra en grupo en el rango.
   function perfilActual() {
-    var m = departamentoMeta();
+    var r = rangoActual();
     return {
       modo: estado.modo, sueldoPropio: estado.sueldoPropio, sueldoPareja: estado.sueldoPareja,
       arriendoActual: estado.arriendoActual, otrasCuotas: estado.otrasCuotas,
       ahorroActual: estado.ahorroActual, ahorroMensual: estado.ahorroMensual,
-      hayGrupo: m ? m.p.tipo === 'conjunto' : hayGrupoQueAlcanza(),
-      listaUF: m ? m.d.listaUF : undefined,
-      cuposGrupo: m && m.p.tipo === 'conjunto' ? m.p.cupos : undefined,
-      arriendoMeta: m ? m.d.arriendoEstimadoIA : undefined
+      hayGrupo: r ? hayGrupoEnRango(r) : hayGrupoQueAlcanza(),
+      listaUF: r ? r.hasta : undefined
     };
   }
 
@@ -2727,7 +2762,7 @@
       '<a href="#inicio" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Tu camino</a>' +
       '<header class="encabezado">' +
         '<h1 id="titulo-caminos" class="h2">Tus caminos</h1>' +
-        '<p class="texto-apoyo">' + (departamentoMeta() ? esc(departamentoMeta().p.nombre) : (perfil.modo === 'vivir' ? 'Para vivir' : 'Para arrendar')) + '</p>' +
+        '<p class="texto-apoyo">' + (rangoActual() ? 'Departamentos de ' + textoRango(rangoActual()) : (perfil.modo === 'vivir' ? 'Para vivir' : 'Para arrendar')) + '</p>' +
       '</header>' +
       (r.todaviaNo ? bloqueTodaviaNo(r, perfil) : '') +
       carruselCaminos(ids, perfil, r) +
@@ -2765,7 +2800,8 @@
 
   // Proyectos se abre con los filtros del camino.
   function prepararProyectos(id) {
-    estado.meAlcanza = true;
+    estado.filtroRango = !!rangoActual();
+    estado.meAlcanza = !estado.filtroRango;
     estado.pestana = id === 'pie-compartido' ? 'financiamiento' : 'conjunto';
   }
 
@@ -2777,8 +2813,7 @@
     guardarRegistro();
     prepararProyectos(id);
     toast('Elegiste ' + CAMINOS[id].nombre + '.');
-    var m = departamentoMeta();
-    location.hash = m ? '#proyecto/' + m.p.id : '#proyectos';
+    location.hash = '#proyectos';
   }
 
   // ----- Fichas de caminos informativos (S9-F4) -----
@@ -2825,7 +2860,7 @@
         '<ol class="lista-numerada">' + pasos.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ol>' +
       '</section>' +
       '<section class="tarjeta bloque" aria-labelledby="titulo-numeros">' +
-        '<h2 class="h5" id="titulo-numeros">Con tu departamento de ' + formatoUF(listaMeta()) + '</h2>' +
+        '<h2 class="h5" id="titulo-numeros">Con un departamento de ' + formatoUF(listaMeta()) + '</h2>' +
         '<ul class="datos-inversion">' + numeros + '</ul>' +
         '<p class="peor-caso"><strong>Peor caso:</strong> ' + peor + '</p>' +
         '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +

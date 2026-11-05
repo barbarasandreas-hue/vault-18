@@ -314,8 +314,8 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 
     | Etapa | Número protagonista | Acción principal |
     |---|---|---|
-    | Recién llega | "Podrías tenerlo en **N meses**", con el departamento que eligió y el camino recomendado | Ver mi camino |
-    | Eligió camino, sin comprar | El mismo plazo, con su camino | Ver mi departamento |
+    | Recién llega | "Podrías tenerlo en **N a M meses**", con su rango de precio y el camino recomendado | Ver mi camino |
+    | Eligió camino, sin comprar | El mismo plazo, con su camino | Ver departamentos (de su rango) |
     | Postulando | Parte de la postulación (1 de 3) | Seguir postulación |
     | Juntando el pie | "Te faltan **N meses**" | Pagar la cuota de este mes |
     | Dueña | "Ya es tuyo **N %**" (o "Este mes pagaste" si es para vivir) | Ver mi mes |
@@ -325,14 +325,14 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
     1. ¿Para qué? (vivir o arrendar)
     2. Sus sueldos
     3. Su ahorro (lo que tiene y lo que puede juntar al mes)
-    4. ¿Cuál te gustaría? La usuaria elige un departamento de los proyectos de su modo. Primero aparecen los que le alcanzan; los demás llevan el chip "No te alcanza hoy". Esta pregunta se agregó a pedido de la autora el 4-nov-2026.
+    4. **¿Cuánto quieres que cueste?** La usuaria elige un rango de precio (hasta UF 1.500, UF 1.500 a 2.000, UF 2.000 a 2.500 o UF 2.500 a 3.000), con su equivalente en millones, cuántos departamentos hay en ese rango para su modo y "No te alcanza hoy" cuando corresponde. Esta pregunta se agregó a pedido de la autora el 4-nov-2026: primero un departamento puntual y después un rango.
 
     Después viene el resultado de "Tu camino", que junta lo que hoy está repartido en Tu mes real y Tus caminos. "Todavía no" aparece en el mismo lugar cuando corresponde.
-  - **Plazo:** "Podrías tenerlo en N meses" son los meses para juntar lo que falta (`numerosCamino(...).meses`) **del departamento que eligió la usuaria**.
-    - Se calcula con su precio, el descuento de su grupo y su arriendo estimado.
-    - El tipo de proyecto define si hay grupo: en grupo → A o A + B; pie compartido → B.
-    - Tu camino muestra el departamento elegido con "Cambiar".
-    - Elegir un camino lleva al detalle de ese departamento.
+  - **Plazo:** "Podrías tenerlo en N a M meses" son los meses para juntar lo que falta (`plazoRango` en `calculos.js`), entre el piso y el techo del rango elegido.
+    - El camino y la evaluación (carga, Tu mes, Todavía no) se calculan con el techo del rango: es el caso conservador.
+    - Si el techo no conviene pero el piso sí, se muestra el plazo del piso con el aviso "Los de UF X te dejarían justo".
+    - Hay grupo si en el rango hay una compra en grupo.
+    - Elegir un camino abre Proyectos filtrado por ese rango, con el chip "UF a a b ×" para quitar el filtro.
   - **Lo que cambia de lugar:**
     - "Puedes comprar hasta UF X" pasa a ser una fila del detalle del camino ("Te prestan hasta"). Deja de ser el número de la portada.
     - Tu mes real y Tus caminos dejan de ser pantallas sueltas: son el detalle de Inicio. Las rutas `#mes-real` y `#caminos` se mantienen y abren ese detalle.

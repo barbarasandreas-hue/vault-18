@@ -757,6 +757,28 @@ function mesesRecordar(perfil, id) {
   return Math.min(24, Math.max(3, e.meses));
 }
 
+// Rangos de precio que elige la usuaria en Inicio (pregunta 4), en UF de lista.
+var RANGOS_PRECIO = [
+  { id: 'hasta-1500', desde: 1000, hasta: 1500 },
+  { id: '1500-2000', desde: 1500, hasta: 2000 },
+  { id: '2000-2500', desde: 2000, hasta: 2500 },
+  { id: '2500-3000', desde: 2500, hasta: 3000 }
+];
+function buscarRango(id) {
+  for (var i = 0; i < RANGOS_PRECIO.length; i++) if (RANGOS_PRECIO[i].id === id) return RANGOS_PRECIO[i];
+  return null;
+}
+// Cada rango incluye su techo y no su piso: un departamento de UF 2.500 está en "UF 2.000 a 2.500".
+function enRango(listaUF, rango) { return listaUF > rango.desde && listaUF <= rango.hasta; }
+
+// El plazo de un rango: el camino recomendado en el piso y en el techo del rango.
+// "hasta" es el caso conservador (el más caro del rango) y es el que define el camino y la evaluación.
+function plazoRango(perfil, rango) {
+  var desde = recomendarCamino(Object.assign({}, perfil, { listaUF: rango.desde }));
+  var hasta = recomendarCamino(Object.assign({}, perfil, { listaUF: rango.hasta }));
+  return { desde: desde, hasta: hasta };
+}
+
 // S11-F3: Todavía no con interruptores. Aplica los cambios activos y devuelve los números del camino.
 // activos: { cuotas: terminar las otras cuotas, estudio: un estudio de UF 1.200, renta: la renta necesaria }.
 // La renta se calcula después de los otros cambios, sobre lo que queda.
@@ -902,6 +924,10 @@ if (typeof module !== 'undefined') module.exports = {
   ingresoNecesario: ingresoNecesario,
   cambiosTodaviaNo: cambiosTodaviaNo,
   simularCambios: simularCambios,
+  RANGOS_PRECIO: RANGOS_PRECIO,
+  buscarRango: buscarRango,
+  enRango: enRango,
+  plazoRango: plazoRango,
   mesesRecordar: mesesRecordar,
   arriendoConOpcion: arriendoConOpcion,
   RESPALDO: RESPALDO,
