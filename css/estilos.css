@@ -1566,3 +1566,8 @@ div.fila { cursor: default; }
 .con-numeros .meta-departamento { margin: 0; padding: 0; border: 0; }
 .sello-bci { background: var(--blue-20); color: var(--blue-dark); }
 .sello-bci .icono, .sello-bci svg { color: var(--blue-dark); }
+
+/* Logo de Bci (logo_bci_negro.svg, para fondos claros) */
+.logo-bci { display: block; height: 24px; width: auto; margin: 0 0 10px; }
+.marca-intro { display: flex; align-items: center; gap: 8px; }
+.marca-intro .logo-intro { height: 36px; margin: 0; }

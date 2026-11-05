@@ -668,8 +668,8 @@
 
   // ---------- Inicio = Tu camino (S11-F0 y S11-F2) ----------
   // Siempre responde "¿cuánto falta y cuándo llegas?", con un número y una acción según la etapa.
-  var FIGURAS = '<div class="figuras" aria-hidden="true"><span class="f-cuadrado"></span><span class="f-circulo"></span>' +
-    '<span class="f-triangulo"></span><span class="f-rectangulo"></span></div>';
+  // El logo de Bci sobre el título de Mi camino (reemplaza las cuatro figuras sueltas).
+  var FIGURAS = '<img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24">';
 
   function icono(id, clase) { return '<svg class="' + (clase || 'icono') + '" aria-hidden="true"><use href="#' + id + '"/></svg>'; }
 
@@ -3740,7 +3740,7 @@
     var monto = MONTOS_REGALO[2];
 
     cont.innerHTML = volver +
-      '<header class="encabezado familia-cabeza">' + icono('i-casa', 'icono-grande') +
+      '<header class="encabezado familia-cabeza">' + FIGURAS + icono('i-casa', 'icono-grande') +
         '<h1 class="h2" id="titulo-regalo">Un aporte para su primer departamento</h1>' +
         '<p class="texto-apoyo">' + esc(lista.ocasion) + ' · ' + p.comuna + '</p></header>' +
       '<section class="tarjeta bloque" aria-label="Su avance">' +
