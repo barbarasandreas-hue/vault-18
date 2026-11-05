@@ -879,6 +879,24 @@
 
   // Tu camino antes de comprar: el plazo del camino recomendado y la acción que toca.
   var plazoMostrado = null;
+  // Opción A del inicio (etapa Elegir): tu edificio de noche con tu ventana, el plazo en grande
+  // y "Si juntas al mes", que recalcula el plazo en vivo.
+  function plazosCon(perfilBase, mensual) {
+    var pf = Object.assign({}, perfilBase, { ahorroMensual: mensual });
+    var rango = rangoActual();
+    var rr = recomendarCamino(pf);
+    var eligio = !!estado.caminoElegido && !CAMINOS[estado.caminoElegido].ficha;
+    var idc = eligio ? estado.caminoElegido : rr.id;
+    var nc = eligio ? numerosCamino(idc, listaMeta(), pf) : rr.numeros;
+    var desde = eligio ? numerosCamino(idc, rango.desde, pf).meses : plazoRango(pf, rango).desde.numeros.meses;
+    return { desde: desde, techo: rr.todaviaNo && !eligio ? desde : nc.meses };
+  }
+  function textoPlazos(x) {
+    if (x.desde !== null && x.techo !== null && x.desde !== x.techo) return (x.desde === 0 ? 'Ya' : x.desde) + ' a ' + textoMeses(x.techo);
+    return x.techo === null ? '—' : textoPlazoMeses(x.techo);
+  }
+  var VENTANAS_NOCHE = [1, 0, 1, 0, 1, 0, 1, 'tu', 1, 1, 0, 1];
+
   function renderTuCamino() {
     var perfil = perfilActual();
     var r = recomendarCamino(perfil);
@@ -886,66 +904,105 @@
     var c = $('inicio-principal');
     var eligio = !!estado.caminoElegido;
     var idCamino = eligio ? estado.caminoElegido : r.id;
-    var numCamino = eligio && !CAMINOS[idCamino].ficha ? numerosCamino(idCamino, listaMeta(), perfil) : n;
+    var esFicha = !!CAMINOS[idCamino].ficha;
+    var numCamino = eligio && !esFicha ? numerosCamino(idCamino, listaMeta(), perfil) : n;
     var rango = rangoActual();
     var pr = plazoRango(perfil, rango);
     var desdeOk = !pr.desde.todaviaNo;
-    var mesesDesde = eligio && !CAMINOS[idCamino].ficha ? numerosCamino(idCamino, rango.desde, perfil).meses : pr.desde.numeros.meses;
-    var mesesHasta = numCamino.meses;
-    var bloqueRango = '<p class="meta-departamento">' + icono('i-casa') + '<span><strong>Departamentos de ' + textoRango(rango) + '</strong>' +
-      '<small>' + plural(departamentosEnRango(rango).length, 'departamento', 'departamentos') + ' en este rango</small></span>' +
-      '<button type="button" class="enlace" id="btn-cambiar-departamento">Cambiar</button></p>';
-    var protagonista = r.todaviaNo && !eligio && !desdeOk
+    var justo = r.todaviaNo && !eligio && !desdeOk;
+    var ingreso = ingresoTotal(estado.sueldoPropio, estado.sueldoPareja) || 0;
+    var minimo = 100000, paso = 50000;
+    var maximo = Math.max(1000000, Math.ceil(ingreso * 0.4 / paso) * paso);
+    var mensual = Math.min(maximo, Math.max(minimo, estado.ahorroMensual || 300000));
+    var plazo = plazosCon(perfil, mensual);
+    var base = caminoBase(perfil.modo);
+    var dif = !esFicha && idCamino !== base ? diferenciaConBase(idCamino, numCamino, numerosCamino(base, listaMeta(), perfil)) : null;
+    var subtitulo = (eligio ? 'Tu camino: ' : 'Te recomendamos ') + CAMINOS[idCamino].corto.toLowerCase() +
+      (dif && dif.descuento > 0.001 ? SEP + formatoPorcentaje(dif.descuento, 0) + ' más barato' : '');
+    var prest = preaprobacion(estado.sueldoPropio, estado.sueldoPareja, estado.otrasCuotas);
+
+    var protagonista = justo
       ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo">' +
           '<p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
           '<h2 class="h3" id="titulo-plazo">Hoy te dejaría muy justo</h2>' +
-          bloqueRango +
         '</section>'
-      : '<section class="tarjeta protagonista" aria-labelledby="titulo-plazo">' +
-          bloqueRango +
-          '<p class="etiqueta" id="titulo-plazo">Podrías tenerlo en</p>' +
-          '<strong class="numero display-1" id="numero-plazo"></strong>' +
-          (r.todaviaNo && !eligio ? '<p class="aviso aviso-alerta aviso-icono">' + icono('i-alerta') + 'Los de ' + formatoUF(rango.hasta) + ' te dejarían justo.</p>' : '') +
-          '<p class="chip-fila"><span class="chip ' + (eligio ? 'chip-existe' : 'chip-propuesta') + '">' + (eligio ? 'Tu camino' : 'Te recomendamos') + '</span> ' +
-            '<strong>' + CAMINOS[idCamino].nombre + '</strong></p>' +
-          '<ul class="datos-inversion">' +
-            '<li><span>' + icono('i-alcancia') + 'Juntas al mes</span><strong>' + formatoPesos(estado.ahorroMensual) + '</strong></li>' +
-            '<li><span>' + icono('i-banco') + 'Dividendo después</span><strong>' + formatoPesos(numCamino.dividendo) + '</strong></li>' +
-            filaPrestaria() +
-          '</ul>' +
-          '<p class="chip-fila"><span class="sello">' + icono('i-escudo') + 'Calculado sin plusvalía</span> ' +
-            (filaPrestaria() ? '<span class="sello sello-bci">' + icono('i-banco') + 'Preaprobación simulada</span>' : '') + '</p>' +
+      : '<section class="noche" aria-labelledby="titulo-plazo">' +
+          '<span class="noche-luna" aria-hidden="true"></span>' +
+          '<span class="noche-estrella" style="left:64%;top:12px" aria-hidden="true"></span><span class="noche-estrella" style="left:74%;top:30px" aria-hidden="true"></span><span class="noche-estrella" style="left:60%;top:32px" aria-hidden="true"></span>' +
+          '<p class="noche-etiqueta" id="titulo-plazo">Tu ventana se enciende en</p>' +
+          '<strong class="numero noche-plazo" id="numero-plazo" aria-live="polite"></strong>' +
+          '<p class="noche-sub">' + subtitulo + '</p>' +
+          (r.todaviaNo && !eligio ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(rango.hasta) + ' te dejarían justo.</p>' : '') +
+          '<div class="noche-edificio" aria-hidden="true"><span class="noche-techo"></span><div class="noche-fachada">' +
+            VENTANAS_NOCHE.map(function (v) {
+              return v === 'tu' ? '<span class="nv tu" id="mi-ventana">Tú</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>';
+            }).join('') +
+          '</div></div>' +
+        '</section>' +
+        '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
+          '<p class="si-juntas-fila"><label for="rango-mensual" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-mensual">' + formatoPesos(mensual) + '</strong></p>' +
+          '<input type="range" id="rango-mensual" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '"' +
+            ' aria-valuetext="' + formatoPesos(mensual) + ' al mes: ' + textoPlazos(plazo) + '">' +
+          '<p class="si-juntas-extremos"><span><strong>' + formatoPesos(minimo) + '</strong>' + textoPlazos(plazosCon(perfil, minimo)) + '</span>' +
+            '<span><strong>' + formatoPesos(maximo) + '</strong>' + textoPlazos(plazosCon(perfil, maximo)) + '</span></p>' +
         '</section>';
+
+    var datos = '<div class="mini-datos">' +
+        '<div><small>Dividendo después</small><strong class="numero">' + formatoPesos(numCamino.dividendo) + '</strong></div>' +
+        (prest && prest.cumple ? '<div><small>Bci te podría prestar hasta</small><strong class="numero">' + formatoPesos(ufAPesos(prest.creditoUF)) + '</strong></div>' : '') +
+      '</div>' +
+      '<p class="chip-fila"><span class="sello">' + icono('i-escudo') + 'Calculado sin plusvalía</span> ' +
+        (prest && prest.cumple ? '<span class="sello sello-bci">' + icono('i-banco') + 'Preaprobación simulada</span>' : '') + '</p>';
+
     c.innerHTML =
       '<header class="encabezado">' + FIGURAS +
         campana() + '<h1 id="titulo-inicio" class="h2" tabindex="-1">Tu camino</h1>' +
-        '<p class="texto-apoyo">' + (estado.modo === 'vivir' ? 'Para vivir' : 'Para arrendar') +
-          ' <button type="button" class="enlace" id="btn-cambiar-datos">Cambiar mis datos</button></p>' +
+        '<p class="texto-apoyo">' + textoRango(rango) + SEP +
+          '<button type="button" class="enlace" id="btn-cambiar-departamento" aria-haspopup="dialog">Cambiar</button></p>' +
       '</header>' +
       protagonista +
+      (justo ? '' : datos) +
       '<div class="accion-fija">' + (eligio
         ? '<a href="#camino/elegir" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-departamentos">Elegir departamento</a>'
         : '<a href="#camino/caminos" class="btn btn-primario btn-lg btn-bloque">' + (r.todaviaNo ? 'Ver qué lo cambia' : 'Elegir mi camino') + '</a>') +
       '</div>' +
-      (eligio ? '<p class="texto-centro"><a href="#camino/caminos" class="enlace">Ver mis caminos</a></p>' : '') +
+      '<p class="texto-centro">' + (eligio ? '<a href="#camino/caminos" class="enlace">Ver mis caminos</a>' + SEP : '') +
+        '<button type="button" class="enlace" id="btn-cambiar-datos" aria-haspopup="dialog">Cambiar mis datos</button></p>' +
       recorridoCamino(0) +
       lineaInversiones();
+
     if ($('numero-plazo')) {
-      // Con un rango: "N a M meses" (del más barato al más caro). Si el más caro no conviene, solo el más barato.
-      var techo = r.todaviaNo && !eligio ? mesesDesde : mesesHasta;
-      if (mesesDesde !== null && techo !== null && mesesDesde !== techo) {
-        $('numero-plazo').textContent = (mesesDesde === 0 ? 'Ya' : mesesDesde) + ' a ' + textoMeses(techo);
-        $('numero-plazo').classList.replace('display-1', 'display-2');
-      } else {
-        contarHasta($('numero-plazo'), plazoMostrado, techo, function (v) { return v === null ? '—' : textoPlazoMeses(v); });
-      }
-      plazoMostrado = techo;
+      if (plazo.desde !== null && plazo.techo !== null && plazo.desde !== plazo.techo) $('numero-plazo').textContent = textoPlazos(plazo);
+      else contarHasta($('numero-plazo'), plazoMostrado, plazo.techo, function (v) { return v === null ? '—' : textoPlazoMeses(v); });
+      plazoMostrado = plazo.techo;
+    }
+    var rangoMensual = $('rango-mensual');
+    if (rangoMensual) {
+      var pintar = function () {
+        var v = Number(rangoMensual.value);
+        rangoMensual.style.setProperty('--lleno', ((v - minimo) / (maximo - minimo) * 100).toFixed(1) + '%');
+        return v;
+      };
+      pintar();
+      rangoMensual.addEventListener('input', function () {
+        var v = pintar();
+        var x = plazosCon(perfil, v);
+        $('valor-mensual').textContent = formatoPesos(v);
+        $('numero-plazo').textContent = textoPlazos(x);
+        rangoMensual.setAttribute('aria-valuetext', formatoPesos(v) + ' al mes: ' + textoPlazos(x));
+        // La ventana brilla un instante cuando el plazo cambia.
+        var ventana = $('mi-ventana');
+        ventana.classList.remove('brilla'); void ventana.offsetWidth; ventana.classList.add('brilla');
+      });
+      rangoMensual.addEventListener('change', function () {
+        estado.ahorroMensual = Number(rangoMensual.value);
+        guardarEstado();
+        plazoMostrado = plazosCon(perfil, estado.ahorroMensual).techo;
+      });
     }
     if ($('btn-ver-departamentos')) $('btn-ver-departamentos').addEventListener('click', function () { prepararProyectos(estado.caminoElegido); });
     $('btn-cambiar-datos').addEventListener('click', function () { abrirMisDatos($('btn-cambiar-datos')); });
-    if ($('btn-cambiar-departamento')) $('btn-cambiar-departamento').addEventListener('click', function () {
-      abrirCambiarRango($('btn-cambiar-departamento'));
-    });
+    $('btn-cambiar-departamento').addEventListener('click', function () { abrirCambiarRango($('btn-cambiar-departamento')); });
   }
 
   function lineaInversiones() {

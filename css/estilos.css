@@ -1571,3 +1571,46 @@ div.fila { cursor: default; }
 .logo-bci { display: block; height: 24px; width: auto; margin: 0 0 10px; }
 .marca-intro { display: flex; align-items: center; gap: 8px; }
 .marca-intro .logo-intro { height: 36px; margin: 0; }
+
+/* ---------- Inicio, opción A: tu ventana te espera ---------- */
+.noche {
+  position: relative; overflow: hidden; margin: 16px 0 0; padding: 18px 18px 0; border-radius: 22px; color: var(--white);
+  background: linear-gradient(180deg, #163E70 0%, var(--blue-dark) 65%, var(--blue-normal) 100%);
+}
+.noche-luna { position: absolute; right: 22px; top: 18px; width: 22px; height: 22px; border-radius: 50%; background: var(--yellow-20); box-shadow: -5px 3px 0 0 var(--yellow-60) inset; }
+.noche-estrella { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--yellow-60); }
+.noche-etiqueta { margin: 0; font-size: 14px; opacity: .9; }
+.noche-plazo { display: block; font-size: 42px; line-height: 1.05; margin: 2px 0 4px; color: var(--white); }
+.noche-sub { margin: 0; font-size: 14px; opacity: .9; }
+.noche-aviso { display: flex; gap: 6px; align-items: center; margin: 8px 0 0; font-size: 14px; font-weight: 600; }
+.noche-aviso .icono { color: var(--white); margin: 0; }
+.noche-edificio { width: 132px; margin: 12px auto 0; }
+.noche-techo { display: block; height: 8px; margin: 0 6px; background: #0F2E55; border-radius: 3px 3px 0 0; }
+.noche-fachada { background: #0F2E55; padding: 9px 11px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.nv { height: 13px; border-radius: 2px; background: #24497A; animation: encender var(--dur-media) var(--ease-salida) backwards; }
+.nv.on { background: var(--yellow-60); box-shadow: 0 0 10px rgba(255, 238, 102, .6); }
+.nv.tu { background: var(--green-dark); color: var(--white); font-size: 9px; font-weight: 700; display: grid; place-items: center; box-shadow: 0 0 14px rgba(126, 184, 128, .9); }
+.nv.tu.brilla { animation: brillar var(--dur-larga) var(--ease-salida); }
+@keyframes brillar { 40% { box-shadow: 0 0 22px 4px rgba(255, 238, 102, .95); transform: scale(1.12); } }
+.si-juntas { margin-top: 12px; padding-top: 14px; padding-bottom: 12px; }
+.si-juntas-fila { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 0; }
+.si-juntas-fila label { font-weight: 600; }
+.si-juntas-fila strong { font-size: 20px; }
+.si-juntas input[type="range"] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 44px; margin: 4px 0 0; background: transparent; cursor: pointer;
+}
+.si-juntas input[type="range"]::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--green-normal) var(--lleno, 50%), var(--gray-semilight) var(--lleno, 50%)); }
+.si-juntas input[type="range"]::-moz-range-track { height: 8px; border-radius: 4px; background: var(--gray-semilight); }
+.si-juntas input[type="range"]::-moz-range-progress { height: 8px; border-radius: 4px; background: var(--green-normal); }
+.si-juntas input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -10px; border-radius: 50%; background: var(--white); border: 3px solid var(--green-normal); box-shadow: 0 2px 6px rgba(0, 0, 0, .2); }
+.si-juntas input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--white); border: 3px solid var(--green-normal); }
+.si-juntas input[type="range"]:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; border-radius: 8px; }
+.si-juntas-extremos { display: flex; justify-content: space-between; gap: 8px; margin: 0; font-size: 13px; color: var(--gray-semidark); }
+.si-juntas-extremos span { display: grid; }
+.si-juntas-extremos span:last-child { text-align: right; }
+.si-juntas-extremos strong { color: var(--gray-dark); }
+.mini-datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 12px 0 4px; }
+.mini-datos > div { background: var(--white); border: 1px solid var(--gray-semilight); border-radius: 14px; padding: 10px 12px; display: grid; gap: 2px; }
+.mini-datos small { font-size: 12px; color: var(--gray-semidark); }
+.mini-datos strong { font-size: 18px; }
+@media (prefers-reduced-motion: reduce) { .nv, .nv.tu.brilla { animation: none; } }
