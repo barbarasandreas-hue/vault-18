@@ -1207,3 +1207,24 @@ body.con-hoja { overflow: hidden; }
 /* Invertir: deslizador */
 #monto-rango { margin: 8px 0 0; }
 .ayuda-campo:empty { display: none; }
+
+/* Pregunta 4 y Tu camino: el departamento que eligió la usuaria */
+.opciones-departamento { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.opcion-departamento {
+  display: grid; grid-template-columns: auto 1fr; grid-template-areas: "icono texto" "icono precio"; align-items: center; gap: 2px 12px;
+  width: 100%; padding: 14px; border: 2px solid var(--gray-semilight); border-radius: var(--radio); background: var(--white);
+  font-family: var(--font); color: var(--gray-dark); text-align: left; cursor: pointer;
+}
+.opcion-departamento .icono-grande { grid-area: icono; color: var(--green-dark); }
+.opcion-texto { grid-area: texto; display: flex; flex-direction: column; gap: 2px; }
+.opcion-texto strong { font-size: 17px; }
+.opcion-texto small { color: var(--gray-semidark); font-size: 14px; }
+.opcion-texto .chip-fila { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
+.opcion-precio { grid-area: precio; font-size: 18px; }
+.opcion-departamento[aria-checked="true"] { border-color: var(--green-dark); background: var(--green-20); }
+.opcion-departamento:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.chip-no-alcanza { background: var(--gray-light); color: var(--gray-dark); }
+.meta-departamento { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding-bottom: 12px; border-bottom: 1px solid var(--gray-light); }
+.meta-departamento .icono { margin: 0; flex: none; }
+.meta-departamento span { flex: 1; min-width: 0; }
+.meta-departamento small { display: block; color: var(--gray-semidark); font-size: 14px; }

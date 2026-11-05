@@ -204,3 +204,20 @@ test('Todavía no con interruptores: cada cambio recalcula el camino', () => {
   // No toca el perfil original
   assert.strictEqual(p.otrasCuotas, 200000);
 });
+
+test('Departamento elegido: precio, descuento de su grupo y su arriendo', () => {
+  // Parque Quinta Normal: UF 1.750, lote de 8 (3 % de descuento), arriendo $280.000
+  const meta = { ...base, listaUF: 1750, cuposGrupo: 8, arriendoMeta: 280000, hayGrupo: true };
+  const r = c.recomendarCamino(meta);
+  assert.strictEqual(r.id, 'grupo-pie-compartido');
+  assert.strictEqual(r.numeros.precioUF, 1750 * 0.97);
+  assert.strictEqual(r.numeros.pie, c.ufAPesos(1750 * 0.97 * 0.05));
+  const neto = c.arriendoNeto(280000) / c.SUPUESTOS.uf;
+  assert.strictEqual(r.numeros.mesesRecompra, c.mesesRecompra(1750 * 0.97 * 0.15, neto, 1));
+  // Un departamento de pie compartido (sin grupo) lleva al camino B, a precio de lista
+  const pe = c.recomendarCamino({ ...base, listaUF: 1200, arriendoMeta: 200000, hayGrupo: false });
+  assert.strictEqual(pe.id, 'pie-compartido');
+  assert.strictEqual(pe.numeros.precioUF, 1200);
+  // Más barato que el de referencia: llega antes
+  assert.ok(r.numeros.meses < c.recomendarCamino(base).numeros.meses);
+});

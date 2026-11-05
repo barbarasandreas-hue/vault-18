@@ -314,20 +314,25 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 
     | Etapa | Número protagonista | Acción principal |
     |---|---|---|
-    | Recién llega | "Podrías tener tu departamento en **N meses**", con el nombre del camino recomendado | Ver mi camino |
-    | Eligió camino, sin proyecto | El mismo plazo y su cuota del mes | Elegir departamento |
+    | Recién llega | "Podrías tenerlo en **N meses**", con el departamento que eligió y el camino recomendado | Ver mi camino |
+    | Eligió camino, sin comprar | El mismo plazo, con su camino | Ver mi departamento |
     | Postulando | Parte de la postulación (1 de 3) | Seguir postulación |
     | Juntando el pie | "Te faltan **N meses**" | Pagar la cuota de este mes |
     | Dueña | "Ya es tuyo **N %**" (o "Este mes pagaste" si es para vivir) | Ver mi mes |
     | Solo invierte | "Este mes recibes **$X**" | Ver mis inversiones |
 
-  - **Primera vez:** 3 preguntas cortas, una por pantalla y con barra de avance:
+  - **Primera vez:** 4 preguntas cortas, una por pantalla y con barra de avance:
     1. ¿Para qué? (vivir o arrendar)
     2. Sus sueldos
     3. Su ahorro (lo que tiene y lo que puede juntar al mes)
+    4. ¿Cuál te gustaría? La usuaria elige un departamento de los proyectos de su modo. Primero aparecen los que le alcanzan; los demás llevan el chip "No te alcanza hoy". Esta pregunta se agregó a pedido de la autora el 4-nov-2026.
 
     Después viene el resultado de "Tu camino", que junta lo que hoy está repartido en Tu mes real y Tus caminos. "Todavía no" aparece en el mismo lugar cuando corresponde.
-  - **Plazo:** "Podrías tenerlo en N meses" = meses para juntar lo que falta (`numerosCamino(...).meses`) del camino recomendado. Sin ahorro mensual, se pide ese dato en vez de inventar un plazo.
+  - **Plazo:** "Podrías tenerlo en N meses" son los meses para juntar lo que falta (`numerosCamino(...).meses`) **del departamento que eligió la usuaria**.
+    - Se calcula con su precio, el descuento de su grupo y su arriendo estimado.
+    - El tipo de proyecto define si hay grupo: en grupo → A o A + B; pie compartido → B.
+    - Tu camino muestra el departamento elegido con "Cambiar".
+    - Elegir un camino lleva al detalle de ese departamento.
   - **Lo que cambia de lugar:**
     - "Puedes comprar hasta UF X" pasa a ser una fila del detalle del camino ("Te prestan hasta"). Deja de ser el número de la portada.
     - Tu mes real y Tus caminos dejan de ser pantallas sueltas: son el detalle de Inicio. Las rutas `#mes-real` y `#caminos` se mantienen y abren ese detalle.

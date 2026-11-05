@@ -638,9 +638,12 @@ function sostenible(perfil, dividendo) {
 
 // Todos los números de un camino de compra para un precio de lista, en pesos.
 // tasa: por defecto con subsidio; el usado no tiene subsidio a la tasa.
+// Con un departamento elegido, perfil.cuposGrupo da el descuento real de su grupo y
+// perfil.arriendoMeta su arriendo estimado; sin él, se usa el de referencia (lote de 10, $420.000 por UF 2.500).
 function numerosCamino(id, listaUF, perfil, tasa) {
   var c = CAMINOS[id];
-  var precio = c.grupo ? listaUF * (1 - descuentoGrupo(10)) : listaUF;
+  var cupos = perfil && perfil.cuposGrupo ? perfil.cuposGrupo : 10;
+  var precio = c.grupo ? listaUF * (1 - descuentoGrupo(cupos)) : listaUF;
   var dividendo = ufAPesos(cuotaFija(precio * c.credito, tasa || SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
   var sinSubsidio = ufAPesos(cuotaFija(precio * c.credito, SUPUESTOS.tasaSinSubsidio, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
   var pie = ufAPesos(precio * c.usuario);
@@ -664,7 +667,7 @@ function numerosCamino(id, listaUF, perfil, tasa) {
   }
   if (c.inversionistas > 0) {
     // Arriendo 10 % más bajo: la recompra toma más meses (con todo el arriendo a la recompra).
-    var arriendo = ARRIENDO_REFERENCIA * (listaUF / LISTA_REFERENCIA_UF);
+    var arriendo = (perfil && perfil.arriendoMeta) || ARRIENDO_REFERENCIA * (listaUF / LISTA_REFERENCIA_UF);
     r.mesesRecompra = mesesRecompra(precio * c.inversionistas, arriendoNeto(arriendo) / SUPUESTOS.uf, 1);
     r.mesesRecompraPeor = mesesRecompra(precio * c.inversionistas, arriendoNeto(arriendo * PEOR_CASO_ARRIENDO) / SUPUESTOS.uf, 1);
   }
