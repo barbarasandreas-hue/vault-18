@@ -60,3 +60,20 @@ test('Registro: las dos preguntas nuevas van en el texto', () => {
   assert.match(t, /¿Volvería el próximo mes\?: Sí/);
   assert.match(t, /Aviso que la haría volver: Tu cuota/);
 });
+
+test('Lista de regalos: cuántos meses adelanta un aporte', () => {
+  // Meta $4.000.000, lleva $1.000.000, junta $500.000 al mes: faltan 6 meses.
+  assert.strictEqual(c.mesesRestantes(4000000, 1000000, 500000), 6);
+  assert.strictEqual(c.mesesQueAdelanta(4000000, 1000000, 500000, 500000), 1);
+  assert.strictEqual(c.mesesQueAdelanta(4000000, 1000000, 500000, 1000000), 2);
+  // Un aporte chico no alcanza a adelantar un mes.
+  assert.strictEqual(c.mesesQueAdelanta(4000000, 1000000, 500000, 100000), 0);
+  // Nunca adelanta más de lo que falta.
+  assert.strictEqual(c.mesesQueAdelanta(4000000, 1000000, 500000, 9000000), 6);
+});
+
+test('Lista de regalos: a cuántos días de ahorro equivale un aporte', () => {
+  assert.strictEqual(c.diasDeAhorro(200000, 800000), 8);
+  assert.strictEqual(c.diasDeAhorro(1000, 800000), 1);
+  assert.strictEqual(c.diasDeAhorro(200000, 0), 0);
+});

@@ -1276,3 +1276,26 @@ body.con-hoja { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .notificacion, .campana-numero, .avatar-2 { animation: none; }
 }
+
+/* S13-F3: lista de regalos y vista de la familia */
+body.en-familia .barra { display: none; }
+body.en-familia .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
+.vista-familia {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 16px; padding: 8px 12px;
+  border-radius: 12px; background: var(--blue-20); color: var(--blue-dark); font-size: 14px; font-weight: 600;
+}
+.vista-familia .icono { margin: 0; }
+.vista-familia .enlace { margin-left: auto; min-height: 44px; display: inline-flex; align-items: center; }
+.familia-cabeza .icono-grande { margin-bottom: 8px; }
+.escala-envuelve { flex-wrap: wrap; }
+.escala-envuelve label { flex: 1 1 40%; }
+.bloque-chico { margin-top: 12px; }
+.aportes { list-style: none; margin: 8px 0 0; padding: 0; }
+.aportes li { padding: 10px 0; border-bottom: 1px solid var(--gray-light); }
+.aporte-fila { display: flex; align-items: center; gap: 4px; }
+.aporte-fila strong { margin-left: auto; }
+.aporte-mensaje { display: block; margin: 4px 0 0 26px; font-style: italic; color: var(--gray-dark); quotes: "“" "”"; }
+.aporte-total { display: flex; justify-content: space-between; font-weight: 700; border-bottom: 0 !important; }
+.adelanta { color: var(--green-dark); font-weight: 600; margin: 12px 0; }
+.campo-texto { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border: 1px solid var(--gray-semidark); border-radius: 8px; resize: vertical; }
+.campo-texto:focus { outline: 3px solid var(--blue-normal); outline-offset: 1px; }

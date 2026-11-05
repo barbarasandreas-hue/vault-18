@@ -428,8 +428,14 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
   - Si está activo, "Simular un mes" cuenta la cuota sola, y "Este mes no pude" actúa como pausa.
   - La salida sin multa se ve siempre, con un toque.
 - **S13-F3 Juntos.**
-  - **"Invita a tu pareja"** (simulado): la pareja ve el mismo avance porque el crédito es de los dos. Se muestran dos avatares en la alcancía.
-  - **"Regalo para tu pie"** (simulado): un enlace para que la familia aporte a la cuenta Bci del usuario. Se ve como una tarjeta con el monto aportado y quién aportó, con la relación (por ejemplo, "mamá") y nunca con nombres.
+  - **"Invita a tu pareja"** (simulado): la pareja ve el mismo avance porque el crédito es de los dos. Se muestran dos avatares.
+  - **Lista de regalos para tu pie** (simulado), como una lista de novios pero para el primer departamento:
+    - Se cuelga de una **ocasión real** en que la familia igual iba a regalar: cumpleaños, Navidad, titulación u otra.
+    - La usuaria crea la lista en Tu pie, elige la ocasión y decide si su familia ve los montos o solo el porcentaje.
+    - La familia **no usa la app**: abre un enlace con una sola pantalla (`#regalo`, sin barra de navegación). Ve el avance del pie, elige el aporte ($50.000, $100.000 o $200.000), ve su efecto ("Adelanta su departamento 1 mes" o "Equivale a 8 días de su ahorro"), dice qué es de la usuaria (mamá, papá, abuela…) y deja un mensaje opcional. Sello: "Va directo a su cuenta Bci para el pie".
+    - La usuaria ve cada aporte con la relación y el mensaje, nunca con nombres. Al firmar, se avisa a quienes aportaron.
+    - Es opcional: la app nunca pide "pídele a tu familia" ni cuenta un aporte en el plazo antes de que llegue. Validar en las entrevistas si la familia ayudaría y en qué ocasión.
+    - Cálculos: `mesesQueAdelanta` y `diasDeAhorro`, con pruebas.
   - Es la puerta de entrada al respaldo familiar.
 - **S13-F4 Tu grupo y tu obra** (compra en grupo).
   - **Más cupos, más descuento:** "Con 1 persona más, el descuento sube a 5 %" (`cuposParaMasDescuento`, con pruebas) y un botón para compartir el proyecto (simulado). Así, invitar tiene un motivo real.

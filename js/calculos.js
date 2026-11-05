@@ -306,6 +306,20 @@ function mesesRestantes(meta, ahorrado, ahorroMensual) {
   return mesesParaMeta(Math.max(0, meta - (ahorrado || 0)), ahorroMensual);
 }
 
+// S13-F3: cuántos meses adelanta un aporte de la familia (0 si no alcanza a adelantar un mes).
+function mesesQueAdelanta(meta, ahorrado, ahorroMensual, aporte) {
+  var antes = mesesRestantes(meta, ahorrado, ahorroMensual);
+  var despues = mesesRestantes(meta, Math.min(meta, (ahorrado || 0) + (aporte || 0)), ahorroMensual);
+  if (antes === null || despues === null) return 0;
+  return Math.max(0, antes - despues);
+}
+
+// S13-F3: a cuántos días de ahorro equivale un aporte (mes de 30 días).
+function diasDeAhorro(aporte, ahorroMensual) {
+  if (!(ahorroMensual > 0) || !(aporte > 0)) return 0;
+  return Math.max(1, Math.round(aporte / ahorroMensual * 30));
+}
+
 // Hitos de la barra de avance del ahorro.
 var HITOS_AHORRO = [0.25, 0.5, 0.75, 1];
 
@@ -1044,6 +1058,8 @@ if (typeof module !== 'undefined') module.exports = {
   diasEntre: diasEntre,
   mesesParaMeta: mesesParaMeta,
   mesesRestantes: mesesRestantes,
+  mesesQueAdelanta: mesesQueAdelanta,
+  diasDeAhorro: diasDeAhorro,
   HITOS_AHORRO: HITOS_AHORRO,
   hitosAlcanzados: hitosAlcanzados,
   sumarMes: sumarMes,
