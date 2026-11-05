@@ -1032,7 +1032,7 @@
     var n = filtrosActivos();
     $('lista-contenido').innerHTML =
       (camino ? '<a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Mi camino</a>' : '') +
-      '<header class="encabezado">' +
+      '<header class="encabezado">' + (camino ? '' : FIGURAS) +
         '<h1 id="titulo-proyectos" class="h2">' + (camino ? 'Elige tu departamento' : 'Departamentos') + '</h1>' +
         '<p class="texto-apoyo">' + (camino ? CAMINOS[estado.caminoElegido].nombre : (arrendar ? 'Para arrendar' : 'Para vivir')) + '</p>' +
       '</header>' +
