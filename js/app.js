@@ -528,22 +528,22 @@
 
   // S14-F1: los 5 pasos como una escalera. La figura está en el peldaño actual y sube cuando avanzas.
   var pasoEscaleraMostrado = null;
-  // Personaje sin rasgos (estilo plano), con mochila: va subiendo hacia su departamento.
-  var PERSONAJE = '<svg class="personaje" viewBox="0 0 32 48">' +
-    '<rect class="p-mochila" x="5" y="18" width="8" height="12" rx="3"/>' +
-    '<rect class="p-pierna" x="11" y="32" width="4.5" height="12" rx="2"/><rect class="p-pierna" x="17" y="32" width="4.5" height="12" rx="2"/>' +
-    '<path class="p-zapato" d="M10 44 h7 v3 h-8 z M16.5 44 h7 l1 3 h-8 z"/>' +
-    '<path class="p-chaqueta" d="M9 20 a7 7 0 0 1 14 0 v14 h-14 z"/>' +
-    '<path class="p-brazo" d="M22 22 l5 6"/>' +
-    '<circle class="p-cara" cx="16" cy="10" r="6"/>' +
-    '<path class="p-pelo" d="M10 10 a6 6 0 0 1 12 -1 c-3 0 -6 -1 -8 -3 c-1 2 -2 3 -4 4 z"/>' +
+  // Personaje estilizado, con mochila urbana: sube decidido hacia su departamento.
+  var PERSONAJE = '<svg class="personaje" viewBox="0 0 32 48" aria-hidden="true">' +
+    '<rect class="p-mochila" x="5.5" y="17" width="6.5" height="11" rx="2.5"/>' +
+    '<rect class="p-pierna" x="11" y="30" width="4" height="13" rx="2"/><rect class="p-pierna" x="17.5" y="27" width="4" height="13" rx="2"/>' +
+    '<path class="p-zapato" d="M10 43 h6 v3 h-6 z M17 40 h6 v3 h-6 z"/>' +
+    '<path class="p-chaqueta" d="M10 17 c0 -2 2 -3 6 -3 s6 1 6 3 v14 h-12 z"/>' +
+    '<path class="p-brazo" d="M21 20 l5 6"/>' +
+    '<circle class="p-cara" cx="16" cy="9.5" r="5.5"/>' +
+    '<path class="p-pelo" d="M10.5 9.5 c0 -4 2.5 -5.5 5.5 -5.5 c4 0 5 2.5 5 5.5 c-3 0 -5 -1.5 -7 -3 c-1 2 -2 3 -3.5 3 z"/>' +
     '</svg>';
   // La meta: la puerta de tu departamento, arriba del último peldaño.
-  var PUERTA_META = '<svg class="puerta-meta" viewBox="0 0 30 40">' +
-    '<rect class="pm-muro" x="2" y="4" width="26" height="36" rx="2"/>' +
-    '<path class="pm-puerta" d="M8 40 V14 a7 7 0 0 1 14 0 V40 z"/>' +
-    '<circle class="pm-pomo" cx="19" cy="28" r="1.6"/>' +
-    '<rect class="pm-maceta" x="23" y="34" width="5" height="6" rx="1"/><circle class="pm-hoja" cx="25.5" cy="31" r="3.5"/>' +
+  var PUERTA_META = '<svg class="puerta-meta" viewBox="0 0 30 40" aria-hidden="true">' +
+    '<rect class="pm-muro" x="2" y="3" width="26" height="37" rx="2"/>' +
+    '<rect class="pm-puerta" x="5.5" y="6" width="17" height="34" rx="1.5"/>' +
+    '<line class="pm-pomo" x1="19.5" y1="18" x2="19.5" y2="28"/>' +
+    '<rect class="pm-maceta" x="23.5" y="31" width="5.5" height="9" rx="1"/><circle class="pm-hoja" cx="26.2" cy="27" r="3.2"/><circle class="pm-hoja" cx="28" cy="23" r="2.2"/>' +
     '</svg>';
   function recorridoCamino(paso) {
     // El paso de la compra (1 a 4) corresponde a los peldaños 2 a 5; sin compra (0), el actual es "Elegir".
@@ -2459,29 +2459,29 @@
   // S10-F1: la casa se va pintando desde abajo con la parte que ya es tuya.
   var pctCasaMostrado = null;
   var recienFirmado = false;
-  // S15: la casa ilustrada. Las paredes se pintan desde abajo con la parte que ya es tuya.
+  // Departamento contemporáneo ilustrado: sus pisos y muros se van pintando desde abajo con la parte que ya es tuya.
   function casaPintada(pct) {
     var desde = pctCasaMostrado === null ? pct : pctCasaMostrado;
     pctCasaMostrado = pct;
     return '<svg class="casa casa-ilustrada" viewBox="0 0 120 100" aria-hidden="true">' +
       '<defs><clipPath id="clip-casa"><rect x="22" y="40" width="76" height="50"/></clipPath></defs>' +
-      '<ellipse class="casa-pasto" cx="60" cy="92" rx="56" ry="6"/>' +
-      '<circle class="casa-arbusto-2" cx="10" cy="84" r="8"/><circle class="casa-arbusto" cx="18" cy="86" r="7"/>' +
-      '<circle class="casa-arbusto-2" cx="110" cy="85" r="7"/><circle class="casa-arbusto" cx="103" cy="87" r="6"/>' +
-      '<rect class="casa-chimenea" x="78" y="14" width="10" height="20" rx="1.5"/>' +
-      '<rect class="casa-fondo" x="22" y="40" width="76" height="50"/>' +
+      '<ellipse class="casa-pasto" cx="60" cy="92" rx="54" ry="5"/>' +
+      '<circle class="casa-arbusto-2" cx="12" cy="85" r="7"/><circle class="casa-arbusto" cx="19" cy="87" r="6"/>' +
+      '<circle class="casa-arbusto-2" cx="108" cy="86" r="6"/><circle class="casa-arbusto" cx="101" cy="88" r="5"/>' +
+      '<rect class="casa-chimenea" x="78" y="18" width="10" height="16" rx="2"/>' +
+      '<rect class="casa-fondo" x="22" y="40" width="76" height="50" rx="2"/>' +
       '<rect class="casa-pintura" x="22" y="40" width="76" height="50" clip-path="url(#clip-casa)" style="--desde:' + (desde / 100) + ';transform:scaleY(' + (pct / 100) + ')"/>' +
-      '<rect class="casa-borde" x="22" y="40" width="76" height="50"/>' +
-      '<path class="casa-techo" d="M14 44 L60 12 L106 44 Z"/>' +
-      '<circle class="casa-ojo-buey" cx="60" cy="31" r="5"/>' +
-      '<rect class="casa-ventana" x="30" y="52" width="24" height="20" rx="2"/>' +
-      '<path class="casa-gato" d="M36 72 V64 L38 61 L40 64 H43 L45 61 L47 64 V72 Z"/>' +
-      '<path class="casa-marco" d="M42 52 V72 M30 62 H54"/>' +
-      '<rect class="casa-macetero" x="31" y="72" width="22" height="4" rx="1"/>' +
-      '<path class="casa-hoja" d="M35 72 C33 66 37 64 39 72 M48 72 C47 65 52 65 51 72"/>' +
-      '<rect class="casa-puerta" x="68" y="58" width="20" height="32" rx="3"/>' +
-      '<circle class="casa-pomo" cx="83" cy="75" r="1.8"/>' +
-      '<path class="casa-lampara" d="M64 56 h3 v-4 h-3 z"/>' +
+      '<rect class="casa-borde" x="22" y="40" width="76" height="50" rx="2"/>' +
+      '<path class="casa-techo" d="M16 40 L60 16 L104 40 Z"/>' +
+      '<circle class="casa-ojo-buey" cx="60" cy="30" r="5"/>' +
+      '<rect class="casa-ventana" x="29" y="48" width="26" height="24" rx="2"/>' +
+      '<path class="casa-gato" d="M36 72 V65 L38 62 L40 65 H43 L45 62 L47 65 V72 Z"/>' +
+      '<path class="casa-marco" d="M42 48 V72 M29 60 H55"/>' +
+      '<rect class="casa-macetero" x="28" y="72" width="28" height="4.5" rx="1.5"/>' +
+      '<path class="casa-hoja" d="M33 72 C31 66 36 64 38 72 M46 72 C45 65 50 65 49 72"/>' +
+      '<rect class="casa-puerta" x="66" y="54" width="22" height="36" rx="2"/>' +
+      '<circle class="casa-pomo" cx="82" cy="73" r="1.8"/>' +
+      '<path class="casa-lampara" d="M62 54 h3.5 v-4.5 h-3.5 z"/>' +
     '</svg>';
   }
 
