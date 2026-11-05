@@ -504,6 +504,57 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 
 ---
 
+## Sprint 15 · Navegación y confianza
+
+**Objetivo:** que comprar sea un solo recorrido en una sola pestaña, que Caminos muestre solo lo que sirve comparado con el crédito de siempre, y que se note por qué esta app y no un portal inmobiliario. Mapa completo: [Mapa de navegación](https://claude.ai/artifact/6xq2Rua2GbSX4y3zqLAgxu) y `claude/mapa-navegacion-nov2026.md` en el proyecto.
+
+> Diagnóstico (recorrido de una usuaria nueva, 5-nov-2026): el recorrido de compra salta de pestaña 2 veces, hay 3 niveles de pasos apilados, 8 controles antes de la lista de departamentos, el detalle mezcla comprar e invertir, y Atrás no sigue los pasos.
+>
+> Frase guía: **los portales te muestran departamentos; Primer Peldaño te dice cuándo puedes tener el tuyo y te lleva hasta ahí, con el banco que te presta.** Se refuerza con la experiencia, no con frases de venta.
+
+**Reglas de navegación** (valen para todo el sprint):
+1. La barra solo cambia cuando se toca. El único cruce (Departamentos → Mi camino) se confirma en una hoja.
+2. Comprar vive entero en Mi camino.
+3. Atrás es el paso anterior: cada paso y subpaso tiene su dirección.
+4. Tocar la pestaña activa vuelve a su raíz; cada pestaña recuerda dónde quedaste.
+5. Una acción principal por pantalla.
+6. Datos, rango y filtros se cambian en una hoja inferior, sin salir de la pantalla.
+7. Comprar en Mi camino, invertir en Inversiones; el detalle de un proyecto muestra solo la acción de la pestaña de origen.
+
+- **S15-F1 Mi camino como recorrido único.**
+  - Pestañas: **Mi camino · Departamentos · Inversiones · Perfil**. "Mi plan" desaparece.
+  - Rutas: `#camino`, `#camino/caminos`, `#camino/ficha/:id`, `#camino/elegir`, `#camino/proyecto/:id`, `#camino/postular/datos`, `/documentos`, `/resultado`, `#camino/pie`, `#camino/firmar`, `#camino/mi-departamento`, `#camino/avisos`. Las rutas antiguas (`#inicio`, `#mis-proyectos`, `#caminos`, `#proyectos`, `#proyecto/:id`) redirigen a las nuevas.
+  - La raíz cambia según la etapa, con un número y una acción: 0 preguntas (sin barra) · 1 plazo → "Elegir mi camino" · 2 camino → "Elegir departamento" · 3 postulando → "Seguir postulando" · 4 pie → "Pagar mi cuota" · 5 → "Ir a firmar" · 6 → "Ver mi departamento".
+  - Se elimina la fila de 5 pasos de Mi plan, las pestañas Mi compra / Mis inversiones y la fila de subpasos de Postular (queda "1 de 3" en texto).
+  - Acepta si: el recorrido A del mapa (primera vez → Postular) no cambia de pestaña; Atrás desde cada paso vuelve al anterior; tocar Mi camino estando en un paso vuelve a la raíz.
+- **S15-F2 Escalera tocable.**
+  - Peldaño hecho → resumen de solo lectura; actual → abre el paso; futuro → no abre y dice "Primero: …".
+  - Son `<a>` o `<button>` con nombre accesible; 44 px de alto como mínimo.
+- **S15-F3 Caminos: lo que sirve, comparado con lo de siempre.**
+  - Orden: "Con tus números" (rango e ingresos, "Cambiar" en hoja) → camino recomendado con su porqué → **siempre el crédito base** (FOGAES para vivir, 80 % para invertir) → a lo más un camino viable más.
+  - Cada tarjeta tiene las mismas cifras en el mismo orden: pones al escriturar · dividendo · llegas en · carga · peor caso sin subsidio.
+  - **Diferencia contra el crédito base** en cada camino nuevo, en una línea ("Pie en cuotas · 3 % más barato · llegas 4 meses antes"). Cálculo en `js/calculos.js` (`diferenciaConBase`), con pruebas.
+  - "Por qué no te mostramos otros" plegado, una línea por camino no mostrado (`razonNoMostrado`, con pruebas).
+  - Las fichas salen del carrusel: respaldo familiar pasa a "Llega antes" (con la lista de regalos, comprar más barato e IVA cero); arriendo con opción de compra queda solo en "Todavía no", como puente.
+- **S15-F4 Elegir departamento dentro del camino.**
+  - `#camino/elegir` muestra solo los proyectos del camino elegido y del rango. Dos controles: el chip del rango y "Filtrar" (hoja con estudio, 1 dormitorio, usado, IVA cero y "solo los que me alcanzan").
+  - El detalle desde el camino tiene una sola acción: "Elegir este departamento".
+- **S15-F5 Departamentos e Inversiones.**
+  - **Departamentos** (`#departamentos`): explorar sin compromiso, por defecto tu camino y tu rango, con "Ver todos". Detalle con "Llevar a mi camino" (hoja de confirmación) o, sin datos, "¿Me alcanza?" (abre las preguntas con ese departamento de meta). Con una compra en curso: "Ya estás comprando en …".
+  - **Inversiones** (`#inversiones`): arriba lo cobrado y tus inversiones; abajo, las oportunidades de pie compartido. Detalle con "Invertir aquí" → monto en UF.
+- **S15-F6 Perfil en filas y hoja "Mis datos".**
+  - Perfil pasa de formulario largo a filas: Mis datos (hoja), Avisos, Ayuda, Sesión de prueba, Empezar de nuevo (con confirmación).
+  - La misma hoja "Mis datos" se abre desde Tu camino; al guardar, el plazo se recalcula ahí mismo.
+- **S15-F7 Confianza que solo da el banco.**
+  - En Tu camino, junto al plazo: "Bci te podría prestar hasta $X" con el sello "Preaprobación simulada" (`montoMaximoCredito`, desde la regla de carga, con pruebas).
+  - **"Ver simulación"** en cada camino: hoja con tasa, CAE, costo total del crédito y dividendo con y sin seguros, como la Hoja de Simulación del nuevo reglamento de información al consumidor de créditos hipotecarios (Decreto 49, vigente desde el 27-feb-2027). `cae` y `costoTotalCredito` en `js/calculos.js`, con pruebas (la CAE incluye seguros y gastos de escritura; supuestos declarados en `CLAUDE.md`).
+  - En el detalle de cada proyecto, una fila "Inmobiliaria cliente de Bci: sí / no" (`clienteBci` en `js/datos.js`).
+  - Nada de frases de venta ni comparaciones con portales dentro de la app.
+
+**Verificación del sprint:** los 4 recorridos del mapa (A primera vez, B explorar primero, C un mes del pie, D invertir) se prueban con Playwright a 390, 360 y 320 px; se repiten las revisiones con `web-design-guidelines` y `ui-ux-pro-max`.
+
+---
+
 ## Estado
 
 | Sprint | Feature | Estado |
@@ -589,3 +640,10 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 14 | S14-F3 Hitos del pie | en progreso |
 | 14 | S14-F4 Gestos en Tu pie | en progreso |
 | 14 | S14-F5 Firmar y recibir las llaves | en progreso |
+| 15 | S15-F1 Mi camino como recorrido único | pendiente |
+| 15 | S15-F2 Escalera tocable | pendiente |
+| 15 | S15-F3 Caminos: lo que sirve, comparado con lo de siempre | pendiente |
+| 15 | S15-F4 Elegir departamento dentro del camino | pendiente |
+| 15 | S15-F5 Departamentos e Inversiones | pendiente |
+| 15 | S15-F6 Perfil en filas y hoja Mis datos | pendiente |
+| 15 | S15-F7 Confianza que solo da el banco | pendiente |
