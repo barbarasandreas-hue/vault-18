@@ -1,6 +1,8 @@
 # Primer Peldaño
 
-App de Bci para que jóvenes profesionales compren su primer departamento sin tener que juntar el pie completo. Es un prototipo para el Taller de Interacción IV (UDD), desafío Bci Labs. El dinero, los inversionistas y la parte legal son simulados; los cálculos son reales. La app debe ser facil de comprender para el usuario. La idea es que sea un marketplace de departamentos en done el usario vea proyectos donde se puede unir, tanto de compras en junto como de financiamiento para el pie.
+App de Bci para que jóvenes profesionales compren su primer departamento sin tener que juntar el pie completo. Es un prototipo para el Taller de Interacción IV (UDD), desafío Bci Labs. El dinero, los inversionistas y la parte legal son simulados; los cálculos son reales. La app debe ser facil de comprender para el usuario. **Función principal:** te decimos cuándo puedes tener tu primer departamento, por qué camino y qué hacer este mes, y te llevamos hasta ahí. Los proyectos (compra en grupo y pie compartido) son un medio dentro del camino, no la portada.
+
+**Qué ve el usuario al entrar:** Inicio siempre responde "¿cuánto me falta y cuándo llego?", con un número y una acción según su etapa. Las pestañas son Inicio (Tu camino), Proyectos (filtrados por su camino), Mi plan (los 5 pasos: Elegir → Postular → Juntar el pie → Firmar → Mi departamento, más sus inversiones) y Perfil.
 
 ## El modelo (v3, 4-nov-2026)
 

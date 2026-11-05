@@ -280,36 +280,81 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 - **S10-F5 Pendientes del Sprint 7.** El "?" responde al primer toque y tiene una zona tocable de 44 px; la carga no secuestra la navegación ni cambia el alto del botón; `location.replace` al empezar.
 
 
-## Sprint 11 · Interacción: base y recorrido principal
+## Sprint 11 · Estructura e interacción del recorrido principal
 
-**Objetivo:** que el recorrido Inicio → Tu mes real → Tus caminos → Tu pie se entienda mirando, no leyendo. Se construye con la skill `interaccion-bci-vanilla`.
+**Objetivo:** que al abrir la app la usuaria vea al tiro **cuándo puede tener su departamento, por qué camino y qué hacer este mes**, y que eso se entienda mirando, no leyendo. Primero se ordena la estructura (S11-F0); después se le da forma con la skill `interaccion-bci-vanilla`.
 
-> Reglas del sprint:
-> - Una pantalla lleva como máximo 2 patrones del catálogo.
-> - Cada visualización **reemplaza** el texto que explicaba lo mismo; nunca se suma a él.
+> **Función principal de la app:** "Te decimos cuándo puedes tener tu primer departamento y te llevamos hasta ahí". Los proyectos son un medio dentro del camino, no la portada.
+>
+> **Por qué:**
+> - La pregunta de la usuaria es "¿cuándo llego y qué hago ahora?" (E1: "lejano", "se ve muchas veces imposible"; E2: "no sé si tan pronto").
+> - Hoy Inicio responde una pregunta del banco ("Puedes comprar hasta UF 3.847").
+> - Tus caminos y Todavía no, que son el corazón de la propuesta, están escondidos a dos toques.
+> - Inicio y Mis proyectos muestran dos sistemas de pasos que no calzan (5 pasos y 3 pasos).
+>
+> **Reglas del sprint:**
+> - Cada pantalla lleva como máximo 2 patrones del catálogo de la skill.
+> - Cada visualización **reemplaza** el texto que explicaba lo mismo.
 > - Solo se anima `transform` y `opacity`.
-> - Con `prefers-reduced-motion` se ve el estado final, sin movimiento.
-> - Las cifras siguen saliendo de `js/calculos.js`; las visualizaciones no calculan nada.
+> - Con `prefers-reduced-motion` se ve el estado final.
+> - Las cifras salen de `js/calculos.js`.
 
-- **S11-F0 Base de interacción.**
+- **S11-F0 Estructura: Inicio = "Tu camino".**
+  - **Las 4 pestañas cambian de rol (mismas posiciones):**
+
+    | Pestaña | Rol |
+    |---|---|
+    | **Inicio** | Una pantalla que siempre responde "¿cuánto falta y cuándo llegas?", con un número protagonista y una acción |
+    | **Proyectos** | Se abre filtrada por el camino elegido y por lo que le alcanza (los filtros siguen a mano). Si no eligió camino, muestra todo y arriba una tarjeta corta: "Primero, tu camino", que lleva a Inicio |
+    | **Mi plan** | Hoy se llama Mis proyectos. Es el detalle de cada paso, y las inversiones van en su propia pestaña interna |
+    | **Perfil** | Tus datos, avisos y ayuda. El registro de la sesión de prueba queda al final, como "Sesión de prueba" |
+
+  - **Un solo sistema de 5 pasos**, el mismo en Inicio y en Mi plan: **Elegir → Postular → Juntar el pie → Firmar → Mi departamento**. Reemplaza "Únete, Postula, Ahorra, Firma, Departamento" y "Postula, Tu pie, Firma". La función que decide el paso actual vive en un solo lugar.
+  - **Inicio según la etapa** (función `etapaUsuario(estado)` en `js/app.js`):
+
+    | Etapa | Número protagonista | Acción principal |
+    |---|---|---|
+    | Recién llega | "Podrías tener tu departamento en **N meses**", con el nombre del camino recomendado | Ver mi camino |
+    | Eligió camino, sin proyecto | El mismo plazo y su cuota del mes | Elegir departamento |
+    | Postulando | Parte de la postulación (1 de 3) | Seguir postulación |
+    | Juntando el pie | "Te faltan **N meses**" | Pagar la cuota de este mes |
+    | Dueña | "Ya es tuyo **N %**" (o "Este mes pagaste" si es para vivir) | Ver mi mes |
+    | Solo invierte | "Este mes recibes **$X**" | Ver mis inversiones |
+
+  - **Primera vez:** 3 preguntas cortas, una por pantalla y con barra de avance:
+    1. ¿Para qué? (vivir o arrendar)
+    2. Sus sueldos
+    3. Su ahorro (lo que tiene y lo que puede juntar al mes)
+
+    Después viene el resultado de "Tu camino", que junta lo que hoy está repartido en Tu mes real y Tus caminos. "Todavía no" aparece en el mismo lugar cuando corresponde.
+  - **Plazo:** "Podrías tenerlo en N meses" = meses para juntar lo que falta (`numerosCamino(...).meses`) del camino recomendado. Sin ahorro mensual, se pide ese dato en vez de inventar un plazo.
+  - **Lo que cambia de lugar:**
+    - "Puedes comprar hasta UF X" pasa a ser una fila del detalle del camino ("Te prestan hasta"). Deja de ser el número de la portada.
+    - Tu mes real y Tus caminos dejan de ser pantallas sueltas: son el detalle de Inicio. Las rutas `#mes-real` y `#caminos` se mantienen y abren ese detalle.
+  - **Textos:**
+    - La frase de la introducción y del manifest pasa a ser "Te decimos cuándo puedes tener tu primer departamento".
+    - Se elimina la idea de "marketplace" de la portada.
+- **S11-F1 Base de interacción.**
   - Tokens de movimiento en `:root` (`--dur-micro` 120 ms, `--dur-corta` 220 ms, `--dur-media` 360 ms, `--dur-larga` 700 ms y las curvas `--ease-salida`, `--ease-entrada`, `--ease-mover` y `--ease-resorte`).
   - Regla global de `prefers-reduced-motion`. Las duraciones escritas a mano (`.15s`, `.2s`) pasan a tokens.
-  - **Presión de botón:** `:active` con `scale(.97)` en `--dur-micro`, en botones, chips, pestañas y tarjetas de proyecto.
-  - **Cambio de pantalla:** la pantalla que entra hace un fundido con `translateY(8px)` en `--dur-media`, sin animar la que sale.
-  - **Toast:** confirma lo que pasa fuera de la vista ("Te uniste a…", "Invertiste…", "Anotado: te interesa"). Va sobre la barra, dura 3 s y lleva `role="status"`. Reemplaza los avisos verdes que hoy quedan bajo el botón fijo.
-  - **12 íconos nuevos** de línea (viewBox 24, trazo 2, `stroke-linecap: round`): `i-banco`, `i-inversionistas`, `i-persona`, `i-casa`, `i-llave`, `i-calendario`, `i-documento`, `i-alcancia`, `i-flujo`, `i-grupo`, `i-regalo` (descuento) e `i-candado` (cuenta bloqueada). Cada concepto usa siempre el mismo ícono.
-  - Función `contarHasta(elemento, desde, hasta, formato)` (número que cuenta) en `js/app.js`, con `requestAnimationFrame` en `--dur-larga`. Con movimiento reducido escribe el valor final de inmediato, y el `aria-live` recibe solo el valor final.
-- **S11-F1 Inicio.**
-  - El selector de modo lleva íconos: llave para "Para arrendar" y casa para "Para vivir".
-  - **Número que cuenta** en "Puedes comprar hasta": cuando cambian los sueldos o el modo, la UF cuenta desde el valor anterior.
-  - **Reparto visual:** la barra y la lista de "¿De dónde sale el resto?" se reemplazan por una casa dividida en franjas, una por actor (Bci, inversionistas y tú), con su ícono, % y monto. Las franjas suben escalonadas, a 60 ms una de otra. La lista de check desaparece.
-- **S11-F2 Tu mes real.**
-  - **Llenado:** la lista de sumas y restas se reemplaza por una barra horizontal de su sueldo (100 %) partida en arriendo, otras cuotas, dividendo y "te queda". Cada tramo lleva color, ícono y monto en una leyenda de filas. La barra tiene una marca fija en el 40 %, con la etiqueta "mínimo para vivir".
-  - Si "te queda" cae bajo la marca, ese tramo cambia a la zona de alerta, con la palabra "Ojo" y el ícono (el color nunca va solo).
-  - **Número que cuenta** en "Te quedan al mes para vivir" al cambiar el arriendo o las cuotas.
-- **S11-F3 Tus caminos y Todavía no.**
-  - **Tarjetas que se deslizan:** los caminos van en una fila horizontal con `scroll-snap`. La recomendada va primero, con la etiqueta "Te recomendamos". Hay puntos indicadores y botones "anterior" y "siguiente" de 44 px como alternativa al gesto. Se elimina "Ver otros caminos".
-  - Cada tarjeta lleva arriba una ilustración de íconos que dice cómo funciona el camino:
+  - **Presión de botón:** `:active` con `scale(.97)` en `--dur-micro`, en botones, chips, pestañas y tarjetas.
+  - **Cambio de pantalla:** la pantalla que entra hace un fundido con `translateY(8px)` en `--dur-media`. La que sale no se anima.
+  - **Toast:** confirma lo que pasa fuera de la vista ("Te uniste a…", "Invertiste…", "Anotado: te interesa"). Va sobre la barra, dura 3 s y lleva `role="status"`. Reemplaza los avisos verdes que quedan bajo el botón fijo.
+  - **12 íconos nuevos** de línea (viewBox 24, trazo 2, extremos redondeados): `i-banco`, `i-inversionistas`, `i-persona`, `i-casa`, `i-llave`, `i-calendario`, `i-documento`, `i-alcancia`, `i-flujo`, `i-grupo`, `i-regalo` (descuento) e `i-candado` (cuenta bloqueada). La pestaña Mi plan usa `i-calendario`.
+  - Función `contarHasta(elemento, desde, hasta, formato)` (número que cuenta), con `requestAnimationFrame` en `--dur-larga`. Con movimiento reducido escribe el valor final de inmediato, y `aria-live` recibe solo el valor final.
+- **S11-F2 Inicio: las 3 preguntas y Tu camino.**
+  - **Preguntas:**
+    - La pregunta 1 son dos tarjetas grandes con ícono: llave para "Para arrendar" y casa para "Para vivir".
+    - La pregunta 3 tiene un **deslizador** para lo que puede juntar al mes (de $50.000 a $2.000.000, de a $10.000), junto al campo.
+  - **Número que cuenta:** "N meses" cuenta desde el valor anterior cuando cambia un dato.
+  - **Tu mes real visual:** la lista de sumas y restas pasa a ser una barra del sueldo (100 %) partida en arriendo, otras cuotas, dividendo y "te queda". Tiene una leyenda en filas con ícono y monto, y una marca fija en el 40 % ("mínimo para vivir"). Si "te queda" cae bajo la marca, ese tramo pasa a la zona de alerta con la palabra "Ojo" y el ícono.
+  - **Reparto visual:** "¿De dónde sale el precio?" pasa a ser una casa dividida en franjas (Bci, inversionistas y tú), cada una con ícono, % y monto. Las franjas suben escalonadas, a 60 ms una de otra. Reemplaza la barra y la lista de check.
+- **S11-F3 Los caminos y Todavía no.**
+  - **Tarjetas que se deslizan:**
+    - Los caminos van en una fila horizontal con `scroll-snap`. La recomendada va primero, con la etiqueta "Te recomendamos".
+    - Hay puntos indicadores y botones "anterior" y "siguiente" de 44 px como alternativa al gesto.
+    - Se elimina "Ver otros caminos".
+  - **Ilustración de íconos** arriba de cada tarjeta:
 
     | Camino | Ilustración |
     |---|---|
@@ -318,21 +363,23 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
     | Con garantía del Estado | `i-escudo` + `i-casa` |
     | Fichas | Su ícono propio |
 
-  - **Todavía no:** los cambios pasan a ser interruptores (`role="switch"`). Al activar uno, "te queda" y la carga se vuelven a calcular en vivo con las fórmulas de `cambiosTodaviaNo`, y el estado pasa de reloj a check si ya conviene.
-- **S11-F4 Tu pie y Sostener.**
-  - **Llenado:** la barra de hitos se reemplaza por una alcancía (`i-alcancia` grande, en SVG) que se llena con `scaleY` desde abajo. Los hitos 25, 50, 75 y 100 % se marcan en su costado.
-  - **Logro:** al pasar un hito, entra un sello con `--ease-resorte` ("¡25 %!") y el toast lo confirma. Reemplaza el aviso verde.
-  - La racha se ve como una fila de 6 puntos de calendario: los meses pagados en verde, el mes con protector con un escudo y los demás vacíos. Reemplaza el chip "N meses seguidos".
-  - Antes de empezar, la cuota mensual tiene un **deslizador** (de $50.000 a $2.000.000, de a $10.000) junto al campo, y "Llegas a tu meta en" se actualiza en vivo.
+  - **Todavía no:**
+    - Los cambios pasan a ser interruptores (`role="switch"`).
+    - Al activar uno, el plazo, "te queda" y la carga se vuelven a calcular en vivo (`cambiosTodaviaNo`), y el estado pasa de reloj a check si ya conviene.
+- **S11-F4 Juntar el pie y Sostener.**
+  - **Llenado:** la barra de hitos pasa a ser una alcancía (SVG) que se llena con `scaleY` desde abajo, con los hitos 25, 50, 75 y 100 % en su costado.
+  - **Logro:** al pasar un hito, entra un sello con `--ease-resorte` ("¡25 %!") y el toast lo confirma.
+  - **Racha:** una fila de 6 puntos de calendario. Los meses pagados van en verde, el mes con protector lleva un escudo y los demás quedan vacíos. Reemplaza el chip "N meses seguidos".
+  - Cuando la usuaria está juntando el pie, esta misma alcancía es el número protagonista de Inicio.
 
 ## Sprint 12 · Interacción: compra, inversión y cierre
 
-**Objetivo:** que el resto de la app tenga el mismo lenguaje visual, con las mismas reglas del Sprint 11.
+**Objetivo:** que Proyectos, Mi plan y la inversión tengan el mismo lenguaje visual del Sprint 11, con sus mismas reglas.
 
 - **S12-F1 Proyectos y Detalle.**
   - **Personas del grupo:** en la tarjeta y en el detalle, la barra de cupos se reemplaza por una fila de N figuras (`i-persona`). Las tomadas van en color, la del usuario con borde y la etiqueta "Tú", y las libres en contorno. Entran escalonadas, a 40 ms una de otra. Se mantiene el texto "6 de 10".
   - En el pie compartido, la participación reunida se muestra como un **llenado** del 15 % de la casa.
-  - El Detalle usa el mismo **reparto visual** de S11-F1.
+  - El Detalle usa el mismo **reparto visual** de S11-F2.
 - **S12-F2 Postula.** **Medidor** de carga: un semicírculo con zonas (hasta 25 % verde, de 25 a 30 % amarilla y sobre 30 % roja) y una aguja que gira con `--ease-mover`. Se mantienen la palabra (Holgado, En el límite, No aprueba) y el ícono. Con cuotas, una segunda marca muestra la carga del dividendo solo.
 - **S12-F3 Tus documentos.**
   - **Éxito con check:** al elegir un archivo, su miniatura vuela hacia la fila del documento con `translate` en `--dur-media`, y el check se dibuja con `stroke-dasharray`. Reemplaza la barra de subida.
@@ -351,6 +398,8 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 
 
 ## Sprint 13 · Volver a la app
+
+> **Orden sugerido:** Sprint 11 → Sprint 13 → Sprint 12. El 13 da datos para las sesiones de prueba ("¿volverías?"); el 12 es pulido visual.
 
 **Objetivo:** que haya una razón concreta para abrir la app cada mes durante los meses de ahorro y de obra, y después de comprar. Sin cobrar por ahorrar, sin culpa y sin promesas de plusvalía.
 
@@ -457,11 +506,11 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 10 | S10-F3 Pie en cuotas | en progreso |
 | 10 | S10-F4 Sostener | en progreso |
 | 10 | S10-F5 Pendientes del Sprint 7 | en progreso |
-| 11 | S11-F0 Base de interacción | pendiente |
-| 11 | S11-F1 Inicio | pendiente |
-| 11 | S11-F2 Tu mes real | pendiente |
-| 11 | S11-F3 Tus caminos y Todavía no | pendiente |
-| 11 | S11-F4 Tu pie y Sostener | pendiente |
+| 11 | S11-F0 Estructura: Inicio = Tu camino | pendiente |
+| 11 | S11-F1 Base de interacción | pendiente |
+| 11 | S11-F2 Inicio: las 3 preguntas y Tu camino | pendiente |
+| 11 | S11-F3 Los caminos y Todavía no | pendiente |
+| 11 | S11-F4 Juntar el pie y Sostener | pendiente |
 | 12 | S12-F1 Proyectos y Detalle | pendiente |
 | 12 | S12-F2 Postula | pendiente |
 | 12 | S12-F3 Tus documentos | pendiente |
