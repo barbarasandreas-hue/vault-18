@@ -1413,20 +1413,37 @@ body.en-familia .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
 .escalera li.actual .peldano-nombre { color: var(--green-dark); font-weight: 700; }
 .escalera li.pendiente .peldano-nombre { color: var(--gray-dark); }
 .escalera-figura { width: 32px; height: 48px; border: 0; background: none; border-radius: 0; margin-bottom: 2px; }
-.personaje { width: 32px; height: 48px; display: block; }
+.personaje { width: 32px; height: 48px; display: block; overflow: visible; }
+.p-sombra { fill: var(--blue-20); opacity: 0.8; }
+.p-pierna-trasera { fill: none; stroke: var(--blue-dark); stroke-width: 3.5; stroke-linecap: round; }
+.p-zapato-trasero { fill: var(--white); stroke: var(--blue-dark); stroke-width: 1; }
+.p-pierna-delantera { fill: none; stroke: var(--blue-dark); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+.p-zapato-delantero { fill: var(--white); stroke: var(--blue-dark); stroke-width: 1; }
 .p-mochila { fill: var(--yellow-normal); stroke: var(--blue-dark); stroke-width: 1.2; }
-.p-pierna { fill: var(--blue-dark); }
-.p-zapato { fill: var(--white); stroke: var(--blue-dark); stroke-width: 1; }
-.p-chaqueta { fill: var(--green-normal); stroke: var(--green-dark); stroke-width: 1.2; }
-.p-brazo { stroke: var(--green-dark); stroke-width: 3.5; stroke-linecap: round; }
+.p-mochila-asa { fill: none; stroke: var(--blue-dark); stroke-width: 1; stroke-linecap: round; }
+.p-mochila-cremallera { stroke: var(--blue-dark); stroke-width: 1; stroke-linecap: round; }
+.p-chaqueta { fill: var(--green-normal); stroke: var(--green-dark); stroke-width: 1.2; stroke-linejoin: round; }
+.p-chaqueta-cierre { stroke: var(--green-dark); stroke-width: 1; stroke-linecap: round; }
+.p-brazo { fill: none; stroke: var(--blue-dark); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.p-mano { fill: var(--ilus-piel); }
 .p-cara { fill: var(--ilus-piel); stroke: var(--blue-dark); stroke-width: 0.8; }
 .p-pelo { fill: var(--blue-dark); }
+.p-ojo { fill: var(--blue-dark); }
+
 .escalera-meta { align-self: center; height: 40px; margin-bottom: 2px; }
-.puerta-meta { width: 30px; height: 40px; display: block; }
-.pm-muro { fill: var(--gray-semilight); stroke: var(--gray-neutral); stroke-width: 1.2; }
-.pm-puerta { fill: var(--blue-dark); stroke: var(--blue-dark); stroke-width: 1.2; }
-.pm-pomo { stroke: var(--yellow-normal); stroke-width: 1.8; stroke-linecap: round; }
-.pm-maceta { fill: var(--red-60); } .pm-hoja { fill: var(--green-normal); }
+.puerta-meta { width: 30px; height: 40px; display: block; overflow: visible; }
+.pm-base { fill: var(--gray-neutral); }
+.pm-muro { fill: var(--blue-20); stroke: var(--blue-dark); stroke-width: 1.2; }
+.pm-puerta { fill: var(--green-dark); stroke: var(--green-dark); stroke-width: 1; }
+.pm-ranuras { fill: none; stroke: rgba(255, 255, 255, 0.2); stroke-width: 0.8; stroke-linecap: round; }
+.pm-placa { fill: var(--yellow-normal); stroke: var(--blue-dark); stroke-width: 0.8; }
+.pm-numero { fill: var(--blue-dark); }
+.pm-pomo { stroke: var(--yellow-normal); stroke-width: 2; stroke-linecap: round; }
+.pm-pomo-soporte { fill: var(--yellow-dark); }
+.pm-maceta { fill: var(--yellow-normal); stroke: var(--blue-dark); stroke-width: 1; }
+.pm-hoja-1 { fill: var(--green-normal); stroke: var(--blue-dark); stroke-width: 0.8; }
+.pm-hoja-2 { fill: var(--green-80); stroke: var(--blue-dark); stroke-width: 0.8; }
+.pm-hoja-3 { fill: var(--green-dark); stroke: var(--blue-dark); stroke-width: 0.8; }
 .escalera-arriba { display: flex; justify-content: center; align-items: flex-end; gap: 3px; }
 .escalera-figura.sube { animation: subirPeldano var(--dur-larga) var(--ease-resorte) both; }
 @keyframes subirPeldano {
@@ -1444,26 +1461,32 @@ body.en-familia .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
 .estrella { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--yellow-60); box-shadow: 0 0 4px rgba(255, 233, 51, 0.6); }
 .e1 { top: 4px; right: 26px; } .e2 { top: 18px; right: 20px; } .e3 { top: 10px; right: -2px; }
 svg.edificio-techo { display: block; width: 100%; height: 22px; background: none; border-radius: 0; }
-.techo-estanque { fill: var(--blue-80); stroke: var(--blue-dark); stroke-width: 1.5; }
-.techo-antena { fill: none; stroke: var(--blue-dark); stroke-width: 2; stroke-linecap: round; }
-.techo-planta { fill: var(--green-normal); } .techo-macetero { fill: var(--red-60); }
 .techo-borde { fill: var(--blue-dark); }
+.techo-baranda { fill: none; stroke: var(--blue-80); stroke-width: 1.2; stroke-linecap: round; }
+.techo-pergola { fill: none; stroke: var(--blue-dark); stroke-width: 1.2; stroke-linecap: round; }
+.techo-estanque { fill: var(--blue-80); stroke: var(--blue-dark); stroke-width: 1.2; }
+.techo-rejilla { fill: none; stroke: var(--blue-dark); stroke-width: 1; stroke-linecap: round; }
+.techo-macetero { fill: var(--yellow-normal); stroke: var(--blue-dark); stroke-width: 0.8; }
+.techo-planta { fill: var(--green-normal); }
+.techo-planta.p2 { fill: var(--green-80); }
+.techo-planta.p3 { fill: var(--green-dark); }
 .edificio .edificio-fachada {
   list-style: none; margin: 0; width: 100%; box-sizing: border-box;
   background: var(--blue-dark); padding: 8px 12px 10px; gap: 8px 10px;
-  border-radius: 2px;
+  border-radius: 3px;
   display: grid; grid-template-columns: repeat(var(--cols), 1fr);
+  box-shadow: 0 4px 12px rgba(29, 86, 153, 0.25);
 }
 .ventana {
-  height: 20px; border: 0; border-radius: 2.5px; background: #164479; position: relative;
-  box-shadow: 0 3px 0 -1px var(--blue-80);
+  height: 20px; border: 0; border-radius: 3px; background: #164479; position: relative;
+  box-shadow: 0 3px 0 -1px rgba(125, 170, 224, 0.4);
   font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; color: var(--white);
   transition: transform var(--dur-corta) var(--ease-salida);
 }
 .ventana.vacia { visibility: hidden; }
 .ventana::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 47%, rgba(29, 86, 153, .5) 47% 53%, transparent 53%); border-radius: 2px; }
 .ventana.encendida { background: var(--yellow-40); box-shadow: 0 0 10px 1px rgba(255, 238, 102, .65), 0 3px 0 -1px var(--blue-80); animation: encender var(--dur-media) var(--ease-salida) backwards; }
-.ventana.tuya { background: var(--green-normal); color: var(--white); box-shadow: 0 0 12px 2px rgba(40, 137, 43, 0.75), 0 3px 0 -1px var(--green-dark); font-weight: 700; letter-spacing: 0.5px; animation: encender var(--dur-media) var(--ease-salida) backwards; }
+.ventana.tuya { background: var(--green-normal); color: var(--white); box-shadow: 0 0 14px 2px rgba(40, 137, 43, 0.75), 0 3px 0 -1px var(--green-dark); font-weight: 700; letter-spacing: 0.5px; animation: encender var(--dur-media) var(--ease-salida) backwards; }
 .ventana.tuya::after { display: none; }
 .ventana.con-planta::before { content: ""; position: absolute; left: 2px; bottom: 0; width: 7px; height: 7px; border-radius: 50% 50% 0 50%; background: var(--green-normal); z-index: 1; }
 @keyframes encender { from { background: #164479; box-shadow: none; } }
@@ -1471,10 +1494,15 @@ svg.edificio-techo { display: block; width: 100%; height: 22px; background: none
 @keyframes destello { 50% { transform: scale(1.18); opacity: .55; } }
 svg.edificio-base { display: block; width: 100%; height: 26px; border: 0; background: none; }
 .base-muro { fill: var(--blue-dark); }
-.base-toldo { fill: var(--red-60); }
-.base-puerta { fill: var(--yellow-40); } .base-marco { stroke: var(--blue-dark); stroke-width: 1.5; }
-.base-arbol { fill: var(--green-normal); } .base-tronco { fill: var(--gray-dark); }
-.base-vereda { fill: var(--gray-neutral); }
+.base-puerta { fill: var(--yellow-40); stroke: var(--blue-dark); stroke-width: 1.2; }
+.base-marco { fill: none; stroke: var(--blue-dark); stroke-width: 1.2; }
+.base-toldo { fill: var(--blue-normal); stroke: var(--blue-dark); stroke-width: 1; }
+.base-tirantes { fill: none; stroke: var(--blue-dark); stroke-width: 1; }
+.base-tronco { fill: var(--gray-dark); }
+.base-arbol { fill: var(--green-normal); }
+.base-arbol.a2 { fill: var(--green-80); }
+.base-vereda { fill: var(--gray-semilight); }
+.base-cordon { stroke: var(--gray-neutral); stroke-width: 1; }
 .actividad-grupo { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
 .actividad-grupo li { display: flex; align-items: flex-start; }
 .actividad-grupo .icono { width: 18px; height: 18px; margin-top: 1px; }
@@ -1487,38 +1515,55 @@ svg.edificio-base { display: block; width: 100%; height: 26px; border: 0; backgr
 @keyframes respirar { 50% { transform: scale(.96); opacity: .7; } }
 .alcancia.lista { transform: scale(1.08); }
 .alcancia.chanchito { width: 112px; }
-.chancho-sombra { fill: rgba(55, 71, 79, 0.08); }
+.chancho-sombra { fill: var(--blue-20); opacity: 0.8; }
+.chancho-pata.pata-trasera { fill: var(--blue-20); stroke: var(--blue-dark); stroke-width: 1.8; stroke-linejoin: round; }
+.chancho-pata.pata-delantera { fill: var(--white); stroke: var(--blue-dark); stroke-width: 1.8; stroke-linejoin: round; }
+.chancho-cola { fill: none; stroke: var(--blue-dark); stroke-width: 2.2; stroke-linecap: round; }
+.chancho-oreja.oreja-trasera { fill: var(--blue-20); stroke: var(--blue-dark); stroke-width: 1.8; stroke-linejoin: round; }
+.chancho-oreja.oreja-delantera { fill: var(--white); stroke: var(--blue-dark); stroke-width: 1.8; stroke-linejoin: round; }
+.chancho-oreja-interior { fill: none; stroke: var(--green-40); stroke-width: 1.5; stroke-linecap: round; }
 .chancho-fondo { fill: var(--white); }
-.chanchito .alcancia-relleno { fill: var(--green-normal); }
-.chancho-borde { fill: none; stroke: var(--gray-semidark); stroke-width: 1.8; stroke-linejoin: round; }
-.chancho-pata, .chancho-oreja { fill: var(--gray-light); stroke: var(--gray-semidark); stroke-width: 1.8; stroke-linejoin: round; }
-.chancho-hocico { fill: var(--gray-light); stroke: var(--gray-semidark); stroke-width: 1.8; stroke-linejoin: round; }
-.chancho-cola { fill: none; stroke: var(--gray-semidark); stroke-width: 1.8; stroke-linecap: round; }
-.chancho-nariz { fill: var(--gray-semidark); }
-.chancho-ojo { fill: var(--gray-dark); }
-.chancho-mejilla { fill: var(--green-40); opacity: .7; }
-.chancho-brillo { fill: none; stroke: var(--white); stroke-width: 3; stroke-linecap: round; opacity: .9; }
-.chancho-ranura { fill: var(--yellow-normal); stroke: var(--yellow-dark); stroke-width: 1.5; }
+.chanchito .alcancia-relleno { fill: var(--green-normal); transform-box: fill-box; transform-origin: bottom; animation: llenarDesde var(--dur-larga) var(--ease-mover); }
+.chancho-borde { fill: none; stroke: var(--blue-dark); stroke-width: 2; stroke-linejoin: round; }
+.chancho-brillo { fill: none; stroke: var(--white); stroke-width: 3; stroke-linecap: round; opacity: .95; }
+.chancho-hocico { fill: var(--white); stroke: var(--blue-dark); stroke-width: 1.8; stroke-linejoin: round; }
+.chancho-nariz { fill: var(--blue-dark); }
+.chancho-ojo { fill: var(--blue-dark); }
+.chancho-mejilla { fill: var(--yellow-normal); opacity: .55; }
+.chancho-ranura { fill: var(--yellow-normal); stroke: var(--blue-dark); stroke-width: 1.5; }
+.chancho-ranura-boca { fill: var(--blue-dark); }
 
 /* Departamento ilustrado (Mi departamento) */
-.casa.casa-ilustrada { width: 120px; }
+.casa.casa-ilustrada { width: 120px; overflow: visible; }
 .casa-pasto { fill: var(--green-20); }
+.casa-sendero { fill: var(--gray-semilight); }
 .casa-arbusto { fill: var(--green-80); }
 .casa-arbusto-2 { fill: var(--green-60); }
-.casa-chimenea { fill: var(--blue-80); stroke: var(--blue-dark); stroke-width: 1.8; }
 .casa-ilustrada .casa-fondo { fill: var(--white); }
-.casa-ilustrada .casa-pintura { fill: var(--green-40); }
-.casa-ilustrada .casa-borde { fill: none; stroke: var(--blue-dark); stroke-width: 2; stroke-dasharray: none; }
-.casa-techo { fill: var(--blue-normal); stroke: var(--blue-dark); stroke-width: 2; stroke-linejoin: round; }
-.casa-ojo-buey { fill: var(--yellow-40); stroke: var(--blue-dark); stroke-width: 1.8; }
-.casa-ventana { fill: var(--yellow-40); stroke: var(--blue-dark); stroke-width: 2; }
-.casa-gato { fill: var(--gray-dark); }
-.casa-marco { fill: none; stroke: var(--blue-dark); stroke-width: 1.5; }
-.casa-macetero { fill: var(--red-60); stroke: var(--blue-dark); stroke-width: 1.5; }
-.casa-hoja { fill: none; stroke: var(--green-normal); stroke-width: 2.2; stroke-linecap: round; }
-.casa-ilustrada .casa-puerta { fill: var(--blue-dark); stroke: var(--blue-dark); stroke-width: 1.8; }
-.casa-pomo { fill: var(--yellow-normal); }
-.casa-lampara { fill: var(--yellow-normal); stroke: var(--blue-dark); stroke-width: 1; }
+.casa-ilustrada .casa-pintura { fill: var(--green-normal); transform-box: fill-box; transform-origin: bottom; animation: llenarDesde var(--dur-larga) var(--ease-mover); }
+.casa-ilustrada .casa-borde { fill: none; stroke: var(--blue-dark); stroke-width: 2; }
+.casa-piso-linea { stroke: var(--blue-dark); stroke-width: 1.2; stroke-dasharray: 4 2; opacity: 0.6; }
+.casa-cornisa { fill: var(--blue-normal); stroke: var(--blue-dark); stroke-width: 1.5; }
+.casa-pergola-post { stroke: var(--blue-dark); stroke-width: 1.5; }
+.casa-pergola-vigas { fill: none; stroke: var(--blue-dark); stroke-width: 1.2; stroke-linecap: round; }
+.casa-macetero-techo { fill: var(--yellow-normal); stroke: var(--blue-dark); stroke-width: 1; }
+.casa-balcon-vidrio { fill: rgba(125, 170, 224, 0.35); stroke: var(--blue-80); stroke-width: 1; }
+.casa-balcon-baranda { stroke: var(--blue-dark); stroke-width: 1.5; stroke-linecap: round; }
+.casa-balcon-post { stroke: var(--blue-dark); stroke-width: 1; }
+.casa-ventana-balcon { fill: var(--yellow-40); stroke: var(--blue-dark); stroke-width: 1.2; }
+.casa-ventana { fill: var(--yellow-40); stroke: var(--blue-dark); stroke-width: 1.5; }
+.casa-marco { fill: none; stroke: var(--blue-dark); stroke-width: 1.2; }
+.casa-planta-interior { fill: var(--green-dark); }
+.casa-macetero-balcon { fill: var(--yellow-normal); stroke: var(--blue-dark); stroke-width: 0.8; }
+.casa-hoja-r1 { fill: var(--green-normal); stroke: var(--blue-dark); stroke-width: 0.8; }
+.casa-hoja-r2 { fill: var(--green-80); stroke: var(--blue-dark); stroke-width: 0.8; }
+.casa-hoja { fill: none; stroke: var(--green-dark); stroke-width: 1.5; stroke-linecap: round; }
+.casa-ilustrada .casa-puerta { fill: var(--blue-dark); stroke: var(--blue-dark); stroke-width: 1.5; }
+.casa-pomo-barra { stroke: var(--yellow-normal); stroke-width: 2; stroke-linecap: round; }
+.casa-pomo-punto { fill: var(--yellow-dark); }
+.casa-puerta-lineas { fill: none; stroke: rgba(255, 255, 255, 0.2); stroke-width: 0.8; stroke-linecap: round; }
+.casa-lampara { fill: var(--yellow-normal); stroke: var(--blue-dark); stroke-width: 0.8; }
+.casa-luz-cono { fill: var(--yellow-40); opacity: 0.5; }
 
 .zona-moneda { display: flex; align-items: center; gap: 10px; margin: 8px 0 12px; }
 .moneda {
