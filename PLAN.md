@@ -504,25 +504,6 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 
 ---
 
-## Sprint 15 · Tu año y cierre
-
-**Objetivo:** dar un momento para mirar hacia atrás y compartir, y dejar el prototipo revisado para las sesiones de prueba.
-
-- **S15-F1 "Tu año".**
-  - Al cumplir 12 meses ahorrando, o al firmar, aparece "Tu año en Primer Peldaño": 4 o 5 pantallas que se deslizan, con un número grande por pantalla.
-  - Por ejemplo: "Juntaste $9.600.000", "Tu mejor racha: 8 meses", "Tu edificio pasó de excavación a terminaciones", "Tu grupo llegó a 10" y "Tu familia aportó $400.000" (solo si hubo aportes).
-  - Se puede compartir como imagen (simulado) y volver a ver desde Mi plan.
-  - Cálculo en `js/calculos.js`: `resumenDelAno`, con pruebas.
-- **S15-F2 La balanza en Postula.**
-  - Probar si el medidor de carga se entiende mejor como una balanza (tu sueldo de un lado, el dividendo y las cuotas del otro).
-  - Se elige uno de los dos según la sesión de prueba. Nunca los dos en la misma pantalla.
-- **S15-F3 Revisión del Evaluator** de los Sprints 10 a 15, con las correcciones que pida.
-- **S15-F4 Preparar la sesión de prueba.**
-  - El registro agrega "¿Qué momento de la app te gustó más?" y "¿Algo te hizo sentir presionada?".
-  - En las entrevistas se pregunta si la familia ayudaría con el pie y en qué ocasión (S13-F3).
-
----
-
 ## Estado
 
 | Sprint | Feature | Estado |
@@ -608,7 +589,3 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 14 | S14-F3 Hitos del pie | en progreso |
 | 14 | S14-F4 Gestos en Tu pie | en progreso |
 | 14 | S14-F5 Firmar y recibir las llaves | en progreso |
-| 15 | S15-F1 Tu año | pendiente |
-| 15 | S15-F2 La balanza en Postula | pendiente |
-| 15 | S15-F3 Revisión del Evaluator | pendiente |
-| 15 | S15-F4 Preparar la sesión de prueba | pendiente |
