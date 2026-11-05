@@ -454,6 +454,75 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 
 ---
 
+## Sprint 14 · Emoción, juego y grupo
+
+**Objetivo:** que la app se sienta, no solo se lea. Una analogía ordena todo: **construir tu primer departamento peldaño a peldaño**, mientras el edificio real sube. Cada parte tiene su imagen, sus gestos y una recompensa que nace del avance real.
+
+**Reglas del sprint** (además de la skill `interaccion-bci-vanilla` y de "Textos mínimos"):
+- **La recompensa es el avance real**, nunca puntos, monedas inventadas ni premios al azar.
+- Se premia **ahorrar, sostener y entender**. Nunca endeudarse más ni decidir rápido.
+- **Celebración escasa:** confeti una sola vez, al firmar. Los hitos llevan una celebración chica. Si todo celebra, nada celebra.
+- **Sin presión falsa:** "quedan 2 cupos" solo si es verdad, y sin cuentas regresivas de urgencia para decidir.
+- Cada gesto nuevo tiene su botón alternativo, que funciona con teclado y lector de pantalla. Todo respeta el movimiento reducido.
+- Máximo 2 patrones de movimiento por pantalla. Solo se anima `transform` y `opacity`.
+- **Descartado** (revisión del 4-nov): los m² que ya son tuyos y las frases de identidad ("Ya eres dueña de tu cocina").
+
+**Analogías por parte**
+
+| Parte | Analogía | Emoción que busca |
+|---|---|---|
+| Inicio | La escalera: cada paso es un peldaño | Claridad y anticipación |
+| Proyectos y Tu grupo | El edificio con ventanas encendidas: cada comprador es una ventana | Pertenencia |
+| Tu pie | La alcancía que se llena al ritmo de la obra | Avance y calma |
+| Firmar | Recibir las llaves | Alegría (la única celebración grande) |
+| Pausa y Todavía no | Un descanso, no una caída | Alivio, sin culpa |
+
+- **S14-F1 La escalera en Inicio.**
+  - Los 5 pasos de Tu camino pasan a ser una escalera de 5 peldaños, con una figura parada en el paso actual.
+  - Al avanzar de paso, la figura sube un peldaño (`--ease-resorte`, una vez, al volver a Inicio).
+  - Se mantienen los nombres de los pasos y el texto para lector de pantalla ("Paso 3 de 5: Juntar el pie").
+  - Reemplaza la lista vertical de Inicio. En Mi plan se queda la fila de pasos actual.
+- **S14-F2 El edificio con ventanas.**
+  - En Detalle y en Tu grupo, la fila de personas pasa a ser la fachada de un edificio con tantas ventanas como cupos. Las tomadas están encendidas (amarillo cálido con borde, sin texto amarillo), la tuya está destacada con "Tú" y las libres están apagadas.
+  - En la tarjeta de Proyectos se mantiene la fila de personas, que es más chica.
+  - **Meta común:** "Entre todos llevan $X en sus cuentas Bci". Cada uno sigue con su cuenta propia: es una suma, no un fondo común.
+  - **Actividad sin nombres** (simulada en `js/datos.js`): "Se unió alguien hace 2 días" y "4 de 7 pagaron su cuota este mes".
+  - **Hito del grupo:** cuando el grupo llega a 5 o a 10 (por ejemplo, al simular que se une alguien), todas las ventanas destellan a la vez y un toast dice "¡Su grupo llegó a 5! Todos tienen 3 % de descuento".
+  - Cálculo en `js/calculos.js`: `totalGrupo` (suma de lo juntado por el grupo), con pruebas.
+- **S14-F3 Hitos del pie.**
+  - Al pasar el 25, el 50 y el 75 % del pie: la alcancía hace un pequeño salto, el hito se marca y vibra una vez en los teléfonos que lo permiten (`navigator.vibrate`).
+  - El aviso del hito conecta con la obra: "Vas en la mitad de tu pie. Tu edificio va en obra gruesa."
+  - Los hitos pueden traer un **beneficio de Bci como propuesta** (por ejemplo, al 50 %, la tasación sin costo), marcado como "propuesta", igual que los caminos que no existen hoy. Se confirma con el equipo antes de construirlo.
+- **S14-F4 Gestos en Tu pie.**
+  - **Arrastrar la cuota a la alcancía** para simular el mes. "Simular un mes" queda como botón alternativo.
+  - **Pausa sin culpa:** al pausar o usar el protector, la alcancía "descansa" (se atenúa y respira despacio), no se rompe ni se vacía.
+  - **Cuenta regresiva a las llaves** en la compra en grupo: "Faltan 214 días" hasta la entrega estimada, junto a Tu obra. No es una cuenta de urgencia: no pide decidir nada.
+- **S14-F5 Firmar y recibir las llaves.**
+  - **Mantener presionado para firmar:** un anillo se llena en 1,5 s y le da peso a la decisión. Si se suelta antes, no firma. Con teclado, Enter firma directo.
+  - Al firmar, la llave gira en la cerradura, cae confeti en los colores del Bci Kit (una sola vez, nunca con movimiento reducido) y dice "¡Es tuyo!".
+  - Si hubo aportes de la familia: "Avisamos a quienes aportaron" (ya existe en S13-F3).
+
+---
+
+## Sprint 15 · Tu año y cierre
+
+**Objetivo:** dar un momento para mirar hacia atrás y compartir, y dejar el prototipo revisado para las sesiones de prueba.
+
+- **S15-F1 "Tu año".**
+  - Al cumplir 12 meses ahorrando, o al firmar, aparece "Tu año en Primer Peldaño": 4 o 5 pantallas que se deslizan, con un número grande por pantalla.
+  - Por ejemplo: "Juntaste $9.600.000", "Tu mejor racha: 8 meses", "Tu edificio pasó de excavación a terminaciones", "Tu grupo llegó a 10" y "Tu familia aportó $400.000" (solo si hubo aportes).
+  - Se puede compartir como imagen (simulado) y volver a ver desde Mi plan.
+  - Cálculo en `js/calculos.js`: `resumenDelAno`, con pruebas.
+- **S15-F2 La balanza en Postula.**
+  - Probar si el medidor de carga se entiende mejor como una balanza (tu sueldo de un lado, el dividendo y las cuotas del otro).
+  - Se elige uno de los dos según la sesión de prueba. Nunca los dos en la misma pantalla.
+- **S15-F3 Revisión del Evaluator** de los Sprints 10 a 15, con las correcciones que pida.
+- **S15-F4 Preparar la sesión de prueba.**
+  - El registro agrega "¿Qué momento de la app te gustó más?" y "¿Algo te hizo sentir presionada?".
+  - En las entrevistas se pregunta si la familia ayudaría con el pie y en qué ocasión (S13-F3).
+
+---
+
 ## Estado
 
 | Sprint | Feature | Estado |
@@ -534,3 +603,12 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 13 | S13-F4 Tu grupo y tu obra | en progreso |
 | 13 | S13-F5 Lo tuyo creció este mes | en progreso |
 | 13 | S13-F6 Medición en la sesión de prueba | en progreso |
+| 14 | S14-F1 La escalera en Inicio | pendiente |
+| 14 | S14-F2 El edificio con ventanas | pendiente |
+| 14 | S14-F3 Hitos del pie | pendiente |
+| 14 | S14-F4 Gestos en Tu pie | pendiente |
+| 14 | S14-F5 Firmar y recibir las llaves | pendiente |
+| 15 | S15-F1 Tu año | pendiente |
+| 15 | S15-F2 La balanza en Postula | pendiente |
+| 15 | S15-F3 Revisión del Evaluator | pendiente |
+| 15 | S15-F4 Preparar la sesión de prueba | pendiente |
