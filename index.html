@@ -50,6 +50,7 @@
     <symbol id="i-grupo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3"/><circle cx="5" cy="10" r="2.3"/><circle cx="19" cy="10" r="2.3"/><path d="M6.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5M1.5 19c0-2.3 1.4-4 3.5-4M22.5 19c0-2.3-1.4-4-3.5-4"/></g></symbol>
     <symbol id="i-regalo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12.5V4h8.5l9.5 9.5-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/></g></symbol>
     <symbol id="i-sube" viewBox="0 0 24 24"><path d="M4 17l6-6 4 4 6-7M15 8h5v5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-filtro" viewBox="0 0 24 24"><path d="M4 5h16l-6 7.5V19l-4 1.5v-8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
     <symbol id="i-campana" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></g></symbol>
     <symbol id="i-candado" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3M12 15v2"/></g></symbol>
   </svg>
@@ -83,91 +84,40 @@
       </section>
 
       <!-- ===== Secciones ===== -->
-      <!-- ===== Proyectos: el marketplace ===== -->
+      <!-- ===== Lista de departamentos: "Elige tu departamento" (Mi camino) y "Departamentos" (explorar). Se dibuja desde app.js ===== -->
       <section id="pantalla-proyectos" class="pantalla" aria-labelledby="titulo-proyectos" hidden>
-        <header class="encabezado">
-          <h1 id="titulo-proyectos" class="h2">Proyectos</h1>
-          <p class="texto-apoyo">Únete a una compra o financia tu pie.</p>
-          <div class="filtro">
-            <span class="chip chip-ia" id="proyectos-ia"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Filtrado por IA: rinde 3,9&nbsp;% o más</span>
-            <p class="texto-apoyo" id="proyectos-modo"></p>
-            <a href="#perfil" class="enlace">Cambiar</a>
-            <button type="button" class="chip chip-filtro" id="filtro-alcanza" aria-pressed="false" hidden></button>
-            <button type="button" class="chip chip-filtro" id="filtro-rango" aria-pressed="false" hidden></button>
-          </div>
-        </header>
-
-        <a class="tarjeta tarjeta-primero" id="proyectos-primero" href="#inicio" hidden>
-          <svg class="icono-grande" aria-hidden="true"><use href="#i-casa"/></svg>
-          <span><strong>Primero, tu camino</strong><small>Te decimos cuál te sirve.</small></span>
-          <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg>
-        </a>
-
-        <div class="mas-barato" id="mas-barato" role="group" aria-labelledby="titulo-mas-barato">
-          <p class="etiqueta" id="titulo-mas-barato">Comprar más barato</p>
-          <div class="chips-mas-barato">
-            <button type="button" class="chip chip-filtro" data-tipo="estudio" aria-pressed="false">Estudio</button>
-            <button type="button" class="chip chip-filtro" data-tipo="1d" aria-pressed="false">1 dormitorio</button>
-            <button type="button" class="chip chip-filtro" data-ajuste="usado" aria-pressed="false">Usado</button>
-            <button type="button" class="chip chip-filtro" data-ajuste="iva-cero" aria-pressed="false">IVA cero</button>
-          </div>
-        </div>
-
-        <div class="pestanas" role="tablist" aria-label="Tipo de proyecto">
-          <button type="button" role="tab" id="tab-conjunto" data-pestana="conjunto" aria-controls="panel-proyectos">Compra en grupo</button>
-          <button type="button" role="tab" id="tab-financiamiento" data-pestana="financiamiento" aria-controls="panel-proyectos">Pie compartido</button>
-        </div>
-
-        <div id="panel-proyectos" role="tabpanel">
-          <p class="texto-apoyo" id="proyectos-explica"></p>
-          <ul class="lista-proyectos" id="lista-proyectos"></ul>
-          <div class="vacio" id="proyectos-vacio" hidden>
-            <svg aria-hidden="true"><use href="#i-proyectos"/></svg>
-            <h2 class="h3" id="vacio-titulo">Ningún proyecto rinde 3,9&nbsp;% hoy</h2>
-            <p class="texto-apoyo" id="vacio-texto">Para arrendar, la IA solo muestra departamentos cuyo arriendo neto rinde 3,9&nbsp;% o más al año.</p>
-            <div class="acciones">
-              <button type="button" class="btn btn-primario btn-bloque" id="btn-vacio-accion" data-accion="vivir">Cambiar a modo vivir</button>
-            </div>
-          </div>
-        </div>
+        <div id="lista-contenido"></div>
       </section>
 
       <!-- ===== Detalle de un proyecto (se dibuja desde app.js) ===== -->
       <section id="pantalla-proyecto" class="pantalla" aria-labelledby="titulo-proyecto" hidden>
-        <a href="#proyectos" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Proyectos</a>
+        <a href="#departamentos" class="enlace volver" id="detalle-volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Departamentos</a>
         <div id="detalle-proyecto"></div>
       </section>
       <!-- ===== Invertir (se dibuja desde app.js) ===== -->
       <section id="pantalla-invertir" class="pantalla" aria-labelledby="titulo-invertir" hidden>
-        <a href="#proyectos" class="enlace volver" id="invertir-volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Volver al proyecto</a>
+        <a href="#inversiones" class="enlace volver" id="invertir-volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Volver al proyecto</a>
         <div id="invertir-contenido"></div>
       </section>
 
-      <!-- ===== Mis proyectos ===== -->
-      <section id="pantalla-mis-proyectos" class="pantalla" aria-labelledby="titulo-mis-proyectos" hidden>
+      <!-- ===== Un paso de la compra (Mi camino): postular, juntar el pie, firmar, mi departamento ===== -->
+      <section id="pantalla-mis-proyectos" class="pantalla" aria-labelledby="titulo-paso" hidden>
+        <a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Mi camino</a>
+        <h1 id="titulo-paso" class="oculto-visual">Mi camino</h1>
+        <div id="panel-compra"></div>
+      </section>
+
+      <!-- ===== Inversiones (S15-F5): lo cobrado y las oportunidades de pie compartido ===== -->
+      <section id="pantalla-inversiones" class="pantalla" aria-labelledby="titulo-inversiones" hidden>
         <header class="encabezado">
-          <h1 id="titulo-mis-proyectos" class="h2">Mi plan</h1>
+          <h1 id="titulo-inversiones" class="h2">Inversiones</h1>
+          <p class="texto-apoyo">Pones parte del pie de otros y recibes 6&nbsp;% al año en UF.</p>
         </header>
-
-        <div class="vacio" id="mis-vacio">
-          <svg aria-hidden="true"><use href="#i-mis-proyectos"/></svg>
-          <h2 class="h3">Tu plan parte en Inicio</h2>
-          <p class="texto-apoyo">Elige tu camino y luego tu departamento.</p>
-          <div class="acciones">
-            <a href="#inicio" class="btn btn-primario btn-bloque">Ver mi camino</a>
-          </div>
-        </div>
-
-        <div id="mis-contenido" hidden>
-          <div class="pestanas" role="tablist" aria-label="Mi plan">
-            <button type="button" role="tab" id="tab-compra" data-mis="compra" aria-controls="panel-compra">Mi compra</button>
-            <button type="button" role="tab" id="tab-inversiones" data-mis="inversiones" aria-controls="panel-inversiones">Mis inversiones</button>
-          </div>
-
-          <div id="panel-compra" role="tabpanel" aria-labelledby="tab-compra"></div>
-
-          <div id="panel-inversiones" role="tabpanel" aria-labelledby="tab-inversiones" hidden></div>
-        </div>
+        <div id="panel-inversiones"></div>
+        <section class="bloque" aria-labelledby="titulo-oportunidades">
+          <h2 class="h3" id="titulo-oportunidades">Oportunidades</h2>
+          <ul class="lista-proyectos" id="lista-oportunidades"></ul>
+        </section>
       </section>
       <!-- ===== Sprint 9: Tu mes real, Tus caminos, fichas y registro (se dibujan desde app.js) ===== -->
       <section id="pantalla-caminos" class="pantalla" aria-labelledby="titulo-caminos" hidden>
@@ -196,9 +146,9 @@
 
     <nav class="barra" aria-label="Secciones">
       <ul>
-        <li><a href="#inicio" data-seccion="inicio"><svg aria-hidden="true"><use href="#i-inicio"/></svg>Inicio</a></li>
-        <li><a href="#proyectos" data-seccion="proyectos"><svg aria-hidden="true"><use href="#i-proyectos"/></svg>Proyectos</a></li>
-        <li><a href="#mis-proyectos" data-seccion="mis-proyectos"><svg aria-hidden="true"><use href="#i-calendario"/></svg>Mi plan</a></li>
+        <li><a href="#camino" data-seccion="camino"><svg aria-hidden="true"><use href="#i-inicio"/></svg>Mi camino</a></li>
+        <li><a href="#departamentos" data-seccion="departamentos"><svg aria-hidden="true"><use href="#i-proyectos"/></svg>Departamentos</a></li>
+        <li><a href="#inversiones" data-seccion="inversiones"><svg aria-hidden="true"><use href="#i-sube"/></svg>Inversiones</a></li>
         <li><a href="#perfil" data-seccion="perfil"><svg aria-hidden="true"><use href="#i-perfil"/></svg>Perfil</a></li>
       </ul>
     </nav>

@@ -14,21 +14,22 @@ var FECHA_REFERENCIA = '2026-11-03';
 // cierre: fecha en que se cierra el proyecto.
 // etapaObra (compra en grupo): 0 excavación, 1 obra gruesa, 2 terminaciones, 3 recepción, 4 escritura (ETAPAS_OBRA).
 // entregaEstimada: fecha estimada de entrega del edificio.
+// clienteBci (simulado): si la inmobiliaria es deudora o cliente de Bci; se informa en el detalle (conflicto de interés).
 // grupo (simulado): cuota promedio y meses que lleva ahorrando el grupo, hace cuántos días se unió alguien y cuántos pagaron este mes.
 var PROYECTOS = [
-  { id: 'mirador-independencia', grupo: { cuotaPromedio: 650000, mesesAhorrando: 4, unidoHaceDias: 2, pagaronMes: 5 }, etapaObra: 1, entregaEstimada: '2027-12-15', nombre: 'Edificio Mirador Independencia', comuna: 'Independencia', tipo: 'conjunto',
+  { id: 'mirador-independencia', clienteBci: true, grupo: { cuotaPromedio: 650000, mesesAhorrando: 4, unidoHaceDias: 2, pagaronMes: 5 }, etapaObra: 1, entregaEstimada: '2027-12-15', nombre: 'Edificio Mirador Independencia', comuna: 'Independencia', tipo: 'conjunto',
     cupos: 10, cuposTomados: 6, ufFinanciadas: 0, cierre: '2026-12-15' },
-  { id: 'parque-quinta-normal', grupo: { cuotaPromedio: 600000, mesesAhorrando: 6, unidoHaceDias: 5, pagaronMes: 4 }, etapaObra: 2, entregaEstimada: '2027-06-30', nombre: 'Edificio Parque Quinta Normal', comuna: 'Quinta Normal', tipo: 'conjunto',
+  { id: 'parque-quinta-normal', clienteBci: false, grupo: { cuotaPromedio: 600000, mesesAhorrando: 6, unidoHaceDias: 5, pagaronMes: 4 }, etapaObra: 2, entregaEstimada: '2027-06-30', nombre: 'Edificio Parque Quinta Normal', comuna: 'Quinta Normal', tipo: 'conjunto',
     cupos: 8, cuposTomados: 5, ufFinanciadas: 0, cierre: '2027-01-20' },
-  { id: 'portal-estacion', grupo: { cuotaPromedio: 450000, mesesAhorrando: 2, unidoHaceDias: 1, pagaronMes: 4 }, etapaObra: 0, entregaEstimada: '2028-03-31', nombre: 'Edificio Portal Estación', comuna: 'Estación Central', tipo: 'conjunto',
+  { id: 'portal-estacion', clienteBci: true, grupo: { cuotaPromedio: 450000, mesesAhorrando: 2, unidoHaceDias: 1, pagaronMes: 4 }, etapaObra: 0, entregaEstimada: '2028-03-31', nombre: 'Edificio Portal Estación', comuna: 'Estación Central', tipo: 'conjunto',
     cupos: 10, cuposTomados: 4, ufFinanciadas: 0, cierre: '2027-02-26' },
-  { id: 'altos-recoleta', grupo: { cuotaPromedio: 700000, mesesAhorrando: 3, unidoHaceDias: 8, pagaronMes: 2 }, etapaObra: 1, entregaEstimada: '2027-10-31', nombre: 'Edificio Altos de Recoleta', comuna: 'Recoleta', tipo: 'conjunto',
+  { id: 'altos-recoleta', clienteBci: false, grupo: { cuotaPromedio: 700000, mesesAhorrando: 3, unidoHaceDias: 8, pagaronMes: 2 }, etapaObra: 1, entregaEstimada: '2027-10-31', nombre: 'Edificio Altos de Recoleta', comuna: 'Recoleta', tipo: 'conjunto',
     cupos: 10, cuposTomados: 3, ufFinanciadas: 0, cierre: '2026-12-30' },
-  { id: 'plaza-estacion', nombre: 'Edificio Plaza Estación', comuna: 'Estación Central', tipo: 'financiamiento',
+  { id: 'plaza-estacion', clienteBci: false, nombre: 'Edificio Plaza Estación', comuna: 'Estación Central', tipo: 'financiamiento',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 108, cierre: '2027-02-10' },
-  { id: 'jardin-independencia', nombre: 'Edificio Jardín Independencia', comuna: 'Independencia', tipo: 'financiamiento',
+  { id: 'jardin-independencia', clienteBci: true, nombre: 'Edificio Jardín Independencia', comuna: 'Independencia', tipo: 'financiamiento',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 220.5, cierre: '2027-01-31' },
-  { id: 'barrio-recoleta', nombre: 'Edificio Barrio Recoleta', comuna: 'Recoleta', tipo: 'financiamiento',
+  { id: 'barrio-recoleta', clienteBci: false, nombre: 'Edificio Barrio Recoleta', comuna: 'Recoleta', tipo: 'financiamiento',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 175.5, cierre: '2027-03-15' }
 ];
 

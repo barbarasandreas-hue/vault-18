@@ -1524,3 +1524,45 @@ svg.edificio-base { display: block; width: 100%; height: 26px; border: 0; backgr
 .peldano-nombre { font-size: 13px; }
 @media (max-width: 380px) { .peldano-nombre { font-size: 12px; } }
 @media (max-width: 340px) { .peldano-nombre { font-size: 11px; hyphens: auto; } }
+
+/* ---------- Sprint 15: navegación y confianza ---------- */
+/* Escalera tocable */
+.peldano-enlace { display: flex; flex-direction: column; align-items: stretch; min-height: 44px; color: inherit; text-decoration: none; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; width: 100%; }
+.peldano-enlace.futuro { cursor: default; }
+.peldano-enlace:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; border-radius: 6px; }
+a.peldano-enlace:hover .peldano-nombre { text-decoration: underline; }
+/* Un paso de la compra */
+.paso-de { margin: 8px 0 12px; font-size: 14px; font-weight: 600; color: var(--green-dark); }
+.partes-postula { margin: 0 0 12px; font-size: 14px; color: var(--gray-semidark); }
+/* Lista de departamentos */
+.controles-lista { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
+.controles-lista .btn-sm { margin-left: auto; }
+.controles-lista .btn-sm .icono { margin-right: 4px; }
+.chips-mas-barato { display: flex; flex-wrap: wrap; gap: 8px; }
+.bloque-chico { margin-top: 12px; }
+/* Filas (Perfil, Llega antes) */
+.filas { list-style: none; margin: 0; padding: 0; display: grid; }
+.filas.tarjeta { padding: 4px 0; }
+.filas li + li { border-top: 1px solid var(--gray-light); }
+.fila {
+  display: flex; align-items: center; gap: 14px; width: 100%; min-height: 64px; padding: 12px 16px;
+  background: none; border: 0; font: inherit; color: inherit; text-align: left; text-decoration: none; cursor: pointer;
+}
+div.fila { cursor: default; }
+.fila > span { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.fila small { color: var(--gray-semidark); font-size: 14px; }
+.fila .icono-grande { width: 32px; height: 32px; }
+.fila .flecha-derecha { width: 20px; height: 20px; color: var(--blue-dark); flex: none; }
+.fila:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: -3px; border-radius: 8px; }
+.tarjeta .filas .fila { padding-left: 0; padding-right: 0; }
+/* Caminos: frente al crédito de siempre */
+.contra-base { display: flex; gap: 8px; align-items: flex-start; margin: 4px 0 8px; padding: 8px 10px; border-radius: 10px; background: var(--green-20); color: var(--green-dark); font-weight: 700; font-size: 14px; }
+.contra-base small { display: block; font-weight: 600; font-size: 12px; }
+.contra-base .icono { margin: 2px 0 0; color: var(--green-dark); }
+.contra-base.es-base { background: var(--blue-20); color: var(--blue-dark); }
+.contra-base.es-base .icono { color: var(--blue-dark); }
+.camino-slide .btn + .btn { margin-top: 8px; }
+.lista-razones { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.con-numeros .meta-departamento { margin: 0; padding: 0; border: 0; }
+.sello-bci { background: var(--blue-20); color: var(--blue-dark); }
+.sello-bci .icono, .sello-bci svg { color: var(--blue-dark); }

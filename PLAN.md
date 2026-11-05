@@ -640,10 +640,10 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 14 | S14-F3 Hitos del pie | en progreso |
 | 14 | S14-F4 Gestos en Tu pie | en progreso |
 | 14 | S14-F5 Firmar y recibir las llaves | en progreso |
-| 15 | S15-F1 Mi camino como recorrido único | pendiente |
-| 15 | S15-F2 Escalera tocable | pendiente |
-| 15 | S15-F3 Caminos: lo que sirve, comparado con lo de siempre | pendiente |
-| 15 | S15-F4 Elegir departamento dentro del camino | pendiente |
-| 15 | S15-F5 Departamentos e Inversiones | pendiente |
-| 15 | S15-F6 Perfil en filas y hoja Mis datos | pendiente |
-| 15 | S15-F7 Confianza que solo da el banco | pendiente |
+| 15 | S15-F1 Mi camino como recorrido único | en progreso |
+| 15 | S15-F2 Escalera tocable | en progreso |
+| 15 | S15-F3 Caminos: lo que sirve, comparado con lo de siempre | en progreso |
+| 15 | S15-F4 Elegir departamento dentro del camino | en progreso |
+| 15 | S15-F5 Departamentos e Inversiones | en progreso |
+| 15 | S15-F6 Perfil en filas y hoja Mis datos | en progreso |
+| 15 | S15-F7 Confianza que solo da el banco | en progreso |

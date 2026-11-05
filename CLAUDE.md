@@ -2,7 +2,7 @@
 
 App de Bci para que jóvenes profesionales compren su primer departamento sin tener que juntar el pie completo. Es un prototipo para el Taller de Interacción IV (UDD), desafío Bci Labs. El dinero, los inversionistas y la parte legal son simulados; los cálculos son reales. La app debe ser facil de comprender para el usuario. **Función principal:** te decimos cuándo puedes tener tu primer departamento, por qué camino y qué hacer este mes, y te llevamos hasta ahí. Los proyectos (compra en grupo y pie compartido) son un medio dentro del camino, no la portada.
 
-**Qué ve el usuario al entrar:** Inicio siempre responde "¿cuánto me falta y cuándo llego?", con un número y una acción según su etapa. El plazo se calcula con **el rango de precio que elige la usuaria** (de su piso a su techo), nunca con un departamento genérico. Las pestañas son Inicio (Tu camino), Proyectos (filtrados por su camino), Mi plan (los 5 pasos: Elegir → Postular → Juntar el pie → Firmar → Mi departamento, más sus inversiones) y Perfil.
+**Qué ve el usuario al entrar:** Inicio siempre responde "¿cuánto me falta y cuándo llego?", con un número y una acción según su etapa. El plazo se calcula con **el rango de precio que elige la usuaria** (de su piso a su techo), nunca con un departamento genérico. Las pestañas son **Mi camino** (todo el recorrido de compra: Elegir → Postular → Juntar el pie → Firmar → Mi departamento, cada paso con su dirección), **Departamentos** (explorar sin compromiso), **Inversiones** (invertir en el pie de otros) y **Perfil**. La barra solo cambia cuando se toca; el único cruce (Departamentos → Mi camino) se confirma. Mapa completo: `claude/mapa-navegacion-nov2026.md` en el proyecto.
 
 ## El modelo (v3, 4-nov-2026)
 
@@ -49,6 +49,8 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 - Límite de carga: dividendo ≤ 25% del ingreso líquido familiar, y dividendo + otras cuotas ≤ 30%. Sobre eso, no aprueba.
 - **Tu mes real:** ingreso líquido − arriendo que paga hoy (si sigue arrendando) − otras cuotas − dividendo. Si no cumple el límite de carga, o si queda menos del 40% del ingreso para vivir (supuesto de diseño, a validar en las sesiones), el camino es "Todavía no".
 - Si el comprador vende (¿Y si me arrepiento?): costos de venta de 2 % del precio (supuesto de diseño). Orden de pago: Bci, inversionistas según su parte del valor neto de costos, costos y el resto para el comprador. Siempre sin plusvalía.
+- Hoja de Simulación (Decreto 49, vigente desde el 27-feb-2027): tasa, dividendo con y sin seguros, CAE y costo total. CAE = tasa interna de retorno mensual × 12 de los flujos del crédito: se recibe el crédito menos los gastos de escritura y se pagan 360 dividendos con seguros (supuesto de diseño: todos los gastos de escritura cuentan como gastos del crédito). Costo total = 360 dividendos con seguros + gastos.
+- Caminos: se muestran el recomendado, siempre el crédito de siempre (FOGAES para vivir, 80 % para invertir) y a lo más uno más; los demás, con su razón en "Por qué no te mostramos otros".
 - Sostener: "Este mes no pude" mantiene la racha una vez cada 6 meses. Lo ahorrado nunca se pierde.
 - Departamento de referencia: UF 2.500 de lista. Comunas de los ejemplos: Independencia, Quinta Normal, Recoleta y Estación Central.
 

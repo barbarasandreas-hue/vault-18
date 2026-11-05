@@ -995,6 +995,89 @@ function diasHasta(fechaISO, hoy) {
   return Math.max(0, Math.round((fin - inicio) / 86400000));
 }
 
+// ---------- Sprint 15: navegación y confianza ----------
+
+// S15-F3: el crédito de siempre de cada modo (existe hoy en Bci). Es la vara de comparación.
+function caminoBase(modo) { return modo === 'vivir' ? 'individual-vivir' : 'individual-invertir'; }
+
+// S15-F3: qué caminos se muestran. No todos: el recomendado, siempre el crédito base,
+// y a lo más un camino viable más. Los demás van a "Por qué no te mostramos otros", con su razón.
+// rec: lo que devuelve recomendarCamino(perfil). Las fichas (arriendo con opción, respaldo familiar)
+// no son caminos: son puentes o aceleradores, y no entran en esta lista.
+// Devuelve { base, mostrados: [ids], noMostrados: [{ id, razon }] }.
+var RAZON_NO_MOSTRADO = {
+  'otro-modo-arrendar': 'es para comprar y arrendar.',
+  'otro-modo-vivir': 'es solo para vivir en tu primera vivienda.',
+  'sin-grupo': 'no hay grupos en tu rango.',
+  'no-alcanza': 'con tus números te dejaría muy justo.',
+  'parecido': 'se parece a los que ya te mostramos.'
+};
+function caminosParaMostrar(perfil, rec) {
+  var base = caminoBase(perfil.modo);
+  var lista = perfil.listaUF || LISTA_REFERENCIA_UF;
+  var mostrados = [rec.id];
+  if (base !== rec.id) mostrados.push(base);
+  var noMostrados = [];
+  caminosDelModo(perfil.modo).forEach(function (id) {
+    if (CAMINOS[id].ficha || mostrados.indexOf(id) !== -1) return;
+    var razon = null;
+    if (CAMINOS[id].grupo && !perfil.hayGrupo) razon = 'sin-grupo';
+    else if (!numerosCamino(id, lista, perfil).evaluacion.cumple) razon = 'no-alcanza';
+    else if (mostrados.length >= 3) razon = 'parecido';
+    if (razon) noMostrados.push({ id: id, razon: razon });
+    else mostrados.push(id);
+  });
+  // Lo que es de otro modo se nombra una vez, para que se entienda por qué no está.
+  if (perfil.modo === 'vivir') noMostrados.push({ id: 'pie-compartido', razon: 'otro-modo-arrendar' });
+  else noMostrados.push({ id: 'individual-vivir', razon: 'otro-modo-vivir' });
+  return { base: base, mostrados: mostrados, noMostrados: noMostrados };
+}
+
+// S15-F3: cuánto gana un camino frente al crédito base. n y nBase: lo que devuelve numerosCamino.
+// Devuelve { descuento (fracción del precio), mesesAntes, pieMenos (pesos al escriturar), enCuotas }.
+function diferenciaConBase(id, n, nBase) {
+  var c = CAMINOS[id];
+  var mesesAntes = (typeof n.meses === 'number' && typeof nBase.meses === 'number') ? Math.max(0, nBase.meses - n.meses) : 0;
+  return {
+    descuento: Math.max(0, 1 - n.precioUF / nBase.precioUF),
+    mesesAntes: mesesAntes,
+    pieMenos: Math.max(0, nBase.alEscriturar - n.alEscriturar),
+    enCuotas: !!c.grupo
+  };
+}
+
+// S15-F7: la Hoja de Simulación de un crédito hipotecario (Decreto 49, vigente desde el 27-feb-2027):
+// tasa, dividendo con y sin seguros, CAE y costo total del crédito.
+// CAE: tasa interna de retorno mensual × 12 de los flujos del crédito: recibes el crédito menos los gastos
+// de escritura (tasación, estudio de títulos, notaría, conservador e impuesto), y pagas 360 dividendos con seguros.
+// Supuesto de diseño: todos los gastos de escritura se cuentan como gastos del crédito.
+function simulacionCredito(precioUF, fraccionCredito, tasa) {
+  var t = tasa || SUPUESTOS.tasaBci;
+  var n = SUPUESTOS.mesesBci;
+  var credito = precioUF * fraccionCredito;
+  var cuota = cuotaFija(credito, t, n);
+  var pago = cuota + SUPUESTOS.segurosUF;
+  var gastos = gastosUF(precioUF);
+  var recibe = credito - gastos;
+  // Tasa mensual que iguala lo recibido con los pagos (bisección).
+  var bajo = 0, alto = 0.05;
+  for (var k = 0; k < 100; k++) {
+    var medio = (bajo + alto) / 2;
+    var valor = pago * (1 - Math.pow(1 + medio, -n)) / medio;
+    if (valor > recibe) bajo = medio; else alto = medio;
+  }
+  return {
+    creditoUF: credito,
+    tasa: t,
+    dividendoSinSeguros: ufAPesos(cuota),
+    dividendoConSeguros: ufAPesos(pago),
+    gastos: ufAPesos(gastos),
+    cae: (bajo + alto) / 2 * 12,
+    costoTotal: ufAPesos(pago * n + gastos),
+    meses: n
+  };
+}
+
 var TIPOS_AVISO = ['cuota', 'grupo', 'obra', 'departamento'];
 function avisosDelMes(c) {
   var lista = [];
@@ -1092,6 +1175,11 @@ if (typeof module !== 'undefined') module.exports = {
   mesesParaMeta: mesesParaMeta,
   mesesRestantes: mesesRestantes,
   mesesQueAdelanta: mesesQueAdelanta,
+  caminoBase: caminoBase,
+  caminosParaMostrar: caminosParaMostrar,
+  RAZON_NO_MOSTRADO: RAZON_NO_MOSTRADO,
+  diferenciaConBase: diferenciaConBase,
+  simulacionCredito: simulacionCredito,
   totalGrupo: totalGrupo,
   escalonCruzado: escalonCruzado,
   textoHito: textoHito,

@@ -3,20 +3,10 @@
 
 (function () {
   // Ruta → pantalla que se muestra y botón de la barra que queda activo.
+  // S15-F1: cuatro pestañas. La primera parte de la dirección dice la pestaña; el resto, la pantalla.
   var RUTAS = {
-    'bienvenida': { pantalla: 'intro', seccion: null },
-    'inicio': { pantalla: 'inicio', seccion: 'inicio' },
-    'proyectos': { pantalla: 'proyectos', seccion: 'proyectos' },
-    'proyecto': { pantalla: 'proyecto', seccion: 'proyectos' },
-    'mis-proyectos': { pantalla: 'mis-proyectos', seccion: 'mis-proyectos' },
-    'invertir': { pantalla: 'invertir', seccion: 'proyectos' },
-    'perfil': { pantalla: 'perfil', seccion: 'perfil' },
-    'mes-real': { pantalla: 'caminos', seccion: 'inicio' },
-    'caminos': { pantalla: 'caminos', seccion: 'inicio' },
-    'ficha': { pantalla: 'ficha', seccion: 'inicio' },
-    'registro': { pantalla: 'registro', seccion: 'perfil' },
-    'avisos': { pantalla: 'avisos', seccion: 'inicio' },
-    'regalo': { pantalla: 'regalo', seccion: 'mis-proyectos' }
+    'bienvenida': 'bienvenida', 'camino': 'camino', 'departamentos': 'departamentos',
+    'inversiones': 'inversiones', 'perfil': 'perfil', 'registro': 'perfil', 'regalo': 'camino'
   };
 
   var CLAVE_COMPRA = 'primer-peldano-compra';
@@ -413,6 +403,10 @@
       texto: 'Si Bci no aprueba el crédito final o si la tasación sale menor que el precio, recuperas tus cuotas completas.' },
     'meta-comun': { termino: 'Entre todos llevan', pregunta: '¿Qué es lo que llevan entre todos?',
       texto: 'La suma de lo que cada comprador del grupo lleva en su propia cuenta Bci. No es un fondo común: cada uno tiene la suya.' },
+    'cliente-bci': { termino: 'Inmobiliaria cliente de Bci', pregunta: '¿Qué significa que la inmobiliaria sea cliente de Bci?',
+      texto: 'Bci le presta o le da servicios a esta inmobiliaria. Te lo decimos para que sepas que hay una relación entre ambos; tu crédito se evalúa con las mismas reglas.' },
+    'simulacion': { termino: 'CAE', pregunta: '¿Qué es la CAE?',
+      texto: 'La carga anual equivalente: el costo real del crédito en un año, con intereses, seguros y gastos. Sirve para comparar créditos entre bancos.' },
     'patrimonio': { termino: 'Tu patrimonio', pregunta: '¿Qué es tu patrimonio?',
       texto: 'Lo que vale tu departamento, sin plusvalía, menos lo que aún debes a Bci y la parte de los inversionistas.' },
     'regalo-pie': { termino: 'Regalo para tu pie', pregunta: '¿Cómo funciona el regalo para tu pie?',
@@ -478,7 +472,7 @@
   function iniciarIntro() {
     $('btn-empezar-intro').addEventListener('click', function () {
       marcarIntroVista();
-      location.replace('#inicio');
+      location.replace('#camino');
     });
   }
 
@@ -496,7 +490,7 @@
         etiqueta: ev ? 'Tu carga' : 'Revisa si califican',
         numero: ev ? formatoPorcentaje(ev.cargaTotal, 1) : null,
         detalle: ev ? SEMAFORO[ev.nivel].palabra : 'Escribe tu sueldo para ver tu carga.',
-        accion: 'Seguir postulación'
+        accion: 'Seguir postulando'
       };
     }
     if (paso === 2) {
@@ -553,6 +547,15 @@
     '<circle class="pm-pomo" cx="19" cy="28" r="1.6"/>' +
     '<rect class="pm-maceta" x="23" y="34" width="5" height="6" rx="1"/><circle class="pm-hoja" cx="25.5" cy="31" r="3.5"/>' +
     '</svg>';
+  // S15-F2: adónde lleva cada peldaño. El actual abre su paso; uno hecho, su resumen.
+  function rutaEscalon(n, estadoPaso) {
+    if (n === 1) {
+      if (estado.compra) return '#camino/proyecto/' + encodeURIComponent(estado.compra.proyectoId);
+      return estado.caminoElegido ? '#camino/elegir' : '#camino/caminos';
+    }
+    if (estadoPaso === 'actual' && estado.compra) return '#camino/' + rutaPasoActual();
+    return '#camino/' + ['', '', 'postular/datos', 'pie', 'firmar', 'mi-departamento'][n];
+  }
   function recorridoCamino(paso) {
     // El paso de la compra (1 a 4) corresponde a los peldaños 2 a 5; sin compra (0), el actual es "Elegir".
     var actual = paso + 1;
@@ -562,6 +565,11 @@
       var n = i + 1;
       var estadoPaso = n < actual ? 'hecho' : (n === actual ? 'actual' : 'pendiente');
       var texto = estadoPaso === 'hecho' ? ', listo' : (estadoPaso === 'actual' ? ', estás aquí' : '');
+      var dentro = '<span class="peldano" aria-hidden="true">' + (estadoPaso === 'hecho' ? icono('i-check', 'peldano-check') : '') + '</span>' +
+        '<span class="peldano-nombre">' + nombre + '<span class="oculto-visual">' + texto + '</span></span>';
+      var enlace = estadoPaso === 'pendiente'
+        ? '<button type="button" class="peldano-enlace futuro" aria-disabled="true" data-primero="' + CAMINO[actual - 1].toLowerCase() + '">' + dentro + '</button>'
+        : '<a class="peldano-enlace" href="' + rutaEscalon(n, estadoPaso) + '">' + dentro + '</a>';
       return '<li class="' + estadoPaso + '" style="--n:' + i + '"' + (estadoPaso === 'actual' ? ' aria-current="step"' : '') + '>' +
         (estadoPaso === 'actual'
           ? '<span class="escalera-arriba">' +
@@ -569,8 +577,7 @@
               (n === CAMINO.length ? '<span class="escalera-meta" aria-hidden="true">' + PUERTA_META + '</span>' : '') +
             '</span>'
           : (n === CAMINO.length ? '<span class="escalera-meta" aria-hidden="true">' + PUERTA_META + '</span>' : '')) +
-        '<span class="peldano" aria-hidden="true">' + (estadoPaso === 'hecho' ? icono('i-check', 'peldano-check') : '') + '</span>' +
-        '<span class="peldano-nombre">' + nombre + '<span class="oculto-visual">' + texto + '</span></span>' +
+        enlace +
       '</li>';
     }).join('') + '</ol>';
   }
@@ -624,7 +631,7 @@
         (x.detalle ? '<p class="texto-apoyo">' + x.detalle + '</p>' : '') +
       '</section>' +
       '<div class="accion">' +
-        '<a href="#mis-proyectos" class="btn btn-primario btn-lg btn-bloque">' + x.accion + '</a>' +
+        '<a href="#camino/' + rutaPasoActual() + '" class="btn btn-primario btn-lg btn-bloque">' + x.accion + '</a>' +
       '</div>' +
       recorridoCamino(x.paso) +
       (avisos.length
@@ -653,7 +660,7 @@
           formatoPesos(ufAPesos(cuotaMensualTotalUF(datosCobro(lista)))) + '.</p>' +
       '</section>' +
       '<div class="accion">' +
-        '<a href="#mis-proyectos/inversiones" class="btn btn-primario btn-lg btn-bloque">Ver mis inversiones</a>' +
+        '<a href="#inversiones" class="btn btn-primario btn-lg btn-bloque">Ver mis inversiones</a>' +
       '</div>' +
       '<p class="texto-centro"><button type="button" class="enlace" id="btn-mi-camino">Ver mi camino para comprar</button></p>';
     $('btn-mi-camino').addEventListener('click', function () { estado.preguntasListas = false; estado.pregunta = 1; renderPreguntas(); });
@@ -904,8 +911,10 @@
           '<ul class="datos-inversion">' +
             '<li><span>' + icono('i-alcancia') + 'Juntas al mes</span><strong>' + formatoPesos(estado.ahorroMensual) + '</strong></li>' +
             '<li><span>' + icono('i-banco') + 'Dividendo después</span><strong>' + formatoPesos(numCamino.dividendo) + '</strong></li>' +
+            filaPrestaria() +
           '</ul>' +
-          '<p class="sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
+          '<p class="chip-fila"><span class="sello">' + icono('i-escudo') + 'Calculado sin plusvalía</span> ' +
+            (filaPrestaria() ? '<span class="sello sello-bci">' + icono('i-banco') + 'Preaprobación simulada</span>' : '') + '</p>' +
         '</section>';
     c.innerHTML =
       '<header class="encabezado">' + FIGURAS +
@@ -915,10 +924,10 @@
       '</header>' +
       protagonista +
       '<div class="accion-fija">' + (eligio
-        ? '<a href="#proyectos" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-departamentos">Ver departamentos</a>'
-        : '<a href="#caminos" class="btn btn-primario btn-lg btn-bloque">' + (r.todaviaNo ? 'Ver qué lo cambia' : 'Ver mi camino') + '</a>') +
+        ? '<a href="#camino/elegir" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-departamentos">Elegir departamento</a>'
+        : '<a href="#camino/caminos" class="btn btn-primario btn-lg btn-bloque">' + (r.todaviaNo ? 'Ver qué lo cambia' : 'Elegir mi camino') + '</a>') +
       '</div>' +
-      (eligio ? '<p class="texto-centro"><a href="#caminos" class="enlace">Ver mis caminos</a></p>' : '') +
+      (eligio ? '<p class="texto-centro"><a href="#camino/caminos" class="enlace">Ver mis caminos</a></p>' : '') +
       recorridoCamino(0) +
       lineaInversiones();
     if ($('numero-plazo')) {
@@ -933,23 +942,15 @@
       plazoMostrado = techo;
     }
     if ($('btn-ver-departamentos')) $('btn-ver-departamentos').addEventListener('click', function () { prepararProyectos(estado.caminoElegido); });
-    $('btn-cambiar-datos').addEventListener('click', function () {
-      estado.preguntasListas = false;
-      estado.pregunta = 1;
-      guardarEstado();
-      renderInicio();
-      $('titulo-inicio').focus();
-    });
+    $('btn-cambiar-datos').addEventListener('click', function () { abrirMisDatos($('btn-cambiar-datos')); });
     if ($('btn-cambiar-departamento')) $('btn-cambiar-departamento').addEventListener('click', function () {
-      estado.pregunta = 4;
-      renderPreguntas();
-      $('titulo-inicio').focus();
+      abrirCambiarRango($('btn-cambiar-departamento'));
     });
   }
 
   function lineaInversiones() {
     if (!estado.inversiones.length) return '';
-    return '<a class="linea-inversiones bloque" href="#mis-proyectos/inversiones"><span>Tus inversiones: cobrado a la fecha</span> <strong>' +
+    return '<a class="linea-inversiones bloque" href="#inversiones"><span>Tus inversiones: cobrado a la fecha</span> <strong>' +
       formatoPesos(ufAPesos(cobradoUF(datosCobro(estado.inversiones)))) + '</strong>' +
       '<span class="linea-ver">Ver <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span></a>';
   }
@@ -967,13 +968,13 @@
   }
 
   // ---------- Proyectos: el marketplace ----------
-  function tarjetaProyecto(p) {
+  function tarjetaProyecto(p, base) {
     var r = resumen(p);
     var d = departamentosDe(p.id)[0];
     var numero = p.tipo === 'conjunto'
       ? '<p class="etiqueta">Ahorras al unirte</p><strong class="numero display-4">' + formatoPesos(r.ahorro) + '</strong>'
       : '<p class="etiqueta">Precio del departamento</p><strong class="numero display-4">' + formatoPesos(r.escenario.precio) + '</strong>';
-    return '<li><a class="tarjeta tarjeta-proyecto" href="#proyecto/' + esc(p.id) + '">' +
+    return '<li><a class="tarjeta tarjeta-proyecto" href="' + (base || '#departamentos/') + esc(p.id) + '">' +
       '<h2 class="h4">' + esc(p.nombre) + '</h2>' +
       '<p class="texto-apoyo ficha">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       numero +
@@ -993,132 +994,217 @@
       (m.sinSubsidio ? ' · sin subsidio a la tasa' : '') + '</p>';
   }
 
-  function renderProyectos() {
+  // S15-F4 y S15-F5: la lista de departamentos. En Mi camino ("camino") muestra solo los del camino
+  // elegido y del rango; en Departamentos ("explorar"), por defecto lo mismo, con "Ver todos".
+  var DORMITORIOS = { estudio: 0, '1d': 1 };
+  function proyectosVisibles(ctx) {
     var arrendar = estado.modo === 'arrendar';
-    $('proyectos-primero').hidden = !!estado.caminoElegido || !!estado.compra;
-    $('proyectos-ia').hidden = !arrendar;
-    $('proyectos-modo').textContent = arrendar ? 'Para arrendar' : 'Para vivir: todos';
-
-    document.querySelectorAll('.pestanas [role="tab"]').forEach(function (tab) {
-      var activa = tab.dataset.pestana === estado.pestana;
-      tab.setAttribute('aria-selected', String(activa));
-      tab.tabIndex = activa ? 0 : -1;
+    var lista = PROYECTOS.filter(function (p) {
+      return (arrendar || p.tipo === 'conjunto') && (!arrendar || resumen(p).pasaFiltro);
     });
-    $('panel-proyectos').setAttribute('aria-labelledby', 'tab-' + estado.pestana);
-    $('proyectos-explica').innerHTML = (estado.pestana === 'conjunto'
-      ? 'Compran juntos y pagan hasta 5\u00a0% menos. ' + ayuda('compra-conjunto')
-      : 'Tú pones el 5\u00a0% e inversionistas el 15\u00a0%. ' + ayuda('financiamiento-pie'));
-
-    // Filtro "Me alcanza" (S5-F0): solo si hay sueldos para calcular la capacidad.
-    var cap = capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo);
-    var filtro = $('filtro-alcanza');
-    filtro.hidden = cap === null;
-    var usarAlcanza = estado.meAlcanza && cap !== null;
-    filtro.setAttribute('aria-pressed', String(usarAlcanza));
-    filtro.innerHTML = usarAlcanza
-      ? 'Me alcanza: hasta ' + formatoUF(cap) + ' <span class="quitar" aria-hidden="true">×</span><span class="oculto-visual">. Toca para quitar el filtro.</span>'
-      : 'Ver solo los que me alcanzan';
-
-    // El pie compartido es para comprar para arrendar: en modo vivir esa pestaña queda vacía.
-    var soloArrendar = !arrendar && estado.pestana === 'financiamiento';
-    var delTipo = soloArrendar ? [] : PROYECTOS.filter(function (p) {
-      return p.tipo === estado.pestana && (!arrendar || resumen(p).pasaFiltro);
-    });
-    // S9-F5: Comprar más barato. El tipo filtra por dormitorios; el ajuste cambia el precio de la tarjeta.
-    var DORMITORIOS = { estudio: 0, '1d': 1 };
-    var delTamano = delTipo.filter(function (p) {
-      return estado.masBaratoTipo === null || departamentosDe(p.id)[0].dormitorios === DORMITORIOS[estado.masBaratoTipo];
-    });
+    var soloCamino = ctx === 'camino' || !estado.verTodos;
+    var c = estado.caminoElegido && CAMINOS[estado.caminoElegido];
+    if (soloCamino && c && !c.ficha) {
+      if (c.grupo) lista = lista.filter(function (p) { return p.tipo === 'conjunto'; });
+      else if (c.inversionistas > 0) lista = lista.filter(function (p) { return p.tipo === 'financiamiento'; });
+    }
     var rango = rangoActual();
-    var usarRango = estado.filtroRango && !!rango;
-    var enSuRango = delTamano.filter(function (p) {
-      return !usarRango || enRango(departamentosDe(p.id)[0].listaUF, rango);
-    });
-    var visibles = enSuRango.filter(function (p) {
-      return !usarAlcanza || resumen(p).escenario.precioUF <= cap;
-    });
-    $('filtro-rango').hidden = !rango;
-    $('filtro-rango').setAttribute('aria-pressed', String(usarRango));
-    $('filtro-rango').innerHTML = rango ? (usarRango
-      ? textoRango(rango) + ' <span class="quitar" aria-hidden="true">×</span><span class="oculto-visual">. Toca para quitar el filtro.</span>'
-      : 'Solo ' + textoRango(rango)) : '';
-    document.querySelectorAll('#mas-barato [data-tipo]').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(b.dataset.tipo === estado.masBaratoTipo));
-    });
-    document.querySelectorAll('#mas-barato [data-ajuste]').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(b.dataset.ajuste === estado.masBaratoAjuste));
-    });
-
-    $('lista-proyectos').innerHTML = visibles.map(tarjetaProyecto).join('');
-    $('lista-proyectos').hidden = visibles.length === 0;
-    $('proyectos-explica').hidden = visibles.length === 0;
-    $('proyectos-vacio').hidden = visibles.length > 0;
-
-    // El estado vacío explica la causa y ofrece la salida que corresponde.
-    var porTamano = !soloArrendar && delTipo.length > 0 && delTamano.length === 0;
-    var porRango = !porTamano && usarRango && delTamano.length > 0 && enSuRango.length === 0;
-    var porAlcanza = !porTamano && !porRango && usarAlcanza && enSuRango.length > 0;
-    var nombreTamano = estado.masBaratoTipo === 'estudio' ? 'estudios' : 'departamentos de 1 dormitorio';
-    $('vacio-titulo').textContent = soloArrendar ? 'El pie compartido es para arrendar'
-      : (porTamano ? 'No hay ' + nombreTamano + ' en esta pestaña'
-        : (porRango ? 'Ninguno en tu rango en esta pestaña'
-          : (porAlcanza ? 'Ninguno de este tipo te alcanza hoy' : 'Ningún proyecto rinde 3,9\u00a0% hoy')));
-    $('vacio-texto').textContent = soloArrendar
-      ? 'Los inversionistas recuperan su parte con el arriendo. Para vivir, mira la compra en grupo.'
-      : (porTamano ? 'Prueba la otra pestaña o quita el filtro de tamaño.'
-        : porRango ? 'Prueba la otra pestaña o quita el filtro de precio.'
-        : (porAlcanza
-          ? 'Con sus sueldos pueden comprar hasta ' + formatoUF(cap) + '. Prueba la otra pestaña o quita el filtro.'
-          : 'Para arrendar, la IA solo muestra departamentos cuyo arriendo neto rinde 3,9\u00a0% o más al año, la tasa del crédito.'));
-    $('btn-vacio-accion').textContent = soloArrendar ? 'Cambiar a modo arrendar'
-      : (porTamano ? 'Quitar el filtro de tamaño' : (porRango ? 'Quitar el filtro de precio' : (porAlcanza ? 'Quitar el filtro Me alcanza' : 'Cambiar a modo vivir')));
-    $('btn-vacio-accion').dataset.accion = soloArrendar ? 'arrendar' : (porTamano ? 'tamano' : (porRango ? 'rango' : (porAlcanza ? 'alcanza' : 'vivir')));
+    if (soloCamino && estado.filtroRango && rango) lista = lista.filter(function (p) { return enRango(departamentosDe(p.id)[0].listaUF, rango); });
+    if (estado.masBaratoTipo !== null) lista = lista.filter(function (p) { return departamentosDe(p.id)[0].dormitorios === DORMITORIOS[estado.masBaratoTipo]; });
+    var cap = capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo);
+    if (estado.meAlcanza && cap !== null) lista = lista.filter(function (p) { return resumen(p).escenario.precioUF <= cap; });
+    return lista;
+  }
+  function filtrosActivos() {
+    return (estado.masBaratoTipo ? 1 : 0) + (estado.masBaratoAjuste ? 1 : 0) + (estado.meAlcanza ? 1 : 0);
   }
 
-  function iniciarProyectos() {
-    document.querySelectorAll('.pestanas [role="tab"]').forEach(function (tab) {
-      tab.addEventListener('click', function () {
-        estado.pestana = tab.dataset.pestana;
-        renderProyectos();
+  function renderLista(ctx) {
+    var camino = ctx === 'camino';
+    if (camino && (!estado.preguntasListas || !estado.caminoElegido || CAMINOS[estado.caminoElegido].ficha)) {
+      location.replace(estado.preguntasListas ? '#camino/caminos' : '#camino');
+      return;
+    }
+    var rango = rangoActual();
+    var arrendar = estado.modo === 'arrendar';
+    var visibles = proyectosVisibles(ctx);
+    var soloCamino = camino || !estado.verTodos;
+    var n = filtrosActivos();
+    $('lista-contenido').innerHTML =
+      (camino ? '<a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Mi camino</a>' : '') +
+      '<header class="encabezado">' +
+        '<h1 id="titulo-proyectos" class="h2">' + (camino ? 'Elige tu departamento' : 'Departamentos') + '</h1>' +
+        '<p class="texto-apoyo">' + (camino ? CAMINOS[estado.caminoElegido].nombre : (arrendar ? 'Para arrendar' : 'Para vivir')) + '</p>' +
+      '</header>' +
+      '<div class="controles-lista">' +
+        (rango && soloCamino ? '<button type="button" class="chip chip-filtro" id="filtro-rango" aria-pressed="' + !!estado.filtroRango + '">' + textoRango(rango) +
+          (estado.filtroRango ? ' <span class="quitar" aria-hidden="true">×</span>' : '') + '</button>' : '') +
+        (!camino && estado.caminoElegido ? '<button type="button" class="chip chip-filtro" id="filtro-todos" aria-pressed="' + !estado.verTodos + '">' +
+          (estado.verTodos ? 'Ver solo mi camino' : 'Solo mi camino <span class="quitar" aria-hidden="true">×</span>') + '</button>' : '') +
+        '<button type="button" class="btn btn-terciario btn-sm" id="btn-filtrar" aria-haspopup="dialog">' + icono('i-filtro') + 'Filtrar' + (n ? ' (' + n + ')' : '') + '</button>' +
+      '</div>' +
+      (arrendar ? '<p class="chip chip-ia">' + icono('i-escudo') + 'Filtrado por IA: rinde 3,9' + NBSP + '% o más</p>' : '') +
+      (visibles.length
+        ? '<ul class="lista-proyectos" id="lista-proyectos">' + visibles.map(function (p) { return tarjetaProyecto(p, camino ? '#camino/proyecto/' : '#departamentos/'); }).join('') + '</ul>'
+        : '<div class="vacio"><svg aria-hidden="true"><use href="#i-proyectos"/></svg>' +
+            '<h2 class="h3">Ninguno con estos filtros</h2>' +
+            '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-quitar-filtros">Quitar filtros</button></div></div>');
+    if ($('filtro-rango')) $('filtro-rango').addEventListener('click', function () { estado.filtroRango = !estado.filtroRango; renderLista(ctx); });
+    if ($('filtro-todos')) $('filtro-todos').addEventListener('click', function () { estado.verTodos = !estado.verTodos; renderLista(ctx); });
+    $('btn-filtrar').addEventListener('click', function () { abrirFiltros(ctx, $('btn-filtrar')); });
+    if ($('btn-quitar-filtros')) $('btn-quitar-filtros').addEventListener('click', function () {
+      estado.masBaratoTipo = null; estado.masBaratoAjuste = null; estado.meAlcanza = false; estado.filtroRango = false;
+      if (!camino) estado.verTodos = true;
+      renderLista(ctx);
+    });
+  }
+
+  // Hoja "Filtrar": tamaño, precio (comprar más barato) y "solo los que me alcanzan".
+  function abrirFiltros(ctx, boton) {
+    var cap = capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo);
+    var chip = function (attr, valor, texto, activo) {
+      return '<button type="button" class="chip chip-filtro" ' + attr + '="' + valor + '" aria-pressed="' + activo + '">' + texto + '</button>';
+    };
+    var html =
+      '<p class="etiqueta">Comprar más barato ' + ayuda('mas-barato') + '</p>' +
+      '<div class="chips-mas-barato">' +
+        chip('data-tipo', 'estudio', 'Estudio', estado.masBaratoTipo === 'estudio') +
+        chip('data-tipo', '1d', '1 dormitorio', estado.masBaratoTipo === '1d') +
+        chip('data-ajuste', 'usado', 'Usado', estado.masBaratoAjuste === 'usado') +
+        chip('data-ajuste', 'iva-cero', 'IVA cero', estado.masBaratoAjuste === 'iva-cero') +
+      '</div>' +
+      (cap !== null ? '<button type="button" class="interruptor bloque-chico" role="switch" id="filtro-alcanza" aria-checked="' + !!estado.meAlcanza + '">' +
+        '<span>Solo los que me alcanzan</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' : '') +
+      '<button type="button" class="btn btn-primario btn-bloque bloque-chico" id="btn-ver-filtrados"></button>';
+    abrirHojaContenido('Filtrar', html, boton, function (hoja) {
+      var actualizar = function () {
+        hoja.querySelectorAll('[data-tipo]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.tipo === estado.masBaratoTipo)); });
+        hoja.querySelectorAll('[data-ajuste]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.ajuste === estado.masBaratoAjuste)); });
+        if ($('filtro-alcanza')) $('filtro-alcanza').setAttribute('aria-checked', String(!!estado.meAlcanza));
+        var k = proyectosVisibles(ctx).length;
+        $('btn-ver-filtrados').textContent = k ? 'Ver ' + plural(k, 'departamento', 'departamentos') : 'Ninguno con estos filtros';
+      };
+      hoja.querySelectorAll('[data-tipo]').forEach(function (b) {
+        b.addEventListener('click', function () { estado.masBaratoTipo = estado.masBaratoTipo === b.dataset.tipo ? null : b.dataset.tipo; actualizar(); });
       });
-      // Flechas izquierda/derecha para moverse entre pestañas.
-      tab.addEventListener('keydown', function (ev) {
-        if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
-        estado.pestana = estado.pestana === 'conjunto' ? 'financiamiento' : 'conjunto';
-        renderProyectos();
-        $('tab-' + estado.pestana).focus();
+      hoja.querySelectorAll('[data-ajuste]').forEach(function (b) {
+        b.addEventListener('click', function () { estado.masBaratoAjuste = estado.masBaratoAjuste === b.dataset.ajuste ? null : b.dataset.ajuste; actualizar(); });
+      });
+      if ($('filtro-alcanza')) $('filtro-alcanza').addEventListener('click', function () { estado.meAlcanza = !estado.meAlcanza; actualizar(); });
+      $('btn-ver-filtrados').addEventListener('click', function () { cerrarHoja(false); renderLista(ctx); $('titulo-proyectos').focus(); });
+      actualizar();
+    });
+  }
+
+  // Hoja genérica: sube desde abajo con fondo atenuado; se cierra con Esc, tocando afuera o con "Cerrar".
+  function abrirHojaContenido(titulo, html, boton, alAbrir) {
+    cerrarHoja(false);
+    botonHoja = boton || null;
+    var fondo = document.createElement('div');
+    fondo.id = 'hoja-fondo'; fondo.className = 'hoja-fondo';
+    var hoja = document.createElement('div');
+    hoja.id = 'hoja-inferior'; hoja.className = 'hoja-inferior';
+    hoja.setAttribute('role', 'dialog'); hoja.setAttribute('aria-modal', 'true'); hoja.setAttribute('aria-labelledby', 'hoja-titulo');
+    hoja.innerHTML = '<span class="hoja-asa" aria-hidden="true"></span>' +
+      '<h2 class="h4" id="hoja-titulo">' + titulo + '</h2>' + html +
+      '<button type="button" class="btn btn-terciario btn-bloque bloque-chico" id="btn-cerrar-hoja">Cerrar</button>';
+    document.body.appendChild(fondo);
+    document.body.appendChild(hoja);
+    document.body.classList.add('con-hoja');
+    if (boton) boton.setAttribute('aria-expanded', 'true');
+    fondo.addEventListener('click', function () { cerrarHoja(true); });
+    $('btn-cerrar-hoja').addEventListener('click', function () { cerrarHoja(true); });
+    document.addEventListener('keydown', escHoja);
+    if (alAbrir) alAbrir(hoja);
+    var primero = hoja.querySelector('input, button:not(.btn-ayuda), a');
+    if (primero) primero.focus();
+  }
+
+  // S15-F6: "Mis datos" se edita en una hoja, desde Mi camino, Caminos o Perfil, sin salir de la pantalla.
+  function abrirMisDatos(boton) {
+    var opcion = function (valor, texto) {
+      return '<input type="radio" name="datos-modo" id="datos-' + valor + '" value="' + valor + '"' +
+        (estado.modo === valor ? ' checked' : '') + '><label for="datos-' + valor + '">' + texto + '</label>';
+    };
+    var html = '<form id="form-datos" novalidate>' +
+      '<fieldset class="selector"><legend>¿Para qué quieres el departamento?</legend>' +
+        '<div class="selector-opciones">' + opcion('vivir', 'Para vivir') + opcion('arrendar', 'Para arrendar') + '</div></fieldset>' +
+      campoDinero('datos-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
+      campoDinero('datos-pareja', 'Sueldo líquido de tu pareja', estado.sueldoPareja) +
+      campoDinero('datos-otras', 'Otras cuotas al mes', estado.otrasCuotas) +
+      campoDinero('datos-ahorro', 'Lo que tienes ahorrado', estado.ahorroActual) +
+      campoDinero('datos-mensual', 'Lo que puedes juntar al mes', estado.ahorroMensual) +
+      campoDinero('datos-arriendo', 'Lo que pagas hoy de arriendo', estado.arriendoActual) +
+      '<button type="submit" class="btn btn-primario btn-bloque">Guardar</button>' +
+    '</form>';
+    abrirHojaContenido('Mis datos', html, boton, function () {
+      ['datos-propio', 'datos-pareja', 'datos-otras', 'datos-ahorro', 'datos-mensual', 'datos-arriendo'].forEach(function (id) {
+        $(id).addEventListener('input', function () { formatearCampo($(id)); });
+      });
+      $('form-datos').addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var propio = leerMonto($('datos-propio').value);
+        var pareja = leerMonto($('datos-pareja').value);
+        var okPropio = validarSueldo($('datos-propio'), propio, true);
+        var okPareja = pareja === null || validarSueldo($('datos-pareja'), pareja, false);
+        if (!okPropio || !okPareja) { var malo = !okPropio ? $('datos-propio') : $('datos-pareja'); temblar(malo); malo.focus(); return; }
+        var modo = document.querySelector('input[name="datos-modo"]:checked').value;
+        if (modo !== estado.modo) estado.caminoElegido = null;
+        estado.modo = modo;
+        estado.sueldoPropio = propio;
+        estado.sueldoPareja = pareja;
+        estado.otrasCuotas = leerMonto($('datos-otras').value);
+        estado.ahorroActual = leerMonto($('datos-ahorro').value) || 0;
+        estado.ahorroMensual = leerMonto($('datos-mensual').value) || estado.ahorroMensual;
+        estado.arriendoActual = leerMonto($('datos-arriendo').value);
+        guardarEstado();
+        recalcularPostulacion();
+        cerrarHoja(false);
+        mostrar();
+        toast('Guardado. Todo se recalculó con tus datos.');
       });
     });
-    $('titulo-mas-barato').insertAdjacentHTML('beforeend', ' ' + ayuda('mas-barato'));
-    // S9-F5: los chips de tamaño se excluyen entre sí, y los de precio también.
-    document.querySelectorAll('#mas-barato [data-tipo]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        estado.masBaratoTipo = estado.masBaratoTipo === b.dataset.tipo ? null : b.dataset.tipo;
-        renderProyectos();
+  }
+
+  function abrirCambiarRango(boton) {
+    var html = '<ul class="opciones-departamento">' + RANGOS_PRECIO.map(function (rg) {
+      var n = departamentosEnRango(rg).length;
+      return '<li><button type="button" class="opcion-departamento" aria-pressed="' + (estado.rangoPrecio === rg.id) + '" data-rango="' + rg.id + '"' +
+        (n === 0 ? ' disabled' : '') + '>' + icono('i-casa', 'icono-grande') +
+        '<span class="opcion-texto"><strong>' + textoRango(rg) + '</strong><small>' + (n === 0 ? 'Sin departamentos hoy' : plural(n, 'departamento', 'departamentos')) + '</small></span></button></li>';
+    }).join('') + '</ul>';
+    abrirHojaContenido('¿Cuánto quieres que cueste?', html, boton, function (hoja) {
+      hoja.querySelectorAll('[data-rango]:not([disabled])').forEach(function (b) {
+        b.addEventListener('click', function () { elegirRango(b.dataset.rango); cerrarHoja(false); mostrar(); toast('Rango: ' + textoRango(rangoActual()) + '.'); });
       });
     });
-    document.querySelectorAll('#mas-barato [data-ajuste]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        estado.masBaratoAjuste = estado.masBaratoAjuste === b.dataset.ajuste ? null : b.dataset.ajuste;
-        renderProyectos();
-      });
-    });
-    $('filtro-rango').addEventListener('click', function () {
-      estado.filtroRango = !estado.filtroRango;
-      renderProyectos();
-    });
-    $('filtro-alcanza').addEventListener('click', function () {
-      estado.meAlcanza = !estado.meAlcanza;
-      renderProyectos();
-    });
-    $('btn-vacio-accion').addEventListener('click', function () {
-      var accion = $('btn-vacio-accion').dataset.accion;
-      if (accion === 'alcanza') estado.meAlcanza = false;
-      else if (accion === 'tamano') estado.masBaratoTipo = null;
-      else if (accion === 'rango') estado.filtroRango = false;
-      else { estado.modo = accion === 'arrendar' ? 'arrendar' : 'vivir'; guardarEstado(); }
-      renderProyectos();
-    });
+  }
+
+  // S15-F7: cuánto le prestaría Bci con sus sueldos (la misma regla de carga de la preaprobación).
+  function filaPrestaria() {
+    var pre = preaprobacion(estado.sueldoPropio, estado.sueldoPareja, estado.otrasCuotas);
+    if (!pre || !pre.cumple) return '';
+    return '<li><span>' + icono('i-banco') + 'Bci te podría prestar hasta</span><strong>' + formatoPesos(ufAPesos(pre.creditoUF)) + '</strong></li>';
+  }
+
+  // S15-F5: Inversiones. Arriba lo cobrado y tus inversiones; abajo, las oportunidades de pie compartido.
+  function tarjetaOportunidad(p) {
+    var r = resumen(p);
+    var d = departamentosDe(p.id)[0];
+    return '<li><a class="tarjeta tarjeta-proyecto" href="#inversiones/' + esc(p.id) + '">' +
+      '<h2 class="h4">' + esc(p.nombre) + '</h2>' +
+      '<p class="texto-apoyo ficha">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
+      '<p class="etiqueta">Falta por financiar</p><strong class="numero display-4">' + formatoPesos(ufAPesos(r.faltaUF)) + '</strong>' +
+      '<p class="texto-apoyo">6' + NBSP + '% al año en UF' + SEP + textoPlazo(plazoRecompra(r.porFinanciarUF, r.netoMensualUF, 1)) + '</p>' +
+      casaParticipacion(r) +
+      '<span class="ver">Ver oportunidad <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span>' +
+    '</a></li>';
+  }
+  function renderInversiones() {
+    renderMisInversiones();
+    var lista = PROYECTOS.filter(function (p) { return resumen(p).faltaUF > 0 && !esMiProyecto(p); });
+    $('lista-oportunidades').innerHTML = lista.length ? lista.map(tarjetaOportunidad).join('')
+      : '<li class="vacio"><h3 class="h4">Sin oportunidades abiertas</h3></li>';
   }
 
   // ---------- Detalle de un proyecto ----------
@@ -1135,14 +1221,31 @@
     return partes;
   }
 
-  function renderDetalle(id) {
+  // S15: el detalle muestra solo la acción de la pestaña desde la que se llegó.
+  // ctx: 'camino' (Elegir este departamento), 'departamentos' (Llevar a mi camino) o 'inversiones' (Invertir aquí).
+  var VOLVER_DETALLE = {
+    camino: ['#camino/elegir', 'Elige tu departamento'], departamentos: ['#departamentos', 'Departamentos'], inversiones: ['#inversiones', 'Inversiones']
+  };
+  function caminoParaProyecto(p) {
+    var c = estado.caminoElegido && CAMINOS[estado.caminoElegido];
+    if (p.tipo === 'conjunto') {
+      if (c && c.grupo) return estado.caminoElegido;
+      return estado.modo === 'vivir' ? 'grupo-vivir' : 'grupo-pie-compartido';
+    }
+    if (c && !c.grupo && !c.ficha) return estado.caminoElegido;
+    return 'pie-compartido';
+  }
+  function renderDetalle(id, ctx) {
+    ctx = ctx || 'departamentos';
+    $('detalle-volver').setAttribute('href', VOLVER_DETALLE[ctx][0]);
+    $('detalle-volver').lastChild.textContent = VOLVER_DETALLE[ctx][1];
     var p = buscarProyecto(id);
     var contenedor = $('detalle-proyecto');
     if (!p) {
       contenedor.innerHTML = '<div class="vacio"><svg aria-hidden="true"><use href="#i-proyectos"/></svg>' +
         '<h1 id="titulo-proyecto" class="h3">No encontramos este proyecto</h1>' +
         '<p class="texto-apoyo">Puede que ya se haya cerrado.</p>' +
-        '<div class="acciones"><a href="#proyectos" class="btn btn-primario btn-bloque">Ver proyectos</a></div></div>';
+        '<div class="acciones"><a href="' + VOLVER_DETALLE[ctx][0] + '" class="btn btn-primario btn-bloque">Volver</a></div></div>';
       return;
     }
 
@@ -1171,14 +1274,14 @@
     var comprar;
     if (!conjunto && estado.modo === 'vivir' && !esMiCompra) {
       comprar = '<p class="aviso">El pie compartido es para comprar para arrendar: los inversionistas recuperan su parte con el arriendo.</p>' +
-        '<a href="#perfil" class="btn btn-terciario btn-bloque">Cambiar a modo arrendar en Perfil</a>';
+        '<button type="button" class="btn btn-terciario btn-bloque" id="btn-detalle-datos">Cambiar mis datos</button>';
     } else if (esMiCompra) {
       comprar = '<p class="aviso">Ya te uniste a este proyecto.</p>' +
-        '<a href="#mis-proyectos" class="btn btn-primario btn-lg btn-bloque">Ver mi compra</a>';
+        '<a href="#camino/' + rutaPasoActual() + '" class="btn btn-primario btn-lg btn-bloque">Ver mi compra</a>';
     } else if (invertiste) {
       // El 15 % de un comprador lo financian otras personas: quien ya invirtió aquí no puede comprar aquí.
       comprar = '<p class="aviso">Ya invertiste en este proyecto, así que no puedes comprar aquí: el 15' + NBSP + '% de un comprador lo ponen otras personas.</p>' +
-        '<a href="#mis-proyectos/inversiones" class="btn btn-terciario btn-bloque">Ver mis inversiones</a>';
+        '<a href="#inversiones" class="btn btn-terciario btn-bloque">Ver mis inversiones</a>';
     } else if (estado.compra && estado.compra.paso === 4) {
       comprar = '<p class="aviso">Ya firmaste tu compra en ' + esc(buscarProyecto(estado.compra.proyectoId).nombre) + '.</p>';
     } else if (estado.compra) {
@@ -1186,14 +1289,23 @@
       var reemplaza = (estado.compra.paso || 1) >= 2
         ? '<p class="texto-apoyo">Tu postulación en ' + esc(actual.nombre) + ' se reemplaza: vuelves a postular aquí.</p>'
         : '';
-      comprar = '<p class="aviso">Ya tienes una compra en ' + esc(actual.nombre) + '.</p>' +
-        (r.cuposLibres > 0
-          ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-cambiar-compra">Cambiar mi compra a este proyecto</button>' + reemplaza
-          : '');
+      comprar = '<p class="aviso">Ya estás comprando en ' + esc(actual.nombre) + '.</p>' +
+        (ctx === 'camino' && r.cuposLibres > 0
+          ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-cambiar-compra">Cambiar mi compra a este departamento</button>' + reemplaza
+          : '<a href="#camino" class="btn btn-secundario-dark btn-bloque">Ver mi camino</a>');
     } else if (r.cuposLibres === 0) {
       comprar = '<p class="aviso">Sin cupos disponibles.</p>';
     } else {
-      comprar = '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-comprar">Comprar aquí</button>';
+      comprar = ctx === 'camino'
+        ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-comprar">Elegir este departamento</button>'
+        : (!estado.preguntasListas
+          ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-me-alcanza">¿Me alcanza?</button>'
+          : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-llevar" aria-haspopup="dialog">Llevar a mi camino</button>');
+    }
+    if (ctx === 'inversiones') {
+      comprar = r.faltaUF > 0 && !esMiCompra
+        ? '<a href="#inversiones/' + esc(p.id) + '/invertir" class="btn btn-primario btn-lg btn-bloque">Invertir aquí</a>'
+        : '<p class="texto-apoyo">' + (esMiCompra ? 'En tu propia compra no puedes invertir.' : 'Este proyecto ya reunió su 15' + NBSP + '%.') + '</p>';
     }
 
     contenedor.innerHTML =
@@ -1218,6 +1330,7 @@
           '<li><span>Gastos de escritura</span><strong>' + formatoPesos(e.gastos) + '</strong></li>' +
           '<li><span>Pones al escriturar</span><strong>' + formatoPesos(e.alEscriturar) + '</strong></li>' +
           '<li><span>Sin subsidio a la tasa ' + ayuda('dividendo') + '</span><strong>' + formatoPesos(e.dividendoSinSubsidio) + ' al mes</strong></li>' +
+          '<li><span>Inmobiliaria cliente de Bci ' + ayuda('cliente-bci') + '</span><strong>' + (p.clienteBci ? 'Sí' : 'No') + '</strong></li>' +
         '</ul>' +
       '</div>' +
 
@@ -1227,6 +1340,7 @@
         '<p class="frase-cierre">' + frase + '</p>' +
       '</div>' +
 
+      (ctx !== 'inversiones' ? '' :
       '<section class="tarjeta bloque" aria-labelledby="titulo-para-invertir">' +
         '<h2 class="h5" id="titulo-para-invertir">Para invertir</h2>' +
         '<ul class="datos-inversion">' +
@@ -1237,22 +1351,16 @@
         '</ul>' +
         (conjunto ? casaParticipacion(r) : '') +
         '<p class="frase-cierre">Ganancias y pérdidas, según la parte de cada uno. ' + ayuda('cuenta-custodia') + '</p>' +
-      '</section>' +
+      '</section>') +
 
-      '<div class="acciones">' +
-        comprar +
-        (r.faltaUF > 0 && !esMiCompra
-          ? '<a href="#invertir/' + esc(p.id) + '" class="btn btn-secundario-dark btn-bloque">Invertir aquí</a>'
-          : '<p class="texto-apoyo">' + (esMiCompra ? 'En tu propia compra no puedes invertir.'
-            : 'Este proyecto ya reunió su 15\u00a0%.') + '</p>') +
-      '</div>';
+      '<div class="acciones">' + comprar + '</div>';
 
     var botonComprar = $('btn-comprar');
     if (botonComprar) {
       botonComprar.addEventListener('click', function () {
         conCarga(botonComprar, function () {
           guardarCompra({ proyectoId: p.id, departamentoId: d.id, paso: 1 });
-          location.hash = '#mis-proyectos';
+          location.hash = '#camino/postular/datos';
         });
       });
     }
@@ -1261,17 +1369,41 @@
       botonCambiar.addEventListener('click', function () {
         conCarga(botonCambiar, function () {
           guardarCompra({ proyectoId: p.id, departamentoId: d.id, paso: 1 });
-          location.hash = '#mis-proyectos';
+          location.hash = '#camino/postular/datos';
         });
       });
     }
+    if ($('btn-detalle-datos')) $('btn-detalle-datos').addEventListener('click', function () { abrirMisDatos($('btn-detalle-datos')); });
+    // Sin datos: "¿Me alcanza?" abre las preguntas con este departamento como meta.
+    if ($('btn-me-alcanza')) $('btn-me-alcanza').addEventListener('click', function () {
+      var rg = RANGOS_PRECIO.filter(function (x) { return enRango(d.listaUF, x); })[0];
+      if (rg) estado.rangoPrecio = rg.id;
+      estado.preguntasListas = false;
+      estado.pregunta = 1;
+      guardarEstado();
+      location.hash = '#camino';
+    });
+    // El único cruce entre pestañas: se confirma en una hoja.
+    if ($('btn-llevar')) $('btn-llevar').addEventListener('click', function () {
+      abrirHojaContenido('¿Elegir ' + esc(p.nombre) + ' para tu camino?',
+        '<p class="texto-apoyo">Pasas a postular en Mi camino.</p>' +
+        '<button type="button" class="btn btn-primario btn-bloque" id="btn-llevar-si">Sí, elegir</button>', $('btn-llevar'), function () {
+          $('btn-llevar-si').addEventListener('click', function () {
+            cerrarHoja(false);
+            estado.caminoElegido = caminoParaProyecto(p);
+            guardarEstado();
+            guardarCompra({ proyectoId: p.id, departamentoId: d.id, paso: 1 });
+            location.hash = '#camino/postular/datos';
+          });
+        });
+    });
   }
 
   // ---------- Invertir (S6-F1 y S6-F3) ----------
   function renderInvertir(id) {
     var p = buscarProyecto(id);
     var contenedor = $('invertir-contenido');
-    $('invertir-volver').setAttribute('href', p ? '#proyecto/' + encodeURIComponent(p.id) : '#proyectos');
+    $('invertir-volver').setAttribute('href', p ? '#inversiones/' + encodeURIComponent(p.id) : '#inversiones');
     if (!p) {
       contenedor.innerHTML = '<div class="vacio"><h1 id="titulo-invertir" class="h3">No encontramos este proyecto</h1>' +
         '<div class="acciones"><a href="#proyectos" class="btn btn-primario btn-bloque">Ver proyectos</a></div></div>';
@@ -1378,7 +1510,7 @@
       conCarga($('btn-confirmar'), function () {
         agregarInversion({ id: 'inv-' + Date.now(), proyectoId: p.id, montoUF: invertido, fecha: FECHA_REFERENCIA, cuotasCobradas: 0, respaldo: respaldo });
         toast('Invertiste ' + formatoUF(invertido) + ' en ' + p.nombre + '.');
-        location.hash = '#mis-proyectos/inversiones';
+        location.hash = '#inversiones';
       });
     });
     dibujar();
@@ -1393,8 +1525,7 @@
         '<div class="vacio">' +
           '<svg aria-hidden="true"><use href="#i-pronto"/></svg>' +
           '<h2 class="h3">Aún no tienes inversiones</h2>' +
-          '<p class="texto-apoyo">En cada proyecto puedes elegir "Invertir aquí".</p>' +
-          '<div class="acciones"><a href="#proyectos" class="btn btn-primario btn-bloque">Ver proyectos</a></div>' +
+          '<p class="texto-apoyo">Elige una oportunidad más abajo.</p>' +
         '</div>';
       return;
     }
@@ -1405,7 +1536,7 @@
       var total = pl.superaTope ? SUPUESTOS.topeRecompraMeses : pl.meses;
       var proximo = ufAPesos(cuotaMensualTotalUF([dc]));
       return '<li class="tarjeta inversion">' +
-        '<a class="enlace" href="#proyecto/' + esc(p.id) + '">' + esc(p.nombre) + '</a>' +
+        '<a class="enlace" href="#inversiones/' + esc(p.id) + '">' + esc(p.nombre) + '</a>' +
         (x.respaldo ? '<p class="chip-fila"><span class="chip chip-propuesta">Comprador de respaldo</span></p>' : '') +
         '<p class="inversion-fila"><span>Invertiste</span><strong>' + formatoUF(x.montoUF) + '</strong></p>' +
         '<p class="inversion-fila"><span>Recibes el próximo mes</span><strong>' + formatoPesos(proximo) + '</strong></p>' +
@@ -1420,8 +1551,7 @@
       '</div>' +
       '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-cobrar-mes">Simular un mes</button></div>' +
 
-      '<ul class="lista-inversiones">' + tarjetas + '</ul>' +
-      '<p class="texto-centro"><a class="enlace" href="#proyectos">Invertir en otro proyecto</a></p>';
+      '<ul class="lista-inversiones">' + tarjetas + '</ul>';
     var cobrado = ufAPesos(cobradoUF(datosCobro(lista)));
     contarHasta($('cobrado'), cobradoMostrado, cobrado, formatoPesos);
     cobradoMostrado = cobrado;
@@ -1458,18 +1588,9 @@
       departamentosDe(p.id)[0];
   }
 
+  // S15-F1: un solo indicador de pasos (la escalera de Mi camino). Aquí basta una línea.
   function listaPasos(pasoCompra) {
-    var pasoActual = pasoCompra + 1;
-    return '<ol class="pasos">' + PASOS.map(function (paso, i) {
-      var n = i + 1;
-      var clase = n === pasoActual ? 'actual' : (n < pasoActual ? 'hecho' : '');
-      var marca = n < pasoActual ? '<svg aria-hidden="true"><use href="#i-ok"/></svg>' : n;
-      return '<li' + (clase ? ' class="' + clase + '"' : '') + (n === pasoActual ? ' aria-current="step"' : '') + '>' +
-        '<span class="num" aria-hidden="true">' + marca + '</span>' +
-        '<span>' + paso.titulo +
-        '<span class="oculto-visual">' + (n === pasoActual ? ', paso actual. ' : (n < pasoActual ? ', listo. ' : '. ')) + paso.apoyo + '</span>' +
-        '</span></li>';
-    }).join('') + '</ol>';
+    return '<p class="paso-de">Paso ' + (pasoCompra + 1) + ' de 5' + SEP + CAMINO[pasoCompra] + '</p>';
   }
 
   function campoDinero(id, etiqueta, valor) {
@@ -1641,10 +1762,7 @@
   var PARTES_POSTULA = ['Tus datos', 'Tus documentos', 'Resultado'];
   function partesPostula(actual) {
     var i = PARTES_POSTULA.indexOf(actual);
-    return '<p class="partes-postula" aria-label="Parte ' + (i + 1) + ' de 3: ' + actual + '">' +
-      PARTES_POSTULA.map(function (t, k) {
-        return '<span class="' + (k === i ? 'actual' : (k < i ? 'hecha' : '')) + '" aria-hidden="true">' + t + '</span>';
-      }).join('<span class="sep" aria-hidden="true">›</span>') + '</p>';
+    return '<p class="partes-postula">' + (i + 1) + ' de 3' + SEP + actual + '</p>';
   }
 
   function renderPostula(p, d) {
@@ -2264,8 +2382,8 @@
       guardarEstado();
       if (estado.ahorrado >= meta) {
         guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
-        renderFirma(p, d, true);
-        window.scrollTo(0, 0);
+        llegoAFirma = true;
+        renderMiCompra();
         return;
       }
       var nuevos = hitosAlcanzados(estado.ahorrado, meta).filter(function (h) { return antes.indexOf(h) === -1; });
@@ -2684,7 +2802,7 @@
   // Versión corta para los pasos: nombre del proyecto (enlace) y una cifra, en una fila.
   function tarjetaCompacta(p, etiqueta, pesos) {
     return '<div class="tarjeta compacta">' +
-      '<a class="enlace" href="#proyecto/' + esc(p.id) + '">' + esc(p.nombre) + '</a>' +
+      '<a class="enlace" href="#camino/proyecto/' + esc(p.id) + '">' + esc(p.nombre) + '</a>' +
       '<p class="compacta-cifra"><span>' + etiqueta + '</span><strong>' + formatoPesos(pesos) + '</strong></p>' +
     '</div>';
   }
@@ -2718,7 +2836,8 @@
 
   function salirDeCompra() {
     guardarCompra(null);
-    renderMisProyectos();
+    location.hash = '#camino';
+    toast('Saliste de la compra. Tu ahorro sigue en tu cuenta.');
   }
 
   // En qué paso está la compra, sin guardar nada (lo usan Mi compra e Inicio).
@@ -2737,55 +2856,81 @@
     return estado.ahorroIniciado && estado.ahorrado >= meta ? 3 : 2;
   }
 
+  // S15-F1: cada paso tiene su dirección. Ir al paso actual cambia la dirección (así Atrás vuelve al anterior);
+  // si ya se está en ella, solo se vuelve a dibujar.
+  var NOMBRES_PASO = { postular: 1, pie: 2, firmar: 3, 'mi-departamento': 4 };
+  function rutaPasoActual() {
+    if (!estado.compra) return '';
+    var paso = pasoEfectivo();
+    if (paso === 4) return 'mi-departamento';
+    if (paso === 3) return 'firmar';
+    if (paso === 2) return 'pie';
+    return 'postular/' + subpasoPostula();
+  }
+  var llegoAFirma = false;
   function renderMiCompra() {
+    var destino = '#camino/' + rutaPasoActual();
+    if (location.hash !== destino) { location.hash = destino; return; }
+    renderPasoActual();
+  }
+  function renderPasoActual() {
     var p = buscarProyecto(estado.compra.proyectoId);
     var d = departamentoDeMiCompra(p);
     var paso = pasoEfectivo();
+    $('titulo-paso').textContent = 'Paso ' + (paso + 1) + ' de 5: ' + CAMINO[paso];
     if (paso === 4) renderMiDepartamento(p, d);
-    else if (paso === 3) renderFirma(p, d, estado.compra.paso === 2);
+    else if (paso === 3) { renderFirma(p, d, llegoAFirma || estado.compra.paso === 2); llegoAFirma = false; }
     else if (paso === 2) renderTu5(p, d);
     else renderPostula(p, d);
   }
 
+  // Un paso pedido por su dirección: si es el actual, se muestra; si ya pasó, su resumen; si aún no llega, el actual.
+  var SUBPASOS = ['datos', 'documentos', 'resultado'];
+  function renderPaso(nombre, sub) {
+    if (!estado.compra) { location.replace('#camino'); return; }
+    var pedido = NOMBRES_PASO[nombre];
+    var actual = pasoEfectivo();
+    if (pedido > actual) { location.replace('#camino/' + rutaPasoActual()); return; }
+    if (pedido < actual) return renderResumenPaso(pedido);
+    if (pedido === 1) {
+      var spPedido = SUBPASOS.indexOf(sub);
+      var spActual = SUBPASOS.indexOf(subpasoPostula());
+      if (spPedido === -1 || spPedido > spActual) { location.replace('#camino/' + rutaPasoActual()); return; }
+      if (spPedido < spActual) guardarSubpaso(sub);
+    }
+    renderPasoActual();
+  }
+
+  // Resumen de un paso que ya se hizo (se llega desde la escalera o con Atrás). Solo para leer.
+  function renderResumenPaso(paso) {
+    var p = buscarProyecto(estado.compra.proyectoId);
+    var e = resumen(p).escenario;
+    var filas = '';
+    if (paso === 1) {
+      var pre = preaprobacion(estado.sueldoPropio, estado.sueldoPareja, estado.otrasCuotas);
+      filas = '<li><span>Tu carga</span><strong>' + formatoPorcentaje(estado.compra.carga || 0, 1) + '</strong></li>' +
+        (pre && pre.cumple ? '<li><span>Bci te preaprobó hasta</span><strong>' + formatoPesos(ufAPesos(pre.creditoUF)) + '</strong></li>' : '');
+    } else if (paso === 2) {
+      filas = '<li><span>Juntaste</span><strong>' + formatoPesos(e.alEscriturar) + '</strong></li>';
+    } else if (paso === 3) {
+      filas = '<li><span>Firmaste</span><strong>' + esc(p.nombre) + '</strong></li>';
+    }
+    $('titulo-paso').textContent = CAMINO[paso] + ': listo';
+    $('panel-compra').innerHTML =
+      tarjetaCompacta(p, 'Dividendo al mes', e.totalMes) +
+      '<section class="tarjeta bloque" aria-labelledby="titulo-resumen-paso">' +
+        '<p class="estado-semaforo">' + icono('i-ok') + 'Listo</p>' +
+        '<h2 class="h3" id="titulo-resumen-paso">' + CAMINO[paso] + '</h2>' +
+        '<ul class="datos-inversion">' + filas + '</ul>' +
+      '</section>' +
+      '<div class="acciones"><a class="btn btn-primario btn-bloque" href="#camino/' + rutaPasoActual() + '">Ir a tu paso de hoy</a></div>';
+  }
+
+  // "Mi plan" ya no existe: la compra vive en Mi camino y las inversiones en su pestaña.
   function renderMisProyectos() {
-    var tieneCompra = !!estado.compra;
-    var tieneInversiones = estado.inversiones.length > 0;
-    var tieneAlgo = tieneCompra || tieneInversiones;
-
-    $('mis-vacio').hidden = tieneAlgo;
-    $('mis-contenido').hidden = !tieneAlgo;
-    if (!tieneAlgo) return;
-
-    if (!estado.pestanaMis) estado.pestanaMis = tieneCompra ? 'compra' : 'inversiones';
-    document.querySelectorAll('[data-mis]').forEach(function (tab) {
-      var activa = tab.dataset.mis === estado.pestanaMis;
-      tab.setAttribute('aria-selected', String(activa));
-      tab.tabIndex = activa ? 0 : -1;
-    });
-    $('panel-compra').hidden = estado.pestanaMis !== 'compra';
-    $('panel-inversiones').hidden = estado.pestanaMis !== 'inversiones';
-
-    renderMisInversiones();
-    if (tieneCompra) renderMiCompra();
-    else $('panel-compra').innerHTML = '<div class="vacio"><h2 class="h3">Aún no tienes una compra</h2>' +
-      '<div class="acciones"><a href="#proyectos" class="btn btn-primario btn-bloque">Ver proyectos</a></div></div>';
+    if (estado.compra) renderMiCompra();
+    else location.hash = '#camino';
   }
-
-  function iniciarMisProyectos() {
-    document.querySelectorAll('[data-mis]').forEach(function (tab) {
-      tab.addEventListener('click', function () {
-        estado.pestanaMis = tab.dataset.mis;
-        renderMisProyectos();
-      });
-      tab.addEventListener('keydown', function (ev) {
-        if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
-        estado.pestanaMis = estado.pestanaMis === 'compra' ? 'inversiones' : 'compra';
-        renderMisProyectos();
-        $('tab-' + estado.pestanaMis).focus();
-      });
-    });
-  }
-
   // ---------- Sprint 9: Tu mes real, Tus caminos, Todavía no y fichas ----------
 
   // Registro de la sesión de prueba (S9-F6): lo llena la facilitadora; "Me interesa" y el camino
@@ -2941,7 +3086,40 @@
       '<li><span>Deja tu familiar</span><strong>' + formatoPesos(r.deposito) + '</strong></li></ul>';
   }
 
-  function tarjetaCamino(id, perfil, recomendado, razon, i, total) {
+  // S15-F3: frente al crédito de siempre, en una línea.
+  function lineaContraBase(id, n, base, nBase) {
+    if (id === base) return '<p class="contra-base es-base">' + icono('i-banco') + 'El crédito de siempre</p>';
+    var d = diferenciaConBase(id, n, nBase);
+    var partes = [];
+    if (d.enCuotas) partes.push('Pie en cuotas');
+    if (d.descuento > 0.001) partes.push(formatoPorcentaje(d.descuento, 0) + ' más barato');
+    if (d.mesesAntes > 0) partes.push('llegas ' + plural(d.mesesAntes, 'mes', 'meses') + ' antes');
+    if (d.pieMenos > 0 && d.descuento <= 0.001) partes.push('pones ' + formatoPesos(d.pieMenos) + ' menos');
+    if (!partes.length) return '';
+    return '<p class="contra-base">' + icono('i-sube') + '<span><small>Frente al crédito de siempre</small>' + partes.join(SEP) + '</span></p>';
+  }
+
+  // S15-F7: Hoja de Simulación (tasa, dividendo con y sin seguros, CAE y costo total).
+  function abrirSimulacion(id, boton) {
+    var n = numerosCamino(id, listaMeta(), perfilActual());
+    var c = CAMINOS[id];
+    var s = simulacionCredito(n.precioUF, c.credito);
+    var sin = simulacionCredito(n.precioUF, c.credito, SUPUESTOS.tasaSinSubsidio);
+    abrirHojaContenido('Simulación: ' + c.corto,
+      '<p class="texto-apoyo">Departamento de ' + formatoUF(n.precioUF) + SEP + '30 años</p>' +
+      '<ul class="datos-inversion">' +
+        '<li><span>Crédito Bci</span><strong>' + formatoPesos(ufAPesos(s.creditoUF)) + '</strong></li>' +
+        '<li><span>Tasa, con subsidio</span><strong>' + formatoPorcentaje(s.tasa, 1) + '</strong></li>' +
+        '<li><span>Dividendo sin seguros</span><strong>' + formatoPesos(s.dividendoSinSeguros) + '</strong></li>' +
+        '<li><span>Dividendo con seguros</span><strong>' + formatoPesos(s.dividendoConSeguros) + '</strong></li>' +
+        '<li><span>CAE ' + ayuda('simulacion') + '</span><strong>' + formatoPorcentaje(s.cae, 2) + '</strong></li>' +
+        '<li><span>Costo total del crédito</span><strong>' + formatoPesos(s.costoTotal) + '</strong></li>' +
+        '<li><span>Sin subsidio a la tasa: CAE</span><strong>' + formatoPorcentaje(sin.cae, 2) + '</strong></li>' +
+      '</ul>' +
+      '<p class="sello">' + icono('i-documento') + 'Simulación referencial</p>', boton);
+  }
+
+  function tarjetaCamino(id, perfil, recomendado, razon, i, total, base, nBase) {
     var c = CAMINOS[id];
     var cabeza = '<div class="camino-cabeza"><h3 class="h4">' + c.nombre + '</h3>' + chipExiste(id) + '</div>';
     var atributos = ' class="tarjeta camino-slide' + (recomendado ? ' recomendado' : '') + '" aria-roledescription="diapositiva" aria-label="' +
@@ -2950,7 +3128,7 @@
       return '<li' + atributos + '>' +
         '<div class="ilustracion-ficha" aria-hidden="true">' + ICONOS_FICHA[id].map(function (x) { return icono(x, 'icono-grande'); }).join('') + '</div>' +
         cabeza + resumenFicha(id) +
-        '<a class="btn btn-secundario-dark btn-bloque" href="#ficha/' + id + '">Ver cómo funciona</a></li>';
+        '<a class="btn btn-secundario-dark btn-bloque" href="#camino/ficha/' + id + '">Ver cómo funciona</a></li>';
     }
     var n = numerosCamino(id, listaMeta(), perfil);
     var noConviene = !n.evaluacion.cumple;
@@ -2960,22 +3138,26 @@
       cabeza +
       (recomendado && razon ? '<p class="razon">Porque ' + RAZONES[razon] + '</p>' : '') +
       (noConviene ? '<p class="aviso aviso-alerta aviso-icono">' + icono('i-alerta') + 'Todavía no te conviene.</p>' : '') +
+      (nBase ? lineaContraBase(id, n, base, nBase) : '') +
       '<ul class="datos-inversion">' +
         '<li><span>Al escriturar</span><strong>' + formatoPesos(n.alEscriturar) + '</strong></li>' +
         '<li><span>Dividendo al mes</span><strong>' + formatoPesos(n.dividendo) + '</strong></li>' +
         '<li><span>' + icono('i-calendario') + 'Llegas en</span><strong>' + textoMesesCamino(n) + '</strong></li>' +
+        '<li><span>Carga</span><strong>' + formatoPorcentaje(n.evaluacion.cargaTotal, 0) + '</strong></li>' +
       '</ul>' +
       '<p class="peor-caso"><strong>Peor caso:</strong> ' + peorCaso(id, n) + '.</p>' +
+      '<button type="button" class="btn btn-terciario btn-bloque" data-simular="' + id + '" aria-haspopup="dialog">Ver simulación</button>' +
       '<button type="button" class="btn ' + (recomendado ? 'btn-primario' : 'btn-secundario-dark') + ' btn-bloque" data-elegir="' + id + '">' +
         (estado.caminoElegido === id ? 'Tu camino ✓' : 'Elegir este camino') + '</button>' +
     '</li>';
   }
 
-  function carruselCaminos(ids, perfil, r) {
+  function carruselCaminos(ids, perfil, r, base) {
     var total = ids.length;
+    var nBase = numerosCamino(base, listaMeta(), perfil);
     return '<section class="carrusel" aria-roledescription="carrusel" aria-label="Caminos">' +
       '<ul class="carrusel-pista" id="carrusel-pista" tabindex="0">' +
-        ids.map(function (id, i) { return tarjetaCamino(id, perfil, !r.todaviaNo && i === 0, r.razon, i, total); }).join('') +
+        ids.map(function (id, i) { return tarjetaCamino(id, perfil, !r.todaviaNo && i === 0, r.razon, i, total, base, nBase); }).join('') +
       '</ul>' +
       '<div class="carrusel-control">' +
         '<button type="button" class="carrusel-boton" id="carrusel-anterior" aria-label="Camino anterior">' + icono('i-flecha', 'flecha-izquierda') + '</button>' +
@@ -3083,20 +3265,48 @@
     if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return sinSueldos(cont, 'Tus caminos', 'titulo-caminos');
     var perfil = perfilActual();
     var r = recomendarCamino(perfil);
-    var ids = r.todaviaNo ? caminosDelModo(perfil.modo) : [r.id].concat(r.otros);
+    // S15-F3: no todas las opciones: las que sirven, comparadas con el crédito de siempre.
+    var sel = caminosParaMostrar(perfil, r);
+    var ids = sel.mostrados;
+    var rango = rangoActual();
 
     cont.innerHTML =
-      '<a href="#inicio" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Tu camino</a>' +
+      '<a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Mi camino</a>' +
       '<header class="encabezado">' +
         '<h1 id="titulo-caminos" class="h2">Tus caminos</h1>' +
-        '<p class="texto-apoyo">' + (rangoActual() ? 'Departamentos de ' + textoRango(rangoActual()) : (perfil.modo === 'vivir' ? 'Para vivir' : 'Para arrendar')) + '</p>' +
       '</header>' +
-      (r.todaviaNo ? bloqueTodaviaNo(r, perfil) : '') +
-      carruselCaminos(ids, perfil, r) +
+      '<div class="tarjeta compacta con-numeros"><p class="meta-departamento">' + icono('i-persona') +
+        '<span><strong>Con tus números</strong><small>' + (rango ? textoRango(rango) + SEP : '') +
+          formatoPesos(ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) + ' al mes' + SEP + (perfil.modo === 'vivir' ? 'para vivir' : 'para arrendar') + '</small></span>' +
+        '<button type="button" class="enlace" id="btn-caminos-datos" aria-haspopup="dialog">Cambiar</button></p></div>' +
+      (r.todaviaNo ? bloqueTodaviaNo(r, perfil) +
+        (perfil.modo === 'vivir' ? '<p class="texto-centro"><a class="enlace" href="#camino/ficha/arriendo-opcion">Mientras tanto: arriendo con opción de compra</a></p>' : '') : '') +
+      carruselCaminos(ids, perfil, r, sel.base) +
+      plegable('no-mostrados', 'Por qué no te mostramos otros', plural(sel.noMostrados.length, 'camino', 'caminos'),
+        '<ul class="lista-razones">' + sel.noMostrados.map(function (x) {
+          return '<li><strong>' + CAMINOS[x.id].corto + ':</strong> ' + RAZON_NO_MOSTRADO[x.razon] + '</li>';
+        }).join('') + '</ul>') +
+      '<section class="tarjeta bloque" aria-labelledby="titulo-llega-antes">' +
+        '<h2 class="h4" id="titulo-llega-antes">Llega antes</h2>' +
+        '<ul class="filas">' +
+          '<li><a class="fila" href="#camino/ficha/respaldo-familiar">' + icono('i-grupo', 'icono-grande') +
+            '<span><strong>Respaldo familiar</strong><small>Un familiar deja el 10' + NBSP + '% en Bci y lo recupera</small></span>' +
+            '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>' +
+          '<li><div class="fila">' + icono('i-regalo', 'icono-grande') +
+            '<span><strong>Lista de regalos</strong><small>Tu familia aporta a tu pie en una ocasión especial</small></span></div></li>' +
+          '<li><div class="fila">' + icono('i-casa', 'icono-grande') +
+            '<span><strong>Comprar más barato</strong><small>Estudio, 1 dormitorio, usado o IVA cero, en "Filtrar"</small></span></div></li>' +
+        '</ul>' +
+      '</section>' +
       barraMes(r.numeros) +
       '<p class="sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>';
 
     iniciarCarrusel();
+    iniciarPlegables();
+    $('btn-caminos-datos').addEventListener('click', function () { abrirMisDatos($('btn-caminos-datos')); });
+    cont.querySelectorAll('[data-simular]').forEach(function (b) {
+      b.addEventListener('click', function () { abrirSimulacion(b.dataset.simular, b); });
+    });
     cont.querySelectorAll('[data-elegir]').forEach(function (b) {
       b.addEventListener('click', function () { elegirCamino(b.dataset.elegir); });
     });
@@ -3120,8 +3330,7 @@
     if ($('btn-ver-estudios')) $('btn-ver-estudios').addEventListener('click', function () {
       estado.masBaratoTipo = 'estudio';
       estado.meAlcanza = false;
-      estado.pestana = estado.modo === 'arrendar' ? 'financiamiento' : 'conjunto';
-      location.hash = '#proyectos';
+      location.hash = estado.caminoElegido ? '#camino/elegir' : '#departamentos';
     });
   }
 
@@ -3140,7 +3349,7 @@
     guardarRegistro();
     prepararProyectos(id);
     toast('Elegiste ' + CAMINOS[id].nombre + '.');
-    location.hash = '#proyectos';
+    location.hash = '#camino/elegir';
   }
 
   // ----- Fichas de caminos informativos (S9-F4) -----
@@ -3369,7 +3578,7 @@
 
   function campana() {
     var n = estado.avisosVistos === claveMesAvisos() ? 0 : avisosDelMes(contextoAvisos()).length;
-    return '<a class="campana" href="#avisos" aria-label="Avisos' + (n ? ', ' + n + ' este mes' : '') + '">' + icono('i-campana', 'icono-campana') +
+    return '<a class="campana" href="#camino/avisos" aria-label="Avisos' + (n ? ', ' + n + ' este mes' : '') + '">' + icono('i-campana', 'icono-campana') +
       (n ? '<span class="campana-numero" aria-hidden="true">' + n + '</span>' : '') + '</a>';
   }
 
@@ -3380,7 +3589,7 @@
     estado.avisosVistos = claveMesAvisos();
     guardarEstado();
     $('avisos-contenido').innerHTML =
-      '<a href="#inicio" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Tu camino</a>' +
+      '<a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Mi camino</a>' +
       '<header class="encabezado"><h1 id="titulo-avisos" class="h2">Avisos</h1>' +
         '<p class="texto-apoyo">Este mes, simulados.</p></header>' +
       (avisos.length
@@ -3391,7 +3600,7 @@
                 '<strong>' + a.titulo + '</strong><span>' + a.texto + '</span></span></li>';
           }).join('') + '</ol>'
         : '<div class="vacio">' + icono('i-campana', 'icono-grande') + '<h2 class="h3">Sin avisos este mes</h2></div>') +
-      '<p class="texto-centro"><a class="enlace" href="#perfil">Elegir qué avisos recibir</a></p>';
+      '<p class="texto-centro"><a class="enlace" href="#perfil/avisos">Elegir qué avisos recibir</a></p>';
   }
 
   // S13-F4: tu grupo (lo asegurado hoy y cuántas personas faltan) y tu obra (5 etapas, la actual marcada).
@@ -3590,94 +3799,57 @@
   }
 
   // ---------- Perfil (S3-F5) ----------
-  function renderPerfil() {
-    var opcion = function (valor, texto) {
-      return '<input type="radio" name="perfil-modo" id="perfil-' + valor + '" value="' + valor + '"' +
-        (estado.modo === valor ? ' checked' : '') + '><label for="perfil-' + valor + '">' + texto + '</label>';
-    };
-    $('perfil-contenido').innerHTML =
-      '<form id="form-perfil" novalidate>' +
-        '<fieldset class="selector"><legend>¿Para qué quieres el departamento?</legend>' +
-          '<div class="selector-opciones">' + opcion('arrendar', 'Para arrendar') + opcion('vivir', 'Para vivir') + '</div>' +
-        '</fieldset>' +
-        campoDinero('perfil-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
-        campoDinero('perfil-pareja', 'Sueldo líquido de tu pareja', estado.sueldoPareja) +
-        campoDinero('perfil-arriendo', 'Lo que pagas hoy de arriendo', estado.arriendoActual) +
-        '<div class="acciones">' +
-          '<button type="submit" class="btn btn-primario btn-lg btn-bloque">Guardar cambios</button>' +
-          '<p class="aviso aviso-ok" id="perfil-guardado" aria-live="polite" hidden></p>' +
-        '</div>' +
-      '</form>' +
-      '<section class="tarjeta bloque" aria-labelledby="titulo-avisos-perfil">' +
+  // S15-F6: Perfil en filas cortas. Mis datos se edita en una hoja; avisos y ayuda tienen su pantalla.
+  function renderPerfil(sub) {
+    var c = $('perfil-contenido');
+    var volver = '<a href="#perfil" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Perfil</a>';
+    if (sub === 'avisos') {
+      c.innerHTML = volver + '<section class="tarjeta bloque" aria-labelledby="titulo-avisos-perfil">' +
         '<h2 class="h4" id="titulo-avisos-perfil">Avisos</h2>' +
         '<ul class="interruptores">' + TIPOS_AVISO.map(function (t) {
           return '<li><button type="button" class="interruptor" role="switch" data-aviso="' + t + '" aria-checked="' + !estado.avisosApagados[t] + '">' +
             '<span>' + NOMBRE_AVISO[t] + '</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button></li>';
-        }).join('') + '</ul>' +
-      '</section>' +
-      '<section class="tarjeta bloque" aria-labelledby="titulo-ayuda">' +
-        '<h2 class="h4" id="titulo-ayuda">Ayuda</h2>' +
-        glosarioCompleto() +
-        '<a class="enlace" href="#bienvenida">Ver de nuevo la introducción</a>' +
-      '</section>' +
-      '<section class="tarjeta bloque" aria-labelledby="titulo-reinicio">' +
-        '<h2 class="h4" id="titulo-reinicio">Empezar de nuevo</h2>' +
-        '<p class="texto-apoyo">Borra tus datos de este teléfono.</p>' +
-        '<div class="acciones">' +
-          '<button type="button" class="btn btn-terciario btn-bloque" id="btn-reiniciar" aria-expanded="false" aria-controls="confirmar-reinicio">Empezar de nuevo</button>' +
-          '<div id="confirmar-reinicio" class="confirmar" hidden>' +
-            '<p><strong>¿Seguro?</strong> Esto no se puede deshacer.</p>' +
-            '<button type="button" class="btn btn-peligro btn-bloque" id="btn-reiniciar-si">Sí, borrar todo</button>' +
-            '<button type="button" class="enlace" id="btn-reiniciar-no">Cancelar</button>' +
-          '</div>' +
+        }).join('') + '</ul></section>';
+      document.querySelectorAll('[data-aviso]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var t = b.dataset.aviso;
+          estado.avisosApagados[t] = !estado.avisosApagados[t];
+          if (!estado.avisosApagados[t]) delete estado.avisosApagados[t];
+          b.setAttribute('aria-checked', String(!estado.avisosApagados[t]));
+          guardarEstado();
+        });
+      });
+      return;
+    }
+    if (sub === 'ayuda') {
+      c.innerHTML = volver + '<section class="tarjeta bloque" aria-labelledby="titulo-ayuda"><h2 class="h4" id="titulo-ayuda">Ayuda</h2>' + glosarioCompleto() + '</section>';
+      return;
+    }
+    var activos = TIPOS_AVISO.filter(function (t) { return !estado.avisosApagados[t]; }).length;
+    var ingreso = ingresoTotal(estado.sueldoPropio, estado.sueldoPareja);
+    var fila = function (etiqueta, href, ic, titulo, detalle, id) {
+      var dentro = icono(ic, 'icono-grande') + '<span><strong>' + titulo + '</strong>' + (detalle ? '<small>' + detalle + '</small>' : '') + '</span>' +
+        '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg>';
+      return '<li>' + (etiqueta === 'a' ? '<a class="fila" href="' + href + '">' + dentro + '</a>'
+        : '<button type="button" class="fila" id="' + id + '" aria-haspopup="dialog">' + dentro + '</button>') + '</li>';
+    };
+    c.innerHTML =
+      '<ul class="filas tarjeta">' +
+        fila('b', '', 'i-persona', 'Mis datos', (estado.modo === 'vivir' ? 'Para vivir' : 'Para arrendar') + (ingreso ? SEP + formatoPesos(ingreso) + ' al mes' : ''), 'btn-mis-datos') +
+        fila('a', '#perfil/avisos', 'i-campana', 'Avisos', activos + ' de ' + TIPOS_AVISO.length + ' activos') +
+        fila('a', '#perfil/ayuda', 'i-ayuda', 'Ayuda', 'Qué significa cada término') +
+        fila('a', '#registro', 'i-documento', 'Sesión de prueba', 'Para la facilitadora') +
+        fila('a', '#bienvenida', 'i-casa', 'Ver la introducción', '') +
+      '</ul>' +
+      '<div class="acciones">' +
+        '<button type="button" class="btn btn-terciario btn-bloque" id="btn-reiniciar" aria-expanded="false" aria-controls="confirmar-reinicio">Empezar de nuevo</button>' +
+        '<div id="confirmar-reinicio" class="confirmar" hidden>' +
+          '<p><strong>¿Seguro?</strong> Esto no se puede deshacer.</p>' +
+          '<button type="button" class="btn btn-peligro btn-bloque" id="btn-reiniciar-si">Sí, borrar todo</button>' +
+          '<button type="button" class="enlace" id="btn-reiniciar-no">Cancelar</button>' +
         '</div>' +
-      '</section>' +
-      '<section class="tarjeta bloque" aria-labelledby="titulo-sesion">' +
-        '<h2 class="h4" id="titulo-sesion">Sesión de prueba</h2>' +
-        '<p class="texto-apoyo">Para la facilitadora.</p>' +
-        '<a class="btn btn-secundario-dark btn-bloque" href="#registro">Abrir el registro</a>' +
-      '</section>';
-
-    ['perfil-propio', 'perfil-pareja', 'perfil-arriendo'].forEach(function (id) {
-      $(id).addEventListener('input', function () {
-        formatearCampo($(id));
-        $('perfil-guardado').hidden = true;
-      });
-    });
-
-    $('form-perfil').addEventListener('submit', function (ev) {
-      ev.preventDefault();
-      var propio = leerMonto($('perfil-propio').value);
-      var pareja = leerMonto($('perfil-pareja').value);
-      var arriendo = leerMonto($('perfil-arriendo').value);
-      // Los sueldos pueden quedar vacíos, pero no en $0. El arriendo puede ser $0.
-      var okPropio = validarSueldo($('perfil-propio'), propio, false);
-      var okPareja = validarSueldo($('perfil-pareja'), pareja, false);
-      if ((!okPropio && propio !== null) || (!okPareja && pareja !== null)) {
-        var malo = propio === 0 ? $('perfil-propio') : $('perfil-pareja');
-        temblar(malo);
-        malo.focus();
-        return;
-      }
-      estado.modo = document.querySelector('input[name="perfil-modo"]:checked').value;
-      estado.sueldoPropio = propio;
-      estado.sueldoPareja = pareja;
-      estado.arriendoActual = arriendo;
-      guardarEstado();
-      recalcularPostulacion();
-      $('perfil-guardado').textContent = 'Cambios guardados. Todo se recalculó con tus datos nuevos.';
-      $('perfil-guardado').hidden = false;
-    });
-
-    document.querySelectorAll('[data-aviso]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        var t = b.dataset.aviso;
-        estado.avisosApagados[t] = !estado.avisosApagados[t];
-        if (!estado.avisosApagados[t]) delete estado.avisosApagados[t];
-        b.setAttribute('aria-checked', String(!estado.avisosApagados[t]));
-        guardarEstado();
-      });
-    });
+      '</div>';
+    $('btn-mis-datos').addEventListener('click', function () { abrirMisDatos($('btn-mis-datos')); });
     var confirmar = $('confirmar-reinicio');
     $('btn-reiniciar').addEventListener('click', function () {
       confirmar.hidden = false;
@@ -3691,7 +3863,7 @@
     });
     $('btn-reiniciar-si').addEventListener('click', function () {
       borrarTodo();
-      location.hash = '#inicio';
+      location.hash = '#camino';
     });
   }
 
@@ -3705,12 +3877,71 @@
     else guardarCompra(Object.assign({}, estado.compra, { carga: ev.cargaTotal }));
   }
 
-  // ---------- Navegación ----------
-  // Lee la dirección: "#proyecto/alto-nunoa" → { nombre: 'proyecto', param: 'alto-nunoa' }.
-  function leerRuta() {
-    var partes = location.hash.replace('#', '').split('/');
-    var nombre = RUTAS[partes[0]] ? partes[0] : 'inicio';
-    return { nombre: nombre, param: partes[1] ? decodeURIComponent(partes[1]) : null };
+  // ---------- Navegación (S15-F1) ----------
+  // Las direcciones antiguas se llevan a las nuevas (enlaces guardados, avisos, código anterior).
+  function rutaLegada(hash) {
+    var p = hash.replace('#', '').split('/');
+    switch (p[0]) {
+      case '': case 'inicio': return '#camino';
+      case 'caminos': case 'mes-real': return '#camino/caminos';
+      case 'ficha': return '#camino/ficha/' + (p[1] || '');
+      case 'avisos': return '#camino/avisos';
+      case 'proyectos': return estado.preguntasListas && estado.caminoElegido && !estado.compra ? '#camino/elegir' : '#departamentos';
+      case 'proyecto': return (estado.compra || estado.caminoElegido ? '#camino/proyecto/' : '#departamentos/') + (p[1] || '');
+      case 'invertir': return '#inversiones/' + (p[1] || '') + '/invertir';
+      case 'mis-proyectos': return p[1] === 'inversiones' ? '#inversiones' : (estado.compra ? '#camino/' + rutaPasoActual() : '#camino');
+    }
+    return RUTAS[p[0]] ? null : '#camino';
+  }
+
+  // De la dirección a la pantalla: { pantalla, seccion, dibujar }.
+  function resolverRuta() {
+    var p = location.hash.replace('#', '').split('/').map(function (x) { return decodeURIComponent(x); });
+    var r = function (pantalla, seccion, dibujar) { return { pantalla: pantalla, seccion: seccion, dibujar: dibujar }; };
+    if (p[0] === 'bienvenida') return r('intro', null, function () {});
+    if (p[0] === 'regalo') return r('regalo', null, renderRegaloFamilia);
+    if (p[0] === 'registro') return r('registro', 'perfil', renderRegistro);
+    if (p[0] === 'perfil') return r('perfil', 'perfil', function () { renderPerfil(p[1]); });
+    if (p[0] === 'departamentos') {
+      if (p[1]) return r('proyecto', 'departamentos', function () { renderDetalle(p[1], 'departamentos'); });
+      return r('proyectos', 'departamentos', function () { renderLista('explorar'); });
+    }
+    if (p[0] === 'inversiones') {
+      if (p[1] && p[2] === 'invertir') return r('invertir', 'inversiones', function () { renderInvertir(p[1]); });
+      if (p[1]) return r('proyecto', 'inversiones', function () { renderDetalle(p[1], 'inversiones'); });
+      return r('inversiones', 'inversiones', renderInversiones);
+    }
+    // Mi camino
+    switch (p[1]) {
+      case 'caminos': return r('caminos', 'camino', function () { cambiosActivos = {}; renderCaminos(); });
+      case 'ficha': return r('ficha', 'camino', function () { renderFicha(p[2]); });
+      case 'elegir': return r('proyectos', 'camino', function () { renderLista('camino'); });
+      case 'proyecto': return r('proyecto', 'camino', function () { renderDetalle(p[2], 'camino'); });
+      case 'avisos': return r('avisos', 'camino', renderAvisos);
+      case 'postular': case 'pie': case 'firmar': case 'mi-departamento':
+        return r('mis-proyectos', 'camino', function () { renderPaso(p[1], p[2]); });
+    }
+    return r('inicio', 'camino', renderInicio);
+  }
+
+  // Cada pestaña recuerda dónde quedaste; tocar la pestaña en la que estás vuelve a su raíz.
+  var ultimaRuta = {};
+  var seccionActual = null;
+  function iniciarBarra() {
+    document.querySelectorAll('.barra a').forEach(function (a) {
+      a.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        var s = a.dataset.seccion;
+        var destino = s === seccionActual ? a.getAttribute('href') : (ultimaRuta[s] || a.getAttribute('href'));
+        if (location.hash === destino) mostrar();
+        else location.hash = destino;
+      });
+    });
+    // Un peldaño que todavía no llega dice qué hacer primero.
+    document.addEventListener('click', function (ev) {
+      var b = ev.target.closest('.peldano-enlace.futuro');
+      if (b) toast('Primero: ' + b.dataset.primero + '.');
+    });
   }
 
   // Historial propio de rutas: si la nueva es la anterior, es "Atrás" y se recupera dónde estaba.
@@ -3718,36 +3949,24 @@
   var primeraPantalla = true;
   function mostrar() {
     cerrarHoja(false);
-    var hashNuevo = location.hash || '#inicio';
+    var legado = rutaLegada(location.hash);
+    if (legado) { location.replace(legado); return; }
+    var hashNuevo = location.hash;
+    // S7-F6: la primera vez, antes de Mi camino, se muestra la introducción.
+    if (hashNuevo === '#camino' && !estado.introVista) { location.replace('#bienvenida'); return; }
+    var yAntes = window.scrollY;
+    var destino = resolverRuta();
+    destino.dibujar();
+    // Si la pantalla redirigió mientras se dibujaba, la nueva dirección se encarga.
+    if (location.hash !== hashNuevo) return;
+    document.body.classList.toggle('en-intro', destino.pantalla === 'intro');
+    document.body.classList.toggle('en-familia', destino.pantalla === 'regalo');
     var volviendo = pilaRutas.length > 1 && pilaRutas[pilaRutas.length - 2].hash === hashNuevo;
-    if (pilaRutas.length) pilaRutas[pilaRutas.length - 1].y = window.scrollY;
+    if (pilaRutas.length) pilaRutas[pilaRutas.length - 1].y = yAntes;
     if (volviendo) pilaRutas.pop();
     else if (!pilaRutas.length || pilaRutas[pilaRutas.length - 1].hash !== hashNuevo) pilaRutas.push({ hash: hashNuevo, y: 0 });
     var yVolver = volviendo ? pilaRutas[pilaRutas.length - 1].y : 0;
-    var ruta = leerRuta();
-    // S7-F6: la primera vez, antes de Inicio, se muestra la introducción.
-    if (ruta.nombre === 'inicio' && !estado.introVista) {
-      location.replace('#bienvenida');
-      ruta = leerRuta();
-    }
-    var destino = RUTAS[ruta.nombre];
-    document.body.classList.toggle('en-intro', destino.pantalla === 'intro');
-    document.body.classList.toggle('en-familia', destino.pantalla === 'regalo');
-
-    if (destino.pantalla === 'inicio') renderInicio();
-    if (destino.pantalla === 'proyectos') renderProyectos();
-    if (destino.pantalla === 'proyecto') renderDetalle(ruta.param);
-    if (destino.pantalla === 'mis-proyectos') {
-      estado.pestanaMis = ruta.param === 'inversiones' || ruta.param === 'compra' ? ruta.param : null;
-      renderMisProyectos();
-    }
-    if (destino.pantalla === 'invertir') renderInvertir(ruta.param);
-    if (destino.pantalla === 'perfil') renderPerfil();
-    if (destino.pantalla === 'caminos') { cambiosActivos = {}; renderCaminos(); }
-    if (destino.pantalla === 'ficha') renderFicha(ruta.param);
-    if (destino.pantalla === 'registro') renderRegistro();
-    if (destino.pantalla === 'avisos') renderAvisos();
-    if (destino.pantalla === 'regalo') renderRegaloFamilia();
+    if (destino.seccion) { ultimaRuta[destino.seccion] = hashNuevo; seccionActual = destino.seccion; }
 
     document.querySelectorAll('main > .pantalla').forEach(function (s) {
       s.hidden = s.id !== 'pantalla-' + destino.pantalla;
@@ -3771,12 +3990,10 @@
     visible.classList.remove('entrando');
     void visible.offsetWidth;
     visible.classList.add('entrando');
-    if (ruta.nombre === 'mes-real' && $('tu-mes')) $('tu-mes').scrollIntoView();
   }
 
   window.addEventListener('hashchange', mostrar);
-  iniciarProyectos();
-  iniciarMisProyectos();
+  iniciarBarra();
   iniciarAyudas();
   iniciarIntro();
   estado.introVista = leerIntroVista() || !!estado.compra || estado.inversiones.length > 0;
