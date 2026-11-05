@@ -571,12 +571,6 @@
       [1, 2, 3].map(function (i) { return '<span class="' + (i <= n ? 'lleno' : '') + '"></span>'; }).join('') + '</div>';
   }
 
-  // Plazo del camino recomendado con los datos de hoy (null si falta el ahorro mensual).
-  function plazoActual() {
-    if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return null;
-    return recomendarCamino(perfilActual());
-  }
-
   function textoPlazoMeses(n) { return n === 0 ? 'Ya lo tienes' : textoMeses(n); }
 
   // Las 3 preguntas de la primera vez: para qué, sus ingresos y su ahorro.
@@ -635,50 +629,29 @@
       });
     } else {
       var arrendar = estado.modo === 'arrendar';
-      var valorRango = Math.min(2000000, Math.max(50000, estado.ahorroMensual || 300000));
       c.innerHTML = cabeza('¿Cuánto ahorras?') +
         '<div class="formulario">' +
           campoDinero('q-ahorro', 'Lo que tienes ahorrado', estado.ahorroActual) +
-          '<div class="campo-rango">' +
-            campoDinero('q-mensual', 'Lo que puedes juntar al mes', estado.ahorroMensual) +
-            '<input type="range" id="q-rango" min="50000" max="2000000" step="10000" value="' + valorRango + '" aria-label="Lo que puedes juntar al mes" aria-valuetext="' + formatoPesos(valorRango) + '">' +
-          '</div>' +
+          campoDinero('q-mensual', 'Lo que puedes juntar al mes', estado.ahorroMensual) +
           (arrendar ? campoDinero('q-arriendo', 'Arriendo que pagas hoy', estado.arriendoActual) : '') +
         '</div>' +
-        '<div id="q-vista" class="tarjeta protagonista" aria-live="polite"></div>' +
         '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-camino">Ver mi camino</button></div>' +
         atras;
-      var anterior = null;
-      var vista = function () {
-        var r = plazoActual();
-        var listo = estado.ahorroMensual > 0;
-        $('btn-ver-camino').disabled = !listo;
-        if (!listo || !r) { $('q-vista').innerHTML = '<p class="sin-numero">Mueve el deslizador para ver tu plazo.</p>'; anterior = null; return; }
-        if (r.todaviaNo) {
-          $('q-vista').innerHTML = '<p class="estado-semaforo estado-pronto">' + icono('i-pronto') + 'Todavía no</p>';
-          anterior = null;
+      [['q-ahorro', 'ahorroActual'], ['q-mensual', 'ahorroMensual'], ['q-arriendo', 'arriendoActual']].forEach(function (x) {
+        if (!$(x[0])) return;
+        $(x[0]).addEventListener('input', function () {
+          estado[x[1]] = formatearCampo($(x[0]));
+          guardarEstado();
+          if (x[1] === 'ahorroMensual') validarMonto($('q-mensual'), estado.ahorroMensual, false, '', 'Tiene que ser mayor a $0.');
+        });
+      });
+      $('btn-ver-camino').addEventListener('click', function () {
+        if (!(estado.ahorroMensual > 0)) {
+          validarMonto($('q-mensual'), estado.ahorroMensual, true, 'Escribe cuánto puedes juntar al mes.', 'Tiene que ser mayor a $0.');
+          temblar($('q-mensual'));
+          $('q-mensual').focus();
           return;
         }
-        var meses = r.numeros.meses;
-        $('q-vista').innerHTML = '<p class="etiqueta">Podrías tenerlo en</p><strong class="numero display-2" id="q-meses"></strong>';
-        contarHasta($('q-meses'), anterior, meses, textoPlazoMeses);
-        anterior = meses;
-      };
-      $('q-ahorro').addEventListener('input', function () { estado.ahorroActual = formatearCampo($('q-ahorro')); guardarEstado(); vista(); });
-      $('q-mensual').addEventListener('input', function () {
-        estado.ahorroMensual = formatearCampo($('q-mensual'));
-        if (estado.ahorroMensual) { $('q-rango').value = Math.min(2000000, Math.max(50000, estado.ahorroMensual)); }
-        guardarEstado(); vista();
-      });
-      $('q-rango').addEventListener('input', function () {
-        estado.ahorroMensual = Number($('q-rango').value);
-        $('q-mensual').value = formatoMiles(estado.ahorroMensual);
-        $('q-rango').setAttribute('aria-valuetext', formatoPesos(estado.ahorroMensual));
-        guardarEstado(); vista();
-      });
-      if (arrendar) $('q-arriendo').addEventListener('input', function () { estado.arriendoActual = formatearCampo($('q-arriendo')); guardarEstado(); vista(); });
-      $('btn-ver-camino').addEventListener('click', function () {
-        if (!(estado.ahorroMensual > 0)) { temblar($('q-mensual')); $('q-mensual').focus(); return; }
         estado.preguntasListas = true;
         estado.pregunta = 1;
         guardarEstado();
@@ -686,7 +659,6 @@
         window.scrollTo(0, 0);
         $('titulo-inicio').focus();
       });
-      vista();
     }
     if ($('btn-atras-pregunta')) $('btn-atras-pregunta').addEventListener('click', function () {
       estado.pregunta = n - 1;
@@ -720,7 +692,7 @@
           '<h2 class="h3" id="titulo-plazo">Hoy te dejaría muy justo</h2>' +
         '</section>'
       : '<section class="tarjeta protagonista" aria-labelledby="titulo-plazo">' +
-          '<p class="etiqueta" id="titulo-plazo">Podrías tener tu departamento en</p>' +
+          '<p class="etiqueta" id="titulo-plazo">Podrías tener un departamento de ' + formatoUF(LISTA_REFERENCIA_UF) + ' en</p>' +
           '<strong class="numero display-1" id="numero-plazo"></strong>' +
           '<p class="chip-fila"><span class="chip ' + (eligio ? 'chip-existe' : 'chip-propuesta') + '">' + (eligio ? 'Tu camino' : 'Te recomendamos') + '</span> ' +
             '<strong>' + CAMINOS[idCamino].nombre + '</strong></p>' +

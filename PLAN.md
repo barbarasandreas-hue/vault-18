@@ -345,8 +345,8 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 - **S11-F2 Inicio: las 3 preguntas y Tu camino.**
   - **Preguntas:**
     - La pregunta 1 son dos tarjetas grandes con ícono: llave para "Para arrendar" y casa para "Para vivir".
-    - La pregunta 3 tiene un **deslizador** para lo que puede juntar al mes (de $50.000 a $2.000.000, de a $10.000), junto al campo.
-  - **Número que cuenta:** "N meses" cuenta desde el valor anterior cuando cambia un dato.
+    - La pregunta 3 son solo campos, sin deslizador ni vista previa del plazo: el plazo aparece recién en Tu camino, junto al departamento al que se refiere (cambio pedido por la autora, 4-nov-2026).
+  - **Número que cuenta:** en Tu camino, "Podrías tener un departamento de UF 2.500 en N meses" cuenta desde el valor anterior cuando cambia un dato.
   - **Tu mes real visual:** la lista de sumas y restas pasa a ser una barra del sueldo (100 %) partida en arriendo, otras cuotas, dividendo y "te queda". Tiene una leyenda en filas con ícono y monto, y una marca fija en el 40 % ("mínimo para vivir"). Si "te queda" cae bajo la marca, ese tramo pasa a la zona de alerta con la palabra "Ojo" y el ícono.
   - **Reparto visual:** "¿De dónde sale el precio?" pasa a ser una casa dividida en franjas (Bci, inversionistas y tú), cada una con ícono, % y monto. Las franjas suben escalonadas, a 60 ms una de otra. Reemplaza la barra y la lista de check.
 - **S11-F3 Los caminos y Todavía no.**
