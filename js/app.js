@@ -330,28 +330,17 @@
     return '<div class="edificio' + (destella ? ' destella' : '') + '" role="img" aria-label="' + r.cuposTomados + ' de ' + r.cupos + ' compradores' + (tuyo ? ', uno eres tú' : '') + '">' +
       '<span class="edificio-cielo" aria-hidden="true"><span class="luna"></span><span class="estrella e1"></span><span class="estrella e2"></span><span class="estrella e3"></span></span>' +
       '<svg class="edificio-techo" viewBox="0 0 100 22" preserveAspectRatio="none" aria-hidden="true">' +
-        '<rect class="techo-borde" x="0" y="16" width="100" height="6"/>' +
-        '<path class="techo-baranda" d="M2 10 H98 M14 10 V16 M30 10 V16 M46 10 V16 M62 10 V16 M78 10 V16 M94 10 V16"/>' +
-        '<path class="techo-pergola" d="M6 5 H38 M8 2 H36 M10 5 V16 M22 5 V16 M34 5 V16"/>' +
-        '<rect class="techo-estanque" x="68" y="4" width="24" height="12" rx="1.5"/>' +
-        '<path class="techo-rejilla" d="M74 8 H86 M74 11 H86 M74 14 H86"/>' +
-        '<rect class="techo-macetero" x="42" y="12" width="16" height="4" rx="1"/>' +
-        '<circle class="techo-planta" cx="46" cy="10" r="3.2"/><circle class="techo-planta p2" cx="54" cy="10" r="3.2"/><circle class="techo-planta p3" cx="50" cy="8.5" r="3.6"/>' +
-      '</svg>' +
+        '<rect class="techo-estanque" x="14" y="4" width="18" height="12" rx="2"/><path class="techo-antena" d="M78 16 V2 M74 6 H82"/>' +
+        '<circle class="techo-planta" cx="58" cy="12" r="5"/><rect class="techo-macetero" x="54" y="14" width="8" height="4" rx="1"/>' +
+        '<rect class="techo-borde" x="0" y="17" width="100" height="5"/></svg>' +
       '<ol class="edificio-fachada" aria-hidden="true" style="--cols:' + cols + '">' + ventanas + '</ol>' +
       '<svg class="edificio-base" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true">' +
         '<rect class="base-muro" x="0" y="0" width="100" height="22"/>' +
-        '<rect class="base-puerta" x="28" y="3" width="44" height="19" rx="1.5"/>' +
-        '<path class="base-marco" d="M50 3 V22 M28 9 H72 M39 3 V22 M61 3 V22"/>' +
-        '<rect class="base-toldo" x="24" y="2" width="52" height="2.5" rx="1"/>' +
-        '<path class="base-tirantes" d="M26 0 L28 2 M72 2 L74 0"/>' +
-        '<rect class="base-tronco" x="11" y="14" width="2" height="8" rx="0.5"/>' +
-        '<circle class="base-arbol" cx="12" cy="10" r="6.5"/><circle class="base-arbol a2" cx="10.5" cy="8" r="4.5"/>' +
-        '<rect class="base-tronco" x="87" y="14" width="2" height="8" rx="0.5"/>' +
-        '<circle class="base-arbol" cx="88" cy="10" r="6.5"/><circle class="base-arbol a2" cx="89.5" cy="8" r="4.5"/>' +
-        '<rect class="base-vereda" x="0" y="22" width="100" height="4"/>' +
-        '<line class="base-cordon" x1="0" y1="22" x2="100" y2="22"/>' +
-      '</svg>' +
+        '<path class="base-toldo" d="M36 4 H64 L67 9 H33 Z"/>' +
+        '<rect class="base-puerta" x="40" y="9" width="20" height="13" rx="1"/><path class="base-marco" d="M50 9 V22"/>' +
+        '<circle class="base-arbol" cx="12" cy="14" r="8"/><rect class="base-tronco" x="11" y="18" width="2" height="5"/>' +
+        '<circle class="base-arbol" cx="88" cy="14" r="8"/><rect class="base-tronco" x="87" y="18" width="2" height="5"/>' +
+        '<rect class="base-vereda" x="0" y="22" width="100" height="4"/></svg>' +
     '</div>';
   }
 
@@ -539,39 +528,22 @@
 
   // S14-F1: los 5 pasos como una escalera. La figura está en el peldaño actual y sube cuando avanzas.
   var pasoEscaleraMostrado = null;
-  // Personaje estilizado, con mochila urbana: sube decidido hacia su departamento.
-  var PERSONAJE = '<svg class="personaje" viewBox="0 0 32 48" aria-hidden="true">' +
-    '<ellipse class="p-sombra" cx="16" cy="46" rx="8" ry="1.5"/>' +
-    '<path class="p-pierna-trasera" d="M11 29 L8.5 42"/>' +
-    '<path class="p-zapato-trasero" d="M6 41 h5 a1.5 1.5 0 0 1 1.5 1.5 v1 h-6.5 z"/>' +
-    '<path class="p-pierna-delantera" d="M16 28 L19.5 35 L23.5 40.5"/>' +
-    '<path class="p-zapato-delantero" d="M21.5 39.5 h5.5 a1.5 1.5 0 0 1 1.5 1.5 v1.5 h-7 z"/>' +
-    '<rect class="p-mochila" x="5" y="15" width="7" height="13" rx="3"/>' +
-    '<path class="p-mochila-asa" d="M8 15 v-2.5 c0 -1 2 -1 2 0 v2.5"/>' +
-    '<line class="p-mochila-cremallera" x1="5" y1="22" x2="12" y2="22"/>' +
-    '<path class="p-chaqueta" d="M10 15 c0 -2.5 2.5 -3.5 6.5 -3.5 s6.5 1 6.5 3.5 v12 c0 1.2 -1 2 -2 2 h-9 c-1.2 0 -2 -.8 -2 -2 z"/>' +
-    '<line class="p-chaqueta-cierre" x1="16.5" y1="12" x2="16.5" y2="27"/>' +
-    '<path class="p-brazo" d="M19 17.5 L24 22.5 L22 26"/>' +
-    '<circle class="p-mano" cx="22" cy="26" r="1.5"/>' +
-    '<circle class="p-cara" cx="16.5" cy="8.5" r="5"/>' +
-    '<path class="p-pelo" d="M11.5 8.5 c0 -3.8 2.5 -5.5 5.5 -5.5 c3.8 0 5.2 2.2 5.2 4.8 c-2.5 -.2 -4.8 -1.2 -6.5 -2.8 c-1 1.8 -2.2 3.5 -4.2 3.5 z"/>' +
-    '<circle class="p-ojo" cx="18" cy="8" r="0.7"/>' +
+  // Personaje sin rasgos (estilo plano), con mochila: va subiendo hacia su departamento.
+  var PERSONAJE = '<svg class="personaje" viewBox="0 0 32 48">' +
+    '<rect class="p-mochila" x="5" y="18" width="8" height="12" rx="3"/>' +
+    '<rect class="p-pierna" x="11" y="32" width="4.5" height="12" rx="2"/><rect class="p-pierna" x="17" y="32" width="4.5" height="12" rx="2"/>' +
+    '<path class="p-zapato" d="M10 44 h7 v3 h-8 z M16.5 44 h7 l1 3 h-8 z"/>' +
+    '<path class="p-chaqueta" d="M9 20 a7 7 0 0 1 14 0 v14 h-14 z"/>' +
+    '<path class="p-brazo" d="M22 22 l5 6"/>' +
+    '<circle class="p-cara" cx="16" cy="10" r="6"/>' +
+    '<path class="p-pelo" d="M10 10 a6 6 0 0 1 12 -1 c-3 0 -6 -1 -8 -3 c-1 2 -2 3 -4 4 z"/>' +
     '</svg>';
   // La meta: la puerta de tu departamento, arriba del último peldaño.
-  var PUERTA_META = '<svg class="puerta-meta" viewBox="0 0 30 40" aria-hidden="true">' +
-    '<rect class="pm-base" x="1" y="38" width="28" height="2" rx="1"/>' +
-    '<rect class="pm-muro" x="2" y="2" width="21" height="36" rx="2"/>' +
-    '<rect class="pm-puerta" x="4.5" y="4.5" width="16" height="33.5" rx="1"/>' +
-    '<path class="pm-ranuras" d="M5 12 H20 M5 20 H20 M5 28 H20"/>' +
-    '<circle class="pm-placa" cx="12.5" cy="8.5" r="2.2"/>' +
-    '<circle class="pm-numero" cx="12.5" cy="8.5" r="0.6"/>' +
-    '<line class="pm-pomo" x1="17.5" y1="16" x2="17.5" y2="26"/>' +
-    '<circle class="pm-pomo-soporte" cx="17.5" cy="16" r="0.9"/>' +
-    '<circle class="pm-pomo-soporte" cx="17.5" cy="26" r="0.9"/>' +
-    '<rect class="pm-maceta" x="22.5" y="27" width="6.5" height="11" rx="1.5"/>' +
-    '<circle class="pm-hoja-1" cx="25.5" cy="23" r="3"/>' +
-    '<circle class="pm-hoja-2" cx="27" cy="19" r="2.4"/>' +
-    '<circle class="pm-hoja-3" cx="23.5" cy="19.5" r="2.2"/>' +
+  var PUERTA_META = '<svg class="puerta-meta" viewBox="0 0 30 40">' +
+    '<rect class="pm-muro" x="2" y="4" width="26" height="36" rx="2"/>' +
+    '<path class="pm-puerta" d="M8 40 V14 a7 7 0 0 1 14 0 V40 z"/>' +
+    '<circle class="pm-pomo" cx="19" cy="28" r="1.6"/>' +
+    '<rect class="pm-maceta" x="23" y="34" width="5" height="6" rx="1"/><circle class="pm-hoja" cx="25.5" cy="31" r="3.5"/>' +
     '</svg>';
   function recorridoCamino(paso) {
     // El paso de la compra (1 a 4) corresponde a los peldaños 2 a 5; sin compra (0), el actual es "Elegir".
@@ -2034,8 +2006,8 @@
     var desde = pctAlcanciaMostrado === null ? 0 : pctAlcanciaMostrado;
     pctAlcanciaMostrado = pct;
     var logrados = hitosAlcanzados(ahorrado, meta);
-    // S15: el chanchito de diseño en cerámica se llena de verde Bci desde abajo, a medida que juntas tu pie.
-    var cuerpo = 'M52 24 C32 24 14 36 14 56 C14 76 32 86 56 86 C74 86 86 78 92 68 C95 64 96 52 93 46 C88 34 72 24 52 24 Z';
+    // S15: el chanchito se llena de rosado desde abajo, a medida que juntas tu pie.
+    var cuerpo = 'M14 54 C14 34 32 24 56 24 C76 24 90 33 94 46 C95 50 95 60 94 64 C90 78 76 86 56 86 C32 86 14 76 14 54 Z';
     var hitos = HITOS_AHORRO.map(function (h) {
       var ok = logrados.indexOf(h) !== -1;
       return '<li class="hito-chip' + (ok ? ' logrado' : '') + (hitoNuevo === h ? ' nuevo' : '') + '">' +
@@ -2049,24 +2021,22 @@
       '<svg class="alcancia chanchito' + (salta ? ' salta' : '') + (descansa ? ' descansa' : '') + '" id="alcancia" viewBox="0 0 112 100" role="img" aria-label="Llevas ' + pct + ' % de tu meta">' +
         '<defs><clipPath id="clip-alcancia"><path d="' + cuerpo + '"/></clipPath></defs>' +
         '<ellipse class="chancho-sombra" cx="54" cy="95" rx="38" ry="4"/>' +
-        '<rect class="chancho-pata pata-trasera" x="25" y="74" width="11" height="18" rx="5"/>' +
-        '<rect class="chancho-pata pata-trasera" x="65" y="74" width="11" height="18" rx="5"/>' +
-        '<path class="chancho-cola" d="M14 52 C7 51 4 41 10 40 C16 39 16 48 9 47"/>' +
-        '<path class="chancho-oreja oreja-trasera" d="M68 25 L76 10 L82 28 Z"/>' +
+        '<rect class="chancho-pata" x="26" y="74" width="12" height="19" rx="5"/>' +
+        '<rect class="chancho-pata" x="68" y="74" width="12" height="19" rx="5"/>' +
+        '<path class="chancho-cola" d="M15 50 C6 49 5 40 11 40 C16 40 15 47 9 47"/>' +
+        '<path class="chancho-oreja" d="M70 27 L80 12 L84 31 Z"/>' +
         '<path class="chancho-fondo" d="' + cuerpo + '"/>' +
         '<rect class="alcancia-relleno" x="0" y="24" width="112" height="62" clip-path="url(#clip-alcancia)" style="--desde:' + (desde / 100) + ';transform:scaleY(' + (pct / 100) + ')"/>' +
         '<path class="chancho-borde" d="' + cuerpo + '"/>' +
-        '<path class="chancho-brillo" d="M22 42 C26 34 34 29 44 28"/>' +
-        '<rect class="chancho-pata pata-delantera" x="35" y="77" width="11" height="17" rx="5"/>' +
-        '<rect class="chancho-pata pata-delantera" x="75" y="77" width="11" height="17" rx="5"/>' +
-        '<path class="chancho-oreja oreja-delantera" d="M58 24 L65 8 L72 26 Z"/>' +
-        '<path class="chancho-oreja-interior" d="M63 21 L65 13 L68 22"/>' +
-        '<ellipse class="chancho-hocico" cx="95" cy="56" rx="9" ry="11"/>' +
-        '<ellipse class="chancho-nariz" cx="93.5" cy="53" rx="1.5" ry="2.2"/><ellipse class="chancho-nariz" cx="98.5" cy="53" rx="1.5" ry="2.2"/>' +
-        '<circle class="chancho-ojo" cx="79" cy="45" r="2.8"/><circle cx="80" cy="44" r="0.9" fill="var(--white)"/>' +
-        '<ellipse class="chancho-mejilla" cx="80" cy="58" rx="4.5" ry="3.5"/>' +
-        '<rect class="chancho-ranura" x="38" y="22" width="22" height="5" rx="2.5"/>' +
-        '<rect class="chancho-ranura-boca" x="42" y="23.8" width="14" height="1.4" rx="0.7"/>' +
+        '<path class="chancho-brillo" d="M26 44 C29 37 36 32 44 30"/>' +
+        '<rect class="chancho-pata" x="36" y="76" width="12" height="19" rx="5"/>' +
+        '<rect class="chancho-pata" x="78" y="74" width="12" height="19" rx="5"/>' +
+        '<path class="chancho-oreja" d="M60 26 L68 10 L74 29 Z"/>' +
+        '<ellipse class="chancho-hocico" cx="96" cy="56" rx="9" ry="11"/>' +
+        '<ellipse class="chancho-nariz" cx="94" cy="52" rx="1.6" ry="2.4"/><ellipse class="chancho-nariz" cx="99" cy="52" rx="1.6" ry="2.4"/>' +
+        '<circle class="chancho-ojo" cx="80" cy="45" r="3"/>' +
+        '<circle class="chancho-mejilla" cx="82" cy="60" r="4.5"/>' +
+        '<rect class="chancho-ranura" x="42" y="27" width="22" height="4.5" rx="2.25"/>' +
       '</svg>' +
       '<div class="alcancia-datos">' +
         '<strong class="numero display-3">' + pct + NBSP + '%</strong>' +
