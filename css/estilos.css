@@ -838,15 +838,11 @@ body.en-intro .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
 .documento { background: var(--white); border: 1px solid var(--gray-semilight); border-radius: var(--radio); padding: 12px; }
 .documento.listo { border-color: var(--green-40); }
 .documento-fila { display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center; }
-.documento-icono { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--gray-neutral); display: flex; align-items: center; justify-content: center; }
-.documento.listo .documento-icono { border-color: var(--green-normal); background: var(--green-normal); }
-.documento-icono svg { width: 16px; height: 16px; color: var(--white); }
+.documento-icono { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex: none; }
+.documento-icono .icono { margin: 0; width: 24px; height: 24px; color: var(--gray-semidark); }
 .documento-texto strong { display: block; font-size: 15px; color: var(--gray-dark); }
 .documento-texto small { display: block; font-size: 14px; color: var(--gray-semidark); overflow-wrap: anywhere; }
 .btn-subir { min-width: 44px; min-height: 44px; }
-.hoja-archivos { margin-top: 12px; padding: 12px; border-radius: var(--radio); background: var(--gray-light); }
-.hoja-archivos[hidden] { display: none; }
-.hoja-titulo { margin: 0 0 8px; font-weight: 600; color: var(--gray-dark); font-size: 15px; }
 .archivos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
 .archivo {
   width: 100%; min-height: 44px; display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -862,13 +858,6 @@ body.en-intro .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
 .md-marca { fill: var(--yellow-20); }
 .md-texto { fill: var(--gray-dark); font-size: 6px; font-weight: 700; }
 .md-nombre { fill: var(--gray-dark); font-size: 7px; font-weight: 700; }
-.subiendo { margin: 0 0 8px; color: var(--gray-dark); font-weight: 600; }
-.barra-subida { height: 8px; border-radius: 999px; background: var(--gray-semilight); overflow: hidden; }
-.barra-subida span { display: block; height: 100%; width: 100%; background: var(--green-normal); transform-origin: left; animation: subir 1s linear forwards; }
-@keyframes subir { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@media (prefers-reduced-motion: reduce) {
-  .barra-subida span { animation: none; }
-}
 .lista-numerada { margin: 8px 0 0; padding-left: 22px; color: var(--gray-dark); }
 .lista-numerada li { margin-bottom: 6px; }
 
@@ -1136,3 +1125,87 @@ input[type="range"] { width: 100%; height: 44px; accent-color: var(--green-dark)
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* ---------- Sprint 12: interacción de compra, inversión y cierre ---------- */
+/* Personas del grupo */
+.personas { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.persona-cupo { position: relative; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; animation: aparecer var(--dur-media) var(--ease-resorte) backwards; }
+.persona-cupo svg { width: 22px; height: 22px; }
+.persona-cupo.tomada { background: var(--green-20); color: var(--green-dark); }
+.persona-cupo.tuya { background: var(--green-dark); color: var(--white); box-shadow: 0 0 0 2px var(--white), 0 0 0 4px var(--green-dark); margin: 0 4px; }
+.persona-cupo.libre { color: var(--gray-semidark); border: 1.5px dashed var(--gray-semidark); }
+.tu-etiqueta { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 3px; font-size: 12px; font-weight: 700; color: var(--green-dark); }
+.personas:has(.tuya) { margin-bottom: 18px; }
+@keyframes aparecer { from { opacity: 0; transform: scale(.4); } }
+.avance-texto .icono { width: 18px; height: 18px; margin-right: 4px; }
+/* Casa del 15 % reunido */
+.avance-casa { display: flex; align-items: center; gap: 12px; }
+.avance-casa .avance-texto { flex: 1; margin: 0; }
+.casa-15 { width: 56px; flex: none; }
+.franja-hueco { fill: var(--white); stroke: var(--blue-60); stroke-width: 1; stroke-dasharray: 3 2; }
+.franja-reunida { fill: var(--blue-60); transform-box: fill-box; transform-origin: left; animation: llenarX var(--dur-larga) var(--ease-salida); }
+.casa-15 .casa-fondo { fill: var(--gray-light); }
+/* Medidor de carga */
+.medidor { display: block; width: 100%; max-width: 260px; margin: 4px auto 0; }
+.medidor .zona { fill: none; stroke-width: 18; }
+.zona-holgado { stroke: var(--green-normal); }
+.zona-limite { stroke: var(--yellow-normal); }
+.zona-no { stroke: var(--red-normal); }
+.marca-dividendo { stroke: var(--gray-dark); stroke-width: 3; stroke-linecap: round; }
+.aguja { transform-origin: 100px 100px; transform-box: view-box; animation: girarAguja var(--dur-larga) var(--ease-mover); }
+.aguja line { stroke: var(--gray-dark); stroke-width: 5; stroke-linecap: round; }
+.aguja circle { fill: var(--gray-dark); }
+@keyframes girarAguja { from { transform: rotate(var(--desde, 0deg)); } }
+.medidor-texto { font-size: 11px; fill: var(--gray-semidark); font-family: var(--font); }
+.semaforo .semaforo-fila { justify-content: center; }
+/* Documentos: hoja inferior, archivo que vuela y check */
+.hoja-fondo { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .4); animation: fundido var(--dur-media) var(--ease-salida); }
+@keyframes fundido { from { opacity: 0; } }
+.hoja-inferior {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; max-width: 480px; margin: 0 auto;
+  padding: 10px 20px calc(20px + env(safe-area-inset-bottom)); border-radius: 20px 20px 0 0; background: var(--white);
+  animation: subirHoja var(--dur-media) var(--ease-salida); max-height: 85vh; overflow-y: auto;
+}
+@keyframes subirHoja { from { transform: translateY(100%); } }
+.hoja-asa { display: block; width: 40px; height: 4px; border-radius: 2px; background: var(--gray-semilight); margin: 0 auto 12px; }
+.hoja-inferior .h4 { margin: 0 0 2px; }
+.hoja-inferior .archivos { margin: 12px 0 16px; }
+body.con-hoja { overflow: hidden; }
+.archivo-volando { position: fixed; z-index: 50; pointer-events: none; transition: transform var(--dur-media) var(--ease-mover), opacity var(--dur-media); transform-origin: center; }
+.archivo-volando svg { width: 100%; height: 100%; }
+.documento.subiendo small { color: var(--blue-dark); font-weight: 600; }
+.check-documento { width: 26px; height: 26px; }
+.check-documento circle { fill: var(--green-normal); }
+.check-documento path { fill: none; stroke: var(--white); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.check-documento.dibujar { animation: aparecer var(--dur-corta) var(--ease-resorte); }
+.check-documento.dibujar path { stroke-dasharray: 16; stroke-dashoffset: 16; animation: dibujarCheck var(--dur-corta) var(--ease-salida) 120ms forwards; }
+@keyframes dibujarCheck { to { stroke-dashoffset: 0; } }
+/* Firma: la llave entra */
+.llave-firma { display: inline-flex; vertical-align: middle; margin-right: 8px; animation: aparecer var(--dur-media) var(--ease-resorte); }
+.llave-firma .icono-grande { color: var(--green-dark); width: 36px; height: 36px; }
+/* Casa que se pinta desde el % anterior */
+.casa-pintura { fill: var(--green-normal); transform-box: fill-box; transform-origin: bottom; animation: llenarDesde var(--dur-larga) var(--ease-mover); }
+/* Flujo del arriendo */
+.flujo { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.flujo-fila { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 8px; animation: entrar var(--dur-media) var(--ease-salida) backwards; }
+.flujo-texto { display: flex; align-items: flex-start; gap: 6px; }
+.flujo-texto .icono { margin: 0; flex: none; }
+.flujo-texto small { display: block; font-size: 13px; color: var(--gray-semidark); }
+.flujo-fila > strong { white-space: nowrap; }
+.flujo-barra { grid-column: 1 / -1; height: 10px; border-radius: 5px; background: var(--gray-light); overflow: hidden; }
+.flujo-relleno { display: block; height: 100%; width: 100%; border-radius: 5px; transform-origin: left; animation: llenarX var(--dur-larga) var(--ease-salida); }
+.tono-arriendo { background: var(--blue-dark); }
+.tono-gastos { background: var(--gray-semidark); }
+.tono-inversionistas { background: var(--blue-60); }
+.tono-tu { background: var(--green-normal); }
+.tono-ayuda { background: var(--green-40); }
+.flujo-final > strong, .flujo-final .flujo-texto { color: var(--green-dark); font-weight: 700; }
+.flujo-flecha { display: flex; justify-content: center; color: var(--blue-dark); }
+.flujo-flecha svg { width: 22px; height: 22px; }
+.flujo-aparte { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 12px; border-radius: var(--radio); border: 1.5px dashed var(--gray-semidark); }
+.flujo-aparte small { display: block; font-size: 13px; color: var(--gray-semidark); font-weight: 400; }
+.flujo-aparte-monto { margin-left: auto; white-space: nowrap; }
+.flujo-aparte .icono-grande { width: 32px; height: 32px; }
+/* Invertir: deslizador */
+#monto-rango { margin: 8px 0 0; }
+.ayuda-campo:empty { display: none; }

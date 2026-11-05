@@ -252,11 +252,40 @@
       '<span style="width:' + pct + '%"></span></div></div>';
   }
 
-  function avanceDe(proyecto, r) {
-    if (proyecto.tipo === 'conjunto') {
-      return barraAvance('Cupos tomados', r.cuposTomados + ' de ' + r.cupos, r.avanceCupos);
+  // S12-F1: los cupos como personas (tomadas en color, la tuya con borde y "Tú", las libres en contorno).
+  function personasGrupo(proyecto, r) {
+    var tuyo = cuposExtra(proyecto) > 0;
+    var items = '';
+    for (var i = 0; i < r.cupos; i++) {
+      var tomada = i < r.cuposTomados;
+      var esTuya = tuyo && i === r.cuposTomados - 1;
+      items += '<li class="persona-cupo ' + (esTuya ? 'tuya' : (tomada ? 'tomada' : 'libre')) + '" style="animation-delay:' + (i * 40) + 'ms">' +
+        '<svg aria-hidden="true"><use href="#i-persona"/></svg>' + (esTuya ? '<span class="tu-etiqueta">Tú</span>' : '') + '</li>';
     }
-    return barraAvance('Participación de 15\u00a0% reunida', formatoPorcentaje(r.avanceFinanciamiento, 0), r.avanceFinanciamiento);
+    return '<div class="avance">' +
+      '<p class="avance-texto"><span>' + icono('i-grupo') + '<strong>' + r.cuposTomados + ' de ' + r.cupos + '</strong></span></p>' +
+      '<ol class="personas" role="img" aria-label="' + r.cuposTomados + ' de ' + r.cupos + ' cupos tomados' + (tuyo ? ', uno es tuyo' : '') + '">' + items + '</ol>' +
+    '</div>';
+  }
+
+  // S12-F1: la participación reunida como el 15 % de la casa que se llena.
+  function casaParticipacion(r) {
+    var pct = porcentajeEntero(r.avanceFinanciamiento);
+    var y0 = 80 - 76 * 0.95, alto = 76 * 0.15;
+    return '<div class="avance avance-casa">' +
+      '<svg class="casa-15" viewBox="0 0 100 84" aria-hidden="true">' +
+        '<defs><clipPath id="clip-15-' + (++idCasa) + '"><path d="' + FORMA_CASA + '"/></clipPath></defs>' +
+        '<path class="casa-fondo" d="' + FORMA_CASA + '"/>' +
+        '<rect class="franja-hueco" x="0" y="' + y0.toFixed(1) + '" width="100" height="' + alto.toFixed(1) + '" clip-path="url(#clip-15-' + idCasa + ')"/>' +
+        '<rect class="franja-reunida" x="0" y="' + y0.toFixed(1) + '" width="100" height="' + alto.toFixed(1) + '" clip-path="url(#clip-15-' + idCasa + ')" style="transform:scaleX(' + (pct / 100) + ')"/>' +
+        '<path class="casa-borde" d="' + FORMA_CASA + '"/>' +
+      '</svg>' +
+      '<p class="avance-texto"><span>' + icono('i-inversionistas') + 'Participación de 15\u00a0% reunida</span><strong>' + pct + '\u00a0%</strong></p>' +
+    '</div>';
+  }
+
+  function avanceDe(proyecto, r) {
+    return proyecto.tipo === 'conjunto' ? personasGrupo(proyecto, r) : casaParticipacion(r);
   }
 
   // ---------- S7-F4: explicaciones a un toque ----------
@@ -891,6 +920,13 @@
       '<span class="monto">' + formatoPesos(monto) + '</span></li>';
   }
 
+  function partesEscenario(e) {
+    var partes = [{ clave: 'bci', icono: 'i-banco', nombre: 'Bci', pct: e.pctCredito, monto: e.reparto.bci }];
+    if (e.pctInversionistas > 0) partes.push({ clave: 'inversionistas', icono: 'i-inversionistas', nombre: 'inversionistas', pct: e.pctInversionistas, monto: e.reparto.inversionistas });
+    partes.push({ clave: 'tu', icono: 'i-persona', nombre: 'tú', pct: e.pctUsuario, monto: e.reparto.usuario });
+    return partes;
+  }
+
   function renderDetalle(id) {
     var p = buscarProyecto(id);
     var contenedor = $('detalle-proyecto');
@@ -969,17 +1005,7 @@
 
       '<div class="tarjeta bloque">' +
         '<h2 class="h5">De dónde sale el precio</h2>' +
-        '<ul class="lista-check">' +
-          (e.modo === 'vivir'
-            ? filaReparto('90\u00a0% lo presta Bci', 'Con garantía del Estado (FOGAES)', e.reparto.bci) +
-              filaReparto('10\u00a0% lo pones tú', conjunto ? 'En cuotas mientras se construye' : '', e.reparto.usuario)
-            : (e.pctInversionistas > 0
-              ? filaReparto('80\u00a0% lo presta Bci', 'A 30 años', e.reparto.bci) +
-                filaReparto('15\u00a0% lo ponen inversionistas', 'Sin cuota para ti', e.reparto.inversionistas) +
-                filaReparto('5\u00a0% lo pones tú', '', e.reparto.usuario)
-              : filaReparto('80\u00a0% lo presta Bci', 'A 30 años', e.reparto.bci) +
-                filaReparto('20\u00a0% lo pones tú', conjunto ? 'En cuotas mientras se construye' : '', e.reparto.usuario))) +
-        '</ul>' +
+        repartoCasa(partesEscenario(e)) +
         '<ul class="datos-inversion">' +
           '<li><span>Gastos de escritura</span><strong>' + formatoPesos(e.gastos) + '</strong></li>' +
           '<li><span>Pones al escriturar</span><strong>' + formatoPesos(e.alEscriturar) + '</strong></li>' +
@@ -1001,7 +1027,7 @@
           '<li><span>Tu respaldo</span><strong>Parte del departamento ' + ayuda('participacion') + '</strong></li>' +
           '<li><span>Falta por financiar</span><strong>' + formatoUF(r.faltaUF) + ' = ' + formatoPesos(ufAPesos(r.faltaUF)) + '</strong></li>' +
         '</ul>' +
-        (conjunto ? barraAvance('Participación de 15\u00a0% reunida', formatoPorcentaje(r.avanceFinanciamiento, 0), r.avanceFinanciamiento) : '') +
+        (conjunto ? casaParticipacion(r) : '') +
         '<p class="frase-cierre">Ganancias y pérdidas, según la parte de cada uno. ' + ayuda('cuenta-custodia') + '</p>' +
       '</section>' +
 
@@ -1066,9 +1092,13 @@
         '<label for="monto-uf">¿Cuánto quieres invertir?</label>' +
         '<div class="campo-caja campo-uf"><span class="prefijo" aria-hidden="true">UF</span>' +
         '<input id="monto-uf" type="text" inputmode="decimal" autocomplete="off" aria-describedby="monto-uf-ayuda monto-uf-error"></div>' +
+        (r.faltaUF > INVERSION_MINIMA_UF
+          ? '<input type="range" id="monto-rango" min="' + INVERSION_MINIMA_UF + '" max="' + Math.floor(r.faltaUF) + '" step="1" value="' + INVERSION_MINIMA_UF +
+            '" aria-label="¿Cuánto quieres invertir?" aria-valuetext="' + formatoUF(INVERSION_MINIMA_UF) + '">'
+          : '') +
         '<p class="texto-apoyo ayuda-campo" id="monto-uf-ayuda">' + (r.faltaUF < INVERSION_MINIMA_UF
           ? 'Falta ' + formatoUF(r.faltaUF) + ' para completar el 15' + NBSP + '%: puedes invertir justo eso.'
-          : 'Desde ' + formatoUF(INVERSION_MINIMA_UF) + ' hasta ' + formatoUF(r.faltaUF) + '.') + '</p>' +
+          : '') + '</p>' +
         '<p class="error" id="monto-uf-error" hidden><svg aria-hidden="true"><use href="#i-no"/></svg><span></span></p>' +
       '</div>' +
       '<div id="invertir-resultado" aria-live="polite"></div>' +
@@ -1103,17 +1133,28 @@
       $('invertir-resultado').innerHTML =
         '<div class="tarjeta protagonista">' +
           '<p class="etiqueta">Recibirás el primer mes</p>' +
-          '<strong class="numero display-2">' + formatoPesos(ufAPesos(primero)) + '</strong>' +
+          '<strong class="numero display-2" id="primer-mes"></strong>' +
           '<p class="texto-apoyo">Recuperas ' + formatoUF(monto) + ' (' + formatoPesos(ufAPesos(monto)) + ') más 6\u00a0% al año en UF' +
             (pl.superaTope ? ' a más tardar en 84 meses, con refinanciamiento o venta.' : ' en ≈ ' + textoMeses(pl.meses) + '.') + '</p>' +
         '</div>';
+      contarHasta($('primer-mes'), primerMostrado, ufAPesos(primero), formatoPesos);
+      primerMostrado = ufAPesos(primero);
     };
 
     var habia = false;
+    var primerMostrado = null;
+    if ($('monto-rango')) $('monto-rango').addEventListener('input', function () {
+      monto = Number($('monto-rango').value);
+      $('monto-uf').value = String(monto);
+      $('monto-rango').setAttribute('aria-valuetext', formatoUF(monto));
+      tocado = true;
+      dibujar();
+    });
     $('monto-uf').addEventListener('input', function () {
       var input = $('monto-uf');
       input.value = limpiarCampoUF(input.value);
       monto = leerMontoUF(input.value);
+      if ($('monto-rango') && monto) $('monto-rango').value = Math.min(Number($('monto-rango').max), Math.max(INVERSION_MINIMA_UF, monto));
       dibujar();
       var hay = !validarInversion(monto, r.faltaUF);
       if (hay && !habia) $('invertir-resultado').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -1123,7 +1164,7 @@
     $('btn-confirmar').addEventListener('click', function () {
       tocado = true;
       dibujar();
-      if ($('btn-confirmar').disabled) { $('monto-uf').focus(); return; }
+      if ($('btn-confirmar').disabled) { temblar($('monto-uf')); $('monto-uf').focus(); return; }
       var invertido = monto;
       var respaldo = $('respaldo').checked;
       conCarga($('btn-confirmar'), function () {
@@ -1136,6 +1177,7 @@
   }
 
   // ---------- Mis inversiones (S6-F4) ----------
+  var cobradoMostrado = null;
   function renderMisInversiones() {
     var lista = estado.inversiones;
     if (!lista.length) {
@@ -1166,14 +1208,15 @@
     $('panel-inversiones').innerHTML =
       '<div class="tarjeta protagonista">' +
         '<p class="etiqueta">Cobrado a la fecha</p>' +
-        '<strong class="numero display-3">' + formatoPesos(ufAPesos(cobradoUF(datosCobro(lista)))) + '</strong>' +
-        '<p class="texto-apoyo">' + plural(lista.length, 'inversión', 'inversiones') + SEP + 'el próximo mes recibes ' +
-          formatoPesos(ufAPesos(cuotaMensualTotalUF(datosCobro(lista)))) + '.</p>' +
+        '<strong class="numero display-3" id="cobrado"></strong>' +
       '</div>' +
       '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-cobrar-mes">Simular un mes</button></div>' +
 
       '<ul class="lista-inversiones">' + tarjetas + '</ul>' +
       '<p class="texto-centro"><a class="enlace" href="#proyectos">Invertir en otro proyecto</a></p>';
+    var cobrado = ufAPesos(cobradoUF(datosCobro(lista)));
+    contarHasta($('cobrado'), cobradoMostrado, cobrado, formatoPesos);
+    cobradoMostrado = cobrado;
 
     $('btn-cobrar-mes').addEventListener('click', function () {
       estado.inversiones = estado.inversiones.map(function (x) {
@@ -1297,6 +1340,33 @@
 
   // Recalcula la carga con lo que hay en los campos. No toca los campos (para no perder el foco).
   // Devuelve true si se pudo calcular.
+  // S12-F2: medidor de carga. Semicírculo de 0 a 40 % con zonas (hasta 25 %, de 25 a 30 % y sobre 30 %),
+  // una aguja que gira desde el valor anterior y, con cuotas, una marca para el dividendo solo.
+  var agujaMostrada = null;
+  function puntoArco(v, radio) {
+    var a = Math.PI * (1 - Math.min(Math.max(v, 0), 0.4) / 0.4);
+    return [(100 + radio * Math.cos(a)).toFixed(1), (100 - radio * Math.sin(a)).toFixed(1)];
+  }
+  function arco(v0, v1, clase) {
+    var a = puntoArco(v0, 80), b = puntoArco(v1, 80);
+    return '<path class="zona ' + clase + '" d="M' + a[0] + ' ' + a[1] + ' A80 80 0 0 1 ' + b[0] + ' ' + b[1] + '"/>';
+  }
+  function medidorCarga(valor, marca) {
+    var grados = 180 * Math.min(Math.max(valor, 0), 0.4) / 0.4;
+    var desde = agujaMostrada === null ? 0 : agujaMostrada;
+    agujaMostrada = grados;
+    var m = marca === null ? '' : (function () {
+      var a = puntoArco(marca, 92), b = puntoArco(marca, 68);
+      return '<line class="marca-dividendo" x1="' + a[0] + '" y1="' + a[1] + '" x2="' + b[0] + '" y2="' + b[1] + '"/>';
+    })();
+    return '<svg class="medidor" viewBox="0 0 200 112" aria-hidden="true">' +
+      arco(0, 0.25, 'zona-holgado') + arco(0.25, 0.30, 'zona-limite') + arco(0.30, 0.40, 'zona-no') + m +
+      '<g class="aguja" style="--desde:' + desde + 'deg;transform:rotate(' + grados.toFixed(1) + 'deg)">' +
+        '<line x1="100" y1="100" x2="34" y2="100"/><circle cx="100" cy="100" r="7"/></g>' +
+      '<text x="20" y="111" class="medidor-texto">0</text><text x="172" y="111" class="medidor-texto">40 %</text>' +
+    '</svg>';
+  }
+
   function renderCarga(p, mostrarVacios) {
     var total = resumen(p).escenario.totalMes;
     var okPropio = validarSueldo($('sueldo-propio'), estado.sueldoPropio, mostrarVacios.propio);
@@ -1321,13 +1391,12 @@
     var html =
       '<div class="tarjeta semaforo semaforo-' + ev.nivel + '">' +
         '<p class="etiqueta">Tu carga ' + ayuda('carga') + '</p>' +
+        medidorCarga(hayCuotas ? ev.cargaTotal : ev.cargaDividendo, hayCuotas ? ev.cargaDividendo : null) +
         '<div class="semaforo-fila">' +
           '<strong class="numero display-2">' + formatoPorcentaje(hayCuotas ? ev.cargaTotal : ev.cargaDividendo, 1) + '</strong>' +
           '<p class="estado-semaforo"><svg aria-hidden="true"><use href="#' + s.icono + '"/></svg>' + s.palabra + '</p>' +
         '</div>' +
-        '<p class="texto-apoyo">' + (hayCuotas
-          ? 'Dividendo ' + formatoPorcentaje(ev.cargaDividendo, 1) + ' · con cuotas ' + formatoPorcentaje(ev.cargaTotal, 1) + '. '
-          : '') + s.explica + '</p>' +
+        (hayCuotas ? '<p class="texto-apoyo">Dividendo solo: ' + formatoPorcentaje(ev.cargaDividendo, 1) + '</p>' : '') +
       '</div>' +
       (sug ? sug.html : '');
     // Solo se vuelve a dibujar si algo cambió: así, al salir de un campo, nada se mueve bajo el dedo
@@ -1425,7 +1494,7 @@
     $('btn-postular').addEventListener('click', function () {
       tocados = { propio: true, pareja: true };
       renderCarga(p, tocados);
-      if ($('btn-postular').disabled) return;
+      if ($('btn-postular').disabled) { if (!(estado.sueldoPropio > 0)) temblar($('sueldo-propio')); return; }
       var k = evaluarCarga(e.totalMes, estado.otrasCuotas, estado.sueldoPropio, estado.sueldoPareja).cargaTotal;
       conCarga($('btn-postular'), function () {
         guardarCompra(Object.assign({}, estado.compra, { subpaso: 'documentos', carga: k }));
@@ -1490,13 +1559,12 @@
         var archivo = docs[x.id];
         return '<li class="documento' + (archivo ? ' listo' : '') + '" id="doc-' + x.id + '">' +
           '<div class="documento-fila">' +
-            '<span class="documento-icono" aria-hidden="true">' + (archivo ? '<svg><use href="#i-ok"/></svg>' : '') + '</span>' +
+            '<span class="documento-icono" aria-hidden="true">' + (archivo ? checkDibujado(docRecien === x.id) : icono('i-documento')) + '</span>' +
             '<span class="documento-texto"><strong>' + x.nombre + '</strong><small>' +
               (archivo ? 'Listo: ' + esc(archivo) : x.para) + '</small></span>' +
-            '<button type="button" class="btn btn-terciario btn-sm btn-subir" data-doc="' + x.id + '" aria-expanded="false" aria-controls="hoja-' + x.id + '">' +
+            '<button type="button" class="btn btn-terciario btn-sm btn-subir" data-doc="' + x.id + '" aria-haspopup="dialog" aria-expanded="false">' +
               (archivo ? 'Cambiar' : 'Subir') + '<span class="oculto-visual"> ' + x.nombre + '</span></button>' +
           '</div>' +
-          '<div class="hoja-archivos" id="hoja-' + x.id + '" hidden></div>' +
         '</li>';
       }).join('') + '</ul>';
     }
@@ -1551,43 +1619,103 @@
     }
   }
 
-  // Hoja con los archivos de ejemplo de un documento.
+  // S12-F3: el check se dibuja en el documento que se acaba de subir.
+  var docRecien = null;
+  function checkDibujado(animar) {
+    return '<svg class="check-documento' + (animar ? ' dibujar' : '') + '" viewBox="0 0 24 24">' +
+      '<circle cx="12" cy="12" r="9.5"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>';
+  }
+
+  // S12-F3: el archivo elegido vuela desde la hoja hasta la fila de su documento.
+  function volar(svg, origen, destino) {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var el = document.createElement('div');
+    el.className = 'archivo-volando';
+    el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = svg;
+    el.style.left = origen.left + 'px'; el.style.top = origen.top + 'px';
+    el.style.width = origen.width + 'px'; el.style.height = origen.height + 'px';
+    document.body.appendChild(el);
+    var dx = destino.left + destino.width / 2 - (origen.left + origen.width / 2);
+    var dy = destino.top + destino.height / 2 - (origen.top + origen.height / 2);
+    var k = destino.width / origen.width;
+    requestAnimationFrame(function () {
+      el.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + k + ')';
+      el.style.opacity = '0.3';
+    });
+    setTimeout(function () { el.remove(); }, 450);
+  }
+
+  // S12-F3: hoja inferior. Sube desde abajo con fondo atenuado; se cierra con Esc, tocando afuera o con "Cerrar".
+  var botonHoja = null;
+  function escHoja(ev) { if (ev.key === 'Escape') cerrarHoja(true); }
+  function cerrarHoja(devolverFoco) {
+    var h = $('hoja-inferior'), f = $('hoja-fondo');
+    if (h) h.remove();
+    if (f) f.remove();
+    document.removeEventListener('keydown', escHoja);
+    document.body.classList.remove('con-hoja');
+    if (botonHoja) {
+      botonHoja.setAttribute('aria-expanded', 'false');
+      if (devolverFoco && document.body.contains(botonHoja)) botonHoja.focus();
+    }
+  }
   function abrirHoja(p, boton) {
     var id = boton.dataset.doc;
     var x = DOCUMENTOS.filter(function (k) { return k.id === id; })[0];
-    var hoja = $('hoja-' + id);
-    var abierta = boton.getAttribute('aria-expanded') === 'true';
-    document.querySelectorAll('.hoja-archivos').forEach(function (h) { h.hidden = true; h.innerHTML = ''; });
-    document.querySelectorAll('.btn-subir').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
-    if (abierta) return;
-    hoja.innerHTML = '<p class="hoja-titulo">Elige un archivo de ejemplo</p>' +
+    cerrarHoja(false);
+    botonHoja = boton;
+    var fondo = document.createElement('div');
+    fondo.id = 'hoja-fondo'; fondo.className = 'hoja-fondo';
+    var hoja = document.createElement('div');
+    hoja.id = 'hoja-inferior'; hoja.className = 'hoja-inferior';
+    hoja.setAttribute('role', 'dialog'); hoja.setAttribute('aria-modal', 'true'); hoja.setAttribute('aria-labelledby', 'hoja-titulo');
+    hoja.innerHTML = '<span class="hoja-asa" aria-hidden="true"></span>' +
+      '<h2 class="h4" id="hoja-titulo">' + x.nombre + '</h2>' +
+      '<p class="texto-apoyo">Elige un archivo de ejemplo</p>' +
       '<ul class="archivos">' + x.archivos.map(function (nombre) {
         return '<li><button type="button" class="archivo" data-archivo="' + esc(nombre) + '">' + miniaturaDoc(nombre, x.corto) +
           '<span class="archivo-nombre">' + esc(nombre) + '</span></button></li>';
-      }).join('') + '</ul>';
-    hoja.hidden = false;
+      }).join('') + '</ul>' +
+      '<button type="button" class="btn btn-terciario btn-bloque" id="btn-cerrar-hoja">Cerrar</button>';
+    document.body.appendChild(fondo);
+    document.body.appendChild(hoja);
+    document.body.classList.add('con-hoja');
     boton.setAttribute('aria-expanded', 'true');
+    fondo.addEventListener('click', function () { cerrarHoja(true); });
+    $('btn-cerrar-hoja').addEventListener('click', function () { cerrarHoja(true); });
+    document.addEventListener('keydown', escHoja);
     hoja.querySelector('.archivo').focus();
     hoja.querySelectorAll('.archivo').forEach(function (a) {
       a.addEventListener('click', function () {
         var nombre = a.dataset.archivo;
-        hoja.innerHTML = '<p class="subiendo" role="status">Subiendo ' + esc(nombre) + '…</p>' +
-          '<div class="barra-subida" aria-hidden="true"><span></span></div>';
+        var mini = a.querySelector('.miniatura-doc');
+        var origen = mini.getBoundingClientRect();
+        var svg = mini.outerHTML;
+        cerrarHoja(false);
+        var fila = $('doc-' + id);
+        var destino = fila.querySelector('.documento-icono');
+        fila.classList.add('subiendo');
+        fila.querySelector('small').textContent = 'Subiendo…';
+        anunciar('Subiendo ' + nombre + '…');
+        volar(svg, origen, destino.getBoundingClientRect());
         setTimeout(function () {
-          if (!estado.compra || subpasoPostula() !== 'documentos' || $('pantalla-mis-proyectos').hidden || !document.body.contains(hoja)) return;
+          if (!estado.compra || subpasoPostula() !== 'documentos' || $('pantalla-mis-proyectos').hidden || !document.body.contains(fila)) return;
           var docs = Object.assign({}, estado.compra.documentos || {});
           docs[id] = nombre;
           guardarCompra(Object.assign({}, estado.compra, { documentos: docs }));
+          docRecien = id;
           renderDocumentos(p);
+          docRecien = null;
           if (documentosListos()) {
             $('btn-ver-preaprobacion').focus();
-            anunciar('Subiste todos tus documentos. Ya puedes ver tu preaprobación.');
+            toast('Subiste todos tus documentos.');
           } else {
             var siguiente = document.querySelector('.documento:not(.listo) .btn-subir');
             if (siguiente) siguiente.focus();
             anunciar(x.nombre + ': listo.');
           }
-        }, ESPERA_CARGA + 300);
+        }, ESPERA_CARGA);
       });
     });
   }
@@ -1804,7 +1932,7 @@
       $('btn-empezar').addEventListener('click', function () {
         tocado = true;
         dibujarMeses();
-        if ($('btn-empezar').disabled) { $('ahorro-mensual').focus(); return; }
+        if ($('btn-empezar').disabled) { temblar($('ahorro-mensual')); $('ahorro-mensual').focus(); return; }
         estado.ahorroIniciado = true;
         guardarEstado();
         renderMiCompra();
@@ -1917,9 +2045,11 @@
         guardarCompra(Object.assign({}, estado.compra, {
           paso: 4, mes: 1, arriendoMes: d.arriendoEstimadoIA, saldoParticipacionUF: e.participacionUF, fraccion: 1
         }));
+        recienFirmado = true;
         renderMiCompra();
+        recienFirmado = false;
         window.scrollTo(0, 0);
-        anunciar('¡Firmaste! Ahora ves Mi departamento.');
+        toast('¡Firmaste!');
       });
     });
   }
@@ -2002,17 +2132,41 @@
   }
 
   // S10-F1: la casa se va pintando desde abajo con la parte que ya es tuya.
+  var pctCasaMostrado = null;
+  var recienFirmado = false;
   function casaPintada(pct) {
-    var alto = 76 * pct / 100;
+    var desde = pctCasaMostrado === null ? pct : pctCasaMostrado;
+    pctCasaMostrado = pct;
     var forma = 'M50 4 L94 40 L86 40 L86 80 L14 80 L14 40 L6 40 Z';
     return '<svg class="casa" viewBox="0 0 100 84" aria-hidden="true">' +
       '<defs><clipPath id="clip-casa"><path d="' + forma + '"/></clipPath></defs>' +
       '<path class="casa-fondo" d="' + forma + '"/>' +
-      '<rect class="casa-pintura" x="0" y="' + (80 - alto).toFixed(1) + '" width="100" height="' + alto.toFixed(1) + '" clip-path="url(#clip-casa)"/>' +
+      '<rect class="casa-pintura" x="0" y="4" width="100" height="76" clip-path="url(#clip-casa)" style="--desde:' + (desde / 100) + ';transform:scaleY(' + (pct / 100) + ')"/>' +
       '<path class="casa-borde" d="' + forma + '"/>' +
       '<rect class="casa-puerta" x="42" y="56" width="16" height="24" rx="2"/>' +
       '</svg>';
   }
+
+  // S12-F4: el arriendo del mes como un flujo: entra arriba y baja por tramos de ancho proporcional a su monto.
+  function flujoArriendo(c, tramos, aparte) {
+    var fila = function (t, i) {
+      var k = Math.min(1, Math.max(0, t.monto / c.bruto));
+      return '<li class="flujo-fila' + (t.final ? ' flujo-final' : '') + '" style="animation-delay:' + (i * 80) + 'ms">' +
+        '<span class="flujo-texto">' + icono(t.icono) + '<span>' + t.nombre + (t.detalle ? '<small>' + t.detalle + '</small>' : '') + '</span></span>' +
+        '<strong>' + (t.resta ? '−' : '') + formatoPesos(t.monto) + '</strong>' +
+        '<span class="flujo-barra" aria-hidden="true"><span class="flujo-relleno tono-' + t.tono + '" style="transform:scaleX(' + k.toFixed(3) + ')"></span></span>' +
+      '</li>';
+    };
+    return '<ol class="flujo">' +
+      fila({ nombre: 'Entra el arriendo', icono: 'i-llave', monto: c.bruto, tono: 'arriendo' }, 0) +
+      '<li class="flujo-flecha" aria-hidden="true"><svg><use href="#i-flujo"/></svg></li>' +
+      tramos.map(function (t, i) { return fila(t, i + 1); }).join('') +
+    '</ol>' +
+    '<div class="flujo-aparte">' + icono('i-persona', 'icono-grande') +
+      '<span><strong>' + aparte.nombre + '</strong><small>' + aparte.detalle + '</small></span>' +
+      '<strong class="flujo-aparte-monto">' + formatoPesos(aparte.monto) + '</strong></div>';
+  }
+
 
   function textoPlazoCasa(pl, faltan) {
     if (faltan === 0) return 'Ya es 100 % tuyo.';
@@ -2043,15 +2197,18 @@
     var cuerpo;
 
     if (arrendar) {
-      // S10-F1: arriendo → administración → dividendo (lo pagas tú) → renta → recompra.
-      var pasos = conParticipacion
-        ? pasoCascada(3, 'Pagas tu dividendo', 'Con tu sueldo' + (m.fraccion < 1 ? ', menos el 20 % del arriendo.' : '.'), formatoPesos(m.pone)) +
-          pasoCascada(4, 'Renta de los inversionistas', '6 % al año en UF', formatoPesos(c.renta)) +
-          pasoCascada(5, 'Recompras su parte', null, formatoPesos(c.recompra), 'cascada-final')
-        : pasoCascada(3, 'Va a tu dividendo', 'El departamento ya es 100 % tuyo.', formatoPesos(c.aUsuario)) +
-          (m.excedente > 0
-            ? pasoCascada(4, 'Te sobra', null, formatoPesos(m.excedente), 'cascada-final')
-            : pasoCascada(4, 'Tú completas el dividendo', null, formatoPesos(m.pone), 'cascada-final'));
+      // S10-F1 y S12-F4: arriendo → administración → renta → recompra; el dividendo lo pagas tú, aparte.
+      var gastos = { nombre: 'Administración y mes vacío', icono: 'i-documento', monto: c.administracion + c.vacancia, tono: 'gastos', resta: true };
+      var tramos = conParticipacion
+        ? [gastos,
+          { nombre: 'Renta de los inversionistas', detalle: '6 % al año en UF', icono: 'i-inversionistas', monto: c.renta, tono: 'inversionistas' },
+          { nombre: 'Recompras su parte', icono: 'i-casa', monto: c.recompra, tono: 'tu', final: m.fraccion === 1 }]
+          .concat(m.fraccion < 1 ? [{ nombre: 'Te ayuda con el dividendo', icono: 'i-persona', monto: c.aUsuario, tono: 'ayuda', final: true }] : [])
+        : [gastos, { nombre: 'Va a tu dividendo', icono: 'i-banco', monto: c.aUsuario, tono: 'tu', final: true }];
+      var aparte = conParticipacion
+        ? { nombre: 'Lo pagas tú', detalle: 'Dividendo, con tu sueldo', monto: m.pone }
+        : (m.excedente > 0 ? { nombre: 'Te sobra', detalle: 'Después del dividendo', monto: m.excedente }
+          : { nombre: 'Lo completas tú', detalle: 'El resto del dividendo', monto: m.pone });
       cuerpo =
         '<div class="tarjeta protagonista">' +
           '<p class="etiqueta">' + (m.excedente > 0 ? 'Este mes te sobraron' : 'Este mes pusiste') + '</p>' +
@@ -2070,13 +2227,7 @@
         '<section class="tarjeta bloque" aria-labelledby="titulo-cascada">' +
           '<h2 class="h4" id="titulo-cascada">Cómo se movió tu dinero</h2>' +
           '<p class="texto-apoyo">En tu cuenta custodia Bci ' + ayuda('cuenta-custodia') + '</p>' +
-          '<ol class="cascada">' +
-            pasoCascada(1, 'Entra el arriendo', null, formatoPesos(c.bruto)) +
-            pasoCascada(2, 'Se descuentan administración y el mes vacío',
-              'Administración (10 %): ' + formatoPesos(c.administracion) + '. Un mes vacío al año, por mes: ' + formatoPesos(c.vacancia) + '.',
-              '−' + formatoPesos(c.administracion + c.vacancia)) +
-            pasos +
-          '</ol>' +
+          flujoArriendo(c, tramos, aparte) +
         '</section>';
     } else {
       // S5-F3: modo vivir, comparado con el arriendo que pagaba.
@@ -2102,7 +2253,7 @@
 
     $('panel-compra').innerHTML =
       tarjetaCompacta(p, 'Dividendo al mes', m.e.totalMes) + listaPasos(4) +
-      '<h2 class="h3 bloque" id="titulo-departamento">Mi departamento <span class="texto-apoyo titulo-apoyo">mes ' + m.mes + ' desde que firmaste</span></h2>' +
+      '<h2 class="h3 bloque" id="titulo-departamento">' + (recienFirmado ? '<span class="llave-firma" aria-hidden="true">' + icono('i-llave', 'icono-grande') + '</span>' : '') + 'Mi departamento <span class="texto-apoyo titulo-apoyo">mes ' + m.mes + ' desde que firmaste</span></h2>' +
       cuerpo +
       '<section class="tarjeta bloque" aria-labelledby="titulo-deudas">' +
         '<h2 class="h4" id="titulo-deudas">Tu avance</h2>' +
@@ -2791,7 +2942,9 @@
       var okPropio = validarSueldo($('perfil-propio'), propio, false);
       var okPareja = validarSueldo($('perfil-pareja'), pareja, false);
       if ((!okPropio && propio !== null) || (!okPareja && pareja !== null)) {
-        (propio === 0 ? $('perfil-propio') : $('perfil-pareja')).focus();
+        var malo = propio === 0 ? $('perfil-propio') : $('perfil-pareja');
+        temblar(malo);
+        malo.focus();
         return;
       }
       estado.modo = document.querySelector('input[name="perfil-modo"]:checked').value;
@@ -2840,6 +2993,7 @@
   }
 
   function mostrar() {
+    cerrarHoja(false);
     var ruta = leerRuta();
     // S7-F6: la primera vez, antes de Inicio, se muestra la introducción.
     if (ruta.nombre === 'inicio' && !estado.introVista) {

@@ -511,12 +511,12 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 11 | S11-F2 Inicio: las 3 preguntas y Tu camino | en progreso |
 | 11 | S11-F3 Los caminos y Todavía no | en progreso |
 | 11 | S11-F4 Juntar el pie y Sostener | en progreso |
-| 12 | S12-F1 Proyectos y Detalle | pendiente |
-| 12 | S12-F2 Postula | pendiente |
-| 12 | S12-F3 Tus documentos | pendiente |
-| 12 | S12-F4 Firma y Mi departamento | pendiente |
-| 12 | S12-F5 Invertir y Mis inversiones | pendiente |
-| 12 | S12-F6 Errores y revisión final | pendiente |
+| 12 | S12-F1 Proyectos y Detalle | en progreso |
+| 12 | S12-F2 Postula | en progreso |
+| 12 | S12-F3 Tus documentos | en progreso |
+| 12 | S12-F4 Firma y Mi departamento | en progreso |
+| 12 | S12-F5 Invertir y Mis inversiones | en progreso |
+| 12 | S12-F6 Errores y revisión final | en progreso |
 | 13 | S13-F1 Avisos con tu meta | pendiente |
 | 13 | S13-F2 Cuota automática y pausa | pendiente |
 | 13 | S13-F3 Juntos | pendiente |
