@@ -150,6 +150,12 @@
   }
 
   leerEstado();
+  // Saltar al contenido: lleva el foco al título de la pantalla visible (sin cambiar la ruta).
+  if ($('saltar')) $('saltar').addEventListener('click', function (ev) {
+    ev.preventDefault();
+    var titulo = document.querySelector('main > .pantalla:not([hidden]) h1');
+    if (titulo) { if (!titulo.hasAttribute('tabindex')) titulo.setAttribute('tabindex', '-1'); titulo.focus(); }
+  });
 
   function $(id) { return document.getElementById(id); }
 
@@ -1702,7 +1708,7 @@
         anunciar('Datos listos. Ahora tus documentos.');
       });
     });
-    $('btn-salir').addEventListener('click', salirDeCompra);
+    prepararSalir();
 
     // Si ya había sueldos guardados, se muestra la carga de inmediato.
     habiaCarga = renderCarga(p, { propio: estado.sueldoPropio !== null, pareja: estado.sueldoPareja !== null });
@@ -2187,7 +2193,7 @@
         renderMiCompra();
         window.scrollTo(0, 0);
       });
-      $('btn-salir').addEventListener('click', salirDeCompra);
+      prepararSalir();
       dibujarMeses();
       return;
     }
@@ -2321,9 +2327,11 @@
     // S14-F5: mantener presionado 1,5 s para firmar. Con teclado (o con movimiento reducido), un toque firma.
     var boton = $('btn-firmar');
     var espera = null;
+    var presiono = false; // los clics de lectores de pantalla (VoiceOver, TalkBack) llegan sin pointerdown
     var reducir = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     function cancelar() { clearTimeout(espera); espera = null; boton.classList.remove('presionando'); }
     boton.addEventListener('pointerdown', function (ev) {
+      presiono = true;
       if (reducir || ev.button > 0) return;
       clearTimeout(espera);
       boton.classList.add('presionando');
@@ -2332,8 +2340,10 @@
     ['pointerup', 'pointerleave', 'pointercancel', 'lostpointercapture'].forEach(function (t) { boton.addEventListener(t, function () { if (espera) cancelar(); }); });
     boton.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
     boton.addEventListener('click', function (ev) {
-      // Un clic con el mouse o el dedo no firma (hay que mantener); Enter o Espacio sí.
-      if (ev.detail === 0 || reducir) firmar();
+      // Un clic con el mouse o el dedo no firma (hay que mantener). Enter, Espacio o un lector de pantalla sí.
+      var sinPresionar = !presiono;
+      presiono = false;
+      if (ev.detail === 0 || reducir || sinPresionar) firmar();
     });
     function firmar() {
       // Solo firma si el botón sigue en pantalla (por ejemplo, si no se cambió de paso mientras se mantenía).
@@ -2669,6 +2679,33 @@
       '<a class="enlace" href="#proyecto/' + esc(p.id) + '">' + esc(p.nombre) + '</a>' +
       '<p class="compacta-cifra"><span>' + etiqueta + '</span><strong>' + formatoPesos(pesos) + '</strong></p>' +
     '</div>';
+  }
+
+  // Salir de la compra es destructivo: primero se confirma.
+  function prepararSalir() {
+    var boton = $('btn-salir');
+    if (!boton) return;
+    var caja = document.createElement('div');
+    caja.id = 'confirmar-salir';
+    caja.className = 'confirmar';
+    caja.hidden = true;
+    caja.innerHTML = '<p><strong>¿Salir de esta compra?</strong></p>' +
+      '<button type="button" class="btn btn-peligro btn-bloque" id="btn-salir-si">Sí, salir</button>' +
+      '<button type="button" class="enlace" id="btn-salir-no">Cancelar</button>';
+    boton.insertAdjacentElement('afterend', caja);
+    boton.setAttribute('aria-expanded', 'false');
+    boton.setAttribute('aria-controls', 'confirmar-salir');
+    boton.addEventListener('click', function () {
+      caja.hidden = false;
+      boton.setAttribute('aria-expanded', 'true');
+      $('btn-salir-si').focus();
+    });
+    $('btn-salir-no').addEventListener('click', function () {
+      caja.hidden = true;
+      boton.setAttribute('aria-expanded', 'false');
+      boton.focus();
+    });
+    $('btn-salir-si').addEventListener('click', salirDeCompra);
   }
 
   function salirDeCompra() {
