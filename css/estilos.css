@@ -6,6 +6,7 @@
    ========================================================= */
 
 :root {
+  --ilus-piel: #E8BFA0; /* solo ilustraciones: rostro del personaje */
   /* S11-F1: tokens de movimiento (skill interaccion-bci-vanilla) */
   --dur-micro: 120ms;
   --dur-corta: 220ms;
@@ -1391,3 +1392,90 @@ body.en-familia .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
   .escalera-figura.sube, .alcancia.salta, .alcancia.descansa, .edificio.destella .ventana, .ventana, .llave-firma .icono-grande { animation: none; }
   .confeti { display: none; }
 }
+
+/* ---------- Ilustraciones: chanchito, casa, edificio de noche y escalera ---------- */
+/* Chanchito (alcancía) */
+.alcancia.chanchito { width: 112px; }
+.chancho-sombra { fill: var(--gray-semilight); }
+.chancho-fondo { fill: var(--red-20); }
+.chanchito .alcancia-relleno { fill: var(--red-60); }
+.chancho-borde, .chancho-pata, .chancho-oreja, .chancho-hocico { stroke: var(--red-dark); stroke-width: 2.5; stroke-linejoin: round; }
+.chancho-borde { fill: none; }
+.chancho-pata, .chancho-oreja { fill: var(--red-40); }
+.chancho-hocico { fill: var(--red-40); }
+.chancho-cola { fill: none; stroke: var(--red-dark); stroke-width: 2.5; stroke-linecap: round; }
+.chancho-nariz { fill: var(--red-dark); }
+.chancho-ojo { fill: var(--gray-dark); }
+.chancho-mejilla { fill: var(--red-40); opacity: .8; }
+.chancho-brillo { fill: none; stroke: var(--white); stroke-width: 3; stroke-linecap: round; opacity: .9; }
+.chancho-ranura { fill: var(--red-dark); }
+
+/* Casa ilustrada (Mi departamento) */
+.casa.casa-ilustrada { width: 120px; }
+.casa-pasto { fill: var(--green-20); }
+.casa-arbusto { fill: var(--green-80); }
+.casa-arbusto-2 { fill: var(--green-60); }
+.casa-chimenea { fill: var(--blue-80); stroke: var(--blue-dark); stroke-width: 2; }
+.casa-ilustrada .casa-fondo { fill: var(--white); }
+.casa-ilustrada .casa-pintura { fill: var(--green-40); }
+.casa-ilustrada .casa-borde { fill: none; stroke: var(--green-dark); stroke-width: 2.5; stroke-dasharray: none; }
+.casa-techo { fill: var(--blue-normal); stroke: var(--blue-dark); stroke-width: 2.5; stroke-linejoin: round; }
+.casa-ojo-buey { fill: var(--yellow-40); stroke: var(--blue-dark); stroke-width: 2; }
+.casa-ventana { fill: var(--yellow-60); stroke: var(--green-dark); stroke-width: 2.5; }
+.casa-gato { fill: var(--gray-dark); }
+.casa-marco { fill: none; stroke: var(--green-dark); stroke-width: 1.5; }
+.casa-macetero { fill: var(--red-60); }
+.casa-hoja { fill: none; stroke: var(--green-normal); stroke-width: 2.5; stroke-linecap: round; }
+.casa-ilustrada .casa-puerta { fill: var(--blue-dark); stroke: var(--blue-dark); stroke-width: 2; }
+.casa-pomo { fill: var(--yellow-normal); }
+.casa-lampara { fill: var(--yellow-normal); stroke: var(--blue-dark); stroke-width: 1; }
+
+/* Edificio de noche con sus luces */
+.edificio { position: relative; width: 116px; padding-top: 14px; }
+.edificio-cielo { position: absolute; inset: 0 -6px auto auto; width: 40px; height: 30px; }
+.luna { position: absolute; top: 0; right: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--yellow-40); box-shadow: -3px 2px 0 0 var(--yellow-60) inset; }
+.estrella { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--yellow-60); }
+.e1 { top: 4px; right: 26px; } .e2 { top: 16px; right: 20px; } .e3 { top: 10px; right: -2px; }
+svg.edificio-techo { display: block; width: 100%; height: 22px; background: none; border-radius: 0; }
+.techo-estanque { fill: var(--blue-80); stroke: var(--blue-dark); stroke-width: 1.5; }
+.techo-antena { fill: none; stroke: var(--blue-dark); stroke-width: 2; stroke-linecap: round; }
+.techo-planta { fill: var(--green-normal); } .techo-macetero { fill: var(--red-60); }
+.techo-borde { fill: var(--blue-dark); }
+.edificio .edificio-fachada { background: var(--blue-dark); padding: 8px 12px 10px; gap: 8px 10px; }
+.edificio .ventana { height: 20px; border: 0; border-radius: 2px; background: #164479; position: relative; box-shadow: 0 3px 0 -1px var(--blue-80); }
+.edificio .ventana::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 47%, rgba(29, 86, 153, .5) 47% 53%, transparent 53%); border-radius: 2px; }
+.edificio .ventana.encendida { background: var(--yellow-60); box-shadow: 0 0 10px 1px rgba(255, 238, 102, .55), 0 3px 0 -1px var(--blue-80); }
+.edificio .ventana.tuya { background: var(--green-dark); color: var(--white); box-shadow: 0 0 10px 1px rgba(126, 184, 128, .7), 0 3px 0 -1px var(--blue-80); }
+.edificio .ventana.tuya::after { display: none; }
+.edificio .ventana.con-planta::before { content: ""; position: absolute; left: 2px; bottom: 0; width: 7px; height: 7px; border-radius: 50% 50% 0 50%; background: var(--green-normal); z-index: 1; }
+@keyframes encender { from { background: #164479; box-shadow: none; } }
+svg.edificio-base { display: block; width: 100%; height: 26px; border: 0; background: none; }
+.base-muro { fill: var(--blue-dark); }
+.base-toldo { fill: var(--red-60); }
+.base-puerta { fill: var(--yellow-60); } .base-marco { stroke: var(--blue-dark); stroke-width: 1.5; }
+.base-arbol { fill: var(--green-normal); } .base-tronco { fill: var(--gray-dark); }
+.base-vereda { fill: var(--gray-neutral); }
+
+/* Escalera con volumen, personaje y la puerta de tu departamento */
+.peldano { border-top: 6px solid var(--gray-neutral); background: var(--gray-semilight); border-radius: 4px 4px 0 0; box-shadow: none !important; }
+.escalera li.hecho .peldano { background: var(--green-20); border-top-color: var(--green-60); }
+.escalera li.actual .peldano { background: var(--green-normal); border-top-color: var(--green-dark); }
+.escalera li.actual .peldano-check { color: var(--white); }
+.escalera-figura { width: 32px; height: 48px; border: 0; background: none; border-radius: 0; margin-bottom: 0; }
+.personaje { width: 32px; height: 48px; display: block; }
+.p-mochila { fill: var(--yellow-normal); stroke: var(--blue-dark); stroke-width: 1.2; }
+.p-pierna { fill: var(--blue-dark); }
+.p-zapato { fill: var(--white); stroke: var(--blue-dark); stroke-width: 1; }
+.p-chaqueta { fill: var(--green-normal); stroke: var(--green-dark); stroke-width: 1.2; }
+.p-brazo { stroke: var(--green-normal); stroke-width: 4; stroke-linecap: round; }
+.p-cara { fill: var(--ilus-piel); }
+.p-pelo { fill: var(--blue-dark); }
+.escalera-meta { align-self: center; height: 40px; margin-bottom: 2px; }
+.puerta-meta { width: 30px; height: 40px; display: block; }
+.pm-muro { fill: var(--blue-20); stroke: var(--blue-dark); stroke-width: 1.5; }
+.pm-puerta { fill: var(--blue-normal); stroke: var(--blue-dark); stroke-width: 1.5; }
+.pm-pomo { fill: var(--yellow-normal); }
+.pm-maceta { fill: var(--red-60); } .pm-hoja { fill: var(--green-normal); }
+.peldano { height: calc(24px + var(--n) * 13px); }
+.escalera-arriba { display: flex; justify-content: center; align-items: flex-end; gap: 2px; }
+.peldano-nombre { min-height: 2.4em; }

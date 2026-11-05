@@ -44,3 +44,12 @@ Estado: listo para que el Evaluator lo revise. S14-F1 a S14-F5 quedan `en progre
 - Recorridos de los Sprints 10, 11 y 13: sin errores. Los que firmaban con un clic ahora firman con Enter.
 - Contraste: el amarillo nunca va como texto (la moneda usa texto gris oscuro sobre amarillo claro). Las ventanas amarillas llevan borde `--yellow-dark` y no son el único indicador: la cantidad va en número al lado.
 - Sin "plata", "depto", "dpto" ni "la IA recomienda".
+
+## Ilustraciones (ajuste después de la revisión con la usuaria del proyecto)
+
+Los íconos se quedan de línea, como estaban. Se ilustran solo cuatro piezas, pensadas para el segmento (jóvenes profesionales de ciudad: plantas, luz cálida de noche, mascotas, estilo plano y sin infantilizar). Todas siguen animándose igual que antes y usan solo colores del Bci Kit, más un tono de piel (`--ilus-piel`) solo para el personaje.
+
+- **El chanchito** reemplaza la alcancía en Tu pie: rosado (rojos 20 a 60 del Bci Kit), con ranura, orejas, hocico y cola, y se llena de rosado desde abajo con lo que llevas.
+- **La casa** de Mi departamento: techo azul, ventana con luz, un gato y plantas en el macetero, puerta con lámpara y arbustos. Las paredes se pintan de verde con la parte que ya es tuya.
+- **El edificio de noche:** fachada azul oscuro con luna y estrellas, estanque y planta en el techo, toldo y árboles en la entrada. Las ventanas de los compradores brillan amarillas, la tuya brilla verde con "Tú" y algunas tienen plantas.
+- **La escalera:** peldaños con volumen, un personaje con mochila (sin rasgos, estilo plano) en el paso actual y la puerta de tu departamento arriba del último. Al llegar, el personaje queda junto a la puerta.

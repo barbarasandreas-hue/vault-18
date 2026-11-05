@@ -321,15 +321,26 @@
         if (i >= r.cupos) { ventanas += '<li class="ventana vacia"></li>'; continue; }
         var esTuya = tuyo && i === proyecto.cuposTomados;
         var clase = esTuya ? 'tuya' : (i < r.cuposTomados ? 'encendida' : 'apagada');
-        ventanas += '<li class="ventana ' + clase + '" style="animation-delay:' + (i * 50) + 'ms">' + (esTuya ? 'Tú' : '') + '</li>';
+        var planta = clase === 'encendida' && i % 3 === 1 ? ' con-planta' : '';
+        ventanas += '<li class="ventana ' + clase + planta + '" style="animation-delay:' + (i * 50) + 'ms">' + (esTuya ? 'Tú' : '') + '</li>';
       }
     }
     var destella = grupoDestella;
     grupoDestella = false;
     return '<div class="edificio' + (destella ? ' destella' : '') + '" role="img" aria-label="' + r.cuposTomados + ' de ' + r.cupos + ' compradores' + (tuyo ? ', uno eres tú' : '') + '">' +
-      '<span class="edificio-techo" aria-hidden="true"></span>' +
+      '<span class="edificio-cielo" aria-hidden="true"><span class="luna"></span><span class="estrella e1"></span><span class="estrella e2"></span><span class="estrella e3"></span></span>' +
+      '<svg class="edificio-techo" viewBox="0 0 100 22" preserveAspectRatio="none" aria-hidden="true">' +
+        '<rect class="techo-estanque" x="14" y="4" width="18" height="12" rx="2"/><path class="techo-antena" d="M78 16 V2 M74 6 H82"/>' +
+        '<circle class="techo-planta" cx="58" cy="12" r="5"/><rect class="techo-macetero" x="54" y="14" width="8" height="4" rx="1"/>' +
+        '<rect class="techo-borde" x="0" y="17" width="100" height="5"/></svg>' +
       '<ol class="edificio-fachada" aria-hidden="true" style="--cols:' + cols + '">' + ventanas + '</ol>' +
-      '<span class="edificio-base" aria-hidden="true"><span class="edificio-puerta"></span></span>' +
+      '<svg class="edificio-base" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true">' +
+        '<rect class="base-muro" x="0" y="0" width="100" height="22"/>' +
+        '<path class="base-toldo" d="M36 4 H64 L67 9 H33 Z"/>' +
+        '<rect class="base-puerta" x="40" y="9" width="20" height="13" rx="1"/><path class="base-marco" d="M50 9 V22"/>' +
+        '<circle class="base-arbol" cx="12" cy="14" r="8"/><rect class="base-tronco" x="11" y="18" width="2" height="5"/>' +
+        '<circle class="base-arbol" cx="88" cy="14" r="8"/><rect class="base-tronco" x="87" y="18" width="2" height="5"/>' +
+        '<rect class="base-vereda" x="0" y="22" width="100" height="4"/></svg>' +
     '</div>';
   }
 
@@ -517,6 +528,23 @@
 
   // S14-F1: los 5 pasos como una escalera. La figura está en el peldaño actual y sube cuando avanzas.
   var pasoEscaleraMostrado = null;
+  // Personaje sin rasgos (estilo plano), con mochila: va subiendo hacia su departamento.
+  var PERSONAJE = '<svg class="personaje" viewBox="0 0 32 48">' +
+    '<rect class="p-mochila" x="5" y="18" width="8" height="12" rx="3"/>' +
+    '<rect class="p-pierna" x="11" y="32" width="4.5" height="12" rx="2"/><rect class="p-pierna" x="17" y="32" width="4.5" height="12" rx="2"/>' +
+    '<path class="p-zapato" d="M10 44 h7 v3 h-8 z M16.5 44 h7 l1 3 h-8 z"/>' +
+    '<path class="p-chaqueta" d="M9 20 a7 7 0 0 1 14 0 v14 h-14 z"/>' +
+    '<path class="p-brazo" d="M22 22 l5 6"/>' +
+    '<circle class="p-cara" cx="16" cy="10" r="6"/>' +
+    '<path class="p-pelo" d="M10 10 a6 6 0 0 1 12 -1 c-3 0 -6 -1 -8 -3 c-1 2 -2 3 -4 4 z"/>' +
+    '</svg>';
+  // La meta: la puerta de tu departamento, arriba del último peldaño.
+  var PUERTA_META = '<svg class="puerta-meta" viewBox="0 0 30 40">' +
+    '<rect class="pm-muro" x="2" y="4" width="26" height="36" rx="2"/>' +
+    '<path class="pm-puerta" d="M8 40 V14 a7 7 0 0 1 14 0 V40 z"/>' +
+    '<circle class="pm-pomo" cx="19" cy="28" r="1.6"/>' +
+    '<rect class="pm-maceta" x="23" y="34" width="5" height="6" rx="1"/><circle class="pm-hoja" cx="25.5" cy="31" r="3.5"/>' +
+    '</svg>';
   function recorridoCamino(paso) {
     // El paso de la compra (1 a 4) corresponde a los peldaños 2 a 5; sin compra (0), el actual es "Elegir".
     var actual = paso + 1;
@@ -528,8 +556,11 @@
       var texto = estadoPaso === 'hecho' ? ', listo' : (estadoPaso === 'actual' ? ', estás aquí' : '');
       return '<li class="' + estadoPaso + '" style="--n:' + i + '"' + (estadoPaso === 'actual' ? ' aria-current="step"' : '') + '>' +
         (estadoPaso === 'actual'
-          ? '<span class="escalera-figura' + (subio ? ' sube' : '') + '" style="--d:' + subio + '" aria-hidden="true">' + icono('i-persona') + '</span>'
-          : '') +
+          ? '<span class="escalera-arriba">' +
+              '<span class="escalera-figura' + (subio ? ' sube' : '') + '" style="--d:' + subio + '" aria-hidden="true">' + PERSONAJE + '</span>' +
+              (n === CAMINO.length ? '<span class="escalera-meta" aria-hidden="true">' + PUERTA_META + '</span>' : '') +
+            '</span>'
+          : (n === CAMINO.length ? '<span class="escalera-meta" aria-hidden="true">' + PUERTA_META + '</span>' : '')) +
         '<span class="peldano" aria-hidden="true">' + (estadoPaso === 'hecho' ? icono('i-check', 'peldano-check') : '') + '</span>' +
         '<span class="peldano-nombre">' + nombre + '<span class="oculto-visual">' + texto + '</span></span>' +
       '</li>';
@@ -1975,11 +2006,8 @@
     var desde = pctAlcanciaMostrado === null ? 0 : pctAlcanciaMostrado;
     pctAlcanciaMostrado = pct;
     var logrados = hitosAlcanzados(ahorrado, meta);
-    var forma = 'M18 22 Q18 16 24 16 L56 16 Q62 16 62 22 L66 34 Q70 40 70 50 L70 90 Q70 96 64 96 L16 96 Q10 96 10 90 L10 50 Q10 40 14 34 Z';
-    var marcas = HITOS_AHORRO.map(function (h) {
-      var y = 96 - 74 * h;
-      return '<line class="alcancia-marca" x1="64" x2="74" y1="' + y + '" y2="' + y + '"/>';
-    }).join('');
+    // S15: el chanchito se llena de rosado desde abajo, a medida que juntas tu pie.
+    var cuerpo = 'M14 54 C14 34 32 24 56 24 C76 24 90 33 94 46 C95 50 95 60 94 64 C90 78 76 86 56 86 C32 86 14 76 14 54 Z';
     var hitos = HITOS_AHORRO.map(function (h) {
       var ok = logrados.indexOf(h) !== -1;
       return '<li class="hito-chip' + (ok ? ' logrado' : '') + (hitoNuevo === h ? ' nuevo' : '') + '">' +
@@ -1990,12 +2018,25 @@
     hitoNuevo = null;
     alcanciaDescansa = false;
     return '<div class="alcancia-avance">' +
-      '<svg class="alcancia' + (salta ? ' salta' : '') + (descansa ? ' descansa' : '') + '" id="alcancia" viewBox="0 0 80 100" role="img" aria-label="Llevas ' + pct + ' % de tu meta">' +
-        '<defs><clipPath id="clip-alcancia"><path d="' + forma + '"/></clipPath></defs>' +
-        '<rect class="alcancia-tapa" x="22" y="6" width="36" height="8" rx="3"/>' +
-        '<path class="alcancia-fondo" d="' + forma + '"/>' +
-        '<rect class="alcancia-relleno" x="0" y="22" width="80" height="74" clip-path="url(#clip-alcancia)" style="--desde:' + (desde / 100) + ';transform:scaleY(' + (pct / 100) + ')"/>' +
-        '<path class="alcancia-borde" d="' + forma + '"/>' + marcas +
+      '<svg class="alcancia chanchito' + (salta ? ' salta' : '') + (descansa ? ' descansa' : '') + '" id="alcancia" viewBox="0 0 112 100" role="img" aria-label="Llevas ' + pct + ' % de tu meta">' +
+        '<defs><clipPath id="clip-alcancia"><path d="' + cuerpo + '"/></clipPath></defs>' +
+        '<ellipse class="chancho-sombra" cx="54" cy="95" rx="38" ry="4"/>' +
+        '<rect class="chancho-pata" x="26" y="74" width="12" height="19" rx="5"/>' +
+        '<rect class="chancho-pata" x="68" y="74" width="12" height="19" rx="5"/>' +
+        '<path class="chancho-cola" d="M15 50 C6 49 5 40 11 40 C16 40 15 47 9 47"/>' +
+        '<path class="chancho-oreja" d="M70 27 L80 12 L84 31 Z"/>' +
+        '<path class="chancho-fondo" d="' + cuerpo + '"/>' +
+        '<rect class="alcancia-relleno" x="0" y="24" width="112" height="62" clip-path="url(#clip-alcancia)" style="--desde:' + (desde / 100) + ';transform:scaleY(' + (pct / 100) + ')"/>' +
+        '<path class="chancho-borde" d="' + cuerpo + '"/>' +
+        '<path class="chancho-brillo" d="M26 44 C29 37 36 32 44 30"/>' +
+        '<rect class="chancho-pata" x="36" y="76" width="12" height="19" rx="5"/>' +
+        '<rect class="chancho-pata" x="78" y="74" width="12" height="19" rx="5"/>' +
+        '<path class="chancho-oreja" d="M60 26 L68 10 L74 29 Z"/>' +
+        '<ellipse class="chancho-hocico" cx="96" cy="56" rx="9" ry="11"/>' +
+        '<ellipse class="chancho-nariz" cx="94" cy="52" rx="1.6" ry="2.4"/><ellipse class="chancho-nariz" cx="99" cy="52" rx="1.6" ry="2.4"/>' +
+        '<circle class="chancho-ojo" cx="80" cy="45" r="3"/>' +
+        '<circle class="chancho-mejilla" cx="82" cy="60" r="4.5"/>' +
+        '<rect class="chancho-ranura" x="42" y="27" width="22" height="4.5" rx="2.25"/>' +
       '</svg>' +
       '<div class="alcancia-datos">' +
         '<strong class="numero display-3">' + pct + NBSP + '%</strong>' +
@@ -2284,17 +2325,20 @@
     function cancelar() { clearTimeout(espera); espera = null; boton.classList.remove('presionando'); }
     boton.addEventListener('pointerdown', function (ev) {
       if (reducir || ev.button > 0) return;
+      clearTimeout(espera);
       boton.classList.add('presionando');
       espera = setTimeout(function () { espera = null; boton.classList.remove('presionando'); firmar(); }, 1500);
     });
-    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (t) { boton.addEventListener(t, function () { if (espera) cancelar(); }); });
+    ['pointerup', 'pointerleave', 'pointercancel', 'lostpointercapture'].forEach(function (t) { boton.addEventListener(t, function () { if (espera) cancelar(); }); });
     boton.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
     boton.addEventListener('click', function (ev) {
       // Un clic con el mouse o el dedo no firma (hay que mantener); Enter o Espacio sí.
       if (ev.detail === 0 || reducir) firmar();
     });
     function firmar() {
-      conCarga($('btn-firmar'), function () {
+      // Solo firma si el botón sigue en pantalla (por ejemplo, si no se cambió de paso mientras se mantenía).
+      if (!document.body.contains(boton)) return;
+      conCarga(boton, function () {
         // El ahorro se usó para escriturar: queda en cero.
         estado.ahorrado = 0;
         estado.ahorroIniciado = false;
@@ -2415,17 +2459,30 @@
   // S10-F1: la casa se va pintando desde abajo con la parte que ya es tuya.
   var pctCasaMostrado = null;
   var recienFirmado = false;
+  // S15: la casa ilustrada. Las paredes se pintan desde abajo con la parte que ya es tuya.
   function casaPintada(pct) {
     var desde = pctCasaMostrado === null ? pct : pctCasaMostrado;
     pctCasaMostrado = pct;
-    var forma = 'M50 4 L94 40 L86 40 L86 80 L14 80 L14 40 L6 40 Z';
-    return '<svg class="casa" viewBox="0 0 100 84" aria-hidden="true">' +
-      '<defs><clipPath id="clip-casa"><path d="' + forma + '"/></clipPath></defs>' +
-      '<path class="casa-fondo" d="' + forma + '"/>' +
-      '<rect class="casa-pintura" x="0" y="4" width="100" height="76" clip-path="url(#clip-casa)" style="--desde:' + (desde / 100) + ';transform:scaleY(' + (pct / 100) + ')"/>' +
-      '<path class="casa-borde" d="' + forma + '"/>' +
-      '<rect class="casa-puerta" x="42" y="56" width="16" height="24" rx="2"/>' +
-      '</svg>';
+    return '<svg class="casa casa-ilustrada" viewBox="0 0 120 100" aria-hidden="true">' +
+      '<defs><clipPath id="clip-casa"><rect x="22" y="40" width="76" height="50"/></clipPath></defs>' +
+      '<ellipse class="casa-pasto" cx="60" cy="92" rx="56" ry="6"/>' +
+      '<circle class="casa-arbusto-2" cx="10" cy="84" r="8"/><circle class="casa-arbusto" cx="18" cy="86" r="7"/>' +
+      '<circle class="casa-arbusto-2" cx="110" cy="85" r="7"/><circle class="casa-arbusto" cx="103" cy="87" r="6"/>' +
+      '<rect class="casa-chimenea" x="78" y="14" width="10" height="20" rx="1.5"/>' +
+      '<rect class="casa-fondo" x="22" y="40" width="76" height="50"/>' +
+      '<rect class="casa-pintura" x="22" y="40" width="76" height="50" clip-path="url(#clip-casa)" style="--desde:' + (desde / 100) + ';transform:scaleY(' + (pct / 100) + ')"/>' +
+      '<rect class="casa-borde" x="22" y="40" width="76" height="50"/>' +
+      '<path class="casa-techo" d="M14 44 L60 12 L106 44 Z"/>' +
+      '<circle class="casa-ojo-buey" cx="60" cy="31" r="5"/>' +
+      '<rect class="casa-ventana" x="30" y="52" width="24" height="20" rx="2"/>' +
+      '<path class="casa-gato" d="M36 72 V64 L38 61 L40 64 H43 L45 61 L47 64 V72 Z"/>' +
+      '<path class="casa-marco" d="M42 52 V72 M30 62 H54"/>' +
+      '<rect class="casa-macetero" x="31" y="72" width="22" height="4" rx="1"/>' +
+      '<path class="casa-hoja" d="M35 72 C33 66 37 64 39 72 M48 72 C47 65 52 65 51 72"/>' +
+      '<rect class="casa-puerta" x="68" y="58" width="20" height="32" rx="3"/>' +
+      '<circle class="casa-pomo" cx="83" cy="75" r="1.8"/>' +
+      '<path class="casa-lampara" d="M64 56 h3 v-4 h-3 z"/>' +
+    '</svg>';
   }
 
   // S12-F4: el arriendo del mes como un flujo: entra arriba y baja por tramos de ancho proporcional a su monto.
