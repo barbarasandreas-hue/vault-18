@@ -603,11 +603,11 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 13 | S13-F4 Tu grupo y tu obra | en progreso |
 | 13 | S13-F5 Lo tuyo creció este mes | en progreso |
 | 13 | S13-F6 Medición en la sesión de prueba | en progreso |
-| 14 | S14-F1 La escalera en Inicio | pendiente |
-| 14 | S14-F2 El edificio con ventanas | pendiente |
-| 14 | S14-F3 Hitos del pie | pendiente |
-| 14 | S14-F4 Gestos en Tu pie | pendiente |
-| 14 | S14-F5 Firmar y recibir las llaves | pendiente |
+| 14 | S14-F1 La escalera en Inicio | en progreso |
+| 14 | S14-F2 El edificio con ventanas | en progreso |
+| 14 | S14-F3 Hitos del pie | en progreso |
+| 14 | S14-F4 Gestos en Tu pie | en progreso |
+| 14 | S14-F5 Firmar y recibir las llaves | en progreso |
 | 15 | S15-F1 Tu año | pendiente |
 | 15 | S15-F2 La balanza en Postula | pendiente |
 | 15 | S15-F3 Revisión del Evaluator | pendiente |

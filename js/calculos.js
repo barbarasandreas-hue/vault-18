@@ -962,6 +962,39 @@ function crecimientoMesUF(precioUF, mes, modo, recompraUF) {
 // c: { etapa: 'camino' | 'pie' | 'departamento' | 'inversion', lugar, meses, cuota, ultimoMes ('pago'|'protector'|'reinicio'),
 //      grupo: { faltan, descuentoSiguiente }, obra: { etapa }, crecioPesos, porcentajeTuyo, inversiones: [{ nombre, pesos }],
 //      apagados: { cuota, grupo, obra, departamento } }
+// ---------- Sprint 14: emoción, juego y grupo ----------
+
+// S14-F2: lo que el grupo lleva entre todos en sus cuentas Bci (cada uno en la suya; es una suma, no un fondo común).
+// otros: compradores que ya venían ahorrando; cuotaPromedio y meses: datos simulados del proyecto.
+function totalGrupo(otros, cuotaPromedio, meses, tuAhorrado) {
+  return Math.max(0, otros) * Math.max(0, cuotaPromedio) * Math.max(0, meses) + Math.max(0, tuAhorrado || 0);
+}
+
+// S14-F2: si al pasar de "antes" a "despues" compradores el grupo cruza un escalón de descuento (5 o 10).
+// Devuelve { cupos, descuento } del escalón cruzado, o null.
+function escalonCruzado(antes, despues) {
+  var escalones = [{ cupos: 10, descuento: 0.05 }, { cupos: 5, descuento: 0.03 }];
+  for (var i = 0; i < escalones.length; i++) {
+    if (antes < escalones[i].cupos && despues >= escalones[i].cupos) return escalones[i];
+  }
+  return null;
+}
+
+// S14-F3: el aviso de un hito del pie, conectado con la obra cuando es compra en grupo.
+var NOMBRE_HITO = { 0.25: 'Llevas un cuarto de tu pie.', 0.5: 'Vas en la mitad de tu pie.', 0.75: 'Llevas tres cuartos de tu pie.', 1: 'Juntaste tu pie.' };
+function textoHito(hito, etapaObra) {
+  var base = NOMBRE_HITO[hito] || '';
+  var etapa = typeof etapaObra === 'number' ? ETAPAS_OBRA[etapaObra] : null;
+  return etapa ? base + ' Tu edificio va en ' + etapa.toLowerCase() + '.' : base;
+}
+
+// S14-F4: días que faltan para una fecha (0 si ya pasó). hoy es un Date.
+function diasHasta(fechaISO, hoy) {
+  var fin = new Date(fechaISO + 'T00:00:00');
+  var inicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  return Math.max(0, Math.round((fin - inicio) / 86400000));
+}
+
 var TIPOS_AVISO = ['cuota', 'grupo', 'obra', 'departamento'];
 function avisosDelMes(c) {
   var lista = [];
@@ -1059,6 +1092,10 @@ if (typeof module !== 'undefined') module.exports = {
   mesesParaMeta: mesesParaMeta,
   mesesRestantes: mesesRestantes,
   mesesQueAdelanta: mesesQueAdelanta,
+  totalGrupo: totalGrupo,
+  escalonCruzado: escalonCruzado,
+  textoHito: textoHito,
+  diasHasta: diasHasta,
   diasDeAhorro: diasDeAhorro,
   HITOS_AHORRO: HITOS_AHORRO,
   hitosAlcanzados: hitosAlcanzados,
