@@ -56,20 +56,21 @@
     parejaInvitada: false,   // S13-F3: la pareja ve el mismo avance (simulado)
     regalos: [],             // S13-F3: aportes de la familia [{ relacion, monto, mensaje }] (simulado)
     listaRegalos: null,      // S13-F3: { ocasion, mostrarMontos } cuando la usuaria creó su lista
-    unidosGrupo: {}          // S14-F2: compradores simulados que se unieron después, por proyecto
+    unidosGrupo: {},         // S14-F2: compradores simulados que se unieron después, por proyecto
+    avisosVistos: null       // el mes cuyos avisos ya se vieron (apaga el número de la campana)
   };
 
   // ---------- Elecciones que se recuerdan entre visitas (S3-F3) ----------
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
-    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {} };
+    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -108,6 +109,7 @@
       estado.parejaInvitada = g.parejaInvitada === true;
       estado.regalos = Array.isArray(g.regalos) ? g.regalos.filter(function (x) { return x && RELACIONES.indexOf(x.relacion) !== -1 && montoValido(x.monto); })
         .map(function (x) { return { relacion: x.relacion, monto: x.monto, mensaje: typeof x.mensaje === 'string' ? x.mensaje.slice(0, 140) : '' }; }).slice(0, 20) : [];
+      if (typeof g.avisosVistos === 'string' && g.avisosVistos.length < 40) estado.avisosVistos = g.avisosVistos;
       if (g.unidosGrupo && typeof g.unidosGrupo === 'object') {
         Object.keys(g.unidosGrupo).forEach(function (id) {
           var n = g.unidosGrupo[id];
@@ -694,7 +696,8 @@
     void t.offsetWidth;
     t.classList.add('toast-entra');
     clearTimeout(temporizadorToast);
-    temporizadorToast = setTimeout(function () { t.hidden = true; }, 3000);
+    // 3,5 s para lo corto y 5 s para lo que se demora en leer.
+    temporizadorToast = setTimeout(function () { t.hidden = true; }, texto.length > 40 ? 5000 : 3500);
   }
 
   function barraPreguntas(n) {
@@ -2057,20 +2060,23 @@
     var moneda = $('moneda');
     var alcancia = $('alcancia');
     if (!moneda || !alcancia || !window.PointerEvent) return;
-    var x0 = 0, y0 = 0, arrastrando = false;
+    var x0 = 0, y0 = 0, arrastrando = false, apretada = false;
     moneda.addEventListener('pointerdown', function (ev) {
-      arrastrando = true;
+      apretada = true;
       x0 = ev.clientX; y0 = ev.clientY;
       moneda.setPointerCapture(ev.pointerId);
-      moneda.classList.add('arrastrando');
     });
     moneda.addEventListener('pointermove', function (ev) {
-      if (!arrastrando) return;
+      if (!apretada) return;
+      // Umbral: un toque o un temblor no arrastra la moneda.
+      if (!arrastrando && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 8) return;
+      if (!arrastrando) { arrastrando = true; moneda.classList.add('arrastrando'); }
       moneda.style.transform = 'translate(' + (ev.clientX - x0) + 'px,' + (ev.clientY - y0) + 'px) scale(1.05)';
       var a = alcancia.getBoundingClientRect();
       alcancia.classList.toggle('lista', ev.clientX > a.left && ev.clientX < a.right && ev.clientY > a.top && ev.clientY < a.bottom);
     });
     function soltar(ev) {
+      apretada = false;
       if (!arrastrando) return;
       arrastrando = false;
       moneda.classList.remove('arrastrando');
@@ -2085,7 +2091,7 @@
       }
     }
     moneda.addEventListener('pointerup', soltar);
-    moneda.addEventListener('pointercancel', function () { arrastrando = false; moneda.style.transform = ''; moneda.classList.remove('arrastrando'); });
+    moneda.addEventListener('pointercancel', function () { apretada = false; arrastrando = false; moneda.style.transform = ''; moneda.classList.remove('arrastrando'); });
   }
 
   // S11-F4: la racha como 6 puntos de calendario (los últimos meses simulados).
@@ -2230,6 +2236,7 @@
       '</section>';
 
     iniciarJuntos(p, d);
+    iniciarPlegables();
     $('btn-cuota-automatica').addEventListener('click', function () {
       estado.cuotaAutomatica = !estado.cuotaAutomatica;
       guardarEstado();
@@ -2279,6 +2286,7 @@
       guardarEstado();
       var despues = resumen(p).cuposTomados;
       var escalon = escalonCruzado(antes, despues);
+      plegablesAbiertos.grupo = true;
       if (escalon) grupoDestella = true;
       renderTu5(p, d);
       $('titulo-grupo').scrollIntoView({ block: 'start' });
@@ -3350,8 +3358,17 @@
     return c;
   }
 
+  // Clave del "mes" de los avisos: el mes simulado de la compra, o el mes del calendario.
+  function claveMesAvisos() {
+    var c = estado.compra;
+    if (c && pasoEfectivo() >= 4) return 'departamento-' + (c.mes || 1);
+    if (c) return 'pie-' + (estado.mesAhorro || 0);
+    var hoy = new Date();
+    return 'camino-' + hoy.getFullYear() + '-' + hoy.getMonth();
+  }
+
   function campana() {
-    var n = avisosDelMes(contextoAvisos()).length;
+    var n = estado.avisosVistos === claveMesAvisos() ? 0 : avisosDelMes(contextoAvisos()).length;
     return '<a class="campana" href="#avisos" aria-label="Avisos' + (n ? ', ' + n + ' este mes' : '') + '">' + icono('i-campana', 'icono-campana') +
       (n ? '<span class="campana-numero" aria-hidden="true">' + n + '</span>' : '') + '</a>';
   }
@@ -3360,6 +3377,8 @@
 
   function renderAvisos() {
     var avisos = avisosDelMes(contextoAvisos());
+    estado.avisosVistos = claveMesAvisos();
+    guardarEstado();
     $('avisos-contenido').innerHTML =
       '<a href="#inicio" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Tu camino</a>' +
       '<header class="encabezado"><h1 id="titulo-avisos" class="h2">Avisos</h1>' +
@@ -3376,6 +3395,22 @@
   }
 
   // S13-F4: tu grupo (lo asegurado hoy y cuántas personas faltan) y tu obra (5 etapas, la actual marcada).
+  // Tu pie: Juntos, Tu grupo y Tu obra se abren al tocarlos, para que arriba quede el pie y su acción.
+  // Lo abierto se recuerda mientras dura la sesión (Tu pie se vuelve a dibujar en cada mes simulado).
+  var plegablesAbiertos = {};
+  function plegable(id, titulo, resumenHtml, contenido) {
+    return '<details class="tarjeta bloque plegable" data-plegable="' + id + '"' + (plegablesAbiertos[id] ? ' open' : '') + '>' +
+      '<summary><span class="plegable-titulo"><span class="h4" id="titulo-' + id + '">' + titulo + '</span>' +
+        (resumenHtml ? '<span class="plegable-resumen">' + resumenHtml + '</span>' : '') + '</span>' +
+        '<svg class="plegable-flecha" aria-hidden="true"><use href="#i-flecha"/></svg></summary>' +
+      '<div class="plegable-cuerpo">' + contenido + '</div></details>';
+  }
+  function iniciarPlegables() {
+    document.querySelectorAll('[data-plegable]').forEach(function (d) {
+      d.addEventListener('toggle', function () { plegablesAbiertos[d.dataset.plegable] = d.open; });
+    });
+  }
+
   function tuGrupoYObra(p) {
     var r = resumen(p);
     var g = cuposParaMasDescuento(r.cuposTomados, r.cupos);
@@ -3390,8 +3425,7 @@
     var g2 = p.grupo || {};
     var juntos = totalGrupo(p.cuposTomados, g2.cuotaPromedio || 0, g2.mesesAhorrando || 0, estado.ahorrado);
     var dias = diasHasta(p.entregaEstimada, new Date());
-    return '<section class="tarjeta bloque" aria-labelledby="titulo-grupo">' +
-        '<h2 class="h4" id="titulo-grupo">Tu grupo</h2>' +
+    return plegable('grupo', 'Tu grupo', r.cuposTomados + ' de ' + r.cupos + ' compradores',
         grupoConEdificio(p, r) +
         '<ul class="datos-inversion">' +
           '<li><span>' + icono('i-alcancia') + 'Entre todos llevan ' + ayuda('meta-comun') + '</span><strong>' + formatoPesos(juntos) + '</strong></li>' +
@@ -3399,14 +3433,11 @@
           (g.faltan > 0 ? '<li><span>Con ' + plural(g.faltan, 'persona', 'personas') + ' más</span><strong>' + formatoPorcentaje(g.descuentoSiguiente, 0) + '</strong></li>' : '') +
         '</ul>' +
         '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-compartir">Compartir el proyecto</button>' +
-        (r.cuposLibres > 0 ? '<button type="button" class="btn btn-terciario btn-bloque" id="btn-se-une">Simular que alguien se une</button>' : '') +
-      '</section>' +
-      '<section class="tarjeta bloque" aria-labelledby="titulo-obra">' +
-        '<h2 class="h4" id="titulo-obra">Tu obra</h2>' +
+        (r.cuposLibres > 0 ? '<button type="button" class="btn btn-terciario btn-bloque" id="btn-se-une">Simular que alguien se une</button>' : '')) +
+      plegable('obra', 'Tu obra', plural(dias, 'día', 'días') + ' para tus llaves',
         '<p class="llaves-en">' + icono('i-llave', 'icono-llave') + '<span><strong class="numero">' + plural(dias, 'día', 'días') + '</strong> para tus llaves</span></p>' +
         '<p class="texto-apoyo">' + icono('i-calendario') + 'Entrega estimada: ' + formatoFecha(p.entregaEstimada) + '</p>' +
-        obra +
-      '</section>';
+        obra);
   }
 
   // S13-F3: juntos. La pareja ve el mismo avance. La familia aporta con una lista de regalos,
@@ -3442,16 +3473,15 @@
     } else {
       regalo = '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-nueva-lista">' + icono('i-regalo') + 'Crear lista de regalos</button>';
     }
-    return '<section class="tarjeta bloque" aria-labelledby="titulo-juntos">' +
-      '<h2 class="h4" id="titulo-juntos">Juntos</h2>' +
+    var resumenJuntos = total > 0 ? 'Tu familia aportó ' + formatoPesos(total) : (estado.parejaInvitada ? 'Con tu pareja' : 'Tu pareja y tu familia');
+    return plegable('juntos', 'Juntos', resumenJuntos,
       (estado.parejaInvitada
         ? '<p class="juntos-avatares">' + icono('i-persona', 'avatar') + icono('i-persona', 'avatar avatar-2') + '<span>Tú y tu pareja ven este avance</span></p>'
         : '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-invitar-pareja">' + icono('i-persona') + 'Invitar a mi pareja</button>') +
       '<div class="regalo">' +
         '<p class="etiqueta">' + icono('i-regalo') + 'Regalo para tu pie ' + ayuda('regalo-pie') + '</p>' +
         regalo +
-      '</div>' +
-    '</section>';
+      '</div>');
   }
 
   function iniciarJuntos(p, d) {
@@ -3463,6 +3493,7 @@
     });
     if ($('btn-nueva-lista')) $('btn-nueva-lista').addEventListener('click', function () {
       creandoLista = true;
+      plegablesAbiertos.juntos = true;
       renderTu5(p, d);
       $('ocasion-0').focus();
     });
@@ -3682,8 +3713,17 @@
     return { nombre: nombre, param: partes[1] ? decodeURIComponent(partes[1]) : null };
   }
 
+  // Historial propio de rutas: si la nueva es la anterior, es "Atrás" y se recupera dónde estaba.
+  var pilaRutas = [];
+  var primeraPantalla = true;
   function mostrar() {
     cerrarHoja(false);
+    var hashNuevo = location.hash || '#inicio';
+    var volviendo = pilaRutas.length > 1 && pilaRutas[pilaRutas.length - 2].hash === hashNuevo;
+    if (pilaRutas.length) pilaRutas[pilaRutas.length - 1].y = window.scrollY;
+    if (volviendo) pilaRutas.pop();
+    else if (!pilaRutas.length || pilaRutas[pilaRutas.length - 1].hash !== hashNuevo) pilaRutas.push({ hash: hashNuevo, y: 0 });
+    var yVolver = volviendo ? pilaRutas[pilaRutas.length - 1].y : 0;
     var ruta = leerRuta();
     // S7-F6: la primera vez, antes de Inicio, se muestra la introducción.
     if (ruta.nombre === 'inicio' && !estado.introVista) {
@@ -3716,9 +3756,18 @@
       if (a.dataset.seccion === destino.seccion) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
     });
-    window.scrollTo(0, 0);
+    window.scrollTo(0, yVolver);
     // S11-F1: la pantalla que entra hace un fundido corto (la que sale no se anima).
     var visible = $('pantalla-' + destino.pantalla);
+    // Al cambiar de pantalla, el foco va a su título: así el lector de pantalla anuncia dónde llegó.
+    if (!primeraPantalla) {
+      var titulo = visible.querySelector('h1');
+      if (titulo) {
+        if (!titulo.hasAttribute('tabindex')) titulo.setAttribute('tabindex', '-1');
+        titulo.focus({ preventScroll: true });
+      }
+    }
+    primeraPantalla = false;
     visible.classList.remove('entrando');
     void visible.offsetWidth;
     visible.classList.add('entrando');
