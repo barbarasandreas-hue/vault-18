@@ -102,6 +102,7 @@ js/app.js           estado y render de las pantallas
 - En el teléfono, desde cualquier lugar: publicarla en GitHub Pages desde la rama `main` y abrir la dirección `https://<usuario>.github.io/<repositorio>/`. Desde el menú del navegador, "Agregar a pantalla de inicio" la deja como un ícono de app.
 - Pruebas de las fórmulas: `node --test tests/` (Node ya viene instalado; no hace falta `npm install`).
 - Interacción y movimiento (Sprints 11 y 12): seguir la skill `interaccion-bci-vanilla` (tokens de movimiento, catálogo de patrones, íconos y accesibilidad). Si no está disponible, sus reglas están resumidas en `PLAN.md`, Sprint 11.
+- Revisión de UI/UX: la skill `ui-ux-pro-max` (instalada en `.agents/skills/` y `.claude/skills/`; buscador en `scripts/search.py`) se usa para revisar accesibilidad, interacción, animación, navegación y formularios. **Nunca reemplaza el Bci Kit**: no se cambian colores, tipografía, botones ni íconos por sus paletas o fuentes, y sus sugerencias no pasan por encima de "Textos mínimos, al estilo Bci".
 - Roles de Claude Code en `.claude/agents/`: `planner` (escribe SPEC.md y PLAN.md), `generator` (programa un sprint) y `evaluator` (revisa el sprint y lo aprueba o rechaza).
 
 ## Forma de trabajo
