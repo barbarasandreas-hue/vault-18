@@ -775,7 +775,9 @@ body.en-intro .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
 }
 .barra ul {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Tantas columnas como pestañas visibles: en modo vivir son 3 y deben quedar centradas. */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   max-width: 480px;
   margin: 0 auto;
   padding: 0;
@@ -974,6 +976,7 @@ body.en-intro .app { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
 /* Presión: todo lo que se toca responde */
 .btn:active, .chip-filtro:active, .pestanas [role="tab"]:active, .tarjeta-proyecto:active,
 .opcion-grande:active, .interruptor:active, .carrusel-boton:active, .barra a:active { transform: scale(.97); }
+.barra li[hidden] { display: none; }
 .tarjeta-proyecto, .opcion-grande, .interruptor, .carrusel-boton { transition: transform var(--dur-micro) var(--ease-salida), background-color var(--dur-corta), border-color var(--dur-corta); }
 /* Cambio de pantalla */
 .pantalla.entrando { animation: entrar var(--dur-media) var(--ease-salida); }
@@ -1734,7 +1737,7 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .pieza-fila.bloq { background: var(--gray-light); border-style: dashed; }
 .pieza-fila.bloq .pieza-nombre { color: var(--gray-semidark); }
 .pieza-nombre { font-weight: 700; font-size: 15px; line-height: 1.25; min-width: 0; }
-.estrella { color: var(--green-dark); margin-right: 4px; }
+.pieza-estrella { color: var(--green-dark); margin-right: 4px; }
 .chip-propuesta-mini { display: inline-block; font-size: 10px; font-weight: 800; color: var(--blue-dark); background: var(--blue-20); border-radius: 999px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; }
 .pieza-efecto { font-size: 13px; font-weight: 800; color: var(--green-dark); background: var(--green-20, #E5F2E5); border-radius: 999px; padding: 4px 9px; white-space: nowrap; }
 .pieza-fila.on .pieza-efecto { background: var(--white); }

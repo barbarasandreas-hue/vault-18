@@ -1197,11 +1197,13 @@
     var c = candidatosVivir().map(deptoDeProyecto);
     var enObra = c.length > 0;
     var entregas = c.map(function (x) { return x.mesesEntrega; });
+    // S18-F1: el descuento en grupo es el que los grupos del rango ya tienen hoy, no el 5 % de completarlos.
+    var desc = enObra ? Math.max.apply(null, c.map(function (x) { return x.descuento; })) : 0;
     var hasta = r.hasta;
-    if (on && on.subsidio) hasta = Math.min(hasta, SUPUESTOS_PIEZAS.topeSubsidioUF / (on.grupo ? 1 - SUPUESTOS_PIEZAS.descuentoGrupo : 1));
+    if (on && on.subsidio) hasta = Math.min(hasta, SUPUESTOS_PIEZAS.topeSubsidioUF / (on.grupo ? 1 - desc : 1));
     return {
-      desde: { listaUF: r.desde, enObra: enObra, mesesEntrega: enObra ? Math.min.apply(null, entregas) : 0 },
-      hasta: { listaUF: hasta, enObra: enObra, mesesEntrega: enObra ? Math.max.apply(null, entregas) : 0 }
+      desde: { listaUF: r.desde, enObra: enObra, mesesEntrega: enObra ? Math.min.apply(null, entregas) : 0, descuento: desc },
+      hasta: { listaUF: hasta, enObra: enObra, mesesEntrega: enObra ? Math.max.apply(null, entregas) : 0, descuento: desc }
     };
   }
   // Bloqueos de la pieza contando lo que hay de verdad en su rango (la app solo ofrece lo que puede cumplir).
@@ -1365,7 +1367,7 @@
       var activo = !!on[id];
       var ef = b ? b.razon : efectoPieza(id, x.perfil, on, x.deptos.hasta, hoyDemo()).texto;
       return '<li class="pieza-fila' + (activo ? ' on' : '') + (b ? ' bloq' : '') + '">' +
-        '<span class="pieza-nombre">' + (mejor === id ? '<span class="estrella" aria-label="Recomendado">★</span>' : '') + pz.nombre +
+        '<span class="pieza-nombre">' + (mejor === id ? '<span class="pieza-estrella" aria-label="Recomendado">★</span>' : '') + pz.nombre +
           (pz.existeHoy ? '' : '<span class="chip-propuesta-mini">Propuesta</span>') + '</span>' +
         '<span class="pieza-efecto">' + ef + '</span>' +
         '<button type="button" class="pieza-q" data-q="' + id + '" aria-expanded="' + (piezaAbierta === id) + '" aria-controls="cond-' + id + '" aria-label="Condiciones: ' + pz.nombre + '">?</button>' +
@@ -2822,7 +2824,8 @@
         '<path class="chancho-cola" d="M15 50 C6 49 5 40 11 40 C16 40 15 47 9 47"/>' +
         '<path class="chancho-oreja" d="M70 27 L80 12 L84 31 Z"/>' +
         '<path class="chancho-fondo" d="' + cuerpo + '"/>' +
-        '<rect class="alcancia-relleno" x="0" y="24" width="112" height="62" clip-path="url(#clip-alcancia)" style="--desde:' + (desde / 100) + ';transform:scaleY(' + (pct / 100) + ')"/>' +
+        // El recorte va en un grupo: si va en el mismo rect, el scaleY también encoge el recorte y el rosado se sale del chanchito.
+        '<g clip-path="url(#clip-alcancia)"><rect class="alcancia-relleno" x="0" y="24" width="112" height="62" style="--desde:' + (desde / 100) + ';transform:scaleY(' + (pct / 100) + ')"/></g>' +
         '<path class="chancho-borde" d="' + cuerpo + '"/>' +
         '<path class="chancho-brillo" d="M26 44 C29 37 36 32 44 30"/>' +
         '<rect class="chancho-pata" x="36" y="76" width="12" height="19" rx="5"/>' +
@@ -3015,7 +3018,7 @@
           puntosRacha() +
           cuentaGrupo +
         '</div>' +
-        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-simular-mes">Ver el próximo mes · demo</button></div>' +
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-simular-mes">Próximo mes · demo</button></div>' +
         // S17-F10: lo que no es la acción del mes queda plegado.
         plegable('mas-opciones', 'Más opciones', '',
           '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + estado.cuotaAutomatica + '" id="btn-cuota-automatica">' +
@@ -3101,7 +3104,7 @@
           barraHitos(estado.ahorrado, meta) +
           cuentaGrupo +
         '</div>' +
-        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-saltar-entrega">Saltar a la entrega · demo</button></div>' +
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-saltar-entrega">Ir a la entrega · demo</button></div>' +
         bloqueJuntos() +
         tuGrupoYObra(p) +
       '</section>';
