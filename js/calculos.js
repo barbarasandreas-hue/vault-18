@@ -37,7 +37,7 @@ function descuentoGrupo(unidades) {
 // Precio que paga el usuario. En lote (compra en grupo) se aplica el descuento según las unidades del lote.
 function precioUF(listaUF, tipo, unidades) {
   if (tipo !== 'lote') return listaUF;
-  var u = unidades === undefined ? 10 : unidades;
+  var u = unidades === undefined ? 0 : unidades; // S18-F1: sin unidades no se supone el grupo completo
   return listaUF * (1 - descuentoGrupo(u));
 }
 
@@ -100,7 +100,7 @@ function escenario(listaUF, tipo, modo, unidades) {
     precioUF: precio,
     precioLista: ufAPesos(listaUF),
     precio: precioPesos,
-    descuento: tipo === 'lote' ? descuentoGrupo(unidades === undefined ? 10 : unidades) : 0,
+    descuento: tipo === 'lote' ? descuentoGrupo(unidades === undefined ? 0 : unidades) : 0,
     pctCredito: m.credito,
     pctUsuario: m.usuario,
     pctInversionistas: m.inversionistas,
@@ -134,7 +134,7 @@ function pasaFiltroIA(rent) { return rent >= RENTABILIDAD_MINIMA; }
 
 // Ahorro por unirse a una compra en grupo: el descuento según las unidades del lote.
 function ahorroPorUnirseUF(listaUF, unidades) {
-  return listaUF * descuentoGrupo(unidades === undefined ? 10 : unidades);
+  return listaUF * descuentoGrupo(unidades === undefined ? 0 : unidades);
 }
 
 // Lo que se reúne con inversionistas: la participación de 15 % del precio pagado.
@@ -172,24 +172,35 @@ function formatoFecha(iso) {
 // cuposExtra: cupos que tomó el usuario en este teléfono (0 o 1).
 // invertidoUF: lo que el usuario invirtió en este proyecto desde este teléfono.
 // modo: 'vivir' o 'arrendar' (por defecto 'arrendar').
-function resumenProyecto(proyecto, departamentos, cuposExtra, invertidoUF, modo) {
+// S18-F1: con opciones.descuentoHoy, el precio usa el descuento que el grupo ya tiene asegurado:
+// los cupos tomados más el tuyo (si aún no estás, opciones.yaEstas = false). Lo de completar el grupo
+// queda como posibilidad en ahorroCompleto y descuentoCompleto. Sin opciones, supone el grupo completo (modo arrendar).
+function unidadesHoy(proyecto, cuposExtra, yaEstas) {
+  var tomados = proyecto.cuposTomados + (cuposExtra || 0);
+  return Math.min(proyecto.cupos, tomados + (yaEstas ? 0 : 1));
+}
+function resumenProyecto(proyecto, departamentos, cuposExtra, invertidoUF, modo, opciones) {
   var tipoCompra = proyecto.tipo === 'conjunto' ? 'lote' : 'individual';
   var listaUF = departamentos[0].listaUF;
-  var e = escenario(listaUF, tipoCompra, modo, proyecto.cupos);
+  var tomados = proyecto.cuposTomados + (cuposExtra || 0);
+  var unidades = opciones && opciones.descuentoHoy && tipoCompra === 'lote'
+    ? unidadesHoy(proyecto, cuposExtra, opciones.yaEstas) : proyecto.cupos;
+  var e = escenario(listaUF, tipoCompra, modo, unidades);
 
   var rentabilidades = departamentos.map(function (d) {
-    return rentabilidad(d.arriendoEstimadoIA, precioUF(d.listaUF, tipoCompra, proyecto.cupos));
+    return rentabilidad(d.arriendoEstimadoIA, precioUF(d.listaUF, tipoCompra, unidades));
   });
   var rentMinima = Math.min.apply(null, rentabilidades);
 
-  var tomados = proyecto.cuposTomados + (cuposExtra || 0);
   var porFinanciar = porFinanciarUF(e.precioUF);
   var financiadas = proyecto.ufFinanciadas + (invertidoUF || 0);
 
   return {
     tipoCompra: tipoCompra,
     escenario: e,
-    ahorro: proyecto.tipo === 'conjunto' ? ufAPesos(ahorroPorUnirseUF(listaUF, proyecto.cupos)) : 0,
+    ahorro: proyecto.tipo === 'conjunto' ? ufAPesos(ahorroPorUnirseUF(listaUF, unidades)) : 0,
+    ahorroCompleto: proyecto.tipo === 'conjunto' ? ufAPesos(ahorroPorUnirseUF(listaUF, proyecto.cupos)) : 0,
+    descuentoCompleto: proyecto.tipo === 'conjunto' ? descuentoGrupo(proyecto.cupos) : 0,
     descuento: e.descuento,
     arriendoBruto: departamentos[0].arriendoEstimadoIA,
     origenArriendo: departamentos[0].origenArriendo,
@@ -1110,6 +1121,231 @@ function avisosDelMes(c) {
   });
 }
 
+// ---------- Sprint 16: avatar, tu equipo y la carrera a la puerta ----------
+// El avatar no tiene género: todos los peinados, colores y accesorios son para todos.
+var AVATAR_PELOS = ['corto', 'largo', 'moño', 'rizado', 'rapado', 'ondulado'];
+var AVATAR_ACCESORIOS = ['lentes', 'audifonos', 'mochila', 'gorro', 'planta'];
+// Relaciones de Tu equipo. Se pueden repetir (dos mamás, dos papás…). La pareja es siempre "tu pareja".
+var RELACIONES_EQUIPO = ['pareja', 'mamá', 'papá', 'hermana', 'hermano', 'abuela', 'abuelo', 'tía', 'tío', 'amiga', 'amigo', 'mascota'];
+var MAXIMO_EQUIPO = 12;
+
+// Deja solo lo que el creador ofrece; lo que no se eligió queda en null (se dibuja neutro).
+function normalizarAvatar(a) {
+  if (!a || typeof a !== 'object') return null;
+  function entero(v, max) { return Number.isInteger(v) && v >= 0 && v < max ? v : null; }
+  return {
+    piel: entero(a.piel, 5),
+    pelo: AVATAR_PELOS.indexOf(a.pelo) !== -1 ? a.pelo : null,
+    colorPelo: entero(a.colorPelo, 6),
+    ropa: entero(a.ropa, 6),
+    accesorios: Array.isArray(a.accesorios) ? AVATAR_ACCESORIOS.filter(function (x) { return a.accesorios.indexOf(x) !== -1; }) : [],
+    mascota: a.mascota === 'perro' || a.mascota === 'gato' ? a.mascota : ''
+  };
+}
+
+// Agrega a alguien a Tu equipo. Devuelve una lista nueva (o la misma si la relación no existe o está lleno).
+function agregarMiembro(equipo, relacion, avatar) {
+  var lista = Array.isArray(equipo) ? equipo : [];
+  if (RELACIONES_EQUIPO.indexOf(relacion) === -1 || lista.length >= MAXIMO_EQUIPO) return lista;
+  var siguiente = lista.reduce(function (m, x) { return Math.max(m, Number(String(x.id).replace(/\D/g, '')) || 0); }, 0) + 1;
+  return lista.concat([{ id: 'm' + siguiente, relacion: relacion, avatar: normalizarAvatar(avatar) }]);
+}
+
+// Cuántas personas y mascotas acompañan a la usuaria (sin contarla a ella).
+function contarEquipo(equipo, mascotaPropia) {
+  var lista = Array.isArray(equipo) ? equipo : [];
+  var mascotas = lista.filter(function (x) { return x.relacion === 'mascota'; }).length + (mascotaPropia ? 1 : 0);
+  return { personas: lista.filter(function (x) { return x.relacion !== 'mascota'; }).length, mascotas: mascotas };
+}
+
+// Carrera a la puerta: 1 = en la puerta, 0 = en la partida. El camino más lento igual avanza un poco
+// (la escala es 25 % más larga que el plazo mayor). Sin plazo (falta el ahorro) queda en la partida.
+function posicionCarrera(meses, mesesMax) {
+  if (meses === null || meses === undefined || !isFinite(meses)) return 0;
+  if (meses <= 0) return 1;
+  if (!(mesesMax > 0)) return 1;
+  return Math.min(1, Math.max(0, 1 - meses / (mesesMax * 1.25)));
+}
+
+// ---------- Sprint 17: un solo plazo, números según lo decidido y piezas que se suman ----------
+
+// Meses completos entre dos fechas ISO (hacia arriba; nunca negativo).
+function mesesEntre(desdeISO, hastaISO) {
+  var a = String(desdeISO).split('-').map(Number), b = String(hastaISO).split('-').map(Number);
+  var m = (b[0] - a[0]) * 12 + (b[1] - a[1]) + (b[2] > a[2] ? 1 : 0);
+  return Math.max(0, m);
+}
+// El mes de las llaves: "noviembre de 2027".
+// S18-F2: la fecha de la demo después de N meses (mismo día, o el último del mes si no existe).
+function fechaMasMeses(fechaISO, meses) {
+  var p = String(fechaISO).split('-').map(Number);
+  var t = p[1] - 1 + (meses || 0);
+  var anio = p[0] + Math.floor(t / 12), mes = ((t % 12) + 12) % 12;
+  var ultimo = new Date(Date.UTC(anio, mes + 1, 0)).getUTCDate();
+  var dos = function (n) { return (n < 10 ? '0' : '') + n; };
+  return anio + '-' + dos(mes + 1) + '-' + dos(Math.min(p[2], ultimo));
+}
+function fechaLlaves(meses, hoyISO) {
+  var p = String(hoyISO).split('-').map(Number);
+  var t = p[1] - 1 + (meses || 0);
+  return MESES[t % 12] + ' de ' + (p[0] + Math.floor(t / 12));
+}
+// S17-F1: el plazo es el mayor entre lo que toma juntar lo que falta y las fechas mínimas
+// (la entrega del edificio, los 12 meses de la cuenta de vivienda). freno dice cuál manda.
+// faltaPesos: lo que falta juntar; pisos: [{ meses, freno }]. basta: lo que alcanza con juntar al mes.
+function plazoConPisos(faltaPesos, ahorroMensual, pisos) {
+  var falta = Math.max(0, faltaPesos || 0);
+  var mesesAhorro = falta === 0 ? 0 : mesesParaMeta(falta, ahorroMensual);
+  var meses = mesesAhorro, freno = falta === 0 ? 'ninguno' : 'ahorro';
+  (pisos || []).forEach(function (x) {
+    if (x && x.meses > 0 && (meses === null || x.meses > meses)) { meses = x.meses; freno = x.freno; }
+  });
+  var basta = falta === 0 ? 0 : (freno === 'ahorro' || meses === null ? ahorroMensual : falta / meses);
+  return { meses: meses, freno: freno, basta: basta, mesesAhorro: mesesAhorro };
+}
+
+// S17-F2: la precisión va con lo que la persona ya decidió (CLAUDE.md).
+function formatoRedondeado(pesos) {
+  var n = Math.abs(pesos || 0);
+  if (n >= 1e6) {
+    var m = Math.round(n / 1e5) / 10;
+    return '$' + String(m).replace('.', ',') + ' millones';
+  }
+  return '$' + formatoMiles(Math.round(n / 1000)) + ' mil';
+}
+function formatoRango(desde, hasta) {
+  var a = Math.min(desde, hasta), b = Math.max(desde, hasta);
+  if (b >= 1e6) {
+    var ma = Math.floor(a / 1e6), mb = Math.ceil(b / 1e6);
+    if (ma === mb || a < 1e6) return formatoRedondeado(b);
+    return 'entre $' + ma + ' y $' + mb + ' millones';
+  }
+  var ka = Math.floor(a / 10000) * 10, kb = Math.ceil(b / 10000) * 10;
+  if (ka === kb) return formatoRedondeado(b);
+  return 'entre $' + ka + ' y $' + kb + ' mil';
+}
+// etapa: 'rango' (valor = { desde, hasta }), 'redondeado' o 'exacto'.
+function formatoSegunEtapa(valor, etapa) {
+  if (etapa === 'rango') return formatoRango(valor.desde, valor.hasta);
+  if (etapa === 'redondeado') return formatoRedondeado(valor);
+  return formatoPesos(valor);
+}
+
+// S17-F7: las piezas del modo vivir. Cada una baja el precio, pone dinero en el pie o fija una fecha.
+// existeHoy: false = propuesta del proyecto. cond: una línea, se muestra solo en "?".
+var SUPUESTOS_PIEZAS = {
+  descuentoGrupo: 0.05,       // lote de 10 (descuentoGrupo)
+  subsidioUF: 270,            // DS1 tramo 3: promedio; el real sale de una tabla por precio (por validar)
+  ahorroMinimoSubsidioUF: 80,
+  mesesCuentaVivienda: 12,
+  topeSubsidioUF: 2200,       // Región Metropolitana
+  bajaIVA: 0.10,              // supuesto (el gobierno estima hasta ~14 %)
+  finIVA: '2027-12-01',
+  regalo: 300000,
+  creditoSiempre: 0.80
+};
+var PIEZAS_VIVIR = {
+  grupo: { nombre: 'Descuento en grupo', grupo: 'menos', existeHoy: false,
+    cond: '5 % menos. Solo edificios en obra. Tu pie va a una cuenta Bci bloqueada.' },
+  subsidio: { nombre: 'Subsidio del Estado', grupo: 'menos', existeHoy: true,
+    cond: 'Hasta UF 2.200. Cuenta de vivienda con 12 meses y 80 UF. Registro Social de Hogares.' },
+  iva: { nombre: 'Sin IVA', grupo: 'menos', existeHoy: true,
+    cond: 'Solo terminados. Firmar antes del 1 de diciembre de 2027.' },
+  regalo: { nombre: 'Regalo de tu familia', grupo: 'ayuda', existeHoy: false,
+    cond: '$300 mil en una ocasión: cumpleaños o Navidad.' },
+  respaldo: { nombre: 'Respaldo familiar', grupo: 'ayuda', existeHoy: false,
+    cond: 'Un familiar deja el 10 % en garantía y lo recupera. Sube lo que pagas al mes.' }
+};
+var ORDEN_PIEZAS = ['grupo', 'subsidio', 'iva', 'regalo', 'respaldo'];
+
+// depto: { listaUF, enObra, mesesEntrega, descuento (del grupo, opcional) }. Sin departamento elegido, comprar en grupo implica en obra.
+function deptoPiezas(depto, on) {
+  if (depto) return depto;
+  return { listaUF: LISTA_REFERENCIA_UF, enObra: !!(on && on.grupo), mesesEntrega: 0 };
+}
+function precioConPiezas(listaUF, on, descuento) {
+  var p = listaUF;
+  if (on.grupo) p *= 1 - (descuento === undefined ? SUPUESTOS_PIEZAS.descuentoGrupo : descuento);
+  if (on.iva) p *= 1 - SUPUESTOS_PIEZAS.bajaIVA;
+  return p;
+}
+// Por qué una pieza no se suma (razón en dos palabras y cómo desbloquearla), o null.
+function bloqueoPieza(id, on, depto) {
+  var d = deptoPiezas(depto, on);
+  if (id === 'grupo' && depto && !depto.enObra) return { razon: 'Terminado', como: 'Elige uno en obra.' };
+  if (id === 'iva' && d.enObra) return { razon: 'En obra', como: 'Elige uno terminado.' };
+  if (id === 'subsidio') {
+    var p = precioConPiezas(d.listaUF, Object.assign({}, on, { subsidio: false }), d.descuento);
+    if (p > SUPUESTOS_PIEZAS.topeSubsidioUF + 1e-9) return { razon: 'Sobre UF 2.200', como: 'Elige uno de hasta UF 2.200.' };
+  }
+  return null;
+}
+// Todo lo que muestra Llega antes para un departamento (o un precio de referencia) y unas piezas.
+// perfil: { ahorroActual, ahorroMensual }; hoyISO: fecha de la demo.
+function calcularPiezas(perfil, onEntrada, depto, hoyISO) {
+  var on = {};
+  ORDEN_PIEZAS.forEach(function (id) { on[id] = !!(onEntrada && onEntrada[id]); });
+  var d = deptoPiezas(depto, on);
+  ORDEN_PIEZAS.forEach(function (id) { if (on[id] && bloqueoPieza(id, on, depto)) on[id] = false; });
+  var S = SUPUESTOS_PIEZAS;
+  var p = precioConPiezas(d.listaUF, on, d.descuento);
+  var creditoMax = (on.respaldo ? 1 : MODOS.vivir.credito) * p;
+  var subsidio = on.subsidio ? S.subsidioUF : 0;
+  var pie = Math.max(on.subsidio ? S.ahorroMinimoSubsidioUF : 0, p - creditoMax - subsidio);
+  var gastos = gastosUF(p);
+  var metaUF = pie + gastos;
+  var tienesUF = ((perfil && perfil.ahorroActual) || 0) / SUPUESTOS.uf + (on.regalo ? S.regalo / SUPUESTOS.uf : 0);
+  var faltaUF = Math.max(0, metaUF - tienesUF);
+  var pisos = [];
+  if (d.enObra && d.mesesEntrega > 0) pisos.push({ meses: d.mesesEntrega, freno: 'entrega' });
+  if (on.subsidio) pisos.push({ meses: S.mesesCuentaVivienda, freno: 'cuenta-vivienda' });
+  var plazo = plazoConPisos(ufAPesos(faltaUF), perfil && perfil.ahorroMensual, pisos);
+  var credito = p - subsidio - pie;
+  var dividendo = ufAPesos(cuotaFija(credito, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
+  var hoy = hoyISO || '2026-11-03';
+  return {
+    on: on, precioUF: p, creditoUF: credito, pctCredito: credito / p, subsidioUF: subsidio,
+    pie: ufAPesos(pie), gastos: ufAPesos(gastos), meta: ufAPesos(metaUF), tienes: ufAPesos(tienesUF), falta: ufAPesos(faltaUF),
+    meses: plazo.meses, freno: plazo.freno, basta: plazo.basta, avance: metaUF > 0 ? Math.min(1, tienesUF / metaUF) : 1,
+    dividendo: dividendo,
+    ivaTarde: on.iva && plazo.meses !== null && plazo.meses > mesesEntre(hoy, S.finIVA),
+    llaves: plazo.meses === null ? null : fechaLlaves(plazo.meses, hoy)
+  };
+}
+// El crédito de siempre (80 %), para la línea tachada.
+function plazoCreditoSiempre(perfil, listaUF) {
+  var meta = ufAPesos(listaUF * (1 - SUPUESTOS_PIEZAS.creditoSiempre) + gastosUF(listaUF));
+  return plazoConPisos(meta - ((perfil && perfil.ahorroActual) || 0), perfil && perfil.ahorroMensual, []).meses;
+}
+// El efecto de sumar (o quitar) una pieza, en un solo número: "−1 mes", "−$5 millones" o "−$438 mil al mes".
+function efectoPieza(id, perfil, on, depto, hoyISO) {
+  var sin = Object.assign({}, on); sin[id] = false;
+  var con = Object.assign({}, on); con[id] = true;
+  var a = calcularPiezas(perfil, sin, depto, hoyISO), b = calcularPiezas(perfil, con, depto, hoyISO);
+  if (a.meses !== null && b.meses !== null && a.meses - b.meses > 0) {
+    var dm = a.meses - b.meses;
+    return { texto: '−' + dm + ' ' + (dm === 1 ? 'mes' : 'meses'), meses: dm };
+  }
+  var dp = ufAPesos(a.precioUF - b.precioUF);
+  if (dp > 100000) return { texto: '−' + formatoRedondeado(dp), meses: 0 };
+  var db = (a.basta || 0) - (b.basta || 0);
+  if (db > 20000) return { texto: '−' + formatoRedondeado(db) + ' al mes', meses: 0 };
+  return { texto: 'Casi igual', meses: 0 };
+}
+// La pieza que más acerca ahora. Nunca propone el respaldo familiar: depende de otra persona.
+function mejorPieza(perfil, on, depto, hoyISO) {
+  var a = calcularPiezas(perfil, on, depto, hoyISO), mejor = null;
+  ORDEN_PIEZAS.forEach(function (id) {
+    if (on[id] || id === 'respaldo' || bloqueoPieza(id, on, depto)) return;
+    var con = Object.assign({}, on); con[id] = true;
+    var b = calcularPiezas(perfil, con, depto, hoyISO);
+    if (b.ivaTarde || a.meses === null || b.meses === null) return;
+    var puntaje = (a.meses - b.meses) * 1e7 + ((a.basta || 0) - (b.basta || 0));
+    if (puntaje > 30000 && (!mejor || puntaje > mejor.puntaje)) mejor = { id: id, puntaje: puntaje };
+  });
+  return mejor ? mejor.id : null;
+}
+
 if (typeof module !== 'undefined') module.exports = {
   LISTA_REFERENCIA_UF: LISTA_REFERENCIA_UF,
   MINIMO_PARA_VIVIR: MINIMO_PARA_VIVIR,
@@ -1219,5 +1455,29 @@ if (typeof module !== 'undefined') module.exports = {
   repartoUF: repartoUF,
   ufAPesos: ufAPesos,
   formatoPesos: formatoPesos,
-  escenario: escenario
+  escenario: escenario,
+  AVATAR_PELOS: AVATAR_PELOS,
+  AVATAR_ACCESORIOS: AVATAR_ACCESORIOS,
+  RELACIONES_EQUIPO: RELACIONES_EQUIPO,
+  normalizarAvatar: normalizarAvatar,
+  agregarMiembro: agregarMiembro,
+  contarEquipo: contarEquipo,
+  posicionCarrera: posicionCarrera,
+  mesesEntre: mesesEntre,
+  fechaLlaves: fechaLlaves,
+  fechaMasMeses: fechaMasMeses,
+  unidadesHoy: unidadesHoy,
+  plazoConPisos: plazoConPisos,
+  formatoRedondeado: formatoRedondeado,
+  formatoRango: formatoRango,
+  formatoSegunEtapa: formatoSegunEtapa,
+  SUPUESTOS_PIEZAS: SUPUESTOS_PIEZAS,
+  PIEZAS_VIVIR: PIEZAS_VIVIR,
+  ORDEN_PIEZAS: ORDEN_PIEZAS,
+  bloqueoPieza: bloqueoPieza,
+  precioConPiezas: precioConPiezas,
+  calcularPiezas: calcularPiezas,
+  plazoCreditoSiempre: plazoCreditoSiempre,
+  efectoPieza: efectoPieza,
+  mejorPieza: mejorPieza
 };

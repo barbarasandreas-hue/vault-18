@@ -555,6 +555,294 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 
 ---
 
+## Sprint 16 · Tu personaje y tu equipo
+
+**Objetivo:** que la persona se vea a sí misma, y a quienes la acompañan, avanzando hacia su departamento, y que las pantallas donde decide (preguntas, caminos, elegir y documentos) sean tan entretenidas como Tu pie. Bocetos: [Primer Peldaño entretenido](https://claude.ai/artifact/FW2HB2gjHCP7uWw6HWoiXY).
+
+> Diagnóstico (5-nov-2026): lo entretenido se juntó al final del recorrido (Tu pie, Firmar, Inicio). Preguntas, Caminos, Elegir y Documentos siguen siendo formularios y listas, y es ahí donde más se abandona.
+
+**Fuera de este sprint:** álbum de stickers, tarjeta para historia, edificio de noche en Mi departamento, "Tu mes" en tres pantallas, balanza en Postular y mapa del barrio.
+
+**Reglas del sprint:**
+1. Se celebra solo el avance real: cada timbre, luz o paso del avatar corresponde a un dato de la usuaria.
+2. Todo gesto tiene un botón al lado y respeta "reducir movimiento".
+3. La ilustración acompaña al número; plazos, montos y condiciones siempre se leen en texto.
+4. **Diversidad de parejas y familias** (vale para todo el sprint):
+   - No se pregunta ni se guarda el género de nadie. El avatar no tiene opción "hombre" o "mujer": todos los peinados, colores, ropa y accesorios están disponibles para todos.
+   - La pareja se llama siempre "tu pareja". Su avatar lo diseña la usuaria desde cero; nunca se propone uno por defecto ni se deduce del avatar de la usuaria.
+   - La familia se arma con relaciones, sin límite por tipo: se pueden agregar dos mamás, dos papás, dos abuelas, etc.
+   - Los textos van en neutro: "¡Es tuyo!", "Solo yo", "Tu pareja ve este avance". No hay saludos con género ("Bienvenida", "Bienvenido").
+   - Las ilustraciones de ejemplo (la tarjeta "En pareja" de las preguntas, los bocetos de la ayuda) usan dos avatares sin cara, con peinados y ropa que no marcan género.
+   - El crédito mancomunado se explica como "tú y tu pareja", sin suponer matrimonio ni tipo de pareja.
+   - El "?" de la lista de regalos dice hoy "como una lista de novios"; pasa a "como una lista de regalos de matrimonio, pero para tu pie".
+5. Nada de nombres de personas: solo relaciones.
+
+- **S16-F1 Creador de avatar.**
+  - Estilo **plano sin cara**, el mismo del personaje de la escalera.
+  - Opciones: 5 tonos de piel, 6 peinados (corto, largo, moño, rizado, rapado, ondulado), 6 colores de pelo (incluye azul y canas), ropa en 6 colores del Bci Kit, accesorios (lentes, audífonos, mochila, gorro, planta) y mascota (sin mascota, perro, gato).
+  - Se abre desde Perfil ("Tu avatar") y desde el primer paso de las preguntas iniciales. Se ve en vivo mientras se elige.
+  - El estado guarda `avatar` (`piel`, `pelo`, `colorPelo`, `ropa`, `accesorios`, `mascota`). Si no lo crea, la app usa uno neutro y nunca le pide crearlo dos veces.
+  - Se dibuja con una función `avatarSVG(avatar, tamaño)` en `js/app.js`. Las muestras de color tienen nombre accesible ("Tono 3", "Pelo castaño") y los botones usan `aria-pressed`.
+  - Acepta si: cada opción cambia la vista previa al tocarla; el avatar se mantiene al recargar; no hay ninguna opción de género.
+- **S16-F2 Preguntas iniciales: tu escena se arma.**
+  - Arriba hay una escena con el avatar; cada respuesta agrega algo:
+    - "Con mi pareja" abre el creador para la pareja (sin avatar sugerido).
+    - "Con mi familia" agrega figuras de la familia.
+    - "+ Mascota" suma la mascota.
+  - Opciones para "¿Con quién vas a vivir?": Solo yo · Con mi pareja · Con mi familia, y aparte el interruptor "+ Mascota".
+  - Al terminar, la escena entra en la ventana encendida del Inicio (opción A del Sprint 15), con un fundido simple.
+  - Sigue siendo "Pregunta N de 4" y cada respuesta se puede cambiar.
+- **S16-F3 El avatar en la app.**
+  - Ventana encendida de Inicio: la usuaria y quienes viven con ella.
+  - Escalera: el personaje es su avatar.
+  - Firmar: la puerta se abre con la usuaria y su equipo delante; luego viene el confeti que ya existe.
+  - Hoja "Mis datos" y Perfil: el avatar arriba, con "Editar".
+- **S16-F4 Tu equipo (familia con avatar).**
+  - En Tu pie, la sección "Tu equipo" con avatares y "Agregar a alguien" (hoja). Se elige la relación y se diseña su avatar.
+  - Relaciones: tu pareja, tu mamá, tu papá, tu hermana, tu hermano, tu abuela, tu abuelo, tu tía, tu tío, tu amiga, tu amigo y tu mascota. Se pueden repetir.
+  - Cada miembro tiene su papel: "ve este avance" (pareja invitada), "aportó" o "vio tu lista". El estado guarda `equipo: [{relacion, avatar, papel}]`.
+  - Lista de regalos: cada aporte muestra el avatar de quien aportó, con su monto y su mensaje.
+  - Vista de la familia (`#regalo`): antes de aportar, "Tu avatar" permite retocar el avatar propio (simulado). Ese avatar aparece en el aporte.
+  - Puerta final: aparece todo el equipo, con el texto "Tu equipo te acompañó: N personas y 1 mascota". El conteo sale de una función en `js/calculos.js`, con pruebas.
+  - Acepta si: se pueden agregar dos personas con la misma relación (por ejemplo, dos mamás); la pareja no tiene avatar sugerido; ningún texto lleva género.
+- **S16-F5 Caminos: la carrera a la puerta.**
+  - Arriba de las tarjetas de Caminos hay un carril por cada camino mostrado (a lo más 3, según S15-F3). El avatar de la usuaria avanza hacia una puerta y la etiqueta dice "N a M meses".
+  - La posición sale de `posicionCarrera(meses, mesesMax)` en `js/calculos.js`, con pruebas: el camino que llega antes queda más cerca de la puerta.
+  - En compra en grupo se ven otros avatares en el mismo carril (sin nombres).
+  - Debajo va la letra chica del camino más rápido en una línea, por ejemplo "Con inversionistas llegas 8 meses antes; ellos tienen el 15 % hasta que lo recompres".
+  - El control "Si juntas al mes" mueve los avatares en vivo. Con "reducir movimiento" cambian de posición sin animarse.
+  - Para lectores de pantalla, la carrera es una lista con camino y meses.
+  - Tocar un carril baja a la tarjeta de ese camino.
+- **S16-F6 Documentos: pasaporte con timbres.**
+  - Los documentos de Postular se ven como páginas de un pasaporte: carnet, liquidaciones, cotizaciones AFP e informe de deudas.
+  - Al subir un documento, cae un timbre "LISTO" con un giro corto y una vibración breve si el teléfono la permite. Los que faltan dicen "FALTA", con borde punteado.
+  - Una sola acción: subir el siguiente documento que falta.
+  - Con "reducir movimiento" el timbre aparece sin caer.
+- **S16-F7 Elegir departamento: fachadas ilustradas.**
+  - Cada proyecto tiene su edificio dibujado en `js/datos.js` (`fachada: {color, pisos}`), con colores del Bci Kit.
+  - Las tarjetas de Elegir y Departamentos muestran la fachada arriba, el nombre y el precio en UF.
+  - Guardar un proyecto enciende una ventana, igual que en Inicio.
+  - Los chips de filtro y el rango se mantienen como en S15-F4.
+
+**Verificación del sprint:**
+- `node --test tests/` con las pruebas nuevas en `tests/sprint16.test.js`: `posicionCarrera`, el conteo del equipo y la repetición de relaciones.
+- Recorrido A con Playwright a 390, 360 y 320 px, con dos parejas distintas: una con avatares de pelo largo y una con avatares de pelo corto. Revisar que ningún texto cambie según el avatar.
+- Búsqueda de textos con género en la interfaz: "Bienvenida", "Bienvenido", "novio", "novia", "esposo", "esposa", "marido".
+- Revisión con `web-design-guidelines` y `ui-ux-pro-max`: foco, nombres accesibles de las muestras y movimiento reducido.
+
+---
+
+## Sprint 17 · Que se entienda sin contexto
+
+**Objetivo:** que alguien que abre la app por primera vez entienda en 10 segundos cuándo tendría sus llaves, cuánto pagaría al mes después y qué puede sumar para llegar antes, sin palabras de banco y con el mínimo de texto. Referencias: [Los caminos por dentro](https://claude.ai/artifact/RFm2D8cznhpUG38jsKmMWU) (modelo y simulador), [Arma tu camino](https://claude.ai/artifact/9Mi7e9rRcAySXyMBvwjuwF) (bocetos E) y `claude/modelo-caminos-piezas-nov2026.md` en el proyecto.
+
+> Diagnóstico (5-nov-2026, recorrido como usuaria nueva, para vivir):
+> - El plazo cambia según la pantalla: Inicio dice 11 a 15 meses, Caminos dice 15 y Tu pie dice 20. La causa es que Tu pie no cuenta lo ya ahorrado.
+> - Los montos aparecen exactos sin haber elegido un departamento.
+> - Hay demasiadas palabras de banco (dividendo, escriturar, carga, preaprobación, participación) y demasiados bloques por pantalla.
+> - Inversiones y los inversionistas aparecen para quien quiere vivir.
+>
+> Hallazgo del modelo: la compra en grupo no adelanta las llaves, porque las fija la entrega del edificio. Lo que hace es bajar el precio y lo que hay que juntar al mes.
+
+**Reglas del sprint:**
+1. **Un solo cálculo por dato.** El plazo, lo que juntas al mes y el dividendo salen de una función en `js/calculos.js` y se muestran igual en todas las pantallas.
+2. **La precisión va con lo decidido** (`CLAUDE.md`): rangos sin departamento, redondeado con departamento y exacto solo en la simulación, la preaprobación y Firmar.
+3. **Mostrar primero, explicar al tocar.** Cada pieza es una fila con nombre, efecto, "?" e interruptor. Las condiciones van en "?", en una línea. Ningún párrafo en pantalla.
+4. **Se dice lo que es propuesta.** Grupo, regalo y respaldo familiar llevan la etiqueta "Propuesta".
+5. **Se sigue el modo vivir.** Nada de inversionistas ni de Inversiones para quien compra para vivir.
+
+### Bloque 1 · Arreglos de confianza (hacer primero)
+
+- **S17-F1 Un solo plazo.**
+  - `plazoCamino(perfil, piezas, departamento)` en `js/calculos.js` devuelve, con pruebas: meses, mes y año de las llaves, freno (`ahorro`, `entrega`, `cuenta-vivienda`, `ninguno`), lo que basta juntar al mes, el porcentaje de la meta ya cubierto y el dividendo.
+  - Tu pie cuenta lo ya ahorrado como avance desde el día uno.
+  - Inicio, Caminos, Detalle y Tu pie usan esa función.
+  - Acepta si: en el recorrido A, el plazo es el mismo (o está contenido en el rango) en las cuatro pantallas.
+- **S17-F2 Números según lo decidido.**
+  - `formatoSegunEtapa(monto, etapa)` en `js/calculos.js`, con pruebas, devuelve "entre $8 y $10 millones", "$9,8 millones" o "$9.752.938".
+  - Inicio: "Bci te podría prestar hasta" pasa a ser el rango redondeado, o se va a "Ver números". Nunca aparece un monto mayor que el precio sin explicación.
+  - Una misma cifra se muestra en una sola unidad: pesos al mes y millones, sin mezclar con UF en la misma pantalla.
+- **S17-F3 Preguntas sin tropiezos.**
+  - Sin la barra de pestañas mientras se responden las preguntas.
+  - Ninguna opción marcada de antemano en "¿Para qué quieres tu departamento?".
+  - El botón fijo no tapa campos: la página deja espacio debajo del último campo. "Atrás" queda visible.
+  - Con "Solo yo", el campo "Sueldo de tu pareja" no aparece.
+- **S17-F4 Toasts que no persiguen.** Un toast se cierra al cambiar de pantalla y no se repite si la persona ya lo vio.
+
+### Bloque 2 · Traducir sin agregar texto
+
+- **S17-F5 Palabras de la persona.**
+  - Cambios de texto:
+
+    | Hoy | Queda |
+    |---|---|
+    | "Dividendo" | "Pagas al mes" |
+    | "Pones al escriturar" | "Juntas antes de firmar" |
+    | "Preaprobado hasta UF …" | "✓ Bci te aprueba este departamento" (el detalle va en "Ver números") |
+    | "Simular un mes" | "Ver el próximo mes · demo" |
+
+  - "Carga", "Peor caso", "Participación" y "Tasación" pasan al "?".
+  - "Postular" lleva el sello "Sin compromiso".
+  - Postular no vuelve a pedir lo que ya se respondió: muestra los datos con "Cambiar".
+  - Acepta si: una búsqueda de "dividendo", "escriturar" y "carga" en las pantallas del modo vivir solo los encuentra dentro de "?" o en la simulación.
+- **S17-F6 Introducción en una promesa.**
+  - Una frase ("¿Cuándo puedes tener tu departamento? Te lo decimos y te llevamos.") y "Empezar".
+  - Sin porcentajes ni inversionistas.
+
+### Bloque 3 · Las pantallas nuevas
+
+- **S17-F7 Modelo de piezas en `js/calculos.js`.**
+  - `PIEZAS` con su efecto: baja el precio, pone dinero en el pie o fija una fecha mínima. También sus condiciones y si existe hoy o es propuesta.
+  - `bloqueoPieza(id, elegidas, departamento)` devuelve la razón en dos palabras y cómo desbloquearla.
+  - `efectoPieza(id, …)` devuelve un solo número: "−1 mes", "−$5,0 millones" o "−$438 mil al mes".
+  - `mejorPieza(…)` elige la que más acerca. Nunca propone el respaldo familiar, porque depende de otra persona.
+  - Piezas para vivir:
+    - **Descuento en grupo:** solo en obra.
+    - **Subsidio del Estado (DS1 tramo 3):** hasta UF 2.200; cuenta de vivienda de 12 meses; monto por tabla.
+    - **Sin IVA:** solo terminados; firmar antes del 1-dic-2027.
+    - **Regalo de tu familia.**
+    - **Respaldo familiar.**
+  - Pruebas mínimas:
+    - grupo y sin IVA no se suman;
+    - el subsidio se bloquea sobre UF 2.200;
+    - con grupo, el freno es la entrega;
+    - con subsidio, el plazo es de al menos 12 meses;
+    - sin IVA se apaga si las llaves llegan después del 1-dic-2027.
+  - Supuestos declarados en `CLAUDE.md`: subsidio de UF 270 (promedio, hasta tener la tabla oficial), sin IVA = −10 %, regalo de $300 mil.
+- **S17-F8 Tu camino: ahora y después.** Reemplaza el bloque de Inicio sin compra.
+  - **Ahora:** el mes y el año de las llaves (rango sin departamento), una barra con el % ya cubierto y el freno en 2 a 4 palabras.
+  - **Después:** "Pagas al mes", junto al arriendo de hoy (si la persona lo dio).
+  - La garantía del Estado va en un sello ("Pones solo el 10 %"). El crédito de siempre (80 %) aparece en una línea tachada.
+  - Se mantiene "Si juntas al mes".
+  - Una acción: "Ver cómo llegar antes".
+- **S17-F9 Llega antes.** Reemplaza el carrusel, la carrera y "Llega antes" de Caminos.
+  - Dos grupos: "Paga menos" y "Recibe ayuda".
+  - Cada fila: nombre de 2 o 3 palabras, chip con el efecto, "?" e interruptor. La recomendada lleva ★. Lo bloqueado queda en gris con la razón.
+  - Al sumar una pieza:
+    - el mes cuenta hacia el nuevo valor;
+    - aparece "−N meses";
+    - la barra avanza (movimiento de la skill `interaccion-bci-vanilla`);
+    - con "reducir movimiento" solo cambia el número.
+  - "Ver números" plegado: precio, Bci presta, subsidio, pie y gastos, lo que ya tienes y lo que falta.
+  - "Ver simulación" queda dentro, para la Hoja de Simulación.
+- **S17-F10 Tu pie más simple.**
+  - Quedan visibles el chanchito, la cuota, el % (que ya cuenta lo ahorrado) y una acción.
+  - "Ahorro propio / Ahorro grupal" desaparece: lo define el camino.
+  - "Este mes no pude", "Cambiar mi ahorro mensual", Juntos, Tu grupo y Tu obra siguen en plegables.
+  - En compra en grupo, el sello "Tu pie está asegurado" (Ley 20.007 y cuenta Bci).
+- **S17-F11 Inversiones solo para quien invierte.**
+  - Con modo vivir, la pestaña Inversiones no aparece. La barra queda en Mi camino · Departamentos · Perfil.
+  - Se puede activar desde Perfil, en "También quiero invertir".
+
+**Verificación del sprint:**
+- `node --test tests/*.test.js` con `tests/sprint17.test.js` (plazo único, formato según etapa, piezas y bloqueos).
+- Recorrido A con Playwright a 390, 360 y 320 px:
+  - el mismo plazo en Inicio, Llega antes, Detalle y Tu pie;
+  - sin la barra de pestañas en las preguntas;
+  - ningún campo tapado;
+  - sin "dividendo" ni "escriturar" fuera de "?" y de la simulación;
+  - sin Inversiones en modo vivir.
+- Prueba con 3 personas del segmento:
+  - "¿Cuándo tendrías tus llaves?";
+  - "¿Cuánto pagas al mes después?";
+  - "¿Se pueden usar dos de estas cosas a la vez?";
+  - "¿Postular te compromete?".
+  - Éxito: 3 de 3 en las dos primeras preguntas.
+
+**Por validar con Bci (no bloquea el sprint; se marca como supuesto):**
+- Si el DS1 se combina con FOGAES en el mismo crédito.
+- La tabla oficial de montos del DS1.
+- Un tope por regalo (impuesto a las donaciones).
+- Cuánto baja el precio sin IVA en cada proyecto.
+
+---
+
+## Sprint 18 · Un solo camino de punta a punta
+
+**Objetivo:** que lo que la app promete en Tu camino y Llega antes se cumpla en todo el resto del recorrido (Elegir, Detalle, Tu pie, Firmar y Mi departamento) y también para quien recibe "Todavía no". Ninguna cifra contradice a otra y no reaparecen las palabras de banco.
+
+> Diagnóstico (5-nov-2026, recorrido completo con Playwright, modo vivir, pareja de $2,5 millones, $3 millones ahorrados, $600 mil al mes, UF 2.000 a 2.500; y segundo recorrido "Solo yo", $1,1 millones, $250 mil al mes, UF 1.500 a 2.000):
+> 1. **El descuento del grupo se promete al 5 % pero hoy es 3 %.** `precioUF` usa 10 unidades por defecto. Elegir dice "Ahorras al unirte $5.133.125" y Detalle "$5,1 millones", pero el grupo va en 6 de 10 y Tu pie muestra "3 % · con 3 personas más, 5 %".
+> 2. **Dos relojes de llaves.** Tu pie dice "Tus llaves en 15 meses" y, en la misma pantalla, "Tu obra: 405 días para tus llaves" (13 meses, que es la entrega del edificio). Con "Ver el próximo mes", el plazo baja pero la obra y el cierre del grupo no avanzan: al llegar a Firmar, Inicio sigue diciendo "El proyecto cierra en 42 días".
+> 3. **Un peso de diferencia.** Juntas antes de firmar: $11.703.526 en Detalle e Inicio, y $11.703.525 en Tu pie.
+> 4. **Exactos antes de tiempo.** Elegir muestra "$5.133.125" sin departamento elegido, y Detalle muestra "$9.752.938", "$87.776.437" y "$1.950.588" fuera de la simulación.
+> 5. **"Todavía no" sigue con el diseño viejo.** Para la persona de menos ingreso, Tu camino dice "Todavía no" y Llega antes abre "Tus caminos" del Sprint 15: carrusel, "Carga 32,7 %", "Dividendo al mes", "Al escriturar", "Peor caso" y montos exactos. Además ofrece "Un estudio de UF 1.200", aunque el departamento más chico se descartó para vivir. Y no ofrece el subsidio, que es justo para este perfil.
+> 6. **Datos de ejemplo pobres.** Cada rango de precio tiene 1 departamento. No hay terminados ni departamentos de hasta UF 2.200 en UF 2.000 a 2.500, así que "Subsidio del Estado" y "Sin IVA" salen siempre en gris para el recorrido principal.
+> 7. **El final habla como banco.** Firmar dice todo en una oración ("90 % ($87.776.437) a 30 años, al 3,9 %: $442.759 al mes"). Inicio y Mi departamento dicen "Tu dividendo". Mi departamento vuelve a pedir el arriendo, que ya se dio. "Tu equipo te acompañó: 1 persona", aunque son tú y tu pareja.
+
+**Reglas del sprint:** las mismas del Sprint 17 (un solo cálculo por dato, precisión según lo decidido, mostrar primero y explicar al tocar, decir lo que es propuesta, nada de inversionistas en modo vivir). Además:
+1. **Lo que no está asegurado se muestra como posibilidad:** "3 % hoy · 5 % si se completa".
+2. **Un solo reloj de demo:** cada "mes" de la demo avanza el ahorro, la obra, el cierre del grupo y los avisos al mismo tiempo.
+
+### Bloque 1 · Que los números no se contradigan (hacer primero)
+
+- **S18-F1 Descuento real del grupo.**
+  - `descuentoActual(proyecto)` en `js/calculos.js`, con pruebas, usa `cuposTomados` (más la persona, si ya se unió).
+  - `precioUF` deja de suponer 10 unidades cuando no se le pasan.
+  - Elegir, Detalle, Llega antes y Tu pie muestran el descuento de hoy y el de completar el grupo como posibilidad: "Ahorras unos $3 millones · $5 millones si se completa".
+  - `efectoPieza('grupo')` usa el descuento de hoy.
+  - Acepta si: con 6 de 10 cupos, ninguna pantalla muestra el 5 % como ya ganado.
+- **S18-F2 Un solo reloj.**
+  - `estado.mesDemo` avanza con "Ver el próximo mes". De él salen los días para la entrega, el cierre del grupo, las etapas de Tu obra y los avisos.
+  - Tu obra dice "Entrega del edificio" (no "tus llaves") y muestra la misma fecha que el freno "entrega".
+  - Si el pie se completa antes de la entrega: "Tu pie está listo" y "Tus llaves: cuando entreguen el edificio, en N meses". No se pasa a Firmar antes de la entrega; para la demo, "Saltar a la entrega · demo".
+  - Acepta si: después de juntar el pie, ningún aviso habla del cierre del grupo como futuro y Tu obra coincide con la fecha de llaves.
+- **S18-F3 Un solo monto para "Juntas antes de firmar".** Una función (`metaCompra`) redondea una sola vez y todas las pantallas la leen. Prueba: Detalle, Tu pie, Inicio y Firmar muestran el mismo número.
+- **S18-F4 Precisión en Elegir y Detalle.**
+  - Las tarjetas de Elegir y Departamentos usan montos redondeados.
+  - "De dónde sale el precio", en Detalle, va en filas redondeadas ("10 % tú · $9,8 millones").
+  - Los exactos quedan solo en "Ver simulación", la preaprobación y Firmar.
+
+### Bloque 2 · "Todavía no" con piezas
+
+- **S18-F5 Tu camino y Llega antes también para "Todavía no".**
+  - El modo vivir con "Todavía no" usa `renderTuCaminoVivir` y `renderLlegaAntes`, no `renderCaminos` del Sprint 15.
+  - Arriba, la razón en 2 a 4 palabras ("La cuota pasa tu límite"). En "?", la regla del 25 %.
+  - Las piezas muestran si cambian el resultado: "Con esta: sí cabe" o "Aún no".
+  - Se quita "Un estudio de UF 1.200" en modo vivir. Se mantienen "Si juntas al mes" y "Recordarme".
+  - "Arriendo con opción de compra" queda como enlace al final ("Mientras tanto").
+  - Acepta si: el recorrido "Solo yo" con $1,1 millones no muestra carrusel ni "Carga", "Dividendo", "Al escriturar" o "Peor caso" fuera de "?", y el subsidio aparece sumable.
+- **S18-F6 Datos de ejemplo para que las piezas se vean.** En `js/datos.js`:
+  - al menos 3 departamentos por rango;
+  - en UF 2.000 a 2.500, uno terminado (para "Sin IVA") y uno de hasta UF 2.200 (para el subsidio);
+  - en UF 1.500 a 2.000, uno en obra con grupo.
+  - Las comunas siguen siendo Independencia, Quinta Normal, Recoleta y Estación Central. Los arriendos estimados se marcan como estimación de la IA (demo).
+  - Acepta si: en el recorrido A, "Subsidio del Estado" y "Sin IVA" se pueden activar (con su departamento) y la app solo los ofrece si hay uno que los cumpla.
+
+### Bloque 3 · El final en el idioma nuevo
+
+- **S18-F7 Firmar en filas y con las piezas elegidas.**
+  - "Lo que firmas" pasa a filas: Bci te presta, Pagas al mes, Plazo y Tasa, con exactos (aquí sí van).
+  - Usa las piezas activas: precio con descuento, subsidio o sin IVA, y el peor caso en una fila ("Sin subsidio a la tasa").
+- **S18-F8 Mi departamento e Inicio después de firmar.**
+  - "Pagas al mes" en vez de "Tu dividendo".
+  - Se usa el arriendo ya dado en las preguntas; solo se pide si falta.
+  - "Tu equipo" cuenta a todas las personas (tú incluido).
+  - Una cifra grande: lo que pagas al mes, junto a lo que pagabas de arriendo.
+- **S18-F9 Revisión de palabras en todo el modo vivir.**
+  - Ampliar la búsqueda del Sprint 17 a Elegir, Detalle, Tu pie, Firmar y Mi departamento.
+  - Fuera de "?" y de la simulación no aparecen: dividendo, escriturar, carga, participación, peor caso, "Al escriturar" ni "Bci te presta hasta".
+
+**Fuera de este sprint:** el modo arrendar (sigue con Caminos y la carrera del Sprint 16) y la validación de supuestos con Bci (lista del Sprint 17).
+
+**Verificación del sprint:**
+- `node --test tests/*.test.js` con `tests/sprint18.test.js`:
+  - descuento actual según cupos;
+  - `precioUF` sin unidades no da 5 %;
+  - un solo monto de meta;
+  - "Todavía no" se resuelve con una pieza que baja el precio;
+  - no se firma antes de la entrega.
+- Recorrido A completo (de las preguntas a Mi departamento) y recorrido "Solo yo", con Playwright a 390, 360 y 320 px:
+  - las mismas cifras de meta, llaves y descuento en cada pantalla;
+  - ningún monto exacto antes de Postular, salvo en "Ver simulación";
+  - palabras de banco solo dentro de "?" y la simulación;
+  - sin desborde ni errores de JavaScript.
+- Prueba con personas del segmento (las del Sprint 17, más una de ingreso menor):
+  - "¿Cuánto te ahorras por comprar en grupo?" (esperado: "depende de si se completa");
+  - "¿Cuándo te entregan las llaves si juntas el pie antes?".
+
+---
+
 ## Estado
 
 | Sprint | Feature | Estado |
@@ -647,3 +935,30 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 15 | S15-F5 Departamentos e Inversiones | en progreso |
 | 15 | S15-F6 Perfil en filas y hoja Mis datos | en progreso |
 | 15 | S15-F7 Confianza que solo da el banco | en progreso |
+| 16 | S16-F1 Creador de avatar | en progreso |
+| 16 | S16-F2 Preguntas iniciales: tu escena se arma | en progreso |
+| 16 | S16-F3 El avatar en la app | en progreso |
+| 16 | S16-F4 Tu equipo (familia con avatar) | en progreso |
+| 16 | S16-F5 Caminos: la carrera a la puerta | en progreso |
+| 16 | S16-F6 Documentos: pasaporte con timbres | en progreso |
+| 16 | S16-F7 Elegir departamento: fachadas ilustradas | en progreso |
+| 17 | S17-F1 Un solo plazo | en progreso |
+| 17 | S17-F2 Números según lo decidido | en progreso |
+| 17 | S17-F3 Preguntas sin tropiezos | en progreso |
+| 17 | S17-F4 Toasts que no persiguen | en progreso |
+| 17 | S17-F5 Palabras de la persona | en progreso |
+| 17 | S17-F6 Introducción en una promesa | en progreso |
+| 17 | S17-F7 Modelo de piezas | en progreso |
+| 17 | S17-F8 Tu camino: ahora y después | en progreso |
+| 17 | S17-F9 Llega antes | en progreso |
+| 17 | S17-F10 Tu pie más simple | en progreso |
+| 17 | S17-F11 Inversiones solo para quien invierte | en progreso |
+| 18 | S18-F1 Descuento real del grupo | en progreso |
+| 18 | S18-F2 Un solo reloj | en progreso |
+| 18 | S18-F3 Un solo monto para "Juntas antes de firmar" | en progreso |
+| 18 | S18-F4 Precisión en Elegir y Detalle | en progreso |
+| 18 | S18-F5 Tu camino y Llega antes también para "Todavía no" | pendiente |
+| 18 | S18-F6 Datos de ejemplo para que las piezas se vean | pendiente |
+| 18 | S18-F7 Firmar en filas y con las piezas elegidas | pendiente |
+| 18 | S18-F8 Mi departamento e Inicio después de firmar | pendiente |
+| 18 | S18-F9 Revisión de palabras en todo el modo vivir | pendiente |

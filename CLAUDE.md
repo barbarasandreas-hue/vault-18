@@ -52,6 +52,14 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 - Hoja de Simulación (Decreto 49, vigente desde el 27-feb-2027): tasa, dividendo con y sin seguros, CAE y costo total. CAE = tasa interna de retorno mensual × 12 de los flujos del crédito: se recibe el crédito menos los gastos de escritura y se pagan 360 dividendos con seguros (supuesto de diseño: todos los gastos de escritura cuentan como gastos del crédito). Costo total = 360 dividendos con seguros + gastos.
 - Caminos: se muestran el recomendado, siempre el crédito de siempre (FOGAES para vivir, 80 % para invertir) y a lo más uno más; los demás, con su razón en "Por qué no te mostramos otros".
 - Sostener: "Este mes no pude" mantiene la racha una vez cada 6 meses. Lo ahorrado nunca se pierde.
+- **Piezas de Llega antes (Sprint 17, modo vivir).** Cada pieza baja el precio, pone dinero en el pie o fija una fecha mínima. Plazo = el mayor entre (lo que falta ÷ lo que juntas al mes) y las fechas mínimas: la entrega del edificio y los 12 meses de la cuenta de vivienda. Supuestos:
+  - descuento en grupo según los cupos del lote;
+  - subsidio DS1 tramo 3 de UF 270 (promedio, hasta tener la tabla oficial), con tope de UF 2.200 y ahorro mínimo de 80 UF;
+  - sin IVA = −10 %, solo departamentos terminados y firmando antes del 1-dic-2027;
+  - regalo de $300 mil;
+  - respaldo familiar = Bci presta el 100 % (propuesta).
+
+  La app solo ofrece una pieza si hay un departamento de ejemplo que la cumpla. Las fórmulas están en `calcularPiezas` y `plazoConPisos`.
 - Departamento de referencia: UF 2.500 de lista. Comunas de los ejemplos: Independencia, Quinta Normal, Recoleta y Estación Central.
 
 ## Reglas de diseño y contenido
@@ -59,6 +67,7 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 - Interfaz en español de Chile. Usar "dinero", nunca "plata".
 - Escribir siempre "departamento" completo, nunca "depto." ni "dpto.".
 - No usar nombres de personas en la interfaz; hablar de "usuario" o "cliente" O "inversionista".
+- Parejas y familias diversas (Sprint 16): no se pregunta ni se guarda el género de nadie; el avatar no tiene opción de género; la pareja es siempre "tu pareja" y su avatar nunca se sugiere; las relaciones de Tu equipo se pueden repetir (dos mamás, dos papás); textos en neutro ("¡Es tuyo!", "Solo yo"), sin "Bienvenida/o", "novio/a", "esposo/a" ni "marido".
 - No usar el auto como forma de juntar el pie. Sí se puede mostrar, en "Todavía no", que terminar de pagar una cuota libera capacidad.
 - Seguir el **Bci Kit**, la guía de diseño de Bci: https://www.bci.cl/corporativo/documentacion
   - Colores: cuatro familias (azul, verde, amarillo y rojo) más grises. Cada familia tiene tonos `dark`, `normal`, `80`, `60`, `40` y `20`, y los grises van de `dark` a `light`. Usar variables con esos nombres: `--blue-dark`, `--blue-normal`, `--blue-80` … `--blue-20`, `--green-*`, `--yellow-*`, `--red-*`, `--gray-dark`, `--gray-semidark`, `--gray-neutral`, `--gray-semilight`, `--gray-light`, `--white`.
@@ -80,6 +89,12 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
   - No se repite "Es una simulación…": basta una palabra ("simulado") donde haga falta.
   - Se mantienen siempre, aunque sean texto: el sello sin plusvalía, el peor caso (por ejemplo, el dividendo sin subsidio), si un camino existe hoy o es una propuesta, y los avisos de la demo que pide el plan.
 - Los montos se muestran en pesos chilenos, con punto de miles (es-CL).
+- **La precisión del número va con lo que la persona ya decidió** (5-nov-2026):
+  - Sin departamento elegido, todo sale de su rango de precio y se muestra en rangos y redondeado, con la etiqueta "con tu rango". Ejemplos: "entre $8 y $10 millones", "unos $600 mil al mes", "11 a 15 meses".
+  - Con un departamento elegido, se redondea: "$9,8 millones", "$443 mil al mes".
+  - El monto exacto ("$9.752.938") aparece solo en la simulación, la preaprobación y Firmar.
+  - Un atajo (compra en grupo, regalo, IVA cero) nunca se da por aplicado si la persona no lo eligió: se muestra como posibilidad ("podrías llegar 3 meses antes").
+  - Una sola cifra grande por pantalla, en la unidad que la persona siente: dinero al mes o meses. Los millones, como máximo una vez.
 
 ## Stack técnico
 

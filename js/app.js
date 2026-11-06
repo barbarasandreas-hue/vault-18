@@ -47,20 +47,26 @@
     regalos: [],             // S13-F3: aportes de la familia [{ relacion, monto, mensaje }] (simulado)
     listaRegalos: null,      // S13-F3: { ocasion, mostrarMontos } cuando la usuaria creó su lista
     unidosGrupo: {},         // S14-F2: compradores simulados que se unieron después, por proyecto
-    avisosVistos: null       // el mes cuyos avisos ya se vieron (apaga el número de la campana)
+    avisosVistos: null,      // el mes cuyos avisos ya se vieron (apaga el número de la campana)
+    avatar: null,            // S16-F1: avatar de la usuaria (normalizarAvatar); null = neutro
+    equipo: [],              // S16-F4: Tu equipo [{ id, relacion, avatar }]; las relaciones se pueden repetir
+    conQuien: null,          // S16-F2: 'solo', 'pareja' o 'familia'
+    piezas: {},              // S17-F7: piezas sumadas en Llega antes { grupo, subsidio, iva, regalo, respaldo }
+    modoElegido: false,      // S17-F3: la primera pregunta no viene marcada
+    quiereInvertir: false    // S17-F11: en modo vivir, Inversiones aparece solo si lo pide
   };
 
   // ---------- Elecciones que se recuerdan entre visitas (S3-F3) ----------
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
-    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null };
+    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -70,6 +76,192 @@
   // S13-F3: lista de regalos (se usan al leer el estado guardado).
   var RELACIONES = ['mamá', 'papá', 'hermana', 'hermano', 'abuela', 'abuelo', 'tía', 'tío', 'amiga', 'amigo'];
   var OCASIONES = ['Cumpleaños', 'Navidad', 'Titulación', 'Otra ocasión'];
+
+  // ---------- S16: avatar y Tu equipo ----------
+  // Sin género: todos los peinados, colores y accesorios son para todos. Lo no elegido se dibuja neutro (gris).
+  var AV_PIEL = ['#F3D3B5', '#E8BFA0', '#C99572', '#9C6B47', '#6B4630'];
+  var AV_COLOR_PELO = [['#2B2B2B', 'Pelo negro'], ['#6D4C41', 'Pelo castaño'], ['#A1774F', 'Pelo castaño claro'], ['#D9B26A', 'Pelo rubio'], ['#2772CC', 'Pelo azul'], ['#B0BEC5', 'Canas']];
+  var AV_ROPA = [['#2772CC', 'Ropa azul'], ['#1D5699', 'Ropa azul oscuro'], ['#28892B', 'Ropa verde'], ['#37474F', 'Ropa gris oscuro'], ['#FFE300', 'Ropa amarilla'], ['#E2E8EA', 'Ropa gris claro']];
+  var AV_NOMBRE_PELO = { corto: 'Corto', largo: 'Largo', 'moño': 'Moño', rizado: 'Rizado', rapado: 'Rapado', ondulado: 'Ondulado' };
+  var AV_NOMBRE_ACC = { lentes: 'Lentes', audifonos: 'Audífonos', mochila: 'Mochila', gorro: 'Gorro', planta: 'Planta' };
+  var AV_OSCURO = '#263238';
+  var NOMBRE_RELACION = { pareja: 'Tu pareja', 'mamá': 'Tu mamá', 'papá': 'Tu papá', hermana: 'Tu hermana', hermano: 'Tu hermano',
+    abuela: 'Tu abuela', abuelo: 'Tu abuelo', 'tía': 'Tu tía', 'tío': 'Tu tío', amiga: 'Tu amiga', amigo: 'Tu amigo', mascota: 'Tu mascota' };
+
+  function avatarPelo(t, c) {
+    var b = '', f = '';
+    if (t === 'corto') f = '<path d="M33 41Q32 21 50 21Q68 21 67 41Q63 31 50 31Q38 31 33 41Z" fill="' + c + '"/>';
+    if (t === 'largo') {
+      b = '<path d="M31 40Q31 19 50 19Q69 19 69 40L71 72L29 72Z" fill="' + c + '"/>';
+      f = '<path d="M33 40Q33 21 50 21Q67 21 67 40Q60 29 47 31Q38 33 33 40Z" fill="' + c + '"/>';
+    }
+    if (t === 'moño') f = '<circle cx="50" cy="18" r="8" fill="' + c + '"/><path d="M33 41Q32 22 50 22Q68 22 67 41Q63 30 50 30Q38 30 33 41Z" fill="' + c + '"/>';
+    if (t === 'rizado') f = [[35, 32], [41, 24], [50, 20], [59, 24], [65, 32], [33, 41], [67, 41]].map(function (p, i) {
+      return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + (i > 4 ? 6 : 8) + '" fill="' + c + '"/>';
+    }).join('');
+    if (t === 'rapado') f = '<path d="M34 38Q34 23 50 23Q66 23 66 38Q60 30 50 30Q40 30 34 38Z" fill="' + c + '" opacity=".6"/>';
+    if (t === 'ondulado') {
+      b = '<path d="M31 40Q30 19 50 19Q70 19 69 40Q73 52 67 60Q64 54 64 46L36 46Q36 54 33 60Q27 52 31 40Z" fill="' + c + '"/>';
+      f = '<path d="M33 41Q33 21 52 21Q68 22 67 40Q60 28 44 32Q37 35 33 41Z" fill="' + c + '"/>';
+    }
+    return { b: b, f: f };
+  }
+  function mascotaFigura(t) {
+    if (t === 'perro') return '<g><ellipse cx="14" cy="93" rx="10" ry="6" fill="#A1887F"/><circle cx="7" cy="85" r="6" fill="#A1887F"/>' +
+      '<ellipse cx="4" cy="84" rx="2.5" ry="5" fill="#6D4C41"/><path d="M23 90q5-6 3-10" stroke="#A1887F" stroke-width="3" fill="none" stroke-linecap="round"/></g>';
+    if (t === 'gato') return '<g><ellipse cx="14" cy="93" rx="9" ry="6" fill="#546E7A"/><circle cx="8" cy="85" r="5.5" fill="#546E7A"/>' +
+      '<path d="M3 82l1-7 4 4zM13 82l-1-7-4 4z" fill="#546E7A"/><path d="M22 92q8-2 6-12" stroke="#546E7A" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>';
+    return '';
+  }
+  function avColores(a) {
+    a = a || {};
+    return {
+      piel: a.piel === null || a.piel === undefined ? '#BBC5CA' : AV_PIEL[a.piel],
+      pelo: AV_COLOR_PELO[a.colorPelo === null || a.colorPelo === undefined ? 1 : a.colorPelo][0],
+      ropa: a.ropa === null || a.ropa === undefined ? '#546E7A' : AV_ROPA[a.ropa][0]
+    };
+  }
+  // Busto plano sin cara (S16-F1). tam en px; aria-hidden: quien lo usa pone el texto.
+  function avatarSVG(a, tam, clase) {
+    a = a || {};
+    var col = avColores(a);
+    var acc = a.accesorios || [];
+    var h = a.pelo ? avatarPelo(a.pelo, col.pelo) : { b: '', f: '' };
+    var t = '<svg class="' + (clase || 'avatar-svg') + '" viewBox="0 0 100 100" width="' + tam + '" height="' + tam + '" aria-hidden="true" focusable="false">' +
+      h.b +
+      '<path d="M24 100Q24 70 50 68Q76 70 76 100Z" fill="' + col.ropa + '"/>' +
+      '<rect x="45" y="52" width="10" height="16" rx="3" fill="' + col.piel + '"/>' +
+      '<circle cx="50" cy="40" r="17" fill="' + col.piel + '"/>' + h.f;
+    if (acc.indexOf('gorro') !== -1) t += '<path d="M32 34Q32 15 50 15Q68 15 68 34Z" fill="#1D5699"/><rect x="30" y="31" width="40" height="6" rx="3" fill="#2772CC"/>';
+    if (acc.indexOf('mochila') !== -1) t += '<path d="M38 72L35 100M62 72L65 100" stroke="' + AV_OSCURO + '" stroke-width="3.5"/>';
+    if (acc.indexOf('lentes') !== -1) t += '<g fill="none" stroke="' + AV_OSCURO + '" stroke-width="1.8"><circle cx="43.5" cy="42" r="4.6"/><circle cx="56.5" cy="42" r="4.6"/><path d="M48 42h4"/></g>';
+    if (acc.indexOf('audifonos') !== -1) t += '<path d="M31 42Q31 16 50 16Q69 16 69 42" stroke="' + AV_OSCURO + '" stroke-width="3" fill="none"/>' +
+      '<rect x="27" y="37" width="7" height="11" rx="3" fill="' + AV_OSCURO + '"/><rect x="66" y="37" width="7" height="11" rx="3" fill="' + AV_OSCURO + '"/>';
+    if (acc.indexOf('planta') !== -1) t += '<ellipse cx="86" cy="80" rx="4" ry="8" fill="#28892B" transform="rotate(-25 86 80)"/>' +
+      '<ellipse cx="91" cy="80" rx="4" ry="8" fill="#28892B" transform="rotate(25 91 80)"/><rect x="81" y="86" width="14" height="13" rx="2" fill="#C47A4A"/>';
+    return t + mascotaFigura(a.mascota) + '</svg>';
+  }
+  function mascotaSVG(especie, tam, clase) {
+    return '<svg class="' + (clase || 'avatar-svg') + '" viewBox="-6 63 42 42" width="' + tam + '" height="' + tam + '" aria-hidden="true" focusable="false">' +
+      mascotaFigura(especie === 'gato' ? 'gato' : 'perro') + '</svg>';
+  }
+  function avatarMiembro(m, tam, clase) {
+    return m.relacion === 'mascota' ? mascotaSVG(m.avatar && m.avatar.mascota, tam, clase) : avatarSVG(m.avatar, tam, clase);
+  }
+  // El personaje de la escalera, con los colores y el peinado del avatar.
+  function personajeSVG() {
+    var a = estado.avatar;
+    if (!a) return PERSONAJE;
+    var col = avColores(a);
+    var h = a.pelo ? avatarPelo(a.pelo, col.pelo) : { b: '', f: '' };
+    var t = 'translate(16 10) scale(.353) translate(-50 -40)';
+    return '<svg class="personaje" viewBox="0 0 32 48">' +
+      (h.b ? '<g transform="' + t + '">' + h.b + '</g>' : '') +
+      ((a.accesorios || []).indexOf('mochila') !== -1 ? '<rect class="p-mochila" x="5" y="18" width="8" height="12" rx="3"/>' : '') +
+      '<rect class="p-pierna" x="11" y="32" width="4.5" height="12" rx="2"/><rect class="p-pierna" x="17" y="32" width="4.5" height="12" rx="2"/>' +
+      '<path class="p-zapato" d="M10 44 h7 v3 h-8 z M16.5 44 h7 l1 3 h-8 z"/>' +
+      '<path d="M9 20 a7 7 0 0 1 14 0 v14 h-14 z" style="fill:' + col.ropa + '"/>' +
+      '<path class="p-brazo" d="M22 22 l5 6" style="stroke:' + col.ropa + '"/>' +
+      '<circle cx="16" cy="10" r="6" style="fill:' + col.piel + '"/>' +
+      (h.f ? '<g transform="' + t + '">' + h.f + '</g>' : '') +
+      '</svg>';
+  }
+  function miembrosCon(relaciones) {
+    return estado.equipo.filter(function (m) { return relaciones.indexOf(m.relacion) !== -1; });
+  }
+  // Quienes viven con la usuaria (según "¿Con quién vas a vivir?").
+  function companeros() {
+    if (estado.conQuien === 'pareja') return miembrosCon(['pareja']).slice(0, 1);
+    if (estado.conQuien === 'familia') return miembrosCon(['pareja', 'mamá', 'papá', 'hermana', 'hermano', 'abuela', 'abuelo', 'tía', 'tío']).slice(0, 3);
+    return [];
+  }
+  // La escena: la usuaria y quienes viven con ella (la mascota va en su avatar).
+  function escena(tam, clase) {
+    return avatarSVG(estado.avatar, tam, clase) + companeros().map(function (m) { return avatarMiembro(m, Math.round(tam * 0.88), clase); }).join('');
+  }
+  function textoEquipo() {
+    var n = contarEquipo(estado.equipo, estado.avatar && estado.avatar.mascota);
+    if (!n.personas && !n.mascotas) return '';
+    return 'Tu equipo te acompañó: ' + [n.personas ? plural(n.personas, 'persona', 'personas') : '', n.mascotas ? plural(n.mascotas, 'mascota', 'mascotas') : '']
+      .filter(Boolean).join(' y ');
+  }
+
+  // S16-F1: el creador, en una hoja. Sin opción de género; lo que no se elige queda neutro.
+  // op: { titulo, avatar, relacion, elegirRelacion, boton, alGuardar(avatar, relacion) }
+  function abrirCreador(op) {
+    var a = normalizarAvatar(op.avatar) || normalizarAvatar({});
+    var relacion = op.relacion || null;
+    var grupo = function (titulo, html) { return '<fieldset class="creador-grupo"><legend>' + titulo + '</legend><div class="creador-ops">' + html + '</div></fieldset>'; };
+    var boton = function (k, v, texto, extra) {
+      var on = k === 'accesorios' ? a.accesorios.indexOf(v) !== -1 : String(a[k]) === String(v);
+      return '<button type="button" class="creador-op' + (extra ? ' muestra' : '') + '" data-k="' + k + '" data-v="' + v + '" aria-pressed="' + on + '"' +
+        (extra ? ' style="background:' + extra + '" aria-label="' + texto + '"' : '') + '>' + (extra ? '' : texto) + '</button>';
+    };
+    function opciones() {
+      if (relacion === 'mascota') return grupo('Mascota', boton('mascota', 'perro', 'Perro') + boton('mascota', 'gato', 'Gato'));
+      return grupo('Tono de piel', AV_PIEL.map(function (c, i) { return boton('piel', i, 'Tono ' + (i + 1), c); }).join('')) +
+        grupo('Pelo', AVATAR_PELOS.map(function (p) { return boton('pelo', p, AV_NOMBRE_PELO[p]); }).join('')) +
+        grupo('Color de pelo', AV_COLOR_PELO.map(function (c, i) { return boton('colorPelo', i, c[1], c[0]); }).join('')) +
+        grupo('Ropa', AV_ROPA.map(function (c, i) { return boton('ropa', i, c[1], c[0]); }).join('')) +
+        grupo('Accesorios', AVATAR_ACCESORIOS.map(function (x) { return boton('accesorios', x, AV_NOMBRE_ACC[x]); }).join('')) +
+        (op.elegirRelacion || relacion ? '' : grupo('Mascota', boton('mascota', '', 'Sin mascota') + boton('mascota', 'perro', 'Perro') + boton('mascota', 'gato', 'Gato')));
+    }
+    function vista() { return relacion === 'mascota' ? mascotaSVG(a.mascota || 'perro', 132) : avatarSVG(a, 132); }
+    var html = '<div class="creador">' +
+      (op.elegirRelacion ? '<div class="campo"><label for="creador-relacion">¿Quién es?</label><select id="creador-relacion" class="campo-select">' +
+        RELACIONES_EQUIPO.map(function (r) { return '<option value="' + r + '"' + (r === relacion ? ' selected' : '') + '>' + NOMBRE_RELACION[r] + '</option>'; }).join('') +
+        '</select></div>' : '') +
+      '<div class="creador-vista" id="creador-vista">' + vista() + '</div>' +
+      '<div id="creador-opciones">' + opciones() + '</div>' +
+      '<button type="button" class="btn btn-primario btn-bloque" id="btn-guardar-avatar">Guardar</button></div>';
+    abrirHojaContenido(op.titulo, html, op.boton, function (hoja) {
+      if (op.elegirRelacion && !relacion) relacion = $('creador-relacion').value;
+      if (op.elegirRelacion) $('creador-relacion').addEventListener('change', function () {
+        relacion = $('creador-relacion').value;
+        a = normalizarAvatar({});
+        $('creador-opciones').innerHTML = opciones();
+        $('creador-vista').innerHTML = vista();
+      });
+      $('creador-opciones').addEventListener('click', function (ev) {
+        var b = ev.target.closest('[data-k]');
+        if (!b) return;
+        var k = b.dataset.k, v = b.dataset.v;
+        if (k === 'accesorios') {
+          var i = a.accesorios.indexOf(v);
+          if (i === -1) a.accesorios.push(v); else a.accesorios.splice(i, 1);
+        } else if (k === 'pelo' || k === 'mascota') a[k] = v;
+        else a[k] = Number(v);
+        $('creador-opciones').innerHTML = opciones();
+        $('creador-vista').innerHTML = vista();
+        var igual = hoja.querySelector('[data-k="' + k + '"][data-v="' + v + '"]');
+        if (igual) igual.focus();
+      });
+      $('btn-guardar-avatar').addEventListener('click', function () {
+        if (relacion === 'mascota' && !a.mascota) a.mascota = 'perro';
+        cerrarHoja(true);
+        op.alGuardar(normalizarAvatar(a), relacion);
+      });
+    });
+  }
+  // La usuaria crea o cambia su avatar.
+  function editarMiAvatar(boton, despues) {
+    abrirCreador({ titulo: 'Tu avatar', avatar: estado.avatar, boton: boton, alGuardar: function (av) {
+      estado.avatar = av;
+      guardarEstado();
+      if (despues) despues(); else mostrar();
+      toast('Tu avatar quedó listo.');
+    } });
+  }
+  // Agregar a alguien a Tu equipo (relación + avatar). La pareja nunca trae un avatar sugerido.
+  function agregarAlEquipo(boton, relacion, despues, inicial) {
+    abrirCreador({ titulo: relacion === 'pareja' ? 'Tu pareja' : 'Agregar a alguien', relacion: relacion || inicial, elegirRelacion: !relacion, boton: boton,
+      alGuardar: function (av, rel) {
+        estado.equipo = agregarMiembro(estado.equipo, rel, av);
+        guardarEstado();
+        if (despues) despues(rel); else mostrar();
+        toast(NOMBRE_RELACION[rel] + ' está en tu equipo.');
+      } });
+  }
 
   function leerEstado() {
     try {
@@ -98,7 +290,7 @@
       estado.cuotaAutomatica = g.cuotaAutomatica === true;
       estado.parejaInvitada = g.parejaInvitada === true;
       estado.regalos = Array.isArray(g.regalos) ? g.regalos.filter(function (x) { return x && RELACIONES.indexOf(x.relacion) !== -1 && montoValido(x.monto); })
-        .map(function (x) { return { relacion: x.relacion, monto: x.monto, mensaje: typeof x.mensaje === 'string' ? x.mensaje.slice(0, 140) : '' }; }).slice(0, 20) : [];
+        .map(function (x) { return { relacion: x.relacion, monto: x.monto, mensaje: typeof x.mensaje === 'string' ? x.mensaje.slice(0, 140) : '', avatar: normalizarAvatar(x.avatar) }; }).slice(0, 20) : [];
       if (typeof g.avisosVistos === 'string' && g.avisosVistos.length < 40) estado.avisosVistos = g.avisosVistos;
       if (g.unidosGrupo && typeof g.unidosGrupo === 'object') {
         Object.keys(g.unidosGrupo).forEach(function (id) {
@@ -109,6 +301,14 @@
       if (g.listaRegalos && OCASIONES.indexOf(g.listaRegalos.ocasion) !== -1) {
         estado.listaRegalos = { ocasion: g.listaRegalos.ocasion, mostrarMontos: g.listaRegalos.mostrarMontos === true };
       }
+      estado.avatar = normalizarAvatar(g.avatar);
+      estado.piezas = {};
+      if (g.piezas && typeof g.piezas === 'object') ORDEN_PIEZAS.forEach(function (id) { if (g.piezas[id] === true) estado.piezas[id] = true; });
+      estado.modoElegido = g.modoElegido === true || g.preguntasListas === true;
+      estado.quiereInvertir = g.quiereInvertir === true;
+      if (['solo', 'pareja', 'familia'].indexOf(g.conQuien) !== -1) estado.conQuien = g.conQuien;
+      estado.equipo = [];
+      if (Array.isArray(g.equipo)) g.equipo.forEach(function (m) { if (m) estado.equipo = agregarMiembro(estado.equipo, m.relacion, m.avatar); });
       // Quien ya tenía sueldos y ahorro mensual guardados no repite las preguntas.
       estado.preguntasListas = g.preguntasListas === true ||
         (g.preguntasListas === undefined && estado.sueldoPropio > 0 && estado.ahorroMensual > 0);
@@ -134,6 +334,8 @@
     estado.avisosApagados = {};
     estado.regalos = [];
     estado.unidosGrupo = {};
+    estado.equipo = [];
+    estado.piezas = {};
     estado.compra = null;
     estado.inversiones = [];
     estado.introVista = false;
@@ -277,9 +479,20 @@
     return estado.modo;
   }
 
+  // S18-F1: para vivir, el precio usa el descuento que el grupo ya tiene (contándote); completar el grupo es posibilidad.
   function resumen(proyecto) {
-    return resumenProyecto(proyecto, departamentosDe(proyecto.id), cuposExtra(proyecto), invertidoEn(proyecto.id), modoFinanciero(proyecto));
+    var op = estado.modo === 'vivir' ? { descuentoHoy: true, yaEstas: esMiProyecto(proyecto) } : null;
+    return resumenProyecto(proyecto, departamentosDe(proyecto.id), cuposExtra(proyecto), invertidoEn(proyecto.id), modoFinanciero(proyecto), op);
   }
+  // S18-F2: un solo reloj. Cada "mes" de la demo mueve la fecha de hoy para el ahorro, la obra, el cierre y los avisos.
+  function hoyDemo() { return fechaMasMeses(FECHA_REFERENCIA, estado.mesAhorro || 0); }
+  function grupoCerrado(p) { return p.tipo === 'conjunto' && !!p.cierre && diasEntre(hoyDemo(), p.cierre) <= 0; }
+  // Meses que faltan para la entrega del edificio (0 si ya se entregó o no es en obra).
+  function mesesParaEntrega(p) {
+    if (p.tipo !== 'conjunto' || !p.entregaEstimada || (p.etapaObra || 0) >= 4) return 0;
+    return Math.max(0, mesesEntre(hoyDemo(), p.entregaEstimada));
+  }
+  function entregaPendiente(p) { return estado.modo === 'vivir' && mesesParaEntrega(p) > 0; }
 
   function barraAvance(texto, detalle, fraccion) {
     var pct = porcentajeEntero(fraccion);
@@ -385,6 +598,8 @@
   // ---------- S7-F4: explicaciones a un toque ----------
   // Una frase por término, sin jerga. Las mismas se reúnen en Perfil › Ayuda.
   var GLOSARIO = {
+    'protector': { termino: 'Protector de racha', pregunta: '¿Qué es el protector de racha?',
+      texto: 'Si un mes no puedes pagar tu cuota, tu racha sigue. Se puede usar una vez cada 6 meses. Lo ahorrado nunca se pierde.' },
     'dividendo': { termino: 'Dividendo', pregunta: '¿Qué es el dividendo?',
       texto: 'Es la cuota que pagas cada mes a Bci por el crédito hipotecario, con los seguros incluidos.' },
     'pie': { termino: 'Pie', pregunta: '¿Qué es el pie?',
@@ -410,7 +625,7 @@
     'patrimonio': { termino: 'Tu patrimonio', pregunta: '¿Qué es tu patrimonio?',
       texto: 'Lo que vale tu departamento, sin plusvalía, menos lo que aún debes a Bci y la parte de los inversionistas.' },
     'regalo-pie': { termino: 'Regalo para tu pie', pregunta: '¿Cómo funciona el regalo para tu pie?',
-      texto: 'Como una lista de novios, pero para tu pie. Para un cumpleaños o una Navidad, tu familia aporta a tu cuenta Bci con un enlace, sin descargar la app. Tú eliges si ven los montos o solo el avance.' },
+      texto: 'Como una lista de regalos de matrimonio, pero para tu pie. Para un cumpleaños o una Navidad, tu familia aporta a tu cuenta Bci con un enlace, sin descargar la app. Tú eliges si ven los montos o solo el avance.' },
     'mas-barato': { termino: 'Comprar más barato', pregunta: '¿Cómo baja el precio?',
       texto: 'Un usado parecido cuesta cerca de 17,6 % menos, pero no tiene subsidio a la tasa. IVA cero baja cerca de 6,5 % los departamentos nuevos, del 1-dic-2026 al 1-dic-2027.' },
     'financiamiento-pie': { termino: 'Pie compartido', pregunta: '¿Qué es el pie compartido?',
@@ -487,7 +702,7 @@
       var ev = evaluarCarga(e.totalMes, estado.otrasCuotas, estado.sueldoPropio, estado.sueldoPareja);
       return {
         p: p, paso: 1, etapa: 'Paso 2 de 5' + SEP + 'Postular',
-        etiqueta: ev ? 'Tu carga' : 'Revisa si califican',
+        etiqueta: ev ? 'Parte de tu sueldo' : 'Revisa si califican',
         numero: ev ? formatoPorcentaje(ev.cargaTotal, 1) : null,
         detalle: ev ? SEMAFORO[ev.nivel].palabra : 'Escribe tu sueldo para ver tu carga.',
         accion: 'Seguir postulando'
@@ -508,7 +723,7 @@
     if (paso === 3) {
       return {
         p: p, paso: 3, etapa: 'Paso 4 de 5' + SEP + 'Firmar',
-        etiqueta: 'Ya juntaste', numero: formatoPesos(e.alEscriturar),
+        etiqueta: 'Ya juntaste', numero: formatoPesos(metaCompra(p)),
         detalle: 'Revisa lo que firmas en palabras simples.',
         accion: 'Ir a firmar'
       };
@@ -573,7 +788,7 @@
       return '<li class="' + estadoPaso + '" style="--n:' + i + '"' + (estadoPaso === 'actual' ? ' aria-current="step"' : '') + '>' +
         (estadoPaso === 'actual'
           ? '<span class="escalera-arriba">' +
-              '<span class="escalera-figura' + (subio ? ' sube' : '') + '" style="--d:' + subio + '" aria-hidden="true">' + PERSONAJE + '</span>' +
+              '<span class="escalera-figura' + (subio ? ' sube' : '') + '" style="--d:' + subio + '" aria-hidden="true">' + personajeSVG() + '</span>' +
               (n === CAMINO.length ? '<span class="escalera-meta" aria-hidden="true">' + PUERTA_META + '</span>' : '') +
             '</span>'
           : (n === CAMINO.length ? '<span class="escalera-meta" aria-hidden="true">' + PUERTA_META + '</span>' : '')) +
@@ -587,17 +802,19 @@
     var p = x.p;
     var r = resumen(p);
     var avisos = [];
-    var dias = diasEntre(FECHA_REFERENCIA, p.cierre);
+    var dias = diasEntre(hoyDemo(), p.cierre);
     var aviso = {
       cierre: dias > 0 ? 'El proyecto cierra en ' + plural(dias, 'día', 'días') + ', el ' + formatoFecha(p.cierre) + '.' : null,
       cupos: p.tipo === 'conjunto'
-        ? (r.cuposLibres > 0
+        ? (grupoCerrado(p) && r.cuposLibres > 0
+          ? 'El grupo cerró con ' + r.cuposTomados + ' de ' + r.cupos + ': tu descuento es ' + formatoPorcentaje(r.descuento, 0) + '.'
+          : r.cuposLibres > 0
           ? 'El grupo lleva ' + r.cuposTomados + ' de ' + r.cupos + ' cupos: ' + (r.cuposLibres === 1 ? 'falta 1' : 'faltan ' + r.cuposLibres) + ' para completarlo.'
           : 'El grupo ya está completo.')
         : 'Ya se reunió el ' + formatoPorcentaje(r.avanceFinanciamiento, 0) + ' de la participación de 15\u00a0% con inversionistas.'
     };
     if (x.paso === 2 && estado.ahorroIniciado) {
-      var meta = r.escenario.alEscriturar;
+      var meta = metaCompra(p);
       var siguiente = HITOS_AHORRO.filter(function (h) { return avance(estado.ahorrado, meta) < h; })[0];
       if (siguiente) {
         avisos.push('Te faltan ' + formatoPesos(Math.ceil(meta * siguiente - estado.ahorrado)) +
@@ -695,10 +912,17 @@
 
   // S11-F1: aviso flotante que confirma lo que pasó (role="status": también lo lee el lector de pantalla).
   var temporizadorToast = null;
+  var toastDesde = 0;
+  // S17-F4: al cambiar de pantalla, el toast se cierra si ya se alcanzó a leer (más de 1,5 s).
+  function cerrarToastViejo() {
+    var t = $('toast');
+    if (t && !t.hidden && Date.now() - toastDesde > 1500) { t.hidden = true; clearTimeout(temporizadorToast); }
+  }
   function toast(texto) {
     var t = $('toast');
     t.textContent = texto;
     t.hidden = false;
+    toastDesde = Date.now();
     t.classList.remove('toast-entra');
     void t.offsetWidth;
     t.classList.add('toast-entra');
@@ -717,26 +941,39 @@
 
   // Las 3 preguntas de la primera vez: para qué, sus ingresos y su ahorro.
   function renderPreguntas() {
+    document.body.classList.add('en-preguntas');
     var n = estado.pregunta || 1;
     var c = $('inicio-principal');
+    // S16-F2: arriba, tu escena. Cada respuesta le suma algo (tu pareja, tu familia, tu mascota).
     var cabeza = function (titulo) {
       return '<header class="encabezado">' + FIGURAS + barraPreguntas(n) +
+        '<div class="escena-preguntas">' +
+          '<div class="escena-figuras" aria-hidden="true">' + escena(84, 'escena-av') + '</div>' +
+          '<button type="button" class="enlace" id="btn-mi-avatar" aria-haspopup="dialog">' + (estado.avatar ? 'Editar tu avatar' : 'Crea tu avatar') + '</button>' +
+        '</div>' +
         '<h1 id="titulo-inicio" class="h2" tabindex="-1">' + titulo + '</h1></header>';
+    };
+    var conEscena = function () {
+      $('btn-mi-avatar').addEventListener('click', function () {
+        editarMiAvatar($('btn-mi-avatar'), function () { renderPreguntas(); $('btn-mi-avatar').focus(); });
+      });
     };
     var atras = n > 1 ? '<p class="texto-centro"><button type="button" class="enlace" id="btn-atras-pregunta">Atrás</button></p>' : '';
 
     if (n === 1) {
       var opcion = function (modo, ic, texto) {
-        return '<button type="button" class="opcion-grande" role="radio" aria-checked="' + (estado.modo === modo) + '" data-modo="' + modo + '">' +
+        return '<button type="button" class="opcion-grande" role="radio" aria-checked="' + (estado.modoElegido && estado.modo === modo) + '" data-modo="' + modo + '">' +
           icono(ic, 'opcion-icono') + '<span>' + texto + '</span></button>';
       };
       c.innerHTML = cabeza('¿Para qué quieres tu departamento?') +
         '<div class="opciones-grandes" role="radiogroup" aria-labelledby="titulo-inicio">' +
           opcion('vivir', 'i-casa', 'Para vivir') + opcion('arrendar', 'i-llave', 'Para arrendar') +
         '</div>';
+      conEscena();
       c.querySelectorAll('.opcion-grande').forEach(function (b) {
         b.addEventListener('click', function () {
           estado.modo = b.dataset.modo;
+          estado.modoElegido = true;
           guardarEstado();
           estado.pregunta = 2;
           renderPreguntas();
@@ -747,24 +984,61 @@
     }
 
     if (n === 2) {
+      var quien = function (v, texto) {
+        return '<button type="button" class="chip-opcion" role="radio" aria-checked="' + (estado.conQuien === v) + '" data-quien="' + v + '">' + texto + '</button>';
+      };
+      var tieneMascota = !!(estado.avatar && estado.avatar.mascota);
       c.innerHTML = cabeza('¿Cuánto ganan?') +
+        '<div class="con-quien">' +
+          '<p class="etiqueta" id="titulo-con-quien">¿Con quién vas a vivir?</p>' +
+          '<div class="chips-opcion" role="radiogroup" aria-labelledby="titulo-con-quien">' +
+            quien('solo', 'Solo yo') + quien('pareja', 'Con mi pareja') + quien('familia', 'Con mi familia') +
+          '</div>' +
+          '<button type="button" class="interruptor" role="switch" aria-checked="' + tieneMascota + '" id="btn-mascota">' +
+            '<span>Con mascota</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
+          (estado.conQuien === 'familia' ? '<button type="button" class="enlace" id="btn-agregar-familia" aria-haspopup="dialog">Agregar a alguien de tu familia</button>' : '') +
+        '</div>' +
         '<div class="formulario">' +
           campoDinero('q-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
-          campoDinero('q-pareja', 'Sueldo de tu pareja', estado.sueldoPareja) +
+          (estado.conQuien === 'solo' ? '' : campoDinero('q-pareja', 'Sueldo de tu pareja', estado.sueldoPareja)) +
           campoDinero('q-otras', 'Otras cuotas al mes', estado.otrasCuotas) +
         '</div>' +
         '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-siguiente">Siguiente</button></div>' +
         atras;
+      if (estado.conQuien === 'solo') { estado.sueldoPareja = null; guardarEstado(); }
       [['q-propio', 'sueldoPropio'], ['q-pareja', 'sueldoPareja'], ['q-otras', 'otrasCuotas']].forEach(function (x) {
+        if (!$(x[0])) return;
         $(x[0]).addEventListener('input', function () {
           estado[x[1]] = formatearCampo($(x[0]));
           guardarEstado();
           if (x[1] !== 'otrasCuotas') validarSueldo($(x[0]), estado[x[1]], false);
         });
       });
+      var volverA = function (sel) { renderPreguntas(); var el = document.querySelector(sel); if (el) el.focus(); };
+      c.querySelectorAll('[data-quien]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          estado.conQuien = b.dataset.quien;
+          guardarEstado();
+          var sel = '[data-quien="' + b.dataset.quien + '"]';
+          if (estado.conQuien === 'pareja' && !miembrosCon(['pareja']).length) return agregarAlEquipo(b, 'pareja', function () { volverA(sel); });
+          if (estado.conQuien === 'familia' && !companeros().length) return agregarAlEquipo(b, null, function () { volverA(sel); }, 'mamá');
+          volverA(sel);
+        });
+      });
+      $('btn-mascota').addEventListener('click', function () {
+        var av = estado.avatar || normalizarAvatar({});
+        av.mascota = av.mascota ? '' : 'perro';
+        estado.avatar = av;
+        guardarEstado();
+        volverA('#btn-mascota');
+      });
+      if ($('btn-agregar-familia')) $('btn-agregar-familia').addEventListener('click', function () {
+        agregarAlEquipo($('btn-agregar-familia'), null, function () { volverA('#btn-agregar-familia'); }, 'mamá');
+      });
+      conEscena();
       $('btn-siguiente').addEventListener('click', function () {
         if (!validarSueldo($('q-propio'), estado.sueldoPropio, true)) { temblar($('q-propio')); $('q-propio').focus(); return; }
-        if (estado.sueldoPareja === 0) { validarSueldo($('q-pareja'), 0, false); $('q-pareja').focus(); return; }
+        if (estado.sueldoPareja === 0 && $('q-pareja')) { validarSueldo($('q-pareja'), 0, false); $('q-pareja').focus(); return; }
         estado.pregunta = 3;
         renderPreguntas();
         $('titulo-inicio').focus();
@@ -777,7 +1051,7 @@
         '<div class="formulario">' +
           campoDinero('q-ahorro', 'Lo que tienes ahorrado', estado.ahorroActual) +
           campoDinero('q-mensual', 'Lo que puedes juntar al mes', estado.ahorroMensual) +
-          (arrendar ? campoDinero('q-arriendo', 'Arriendo que pagas hoy', estado.arriendoActual) : '') +
+          campoDinero('q-arriendo', arrendar ? 'Arriendo que pagas hoy' : 'Arriendo que pagas hoy (opcional)', estado.arriendoActual) +
         '</div>' +
         '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-camino">Siguiente</button></div>' +
         atras;
@@ -803,6 +1077,7 @@
         $('titulo-inicio').focus();
       });
     }
+    if (n === 3) conEscena();
     if (n !== 4 && $('btn-atras-pregunta')) $('btn-atras-pregunta').addEventListener('click', function () {
       estado.pregunta = n - 1;
       renderPreguntas();
@@ -854,6 +1129,9 @@
         $('titulo-inicio').focus();
       });
     });
+    if ($('btn-mi-avatar')) $('btn-mi-avatar').addEventListener('click', function () {
+      editarMiAvatar($('btn-mi-avatar'), function () { renderPreguntas(); $('btn-mi-avatar').focus(); });
+    });
     if ($('btn-atras-pregunta')) $('btn-atras-pregunta').addEventListener('click', function () {
       estado.pregunta = 3;
       renderPreguntas();
@@ -895,7 +1173,271 @@
     if (x.desde !== null && x.techo !== null && x.desde !== x.techo) return (x.desde === 0 ? 'Ya' : x.desde) + ' a ' + textoMeses(x.techo);
     return x.techo === null ? '—' : textoPlazoMeses(x.techo);
   }
-  var VENTANAS_NOCHE = [1, 0, 1, 0, 1, 0, 1, 'tu', 1, 1, 0, 1];
+  // S16-F3: tu ventana es más grande (2 columnas × 3 pisos) y adentro estás tú con quienes viven contigo.
+  var VENTANAS_NOCHE = [1, 0, 1, 'tu', 1, 0, 1, 1, 1, 0];
+
+
+  // ---------- Sprint 17: un solo plazo, piezas que se suman y texto mínimo (modo vivir) ----------
+  function piezasOn() { return estado.piezas || {}; }
+  function perfilPiezas() { return { ahorroActual: estado.ahorroActual || 0, ahorroMensual: estado.ahorroMensual }; }
+  function deptoDeProyecto(p) {
+    var d = departamentosDe(p.id)[0];
+    return { listaUF: d.listaUF, enObra: p.tipo === 'conjunto' && (p.etapaObra || 0) < 4,
+      mesesEntrega: mesesParaEntrega(p),
+      descuento: p.tipo === 'conjunto' ? resumen(p).descuento : 0 };
+  }
+  // Los departamentos de verdad que hay para vivir en su rango.
+  function candidatosVivir() {
+    var r = rangoActual();
+    return PROYECTOS.filter(function (p) { return p.tipo === 'conjunto' && (!r || enRango(departamentosDe(p.id)[0].listaUF, r)); });
+  }
+  // Sin departamento elegido: el piso y el techo del rango, con la entrega más próxima y la más lejana.
+  function deptosRango(on) {
+    var r = rangoActual() || { desde: 2000, hasta: LISTA_REFERENCIA_UF };
+    var c = candidatosVivir().map(deptoDeProyecto);
+    var enObra = c.length > 0;
+    var entregas = c.map(function (x) { return x.mesesEntrega; });
+    var hasta = r.hasta;
+    if (on && on.subsidio) hasta = Math.min(hasta, SUPUESTOS_PIEZAS.topeSubsidioUF / (on.grupo ? 1 - SUPUESTOS_PIEZAS.descuentoGrupo : 1));
+    return {
+      desde: { listaUF: r.desde, enObra: enObra, mesesEntrega: enObra ? Math.min.apply(null, entregas) : 0 },
+      hasta: { listaUF: hasta, enObra: enObra, mesesEntrega: enObra ? Math.max.apply(null, entregas) : 0 }
+    };
+  }
+  // Bloqueos de la pieza contando lo que hay de verdad en su rango (la app solo ofrece lo que puede cumplir).
+  function bloqueoApp(id, on) {
+    var c = candidatosVivir();
+    if (id === 'iva' && !c.some(function (p) { return !deptoDeProyecto(p).enObra; }))
+      return { razon: 'Sin terminados', como: 'Hoy no hay departamentos terminados en tu rango.' };
+    if (id === 'subsidio' && !c.some(function (p) {
+      var d = deptoDeProyecto(p);
+      return precioConPiezas(d.listaUF, Object.assign({}, on, { subsidio: false }), d.descuento) <= SUPUESTOS_PIEZAS.topeSubsidioUF + 1e-9;
+    })) return { razon: 'Sobre UF 2.200', como: 'En tu rango no hay de hasta UF 2.200. Prueba otro rango.' };
+    if (id === 'grupo' && !c.length) return { razon: 'Sin grupos', como: 'Hoy no hay grupos en tu rango.' };
+    return null;
+  }
+  function piezasValidas(on) {
+    var v = {};
+    ORDEN_PIEZAS.forEach(function (id) { v[id] = !!on[id] && !bloqueoApp(id, on); });
+    return v;
+  }
+  // El plazo de Mi camino: un rango (piso y techo) mientras no haya departamento.
+  function plazoVivir(mensual) {
+    var on = piezasValidas(piezasOn());
+    var pf = perfilPiezas();
+    if (mensual) pf.ahorroMensual = mensual;
+    var d = deptosRango(on);
+    return { on: on, desde: calcularPiezas(pf, on, d.desde, hoyDemo()), hasta: calcularPiezas(pf, on, d.hasta, hoyDemo()), deptos: d, perfil: pf };
+  }
+  // El plazo de una compra o de un departamento elegido (un solo número).
+  function plazoDepartamento(p, mensual) {
+    var on = Object.assign({}, piezasOn(), { grupo: p.tipo === 'conjunto' });
+    var pf = perfilPiezas();
+    if (mensual) pf.ahorroMensual = mensual;
+    return calcularPiezas(pf, on, deptoDeProyecto(p), hoyDemo());
+  }
+  // Lo que hay que juntar antes de firmar en una compra: para vivir, con las piezas que aplican a ese departamento.
+  function metaCompra(p) {
+    return estado.modo === 'vivir' && p.tipo === 'conjunto' ? plazoDepartamento(p).meta : resumen(p).escenario.alEscriturar;
+  }
+  function ahorradoTuPie(meta) { return estado.ahorroIniciado ? estado.ahorrado : Math.min(meta, estado.ahorroActual || 0); }
+  // S17-F1: Tu pie usa la misma regla que Inicio: lo que falta y la entrega del edificio (si es en obra).
+  function plazoTuPie(p, meta) {
+    var pisos = [];
+    if (estado.modo === 'vivir') {
+      var d = deptoDeProyecto(p);
+      if (d.enObra && d.mesesEntrega > 0) pisos.push({ meses: d.mesesEntrega, freno: 'entrega' });
+    }
+    return plazoConPisos(meta - ahorradoTuPie(meta), estado.ahorroMensual, pisos);
+  }
+  function textoMesesRango(a, b) {
+    if (a === null || b === null) return '—';
+    if (a === b) return a === 0 ? 'Ya' : textoMeses(a);
+    return (a === 0 ? 'Ya' : a) + ' a ' + textoMeses(b);
+  }
+  function textoLlavesRango(x) {
+    if (x.desde.meses === null) return '';
+    if (x.desde.meses === x.hasta.meses) return x.hasta.llaves;
+    var a = x.desde.llaves.split(' de '), b = x.hasta.llaves.split(' de ');
+    return 'Entre ' + (a[1] === b[1] ? a[0] : x.desde.llaves) + ' y ' + x.hasta.llaves;
+  }
+  var FRENO = { ahorro: 'Te frena: juntar tu pie', entrega: 'Te frena: la entrega', 'cuenta-vivienda': 'Te frena: tu cuenta de vivienda', ninguno: 'Nada te frena' };
+  function vsArriendo(div) {
+    if (!(estado.arriendoActual > 0)) return '';
+    var max = Math.max(estado.arriendoActual, div);
+    return '<div class="vs-arriendo" aria-hidden="true">' +
+      '<span>Arriendo hoy</span><span class="b gris" style="transform:scaleX(' + (estado.arriendoActual / max).toFixed(3) + ')"></span><b>' + formatoRedondeado(estado.arriendoActual) + '</b>' +
+      '<span>Tu departamento</span><span class="b azul" style="transform:scaleX(' + (div / max).toFixed(3) + ')"></span><b>' + formatoRedondeado(div) + '</b>' +
+    '</div>';
+  }
+  function barraLlaves(avance) {
+    return '<div class="pista-llaves" aria-hidden="true"><span class="barra-llaves"><i style="transform:scaleX(' + avance.toFixed(3) + ')"' + (avance >= 0.75 ? ' class="cerca"' : '') + '></i></span>' +
+      '<span class="pct-llaves">' + Math.round(avance * 100) + ' %</span><span class="llave-meta">' + icono('i-llave') + '</span></div>';
+  }
+
+  // S17-F8: Tu camino en modo vivir: ahora (tus llaves) y después (lo que pagas al mes, junto a tu arriendo).
+  function renderTuCaminoVivir() {
+    var c = $('inicio-principal');
+    var perfil = perfilActual();
+    var rec = recomendarCamino(perfil);
+    var ingreso = ingresoTotal(estado.sueldoPropio, estado.sueldoPareja) || 0;
+    var minimo = 100000, paso = 50000;
+    var maximo = Math.max(1000000, Math.ceil(ingreso * 0.4 / paso) * paso);
+    var mensual = Math.min(maximo, Math.max(minimo, estado.ahorroMensual || 300000));
+    var x = plazoVivir(mensual);
+    var rango = rangoActual();
+    var eligio = !!estado.caminoElegido;
+    var siempre = plazoCreditoSiempre(x.perfil, x.deptos.hasta.listaUF);
+    var justo = rec && rec.todaviaNo;
+
+    c.innerHTML =
+      '<header class="encabezado">' + FIGURAS + campana() +
+        '<h1 id="titulo-inicio" class="h2" tabindex="-1">Tu camino</h1>' +
+        '<p class="texto-apoyo">' + textoRango(rango) + SEP + '<button type="button" class="enlace" id="btn-cambiar-departamento" aria-haspopup="dialog">Cambiar</button></p>' +
+      '</header>' +
+      (justo
+        ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
+            '<h2 class="h3" id="titulo-plazo">Hoy te dejaría muy justo</h2></section>'
+        : '<section class="noche" aria-labelledby="titulo-plazo">' +
+            '<span class="noche-luna" aria-hidden="true"></span>' +
+            '<p class="noche-etiqueta" id="titulo-plazo">Tus llaves</p>' +
+            '<strong class="numero noche-plazo" id="numero-plazo" aria-live="polite">' + textoMesesRango(x.desde.meses, x.hasta.meses) + '</strong>' +
+            '<p class="noche-sub" id="llaves-fecha">' + textoLlavesRango(x) + '</p>' +
+            '<div class="noche-edificio" aria-hidden="true"><span class="noche-techo"></span><div class="noche-fachada">' +
+              VENTANAS_NOCHE.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
+            '</div></div>' +
+            '<span class="freno-llaves" id="freno-llaves">' + FRENO[x.hasta.freno] + '</span>' +
+          '</section>') +
+      '<p class="sello sello-bci">' + icono('i-escudo') + 'Con la garantía del Estado pones solo el 10 %</p>' +
+      '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
+        '<p class="si-juntas-fila"><label for="rango-mensual" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-mensual">' + formatoRedondeado(mensual) + '</strong></p>' +
+        '<input type="range" id="rango-mensual" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '" aria-valuetext="' + formatoRedondeado(mensual) + ' al mes: ' + textoMesesRango(x.desde.meses, x.hasta.meses) + '">' +
+      '</section>' +
+      '<section class="tarjeta bloque despues" aria-labelledby="titulo-despues">' +
+        '<p class="etiqueta" id="titulo-despues">Después, pagas al mes</p>' +
+        '<strong class="numero display-4">' + formatoRango(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
+        vsArriendo(x.hasta.dividendo) +
+      '</section>' +
+      (siempre !== null ? '<p class="texto-apoyo linea-siempre">Crédito de siempre (80 %): <s>' + textoMeses(siempre) + '</s></p>' : '') +
+      '<div class="accion-fija">' + (eligio
+        ? '<a href="#camino/elegir" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-departamentos">Elegir departamento</a>'
+        : '<a href="#camino/caminos" class="btn btn-primario btn-lg btn-bloque">' + (justo ? 'Ver qué lo cambia' : 'Ver cómo llegar antes') + '</a>') +
+      '</div>' +
+      '<p class="texto-centro">' + (eligio ? '<a href="#camino/caminos" class="enlace">Ver cómo llegar antes</a>' + SEP : '') +
+        '<button type="button" class="enlace" id="btn-cambiar-datos" aria-haspopup="dialog">Cambiar mis datos</button></p>' +
+      recorridoCamino(0) +
+      lineaInversiones();
+
+    var rm = $('rango-mensual');
+    var pintar = function () { var v = Number(rm.value); rm.style.setProperty('--lleno', ((v - minimo) / (maximo - minimo) * 100).toFixed(1) + '%'); return v; };
+    pintar();
+    rm.addEventListener('input', function () {
+      var v = pintar();
+      var y = plazoVivir(v);
+      $('valor-mensual').textContent = formatoRedondeado(v);
+      if ($('numero-plazo')) {
+        $('numero-plazo').textContent = textoMesesRango(y.desde.meses, y.hasta.meses);
+        $('llaves-fecha').textContent = textoLlavesRango(y);
+        $('freno-llaves').textContent = FRENO[y.hasta.freno];
+        var ventana = $('mi-ventana'); ventana.classList.remove('brilla'); void ventana.offsetWidth; ventana.classList.add('brilla');
+      }
+      rm.setAttribute('aria-valuetext', formatoRedondeado(v) + ' al mes: ' + textoMesesRango(y.desde.meses, y.hasta.meses));
+    });
+    rm.addEventListener('change', function () { estado.ahorroMensual = Number(rm.value); guardarEstado(); });
+    if ($('btn-ver-departamentos')) $('btn-ver-departamentos').addEventListener('click', function () { prepararProyectos(estado.caminoElegido); });
+    $('btn-cambiar-datos').addEventListener('click', function () { abrirMisDatos($('btn-cambiar-datos')); });
+    $('btn-cambiar-departamento').addEventListener('click', function () { abrirCambiarRango($('btn-cambiar-departamento')); });
+  }
+
+  // S17-F9: Llega antes. Cada pieza es una fila: nombre, efecto, "?" e interruptor. La recomendada lleva ★.
+  var piezaAbierta = null, mesesLlegaAntes = null;
+  function renderLlegaAntes() {
+    var cont = $('caminos-contenido');
+    var x = plazoVivir();
+    var on = x.on;
+    var rango = rangoActual();
+    var mejor = mejorPieza(x.perfil, on, x.deptos.hasta, hoyDemo());
+    if (mejor && bloqueoApp(mejor, on)) mejor = null;
+    var siempre = plazoCreditoSiempre(x.perfil, x.deptos.hasta.listaUF);
+    var fila = function (id) {
+      var pz = PIEZAS_VIVIR[id];
+      var b = bloqueoApp(id, on) || (id === 'iva' || id === 'subsidio' ? bloqueoPieza(id, on, x.deptos.desde) : null);
+      var activo = !!on[id];
+      var ef = b ? b.razon : efectoPieza(id, x.perfil, on, x.deptos.hasta, hoyDemo()).texto;
+      return '<li class="pieza-fila' + (activo ? ' on' : '') + (b ? ' bloq' : '') + '">' +
+        '<span class="pieza-nombre">' + (mejor === id ? '<span class="estrella" aria-label="Recomendado">★</span>' : '') + pz.nombre +
+          (pz.existeHoy ? '' : '<span class="chip-propuesta-mini">Propuesta</span>') + '</span>' +
+        '<span class="pieza-efecto">' + ef + '</span>' +
+        '<button type="button" class="pieza-q" data-q="' + id + '" aria-expanded="' + (piezaAbierta === id) + '" aria-controls="cond-' + id + '" aria-label="Condiciones: ' + pz.nombre + '">?</button>' +
+        '<button type="button" class="pieza-sw" role="switch" data-pieza="' + id + '" aria-checked="' + activo + '" aria-label="' + pz.nombre + '"' + (b ? ' aria-disabled="true"' : '') + '></button>' +
+        '<span class="pieza-cond" id="cond-' + id + '"' + (piezaAbierta === id ? '' : ' hidden') + '>' + pz.cond + (b ? ' ' + b.como : '') + '</span>' +
+      '</li>';
+    };
+    var grupo = function (g, titulo) {
+      return '<h2 class="grupo-piezas" id="titulo-' + g + '">' + titulo + '</h2><ul class="lista-piezas" aria-labelledby="titulo-' + g + '">' +
+        ORDEN_PIEZAS.filter(function (id) { return PIEZAS_VIVIR[id].grupo === g; }).map(fila).join('') + '</ul>';
+    };
+    var cambio = mesesLlegaAntes !== null && x.hasta.meses !== null && mesesLlegaAntes !== x.hasta.meses ? mesesLlegaAntes - x.hasta.meses : 0;
+    mesesLlegaAntes = x.hasta.meses;
+    cont.innerHTML =
+      '<a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Mi camino</a>' +
+      '<header class="encabezado"><h1 id="titulo-caminos" class="h2">Llega antes</h1>' +
+        '<p class="texto-apoyo">' + (rango ? textoRango(rango) + SEP : '') + '<button type="button" class="enlace" id="btn-caminos-rango" aria-haspopup="dialog">Cambiar</button></p></header>' +
+      '<section class="llaves-hero" aria-labelledby="titulo-llaves">' +
+        '<p class="noche-etiqueta" id="titulo-llaves">Tus llaves</p>' +
+        '<strong class="numero noche-plazo" aria-live="polite">' + textoMesesRango(x.desde.meses, x.hasta.meses) + '</strong>' +
+        '<p class="noche-sub">' + textoLlavesRango(x) + '</p>' +
+        barraLlaves(x.hasta.avance) +
+        '<span class="freno-llaves">' + (x.hasta.ivaTarde ? 'Sin IVA vence antes' + SEP : '') + FRENO[x.hasta.freno] + '</span>' +
+        (cambio ? '<span class="cambio-llaves" aria-hidden="true">' + (cambio > 0 ? '−' : '+') + plural(Math.abs(cambio), 'mes', 'meses') + '</span>' : '') +
+      '</section>' +
+      '<div class="mini-datos">' +
+        '<div><small>Juntas al mes</small><strong class="numero">' + (x.hasta.falta > 0 ? formatoRedondeado(x.hasta.freno === 'ahorro' ? estado.ahorroMensual : x.hasta.basta) : '$0') + '</strong></div>' +
+        '<div><small>Después pagas al mes</small><strong class="numero">' + formatoRango(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
+          (estado.arriendoActual > 0 ? '<small>Arriendo hoy ' + formatoRedondeado(estado.arriendoActual) + '</small>' : '') + '</div>' +
+      '</div>' +
+      grupo('menos', 'Paga menos') + grupo('ayuda', 'Recibe ayuda') +
+      (siempre !== null ? '<p class="texto-apoyo linea-siempre">Crédito de siempre (80 %): <s>' + textoMeses(siempre) + '</s></p>' : '') +
+      plegable('numeros-llega', 'Ver números', '',
+        '<ul class="datos-inversion">' +
+          '<li><span>Precio</span><strong>' + formatoRango(ufAPesos(x.desde.precioUF), ufAPesos(x.hasta.precioUF)) + '</strong></li>' +
+          '<li><span>Bci presta</span><strong>' + Math.round(x.hasta.pctCredito * 100) + ' %</strong></li>' +
+          (x.hasta.subsidioUF ? '<li><span>Subsidio</span><strong>' + formatoRedondeado(ufAPesos(x.hasta.subsidioUF)) + '</strong></li>' : '') +
+          '<li><span>Pie y gastos</span><strong>' + formatoRango(x.desde.meta, x.hasta.meta) + '</strong></li>' +
+          '<li><span>Ya tienes</span><strong>' + formatoRedondeado(x.hasta.tienes) + '</strong></li>' +
+        '</ul>' +
+        '<button type="button" class="btn btn-terciario btn-bloque" data-simular="' + (on.grupo ? 'grupo-vivir' : 'individual-vivir') + '" aria-haspopup="dialog">Ver simulación</button>') +
+      '<p class="sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
+      '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-llega-elegir">Elegir departamento</button></div>';
+
+    iniciarPlegables();
+    cont.querySelectorAll('[data-q]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        piezaAbierta = piezaAbierta === b.dataset.q ? null : b.dataset.q;
+        renderLlegaAntes();
+        cont.querySelector('[data-q="' + b.dataset.q + '"]').focus();
+      });
+    });
+    cont.querySelectorAll('[data-pieza]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (b.getAttribute('aria-disabled') === 'true') { piezaAbierta = b.dataset.pieza; renderLlegaAntes(); cont.querySelector('[data-q="' + b.dataset.pieza + '"]').focus(); return; }
+        var id = b.dataset.pieza;
+        estado.piezas = Object.assign({}, piezasOn());
+        estado.piezas[id] = !estado.piezas[id];
+        guardarEstado();
+        renderLlegaAntes();
+        cont.querySelector('[data-pieza="' + id + '"]').focus();
+        anunciar(PIEZAS_VIVIR[id].nombre + (estado.piezas[id] ? ' sumado. ' : ' quitado. ') + 'Tus llaves: ' + textoMesesRango(plazoVivir().desde.meses, plazoVivir().hasta.meses) + '.');
+        if (estado.piezas[id] && navigator.vibrate) navigator.vibrate(20);
+      });
+    });
+    cont.querySelectorAll('[data-simular]').forEach(function (b) { b.addEventListener('click', function () { abrirSimulacion(b.dataset.simular, b); }); });
+    $('btn-caminos-rango').addEventListener('click', function () { abrirCambiarRango($('btn-caminos-rango')); });
+    $('btn-llega-elegir').addEventListener('click', function () {
+      // El camino sale de las piezas: con grupo, compra en grupo; si no, el crédito con la garantía del Estado.
+      elegirCamino(piezasValidas(piezasOn()).grupo ? 'grupo-vivir' : 'individual-vivir');
+    });
+  }
 
   function renderTuCamino() {
     var perfil = perfilActual();
@@ -935,7 +1477,7 @@
           (r.todaviaNo && !eligio ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(rango.hasta) + ' te dejarían justo.</p>' : '') +
           '<div class="noche-edificio" aria-hidden="true"><span class="noche-techo"></span><div class="noche-fachada">' +
             VENTANAS_NOCHE.map(function (v) {
-              return v === 'tu' ? '<span class="nv tu" id="mi-ventana">Tú</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>';
+              return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>';
             }).join('') +
           '</div></div>' +
         '</section>' +
@@ -1017,21 +1559,42 @@
     // primera vez → las 3 preguntas; si no → el plazo de su camino.
     var c = $('inicio-principal');
     c.innerHTML = '';
+    document.body.classList.remove('en-preguntas');
+    actualizarBarraInversiones();
     if (estado.compra) return renderCamino();
     if (estado.inversiones.length && !estado.preguntasListas) return renderSoloInversiones();
     if (!estado.preguntasListas) return renderPreguntas();
     if (!rangoActual()) { estado.pregunta = 4; return renderPreguntas(); }
-    renderTuCamino();
+    if (estado.modo === 'vivir') renderTuCaminoVivir(); else renderTuCamino();
   }
 
   // ---------- Proyectos: el marketplace ----------
+  // S16-F7: cada proyecto con su edificio dibujado. La ventana de tu compra está encendida.
+  function fachada(p) {
+    var f = p.fachada || { color: 'blue-normal', pisos: 5 };
+    var tuyo = esMiProyecto(p);
+    var alto = f.pisos * 16 + 14, ventanas = '';
+    for (var piso = 0; piso < f.pisos; piso++) for (var col = 0; col < 3; col++) {
+      var on = tuyo && piso === Math.floor(f.pisos / 2) && col === 1;
+      ventanas += '<rect class="fachada-ventana' + (on ? ' on' : '') + '" x="' + (12 + col * 22) + '" y="' + (10 + piso * 16) + '" width="14" height="10" rx="2"/>';
+    }
+    return '<span class="fachada" aria-hidden="true"><svg viewBox="0 0 90 ' + alto + '" height="' + Math.min(alto, 96) + '">' +
+      '<rect x="4" y="2" width="82" height="' + (alto - 2) + '" rx="4" style="fill:var(--' + f.color + ')"/>' + ventanas + '</svg>' +
+      (tuyo ? '<span class="fachada-tuyo">Tu ventana</span>' : '') + '</span>';
+  }
   function tarjetaProyecto(p, base) {
     var r = resumen(p);
     var d = departamentosDe(p.id)[0];
-    var numero = p.tipo === 'conjunto'
-      ? '<p class="etiqueta">Ahorras al unirte</p><strong class="numero display-4">' + formatoPesos(r.ahorro) + '</strong>'
-      : '<p class="etiqueta">Precio del departamento</p><strong class="numero display-4">' + formatoPesos(r.escenario.precio) + '</strong>';
+    // S18-F1 y F4: el ahorro de hoy, redondeado; el de completar el grupo, como posibilidad.
+    var completo = r.ahorroCompleto > r.ahorro ? formatoRedondeado(r.ahorroCompleto) + ' si se completa' : '';
+    var numero = p.tipo !== 'conjunto'
+      ? '<p class="etiqueta">Precio del departamento</p><strong class="numero display-4">' + formatoRedondeado(r.escenario.precio) + '</strong>'
+      : r.ahorro > 0
+      ? '<p class="etiqueta">Ahorras al unirte</p><strong class="numero display-4">' + formatoRedondeado(r.ahorro) + '</strong>' +
+        (completo ? '<p class="texto-apoyo">' + completo + '</p>' : '')
+      : '<p class="etiqueta">Si el grupo se completa</p><strong class="numero display-4">' + formatoRedondeado(r.ahorroCompleto) + '</strong>';
     return '<li><a class="tarjeta tarjeta-proyecto" href="' + (base || '#departamentos/') + esc(p.id) + '">' +
+      fachada(p) +
       '<h2 class="h4">' + esc(p.nombre) + '</h2>' +
       '<p class="texto-apoyo ficha">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       numero +
@@ -1311,6 +1874,8 @@
     var d = departamentosDe(p.id)[0];
     var conjunto = p.tipo === 'conjunto';
     var esMiCompra = estado.compra && estado.compra.proyectoId === p.id;
+    var vivirAqui = estado.modo === 'vivir' && conjunto && ctx !== 'inversiones' && estado.preguntasListas;
+    var pd = vivirAqui ? plazoDepartamento(p) : null;
 
     var precio = conjunto
       ? '<p class="precio-lista">Precio de lista <s>' + formatoPesos(e.precioLista) + '</s></p>' +
@@ -1373,20 +1938,36 @@
         '<p class="texto-apoyo">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       '</header>' +
 
-      '<div class="tarjeta protagonista">' +
+      (vivirAqui
+        // S17-F1 y F2: para vivir, el mismo plazo que Inicio y Tu pie, con cifras redondeadas.
+        ? '<div class="tarjeta protagonista">' +
+            '<p class="etiqueta">Tus llaves</p>' +
+            '<strong class="numero display-3">' + (pd.meses === 0 ? 'Ya' : textoMeses(pd.meses)) + '</strong>' +
+            '<p class="texto-apoyo">' + pd.llaves + SEP + FRENO[pd.freno] + '</p>' +
+            '<ul class="datos-inversion">' +
+              '<li><span>Juntas antes de firmar</span><strong>' + formatoRedondeado(pd.meta) + '</strong></li>' +
+              '<li><span>Después pagas al mes</span><strong>' + formatoRedondeado(pd.dividendo) + '</strong></li>' +
+              '<li><span>Precio' + (conjunto ? ' con descuento' : '') + '</span><strong>' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong></li>' +
+              (conjunto ? '<li><span>Ahorras en grupo hoy</span><strong>' + formatoRedondeado(r.ahorro) + '</strong></li>' : '') +
+              (conjunto && r.ahorroCompleto > r.ahorro ? '<li><span>Si se completa</span><strong>' + formatoRedondeado(r.ahorroCompleto) + '</strong></li>' : '') +
+            '</ul>' +
+            '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
+          '</div>'
+        : '<div class="tarjeta protagonista">' +
         '<p class="etiqueta">Precio del departamento</p>' + precio +
         '<p class="secundario">Y luego <strong>' + formatoPesos(e.totalMes) + '</strong> al mes de dividendo</p>' +
         '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
-      '</div>' +
+      '</div>') +
       rinde +
 
       '<div class="tarjeta bloque">' +
         '<h2 class="h5">De dónde sale el precio</h2>' +
-        repartoCasa(partesEscenario(e)) +
+        // S18-F4: para vivir, redondeado; los exactos quedan en la simulación, la preaprobación y Firmar.
+        repartoCasa(partesEscenario(e), vivirAqui ? formatoRedondeado : formatoPesos) +
         '<ul class="datos-inversion">' +
-          '<li><span>Gastos de escritura</span><strong>' + formatoPesos(e.gastos) + '</strong></li>' +
-          '<li><span>Pones al escriturar</span><strong>' + formatoPesos(e.alEscriturar) + '</strong></li>' +
-          '<li><span>Sin subsidio a la tasa ' + ayuda('dividendo') + '</span><strong>' + formatoPesos(e.dividendoSinSubsidio) + ' al mes</strong></li>' +
+          '<li><span>Gastos de escritura</span><strong>' + (vivirAqui ? formatoRedondeado : formatoPesos)(e.gastos) + '</strong></li>' +
+          (vivirAqui ? '' : '<li><span>Juntas antes de firmar</span><strong>' + formatoPesos(e.alEscriturar) + '</strong></li>') +
+          '<li><span>Sin subsidio a la tasa ' + ayuda('dividendo') + '</span><strong>' + (vivirAqui ? formatoRedondeado : formatoPesos)(e.dividendoSinSubsidio) + ' al mes</strong></li>' +
           '<li><span>Inmobiliaria cliente de Bci ' + ayuda('cliente-bci') + '</span><strong>' + (p.clienteBci ? 'Sí' : 'No') + '</strong></li>' +
         '</ul>' +
       '</div>' +
@@ -1776,7 +2357,7 @@
     var sug = ev.nivel === 'holgado' ? null : sugerencia(p, ev);
     var html =
       '<div class="tarjeta semaforo semaforo-' + ev.nivel + '">' +
-        '<p class="etiqueta">Tu carga ' + ayuda('carga') + '</p>' +
+        '<p class="etiqueta">Parte de tu sueldo ' + ayuda('carga') + '</p>' +
         medidorCarga(hayCuotas ? ev.cargaTotal : ev.cargaDividendo, hayCuotas ? ev.cargaDividendo : null) +
         '<div class="semaforo-fila">' +
           '<strong class="numero display-2">' + formatoPorcentaje(hayCuotas ? ev.cargaTotal : ev.cargaDividendo, 1) + '</strong>' +
@@ -1822,25 +2403,36 @@
     return '<p class="partes-postula">' + (i + 1) + ' de 3' + SEP + actual + '</p>';
   }
 
+  var editandoPostula = false;
   function renderPostula(p, d) {
     var sp = subpasoPostula();
     if (sp === 'documentos') return renderDocumentos(p, d);
     if (sp === 'resultado') return renderResultadoPreaprobacion(p, d);
 
     var e = resumen(p).escenario;
+    var yaTiene = estado.sueldoPropio > 0 && !editandoPostula;
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Dividendo al mes', e.totalMes) +
+      tarjetaCompacta(p, 'Pagas al mes', e.totalMes) +
       listaPasos(1) +
       '<section class="bloque" aria-labelledby="titulo-postula">' +
         '<h2 class="h3" id="titulo-postula">Postula</h2>' +
         partesPostula('Tus datos') +
-        '<div class="formulario">' +
+        // S17-F5: no se vuelve a pedir lo ya respondido: se muestra con "Cambiar".
+        (yaTiene
+          ? '<div class="tarjeta compacta resumen-datos" id="resumen-datos"><ul class="datos-inversion">' +
+              '<li><span>Tu sueldo</span><strong>' + formatoPesos(estado.sueldoPropio) + '</strong></li>' +
+              (estado.sueldoPareja ? '<li><span>Tu pareja</span><strong>' + formatoPesos(estado.sueldoPareja) + '</strong></li>' : '') +
+              '<li><span>Otras cuotas</span><strong>' + formatoPesos(estado.otrasCuotas || 0) + '</strong></li>' +
+            '</ul><button type="button" class="enlace" id="btn-cambiar-postula">Cambiar</button></div>'
+          : '') +
+        '<div class="formulario" id="form-postula"' + (yaTiene ? ' hidden' : '') + '>' +
           campoDinero('sueldo-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
           campoDinero('sueldo-pareja', 'Sueldo líquido de tu pareja', estado.sueldoPareja) +
           campoDinero('otras-cuotas', 'Otras cuotas al mes', estado.otrasCuotas) +
-          campoContrato() +
         '</div>' +
+        campoContrato() +
         '<div id="carga-resultado" aria-live="polite"></div>' +
+        '<p class="sello sello-bci">' + icono('i-escudo') + 'Sin compromiso</p>' +
         '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-postular" aria-describedby="postular-explica">Postular</button></div>' +
           '<div class="acciones">' +
           '<p class="texto-apoyo" id="postular-explica"></p>' +
@@ -1864,6 +2456,12 @@
         tocados[c[2]] = true;
         renderCarga(p, tocados);
       });
+    });
+    if ($('btn-cambiar-postula')) $('btn-cambiar-postula').addEventListener('click', function () {
+      editandoPostula = true;
+      $('resumen-datos').hidden = true;
+      $('form-postula').hidden = false;
+      $('sueldo-propio').focus();
     });
     $('otras-cuotas').addEventListener('input', function () {
       estado.otrasCuotas = formatearCampo($('otras-cuotas'));
@@ -1938,22 +2536,24 @@
 
     var lista = '';
     if (c.cliente === false) {
-      lista = '<ul class="lista-documentos">' + DOCUMENTOS.map(function (x) {
+      // S16-F6: pasaporte con timbres. Cada página es un documento; al subirlo cae el timbre "Listo".
+      var listos = DOCUMENTOS.filter(function (x) { return !!docs[x.id]; }).length;
+      lista = '<p class="pasaporte-cuenta">' + listos + ' de ' + DOCUMENTOS.length + ' timbrados</p>' +
+        '<ul class="pasaporte">' + DOCUMENTOS.map(function (x) {
         var archivo = docs[x.id];
-        return '<li class="documento' + (archivo ? ' listo' : '') + '" id="doc-' + x.id + '">' +
-          '<div class="documento-fila">' +
-            '<span class="documento-icono" aria-hidden="true">' + (archivo ? checkDibujado(docRecien === x.id) : icono('i-documento')) + '</span>' +
-            '<span class="documento-texto"><strong>' + x.nombre + '</strong><small>' +
-              (archivo ? 'Listo: ' + esc(archivo) : x.para) + '</small></span>' +
-            '<button type="button" class="btn btn-terciario btn-sm btn-subir" data-doc="' + x.id + '" aria-haspopup="dialog" aria-expanded="false">' +
-              (archivo ? 'Cambiar' : 'Subir') + '<span class="oculto-visual"> ' + x.nombre + '</span></button>' +
-          '</div>' +
+        return '<li class="documento pagina' + (archivo ? ' listo' : '') + '" id="doc-' + x.id + '">' +
+          '<button type="button" class="pagina-boton btn-subir" data-doc="' + x.id + '" aria-haspopup="dialog" aria-expanded="false">' +
+            '<span class="documento-icono timbre' + (archivo && docRecien === x.id ? ' cae' : '') + '" aria-hidden="true">' + (archivo ? 'LISTO' : 'FALTA') + '</span>' +
+            '<strong>' + x.corto + '</strong>' +
+            '<small>' + (archivo ? 'Listo' : 'Falta') + '</small>' +
+            '<span class="oculto-visual">' + x.nombre + '. ' + (archivo ? 'Cambiar' : 'Subir') + '</span>' +
+          '</button>' +
         '</li>';
       }).join('') + '</ul>';
     }
 
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Dividendo al mes', resumen(p).escenario.totalMes) +
+      tarjetaCompacta(p, 'Pagas al mes', resumen(p).escenario.totalMes) +
       listaPasos(1) +
       '<section class="bloque" aria-labelledby="titulo-documentos">' +
         '<h2 class="h3" id="titulo-documentos">Tus documentos</h2>' +
@@ -1961,8 +2561,10 @@
         '<p class="aviso">En esta demo tus archivos no se guardan ni se envían.</p>' +
         opciones + lista +
         (c.cliente === false
-          ? '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-preaprobacion"' +
-              (documentosListos() ? '' : ' disabled') + '>Ver mi preaprobación</button></div>'
+          ? '<div class="accion-fija">' + (documentosListos()
+            ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-preaprobacion">Ver mi preaprobación</button>'
+            : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-siguiente-doc" aria-haspopup="dialog">Subir ' +
+                DOCUMENTOS.filter(function (x) { return !docs[x.id]; })[0].corto.toLowerCase() + '</button>') + '</div>'
           : '') +
         '<div class="acciones"><button type="button" class="enlace" id="btn-volver-datos">Volver a mis datos</button></div>' +
       '</section>';
@@ -1987,6 +2589,10 @@
     });
     document.querySelectorAll('.btn-subir').forEach(function (boton) {
       boton.addEventListener('click', function () { abrirHoja(p, boton); });
+    });
+    if ($('btn-siguiente-doc')) $('btn-siguiente-doc').addEventListener('click', function () {
+      var falta = DOCUMENTOS.filter(function (x) { return !docs[x.id]; })[0];
+      abrirHoja(p, document.querySelector('.btn-subir[data-doc="' + falta.id + '"]'));
     });
     var ver = $('btn-ver-preaprobacion');
     if (ver) {
@@ -2090,13 +2696,14 @@
           docRecien = id;
           renderDocumentos(p);
           docRecien = null;
+          var reducirTimbre = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (!reducirTimbre && navigator.vibrate) navigator.vibrate(30);
           if (documentosListos()) {
             $('btn-ver-preaprobacion').focus();
             toast('Subiste todos tus documentos.');
           } else {
-            var siguiente = document.querySelector('.documento:not(.listo) .btn-subir');
-            if (siguiente) siguiente.focus();
-            anunciar(x.nombre + ': listo.');
+            if ($('btn-siguiente-doc')) $('btn-siguiente-doc').focus();
+            anunciar(x.nombre + ': timbrado.');
           }
         }, ESPERA_CARGA);
       });
@@ -2127,20 +2734,24 @@
     } else {
       puedeSeguir = true;
       var alcanza = r.creditoUF >= creditoNecesario - 1e-9;
+      // S17-F5: el resultado en palabras de la persona; las cifras del crédito, en "Ver números".
       cuerpo =
-        '<div class="tarjeta protagonista">' +
-          '<p class="etiqueta">Preaprobado (simulado) hasta</p>' +
-          '<strong class="numero display-2">' + formatoUF(r.creditoUF) + '</strong>' +
-          '<p class="texto-apoyo">de crédito. Dividendo de hasta <strong>' + formatoPesos(r.dividendo) + '</strong> al mes, con subsidio a la tasa.</p>' +
+        '<div class="tarjeta protagonista aprobado' + (alcanza ? '' : ' no-alcanza') + '">' +
+          (alcanza
+            ? '<p class="estado-semaforo">' + icono('i-ok') + 'Simulado</p><strong class="h3 aprobado-titulo">Bci te aprueba este departamento</strong>'
+            : '<p class="estado-semaforo">' + icono('i-alerta') + 'Simulado</p><strong class="h3 aprobado-titulo">Este departamento supera lo que Bci te presta</strong>') +
         '</div>' +
-        '<p class="' + (alcanza ? 'aviso aviso-ok' : 'aviso') + ' bloque">' + (alcanza
-          ? 'Tu departamento en ' + esc(p.nombre) + ' necesita ' + formatoUF(creditoNecesario) + ' de crédito: te alcanza.'
-          : 'Tu departamento en ' + esc(p.nombre) + ' necesita ' + formatoUF(creditoNecesario) + ' de crédito: es más de lo preaprobado. Revisa un departamento más barato.') + '</p>';
+        plegable('numeros-pre', 'Ver números', '',
+          '<ul class="datos-inversion">' +
+            '<li><span>Bci te presta hasta</span><strong>' + formatoRedondeado(ufAPesos(r.creditoUF)) + '</strong></li>' +
+            '<li><span>Este departamento necesita</span><strong>' + formatoRedondeado(ufAPesos(creditoNecesario)) + '</strong></li>' +
+            '<li><span>Pagarías hasta al mes</span><strong>' + formatoRedondeado(r.dividendo) + '</strong></li>' +
+          '</ul>');
       puedeSeguir = alcanza;
     }
 
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Dividendo al mes', e.totalMes) +
+      tarjetaCompacta(p, 'Pagas al mes', e.totalMes) +
       listaPasos(1) +
       '<section class="bloque" aria-labelledby="titulo-resultado">' +
         '<h2 class="h3" id="titulo-resultado">Tu preaprobación</h2>' +
@@ -2157,11 +2768,12 @@
         '<div class="acciones"><button type="button" class="enlace" id="btn-editar-datos">Editar mis datos</button></div>' +
       '</section>';
 
+    iniciarPlegables();
     var seguir = $('btn-seguir-pie');
     if (seguir) {
       seguir.addEventListener('click', function () {
         conCarga(seguir, function () {
-          guardarCompra(Object.assign({}, estado.compra, { paso: pasoTrasPostular(e.alEscriturar) }));
+          guardarCompra(Object.assign({}, estado.compra, { paso: pasoTrasPostular(metaCompra(p), p) }));
           renderMisProyectos();
           window.scrollTo(0, 0);
           anunciar('Preaprobación lista. Sigue Tu pie.');
@@ -2306,21 +2918,20 @@
   }
 
   function renderTu5(p, d) {
-    var meta = resumen(p).escenario.alEscriturar;
+    var meta = metaCompra(p);
     // Si ya se juntó todo (por ejemplo, al cambiar a un proyecto más barato), se pasa a la firma.
     var enGrupo = p.tipo === 'conjunto';
-    var cabecera = tarjetaCompacta(p, 'Meta al escriturar', meta) + listaPasos(2) +
+    var cabecera = tarjetaCompacta(p, 'Juntas antes de firmar', meta) + listaPasos(2) +
       '<h2 class="h3 bloque" id="titulo-tu5">' + (enGrupo ? 'Tu pie en cuotas ' : 'Tu pie ') + ayuda('pie') + '</h2>';
     // S10-F3: en la compra en grupo, el pie va a una cuenta bloqueada de Bci y se puede salir sin multa.
     var cuentaGrupo = (enGrupo
-      ? '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Tu dinero está en Bci, no en la inmobiliaria</p>'
+      ? '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Tu pie está asegurado en Bci</p>'
       : '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Tu ahorro está en tu cuenta Bci</p>') +
       '<p class="texto-apoyo">Salida sin multa ' + ayuda('salida-sin-multa') + '</p>';
 
     if (!estado.ahorroIniciado) {
       $('panel-compra').innerHTML = cabecera +
         '<section aria-labelledby="titulo-tu5">' +
-          selectorAhorro() +
           campoDinero('ahorro-mensual', enGrupo ? 'Tu cuota al mes' : '¿Cuánto puedes ahorrar al mes?', estado.ahorroMensual) +
           '<div id="meses-resultado" aria-live="polite"></div>' +
           cuentaGrupo +
@@ -2339,12 +2950,13 @@
           $('meses-resultado').innerHTML = '<p class="texto-apoyo">Escribe tu ahorro mensual para ver en cuántos meses llegas.</p>';
           return;
         }
-        var n = mesesRestantes(meta, estado.ahorrado, estado.ahorroMensual);
+        var pl = plazoTuPie(p, meta);
         $('meses-resultado').innerHTML =
           '<div class="tarjeta resultado-meses">' +
-            '<p class="etiqueta">Llegas a tu meta en</p>' +
-            '<strong class="numero display-2">' + textoMeses(n) + '</strong>' +
-            barraHitos(estado.ahorrado, meta) +
+            '<p class="etiqueta">Tus llaves en</p>' +
+            '<strong class="numero display-2">' + textoMeses(pl.meses) + '</strong>' +
+            '<p class="texto-apoyo">' + fechaLlaves(pl.meses, hoyDemo()) + SEP + FRENO[pl.freno] + '</p>' +
+            barraHitos(ahorradoTuPie(meta), meta) +
           '</div>';
       };
 
@@ -2369,6 +2981,8 @@
         tocado = true;
         dibujarMeses();
         if ($('btn-empezar').disabled) { temblar($('ahorro-mensual')); $('ahorro-mensual').focus(); return; }
+        // Lo que ya tenía ahorrado cuenta desde el primer día.
+        if (!estado.ahorrado) estado.ahorrado = Math.min(meta, estado.ahorroActual || 0);
         estado.ahorroIniciado = true;
         guardarEstado();
         renderMiCompra();
@@ -2379,33 +2993,37 @@
       return;
     }
 
+    // S18-F2: si el pie ya está pero el edificio aún no se entrega, se espera la entrega (no se firma antes).
+    if (estado.ahorrado >= meta && entregaPendiente(p)) { renderPieListo(p, d, meta, cabecera, cuentaGrupo); return; }
+
     // Ya empezó a ahorrar: el número es lo que falta, y la acción es simular un mes.
-    var faltan = mesesRestantes(meta, estado.ahorrado, estado.ahorroMensual);
+    var plTu = plazoTuPie(p, meta);
+    var faltan = plTu.meses;
     var protector = protectorDisponible(estado.mesAhorro + 1, estado.ultimoProtector);
     $('panel-compra').innerHTML = cabecera +
       '<section aria-labelledby="titulo-tu5">' +
         '<div class="tarjeta resultado-meses">' +
-          '<p class="etiqueta">Te faltan</p>' +
+          '<p class="etiqueta">Tus llaves en</p>' +
           '<strong class="numero display-2">' + textoMeses(faltan) + '</strong>' +
+          '<p class="texto-apoyo">' + fechaLlaves(faltan, hoyDemo()) + SEP + FRENO[plTu.freno] + '</p>' +
           '<div class="zona-moneda">' +
             '<span class="moneda" id="moneda" aria-hidden="true">' + formatoPesos(estado.ahorroMensual) + '</span>' +
-            '<span class="moneda-pista">' + (enGrupo ? 'Tu cuota' : (estado.tipoAhorro === 'grupal' ? 'Ahorro grupal' : 'Tu ahorro')) + ' al mes' +
+            '<span class="moneda-pista">' + (enGrupo ? 'Tu cuota' : 'Tu ahorro') + ' al mes' +
               '<small aria-hidden="true">Arrástrala a la alcancía</small></span>' +
           '</div>' +
           barraHitos(estado.ahorrado, meta) +
           puntosRacha() +
           cuentaGrupo +
         '</div>' +
-        '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + estado.cuotaAutomatica + '" id="btn-cuota-automatica">' +
-          '<span>' + icono('i-calendario') + 'Pagar mi cuota sola el día 5</span>' +
-          '<span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
-        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-simular-mes">Simular un mes</button></div>' +
-          '<div class="acciones">' +
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-simular-mes">Ver el próximo mes · demo</button></div>' +
+        // S17-F10: lo que no es la acción del mes queda plegado.
+        plegable('mas-opciones', 'Más opciones', '',
+          '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + estado.cuotaAutomatica + '" id="btn-cuota-automatica">' +
+            '<span>' + icono('i-calendario') + 'Pagar mi cuota sola el día 5</span>' +
+            '<span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
           '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-no-pude">' + (estado.cuotaAutomatica ? 'Pausar este mes' : 'Este mes no pude') + '</button>' +
-          '<p class="texto-apoyo texto-centro">' + (protector ? 'Tu protector de racha está disponible.'
-            : 'Protector de racha: de nuevo en ' + textoMeses(mesesParaProtector(estado.mesAhorro + 1, estado.ultimoProtector)) + '.') + '</p>' +
-          '<button type="button" class="btn btn-terciario btn-bloque" id="btn-cambiar-ahorro">Cambiar mi ahorro mensual</button>' +
-        '</div>' +
+          '<p class="texto-apoyo texto-centro">' + (protector ? 'Protector de racha disponible ' + ayuda('protector') : 'Protector de racha en ' + textoMeses(mesesParaProtector(estado.mesAhorro + 1, estado.ultimoProtector))) + '</p>' +
+          '<button type="button" class="btn btn-terciario btn-bloque" id="btn-cambiar-ahorro">Cambiar mi ahorro mensual</button>') +
         bloqueJuntos() +
         (enGrupo ? tuGrupoYObra(p) : '') +
       '</section>';
@@ -2416,6 +3034,7 @@
       estado.cuotaAutomatica = !estado.cuotaAutomatica;
       guardarEstado();
       renderTu5(p, d);
+      plegablesAbiertos['mas-opciones'] = true;
       $('btn-cuota-automatica').focus();
       toast(estado.cuotaAutomatica ? 'Tu cuota se paga sola el día 5 (simulado).' : 'Pagas tu cuota a mano.');
     });
@@ -2438,6 +3057,12 @@
       estado.historialMeses = (estado.historialMeses || []).concat([r.resultado]).slice(-6);
       guardarEstado();
       if (estado.ahorrado >= meta) {
+        if (entregaPendiente(p)) {
+          renderTu5(p, d);
+          toast('¡Juntaste tu pie! Ahora esperas la entrega.');
+          if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+          return;
+        }
         guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
         llegoAFirma = true;
         renderMiCompra();
@@ -2446,7 +3071,7 @@
       var nuevos = hitosAlcanzados(estado.ahorrado, meta).filter(function (h) { return antes.indexOf(h) === -1; });
       if (nuevos.length) hitoNuevo = nuevos[nuevos.length - 1];
       renderTu5(p, d);
-      var faltanAhora = mesesRestantes(meta, estado.ahorrado, estado.ahorroMensual);
+      var faltanAhora = plazoTuPie(p, meta).meses;
       if (nuevos.length) {
         toast(textoHito(nuevos[nuevos.length - 1], enGrupo ? (p.etapaObra || 0) : undefined));
         if (navigator.vibrate) navigator.vibrate(40);
@@ -2455,6 +3080,45 @@
       $('btn-simular-mes').focus();
     });
     iniciarMoneda();
+    prepararSeUne(p, d);
+    $('btn-cambiar-ahorro').addEventListener('click', function () {
+      estado.ahorroIniciado = false;
+      guardarEstado();
+      renderMiCompra();
+    });
+  }
+
+  // S18-F2: el pie está listo y falta la entrega. Tus llaves las fija el edificio; la demo puede saltar a ese mes.
+  function renderPieListo(p, d, meta, cabecera, cuentaGrupo) {
+    var m = mesesParaEntrega(p);
+    $('panel-compra').innerHTML = cabecera +
+      '<section aria-labelledby="titulo-tu5">' +
+        '<div class="tarjeta resultado-meses">' +
+          '<p class="sello"><svg aria-hidden="true"><use href="#i-ok"/></svg>Tu pie está listo</p>' +
+          '<p class="etiqueta">Tus llaves en</p>' +
+          '<strong class="numero display-2">' + textoMeses(m) + '</strong>' +
+          '<p class="texto-apoyo">' + fechaLlaves(m, hoyDemo()) + SEP + FRENO.entrega + '</p>' +
+          barraHitos(estado.ahorrado, meta) +
+          cuentaGrupo +
+        '</div>' +
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-saltar-entrega">Saltar a la entrega · demo</button></div>' +
+        bloqueJuntos() +
+        tuGrupoYObra(p) +
+      '</section>';
+    iniciarJuntos(p, d);
+    iniciarPlegables();
+    prepararSeUne(p, d);
+    $('btn-saltar-entrega').addEventListener('click', function () {
+      estado.mesAhorro = (estado.mesAhorro || 0) + mesesParaEntrega(p);
+      guardarEstado();
+      guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
+      llegoAFirma = true;
+      renderMiCompra();
+      window.scrollTo(0, 0);
+    });
+  }
+
+  function prepararSeUne(p, d) {
     if ($('btn-se-une')) $('btn-se-une').addEventListener('click', function () {
       var antes = resumen(p).cuposTomados;
       estado.unidosGrupo[p.id] = (estado.unidosGrupo[p.id] || 0) + 1;
@@ -2467,11 +3131,6 @@
       $('titulo-grupo').scrollIntoView({ block: 'start' });
       toast(escalon ? '¡Su grupo llegó a ' + escalon.cupos + '! Todos tienen ' + formatoPorcentaje(escalon.descuento, 0) + ' de descuento.' : 'Se unió alguien a tu grupo.');
       if (escalon && navigator.vibrate) navigator.vibrate([40, 60, 40]);
-    });
-    $('btn-cambiar-ahorro').addEventListener('click', function () {
-      estado.ahorroIniciado = false;
-      guardarEstado();
-      renderMiCompra();
     });
   }
 
@@ -2491,10 +3150,10 @@
           'Para tu primera vivienda. Se usa una sola vez.');
 
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Pones al escriturar', e.alEscriturar) + listaPasos(3) +
+      tarjetaCompacta(p, 'Juntas antes de firmar', metaCompra(p)) + listaPasos(3) +
       '<div class="logro bloque"' + (recienLlegado ? ' role="status"' : '') + '>' +
         '<svg aria-hidden="true"><use href="#i-ok"/></svg>' +
-        '<p><strong>¡Juntaste tu pie!</strong> Ya tienes ' + formatoPesos(e.alEscriturar) + ' para escriturar.</p>' +
+        '<p><strong>¡Juntaste tu pie!</strong> Ya tienes ' + formatoPesos(metaCompra(p)) + ' para firmar.</p>' +
       '</div>' +
       '<section class="tarjeta bloque" aria-labelledby="titulo-firma">' +
         '<h2 class="h3" id="titulo-firma">Lo que firmas</h2>' +
@@ -2540,6 +3199,7 @@
           paso: 4, mes: 1, arriendoMes: d.arriendoEstimadoIA, saldoParticipacionUF: e.participacionUF, fraccion: 1
         }));
         recienFirmado = true;
+        puertaHasta = Date.now() + 4000; // la ruta puede volver a dibujar Mi departamento: la puerta se mantiene
         renderMiCompra();
         recienFirmado = false;
         window.scrollTo(0, 0);
@@ -2652,6 +3312,7 @@
   // S10-F1: la casa se va pintando desde abajo con la parte que ya es tuya.
   var pctCasaMostrado = null;
   var recienFirmado = false;
+  var puertaHasta = 0;
   // Departamento contemporáneo ilustrado: sus pisos y muros se van pintando desde abajo con la parte que ya es tuya.
   function casaPintada(pct) {
     var desde = pctCasaMostrado === null ? pct : pctCasaMostrado;
@@ -2733,6 +3394,18 @@
   }
 
 
+  // S16-F3 y F4: al firmar, la puerta se abre con la usuaria y todo su equipo delante.
+  function puertaEquipo() {
+    var texto = textoEquipo();
+    return '<section class="puerta-equipo bloque" aria-labelledby="titulo-puerta">' +
+      '<div class="puerta-abierta" aria-hidden="true"><span class="puerta-luz"></span><span class="puerta-hoja"></span></div>' +
+      '<div class="puerta-figuras" aria-hidden="true">' + avatarSVG(estado.avatar, 56, 'puerta-av') +
+        estado.equipo.map(function (m) { return avatarMiembro(m, 48, 'puerta-av'); }).join('') + '</div>' +
+      '<p class="h4" id="titulo-puerta">¡Es tuyo!</p>' +
+      (texto ? '<p class="texto-apoyo">' + texto + '</p>' : '') +
+    '</section>';
+  }
+
   function renderMiDepartamento(p, d) {
     var m = mesDelDepartamento(p, d);
     var c = m.cascada;
@@ -2796,7 +3469,8 @@
     }
 
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Dividendo al mes', m.e.totalMes) + listaPasos(4) +
+      tarjetaCompacta(p, 'Pagas al mes', m.e.totalMes) + listaPasos(4) +
+      (recienFirmado || Date.now() < puertaHasta ? puertaEquipo() : '') +
       '<h2 class="h3 bloque" id="titulo-departamento">' + (recienFirmado ? '<span class="llave-firma" aria-hidden="true">' + icono('i-llave', 'icono-grande') + '</span>' : '') + 'Mi departamento <span class="texto-apoyo titulo-apoyo">mes ' + m.mes + ' desde que firmaste</span></h2>' +
       cuerpo +
       loTuyo(m) +
@@ -2903,14 +3577,14 @@
     var c = estado.compra;
     var paso = c.paso || 1;
     if (paso >= 2 && paso < 4 && !c.carga) return 1;
-    if (paso === 2 && estado.ahorroIniciado &&
-        estado.ahorrado >= resumen(buscarProyecto(c.proyectoId)).escenario.alEscriturar) return 3;
+    var pc = buscarProyecto(c.proyectoId);
+    if (paso === 2 && estado.ahorroIniciado && estado.ahorrado >= metaCompra(pc) && !entregaPendiente(pc)) return 3;
     return paso;
   }
 
   // Después de postular: va a Tu pie, o directo a la firma si el ahorro ya alcanza la meta.
-  function pasoTrasPostular(meta) {
-    return estado.ahorroIniciado && estado.ahorrado >= meta ? 3 : 2;
+  function pasoTrasPostular(meta, p) {
+    return estado.ahorroIniciado && estado.ahorrado >= meta && !(p && entregaPendiente(p)) ? 3 : 2;
   }
 
   // S15-F1: cada paso tiene su dirección. Ir al paso actual cambia la dirección (así Atrás vuelve al anterior);
@@ -2965,7 +3639,7 @@
     var filas = '';
     if (paso === 1) {
       var pre = preaprobacion(estado.sueldoPropio, estado.sueldoPareja, estado.otrasCuotas);
-      filas = '<li><span>Tu carga</span><strong>' + formatoPorcentaje(estado.compra.carga || 0, 1) + '</strong></li>' +
+      filas = '<li><span>Parte de tu sueldo</span><strong>' + formatoPorcentaje(estado.compra.carga || 0, 1) + '</strong></li>' +
         (pre && pre.cumple ? '<li><span>Bci te preaprobó hasta</span><strong>' + formatoPesos(ufAPesos(pre.creditoUF)) + '</strong></li>' : '');
     } else if (paso === 2) {
       filas = '<li><span>Juntaste</span><strong>' + formatoPesos(e.alEscriturar) + '</strong></li>';
@@ -2974,7 +3648,7 @@
     }
     $('titulo-paso').textContent = CAMINO[paso] + ': listo';
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Dividendo al mes', e.totalMes) +
+      tarjetaCompacta(p, 'Pagas al mes', e.totalMes) +
       '<section class="tarjeta bloque" aria-labelledby="titulo-resumen-paso">' +
         '<p class="estado-semaforo">' + icono('i-ok') + 'Listo</p>' +
         '<h2 class="h3" id="titulo-resumen-paso">' + CAMINO[paso] + '</h2>' +
@@ -3102,7 +3776,8 @@
   // S11-F2: reparto visual. Una casa en franjas (desde abajo: Bci, inversionistas, tú), con su leyenda.
   var FORMA_CASA = 'M50 4 L94 40 L86 40 L86 80 L14 80 L14 40 L6 40 Z';
   var idCasa = 0;
-  function repartoCasa(partes) {
+  function repartoCasa(partes, formato) {
+    formato = formato || formatoPesos;
     var id = 'clip-reparto-' + (++idCasa);
     var y = 80;
     var franjas = partes.map(function (x, i) {
@@ -3117,7 +3792,7 @@
         franjas + '<path class="casa-borde" d="' + FORMA_CASA + '"/></svg>' +
       '<ul class="reparto-leyenda">' + partes.slice().reverse().map(function (x) {
         return '<li><span class="punto punto-' + x.clave + '" aria-hidden="true"></span>' +
-          '<span>' + Math.round(x.pct * 100) + NBSP + '% ' + x.nombre + '</span><strong>' + formatoPesos(x.monto) + '</strong></li>';
+          '<span>' + Math.round(x.pct * 100) + NBSP + '% ' + x.nombre + '</span><strong>' + formato(x.monto) + '</strong></li>';
       }).join('') + '</ul>' +
     '</div>';
   }
@@ -3317,14 +3992,107 @@
     '</section>';
   }
 
+  // S16-F5: la carrera a la puerta. Un carril por camino; el avatar avanza según cuántos meses le faltan.
+  var LETRA_CARRERA = {
+    'grupo-vivir': 'el pie va en cuotas a una cuenta Bci bloqueada', 'grupo-invertir': 'el pie va en cuotas a una cuenta Bci bloqueada',
+    'pie-compartido': 'los inversionistas tienen el 15\u00a0% hasta que lo recompres', 'grupo-pie-compartido': 'los inversionistas tienen el 15\u00a0% hasta que lo recompres',
+    'individual-vivir': 'el departamento es 100\u00a0% tuyo al firmar', 'individual-invertir': 'el departamento es 100\u00a0% tuyo al firmar'
+  };
+  var MIN_CARRERA = 100000, PASO_CARRERA = 50000;
+  function mesesCarrera(ids, perfil, mensual) {
+    var pf = Object.assign({}, perfil, { ahorroMensual: mensual });
+    var rango = rangoActual();
+    return ids.map(function (id) {
+      var techo = numerosCamino(id, listaMeta(), pf).meses;
+      var desde = rango ? numerosCamino(id, rango.desde, pf).meses : techo;
+      return { id: id, desde: desde, techo: techo };
+    });
+  }
+  function letraCarrera(filas) {
+    var con = filas.filter(function (x) { return x.techo !== null; });
+    if (con.length < 2) return '';
+    var rapido = con.reduce(function (a, x) { return x.techo < a.techo ? x : a; });
+    var lento = con.reduce(function (a, x) { return x.techo > a.techo ? x : a; });
+    var dif = lento.techo - rapido.techo;
+    if (dif <= 0) return 'Todos llegan en ' + textoMeses(rapido.techo) + '.';
+    return CAMINOS[rapido.id].corto + ' llega ' + plural(dif, 'mes', 'meses') + ' antes: ' + LETRA_CARRERA[rapido.id] + '.';
+  }
+  function carrera(ids, perfil, todos) {
+    var ingreso = ingresoTotal(estado.sueldoPropio, estado.sueldoPareja) || 0;
+    var maximo = Math.max(1000000, Math.ceil(ingreso * 0.4 / PASO_CARRERA) * PASO_CARRERA);
+    var mensual = Math.min(maximo, Math.max(MIN_CARRERA, estado.ahorroMensual || 300000));
+    var escala = Math.max.apply(null, mesesCarrera(ids, perfil, MIN_CARRERA).map(function (x) { return x.techo || 0; }).concat([1]));
+    var filas = mesesCarrera(ids, perfil, mensual);
+    return '<section class="tarjeta bloque carrera" aria-labelledby="titulo-carrera" data-escala="' + escala + '" data-max="' + maximo + '">' +
+      '<h2 class="h4" id="titulo-carrera">¿Por cuál llegas antes?</h2>' +
+      '<ul class="carriles">' + filas.map(function (x, i) {
+        var grupo = CAMINOS[x.id].grupo;
+        return '<li><button type="button" class="carril" data-ir="' + todos.indexOf(x.id) + '">' +
+          '<span class="carril-fila"><strong>' + CAMINOS[x.id].corto + '</strong><span class="numero" data-meses="' + x.id + '">' + textoPlazos(x) + '</span></span>' +
+          '<span class="pista" aria-hidden="true"><span class="recorrido" data-pos="' + x.id + '" style="--pos:' + posicionCarrera(x.techo, escala).toFixed(3) + '">' +
+            '<span class="carril-avs">' + avatarSVG(estado.avatar, 34, 'carril-av') +
+              (grupo ? avatarSVG({ piel: (i + 2) % 5, pelo: 'rizado', colorPelo: 0, ropa: 2 }, 26, 'carril-av otro') +
+                avatarSVG({ piel: (i + 4) % 5, pelo: 'corto', colorPelo: 2, ropa: 1 }, 26, 'carril-av otro') : '') +
+            '</span></span><span class="carril-puerta"></span></span>' +
+        '</button></li>';
+      }).join('') + '</ul>' +
+      '<p class="carrera-letra" id="carrera-letra">' + letraCarrera(filas) + '</p>' +
+      '<p class="si-juntas-fila"><label for="carrera-mensual">Si juntas al mes</label><strong class="numero" id="carrera-valor">' + formatoPesos(mensual) + '</strong></p>' +
+      '<input type="range" id="carrera-mensual" min="' + MIN_CARRERA + '" max="' + maximo + '" step="' + PASO_CARRERA + '" value="' + mensual + '" aria-valuetext="' + formatoPesos(mensual) + ' al mes">' +
+    '</section>';
+  }
+  function iniciarCarrera(ids, perfil) {
+    var sec = document.querySelector('.carrera');
+    if (!sec) return;
+    var escala = Number(sec.dataset.escala), maximo = Number(sec.dataset.max);
+    var rango = $('carrera-mensual');
+    var pintar = function () {
+      var v = Number(rango.value);
+      rango.style.setProperty('--lleno', ((v - MIN_CARRERA) / (maximo - MIN_CARRERA) * 100).toFixed(1) + '%');
+      return v;
+    };
+    pintar();
+    rango.addEventListener('input', function () {
+      var v = pintar();
+      var filas = mesesCarrera(ids, perfil, v);
+      filas.forEach(function (x) {
+        sec.querySelector('[data-meses="' + x.id + '"]').textContent = textoPlazos(x);
+        sec.querySelector('[data-pos="' + x.id + '"]').style.setProperty('--pos', posicionCarrera(x.techo, escala).toFixed(3));
+      });
+      $('carrera-valor').textContent = formatoPesos(v);
+      $('carrera-letra').textContent = letraCarrera(filas);
+      rango.setAttribute('aria-valuetext', formatoPesos(v) + ' al mes');
+    });
+    // Al soltar se guarda y las tarjetas se recalculan con ese monto.
+    rango.addEventListener('change', function () {
+      estado.ahorroMensual = Number(rango.value);
+      guardarEstado();
+      var y = window.scrollY;
+      renderCaminos();
+      window.scrollTo(0, y);
+      $('carrera-mensual').focus();
+    });
+    sec.querySelectorAll('[data-ir]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var pista = $('carrusel-pista');
+        var reducir = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        pista.scrollTo({ left: Number(b.dataset.ir) * pista.clientWidth, behavior: reducir ? 'auto' : 'smooth' });
+        pista.scrollIntoView({ behavior: reducir ? 'auto' : 'smooth', block: 'start' });
+      });
+    });
+  }
+
   function renderCaminos() {
     var cont = $('caminos-contenido');
     if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return sinSueldos(cont, 'Tus caminos', 'titulo-caminos');
     var perfil = perfilActual();
     var r = recomendarCamino(perfil);
+    // S17-F9: para vivir, Llega antes reemplaza el carrusel y la carrera.
+    if (estado.modo === 'vivir' && !r.todaviaNo) return renderLlegaAntes();
     // S15-F3: no todas las opciones: las que sirven, comparadas con el crédito de siempre.
     var sel = caminosParaMostrar(perfil, r);
     var ids = sel.mostrados;
+    var idsCarrera = ids.filter(function (id) { return !CAMINOS[id].ficha; });
     var rango = rangoActual();
 
     cont.innerHTML =
@@ -3338,6 +4106,7 @@
         '<button type="button" class="enlace" id="btn-caminos-datos" aria-haspopup="dialog">Cambiar</button></p></div>' +
       (r.todaviaNo ? bloqueTodaviaNo(r, perfil) +
         (perfil.modo === 'vivir' ? '<p class="texto-centro"><a class="enlace" href="#camino/ficha/arriendo-opcion">Mientras tanto: arriendo con opción de compra</a></p>' : '') : '') +
+      (r.todaviaNo ? '' : carrera(idsCarrera, perfil, ids)) +
       carruselCaminos(ids, perfil, r, sel.base) +
       plegable('no-mostrados', 'Por qué no te mostramos otros', plural(sel.noMostrados.length, 'camino', 'caminos'),
         '<ul class="lista-razones">' + sel.noMostrados.map(function (x) {
@@ -3359,6 +4128,7 @@
       '<p class="sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>';
 
     iniciarCarrusel();
+    iniciarCarrera(idsCarrera, perfil);
     iniciarPlegables();
     $('btn-caminos-datos').addEventListener('click', function () { abrirMisDatos($('btn-caminos-datos')); });
     cont.querySelectorAll('[data-simular]').forEach(function (b) {
@@ -3405,7 +4175,7 @@
     registro.camino = id;
     guardarRegistro();
     prepararProyectos(id);
-    toast('Elegiste ' + CAMINOS[id].nombre + '.');
+    toast('Tu camino: ' + CAMINOS[id].corto.toLowerCase() + '.');
     location.hash = '#camino/elegir';
   }
 
@@ -3600,7 +4370,7 @@
       }
       if (paso <= 3) {
         c.etapa = 'pie';
-        c.meses = mesesRestantes(r.escenario.alEscriturar, estado.ahorrado, estado.ahorroMensual);
+        c.meses = mesesRestantes(metaCompra(p), estado.ahorrado, estado.ahorroMensual);
         if (c.meses === null) c.etapa = null;
       } else {
         var m = mesDelDepartamento(p, departamentoDeMiCompra(p));
@@ -3677,10 +4447,19 @@
     });
   }
 
+  // S18-F2: la obra avanza con el reloj de la demo; al llegar la entrega queda en Recepción.
+  function etapaObraHoy(p) {
+    var e0 = p.etapaObra || 0;
+    if (!p.entregaEstimada) return e0;
+    if (mesesParaEntrega(p) <= 0) return Math.max(e0, 3);
+    var total = Math.max(1, mesesEntre(FECHA_REFERENCIA, p.entregaEstimada));
+    return Math.min(2, e0 + Math.floor((estado.mesAhorro || 0) / total * (3 - e0)));
+  }
+
   function tuGrupoYObra(p) {
     var r = resumen(p);
     var g = cuposParaMasDescuento(r.cuposTomados, r.cupos);
-    var etapa = p.etapaObra || 0;
+    var etapa = etapaObraHoy(p);
     var obra = '<ol class="camino obra" aria-label="Avance de la obra">' + ETAPAS_OBRA.map(function (nombre, i) {
       var est = i < etapa ? 'hecho' : (i === etapa ? 'actual' : 'pendiente');
       var ic = est === 'hecho' ? '<svg aria-hidden="true"><use href="#i-ok"/></svg>'
@@ -3690,24 +4469,27 @@
     }).join('') + '</ol>';
     var g2 = p.grupo || {};
     var juntos = totalGrupo(p.cuposTomados, g2.cuotaPromedio || 0, g2.mesesAhorrando || 0, estado.ahorrado);
-    var dias = diasHasta(p.entregaEstimada, new Date());
-    return plegable('grupo', 'Tu grupo', r.cuposTomados + ' de ' + r.cupos + ' compradores',
+    var cerrado = grupoCerrado(p);
+    var mEntrega = mesesParaEntrega(p);
+    var entrega = mEntrega > 0 ? 'Entrega en ' + textoMeses(mEntrega) : 'Edificio entregado';
+    return plegable('grupo', 'Tu grupo', r.cuposTomados + ' de ' + r.cupos + ' compradores' + (cerrado ? SEP + 'cerrado' : ''),
         grupoConEdificio(p, r) +
         '<ul class="datos-inversion">' +
-          '<li><span>' + icono('i-alcancia') + 'Entre todos llevan ' + ayuda('meta-comun') + '</span><strong>' + formatoPesos(juntos) + '</strong></li>' +
-          '<li><span>' + icono('i-regalo') + 'Descuento asegurado hoy</span><strong>' + formatoPorcentaje(g.asegurado, 0) + '</strong></li>' +
-          (g.faltan > 0 ? '<li><span>Con ' + plural(g.faltan, 'persona', 'personas') + ' más</span><strong>' + formatoPorcentaje(g.descuentoSiguiente, 0) + '</strong></li>' : '') +
+          '<li><span>' + icono('i-alcancia') + 'Entre todos llevan ' + ayuda('meta-comun') + '</span><strong>' + formatoRedondeado(juntos) + '</strong></li>' +
+          '<li><span>' + icono('i-regalo') + (cerrado ? 'Tu descuento' : 'Descuento asegurado hoy') + '</span><strong>' + formatoPorcentaje(g.asegurado, 0) + '</strong></li>' +
+          (g.faltan > 0 && !cerrado ? '<li><span>Con ' + plural(g.faltan, 'persona', 'personas') + ' más</span><strong>' + formatoPorcentaje(g.descuentoSiguiente, 0) + '</strong></li>' : '') +
         '</ul>' +
-        '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-compartir">Compartir el proyecto</button>' +
-        (r.cuposLibres > 0 ? '<button type="button" class="btn btn-terciario btn-bloque" id="btn-se-une">Simular que alguien se une</button>' : '')) +
-      plegable('obra', 'Tu obra', plural(dias, 'día', 'días') + ' para tus llaves',
-        '<p class="llaves-en">' + icono('i-llave', 'icono-llave') + '<span><strong class="numero">' + plural(dias, 'día', 'días') + '</strong> para tus llaves</span></p>' +
-        '<p class="texto-apoyo">' + icono('i-calendario') + 'Entrega estimada: ' + formatoFecha(p.entregaEstimada) + '</p>' +
+        (cerrado ? '' : '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-compartir">Compartir el proyecto</button>' +
+        (r.cuposLibres > 0 ? '<button type="button" class="btn btn-terciario btn-bloque" id="btn-se-une">Simular que alguien se une</button>' : ''))) +
+      // S18-F2: la obra dice la entrega del edificio, con el mismo reloj que Tus llaves.
+      plegable('obra', 'Tu obra', entrega,
+        '<p class="llaves-en">' + icono('i-calendario', 'icono-llave') + '<span><strong class="numero">' + entrega + '</strong></span></p>' +
+        '<p class="texto-apoyo">Entrega estimada: ' + fechaLlaves(0, p.entregaEstimada) + '</p>' +
         obra);
   }
 
   // S13-F3: juntos. La pareja ve el mismo avance. La familia aporta con una lista de regalos,
-  // como una lista de novios pero para el pie, en una ocasión real (simulado).
+  // como una lista de regalos de matrimonio pero para el pie, en una ocasión real (simulado).
   var MONTOS_REGALO = [50000, 100000, 200000];
   var creandoLista = false;
 
@@ -3719,7 +4501,7 @@
       regalo = '<p class="chip-fila"><span class="chip chip-existe">' + esc(lista.ocasion) + '</span></p>' +
         (estado.regalos.length
           ? '<ul class="aportes">' + estado.regalos.map(function (x) {
-              return '<li><span class="aporte-fila">' + icono('i-persona') + '<span>De tu ' + x.relacion + '</span><strong>' + formatoPesos(x.monto) + '</strong></span>' +
+              return '<li><span class="aporte-fila">' + avatarDeAporte(x, 36) + '<span>De tu ' + x.relacion + '</span><strong>' + formatoPesos(x.monto) + '</strong></span>' +
                 (x.mensaje ? '<q class="aporte-mensaje">' + esc(x.mensaje) + '</q>' : '') + '</li>';
             }).join('') + '<li class="aporte-total"><span>Total</span><strong>' + formatoPesos(total) + '</strong></li></ul>'
           : '') +
@@ -3740,22 +4522,63 @@
       regalo = '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-nueva-lista">' + icono('i-regalo') + 'Crear lista de regalos</button>';
     }
     var resumenJuntos = total > 0 ? 'Tu familia aportó ' + formatoPesos(total) : (estado.parejaInvitada ? 'Con tu pareja' : 'Tu pareja y tu familia');
+    var pareja = miembrosCon(['pareja'])[0];
     return plegable('juntos', 'Juntos', resumenJuntos,
       (estado.parejaInvitada
-        ? '<p class="juntos-avatares">' + icono('i-persona', 'avatar') + icono('i-persona', 'avatar avatar-2') + '<span>Tú y tu pareja ven este avance</span></p>'
+        ? '<p class="juntos-avatares">' + avatarSVG(estado.avatar, 40, 'avatar') + (pareja ? avatarMiembro(pareja, 40, 'avatar avatar-2') : avatarSVG(null, 40, 'avatar avatar-2')) +
+          '<span>Tú y tu pareja ven este avance</span></p>'
         : '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-invitar-pareja">' + icono('i-persona') + 'Invitar a mi pareja</button>') +
+      tuEquipo() +
       '<div class="regalo">' +
         '<p class="etiqueta">' + icono('i-regalo') + 'Regalo para tu pie ' + ayuda('regalo-pie') + '</p>' +
         regalo +
       '</div>');
   }
 
+  // S16-F4: Tu equipo dentro de Juntos. Cada persona con su relación y lo que hizo (ve tu avance o aportó).
+  function papelEnEquipo(m) {
+    if (m.relacion === 'pareja' && estado.parejaInvitada) return 'Ve este avance';
+    if (estado.regalos.some(function (x) { return x.relacion === m.relacion; })) return 'Aportó';
+    return '';
+  }
+  function avatarDeAporte(x, tam) {
+    if (x.avatar) return avatarSVG(x.avatar, tam, 'aporte-av');
+    var m = miembrosCon([x.relacion])[0];
+    return m ? avatarMiembro(m, tam, 'aporte-av') : avatarSVG(null, tam, 'aporte-av');
+  }
+  function tuEquipo() {
+    return '<div class="tu-equipo">' +
+      '<p class="etiqueta" id="titulo-equipo">Tu equipo</p>' +
+      '<ul class="equipo-lista" aria-labelledby="titulo-equipo">' +
+        '<li>' + avatarSVG(estado.avatar, 52, 'equipo-av') + '<span>Tú</span></li>' +
+        estado.equipo.map(function (m) {
+          var papel = papelEnEquipo(m);
+          return '<li>' + avatarMiembro(m, 52, 'equipo-av') + '<span>' + NOMBRE_RELACION[m.relacion] + '</span>' + (papel ? '<small>' + papel + '</small>' : '') + '</li>';
+        }).join('') +
+      '</ul>' +
+      '<button type="button" class="btn btn-terciario btn-bloque" id="btn-agregar-equipo" aria-haspopup="dialog">Agregar a alguien</button>' +
+    '</div>';
+  }
+
   function iniciarJuntos(p, d) {
-    if ($('btn-invitar-pareja')) $('btn-invitar-pareja').addEventListener('click', function () {
-      estado.parejaInvitada = true;
-      guardarEstado();
+    var otraVez = function (foco) {
+      plegablesAbiertos.juntos = true;
       renderTu5(p, d);
-      toast('Invitamos a tu pareja (simulado).');
+      if ($(foco)) $(foco).focus();
+    };
+    if ($('btn-invitar-pareja')) $('btn-invitar-pareja').addEventListener('click', function () {
+      var invitar = function () {
+        estado.parejaInvitada = true;
+        guardarEstado();
+        otraVez('btn-agregar-equipo');
+        toast('Invitamos a tu pareja (simulado).');
+      };
+      // Sin pareja en tu equipo, primero se diseña su avatar (sin uno sugerido).
+      if (!miembrosCon(['pareja']).length) agregarAlEquipo($('btn-invitar-pareja'), 'pareja', invitar);
+      else invitar();
+    });
+    if ($('btn-agregar-equipo')) $('btn-agregar-equipo').addEventListener('click', function () {
+      agregarAlEquipo($('btn-agregar-equipo'), null, function () { otraVez('btn-agregar-equipo'); }, 'mamá');
     });
     if ($('btn-nueva-lista')) $('btn-nueva-lista').addEventListener('click', function () {
       creandoLista = true;
@@ -3791,7 +4614,7 @@
     }
     var p = buscarProyecto(c.proyectoId);
     var d = departamentoDeMiCompra(p);
-    var meta = resumen(p).escenario.alEscriturar;
+    var meta = metaCompra(p);
     var lista = estado.listaRegalos;
     var pct = porcentajeEntero(avance(estado.ahorrado, meta));
     var monto = MONTOS_REGALO[2];
@@ -3817,6 +4640,8 @@
         '<p class="adelanta" id="adelanta" aria-live="polite"></p>' +
         '<div class="campo"><label for="regalo-relacion">Eres su</label>' +
           '<select id="regalo-relacion" class="campo-select">' + RELACIONES.map(function (r) { return '<option>' + r + '</option>'; }).join('') + '</select></div>' +
+        '<div class="avatar-familia"><span id="avatar-familia" aria-hidden="true"></span>' +
+          '<button type="button" class="btn btn-terciario btn-sm" id="btn-avatar-familia" aria-haspopup="dialog">Tu avatar</button></div>' +
         '<div class="campo"><label for="regalo-mensaje">Mensaje (opcional)</label>' +
           '<textarea id="regalo-mensaje" class="campo-texto" maxlength="140" rows="2"></textarea></div>' +
         '<p class="sello">' + icono('i-escudo') + 'Va directo a su cuenta Bci para el pie</p>' +
@@ -3832,12 +4657,29 @@
     document.querySelectorAll('input[name="monto-regalo"]').forEach(function (r) { r.addEventListener('change', adelanta); });
     adelanta();
 
+    // S16-F4: quien aporta puede retocar su propio avatar antes de aportar (simulado).
+    var avatarFamilia = null;
+    var avatarActual = function () {
+      if (avatarFamilia) return avatarFamilia;
+      var m = miembrosCon([$('regalo-relacion').value])[0];
+      return m ? m.avatar : null;
+    };
+    var pintarAvatar = function () { $('avatar-familia').innerHTML = avatarSVG(avatarActual(), 56); };
+    pintarAvatar();
+    $('regalo-relacion').addEventListener('change', function () { avatarFamilia = null; pintarAvatar(); });
+    $('btn-avatar-familia').addEventListener('click', function () {
+      abrirCreador({ titulo: 'Tu avatar', avatar: avatarActual(), boton: $('btn-avatar-familia'), relacion: $('regalo-relacion').value,
+        alGuardar: function (av) { avatarFamilia = av; pintarAvatar(); } });
+    });
+
     $('btn-aportar').addEventListener('click', function () {
-      var regalo = { relacion: $('regalo-relacion').value, monto: monto, mensaje: $('regalo-mensaje').value.trim().slice(0, 140) };
+      var regalo = { relacion: $('regalo-relacion').value, monto: monto, mensaje: $('regalo-mensaje').value.trim().slice(0, 140), avatar: avatarActual() };
       estado.regalos = estado.regalos.concat([regalo]);
+      // Quien aporta queda en Tu equipo.
+      if (!miembrosCon([regalo.relacion]).length) estado.equipo = agregarMiembro(estado.equipo, regalo.relacion, regalo.avatar);
       estado.ahorrado = Math.min(meta, estado.ahorrado + monto);
       guardarEstado();
-      if (estado.ahorrado >= meta) guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
+      if (estado.ahorrado >= meta && !entregaPendiente(p)) guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
       location.hash = '#mis-proyectos/compra';
       toast('Tu ' + regalo.relacion + ' aportó ' + formatoPesos(monto) + '.');
     });
@@ -3892,8 +4734,13 @@
     };
     c.innerHTML =
       '<ul class="filas tarjeta">' +
+        '<li><button type="button" class="fila fila-avatar" id="btn-perfil-avatar" aria-haspopup="dialog">' + avatarSVG(estado.avatar, 48, 'fila-av') +
+          '<span><strong>Tu avatar</strong><small>' + (estado.avatar ? 'Editar' : 'Créalo') + (estado.equipo.length ? SEP + 'Tu equipo: ' + estado.equipo.length : '') + '</small></span>' +
+          '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button></li>' +
         fila('b', '', 'i-persona', 'Mis datos', (estado.modo === 'vivir' ? 'Para vivir' : 'Para arrendar') + (ingreso ? SEP + formatoPesos(ingreso) + ' al mes' : ''), 'btn-mis-datos') +
         fila('a', '#perfil/avisos', 'i-campana', 'Avisos', activos + ' de ' + TIPOS_AVISO.length + ' activos') +
+        (estado.modo === 'vivir' ? '<li><button type="button" class="interruptor fila-interruptor" role="switch" aria-checked="' + !!estado.quiereInvertir + '" id="btn-quiero-invertir">' +
+          '<span>' + icono('i-sube', 'icono-grande') + 'También quiero invertir</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button></li>' : '') +
         fila('a', '#perfil/ayuda', 'i-ayuda', 'Ayuda', 'Qué significa cada término') +
         fila('a', '#registro', 'i-documento', 'Sesión de prueba', 'Para la facilitadora') +
         fila('a', '#bienvenida', 'i-casa', 'Ver la introducción', '') +
@@ -3907,6 +4754,14 @@
         '</div>' +
       '</div>';
     $('btn-mis-datos').addEventListener('click', function () { abrirMisDatos($('btn-mis-datos')); });
+    $('btn-perfil-avatar').addEventListener('click', function () { editarMiAvatar($('btn-perfil-avatar')); });
+    if ($('btn-quiero-invertir')) $('btn-quiero-invertir').addEventListener('click', function () {
+      estado.quiereInvertir = !estado.quiereInvertir;
+      guardarEstado();
+      $('btn-quiero-invertir').setAttribute('aria-checked', String(estado.quiereInvertir));
+      actualizarBarraInversiones();
+      toast(estado.quiereInvertir ? 'Inversiones está en la barra.' : 'Inversiones salió de la barra.');
+    });
     var confirmar = $('confirmar-reinicio');
     $('btn-reiniciar').addEventListener('click', function () {
       confirmar.hidden = false;
@@ -4004,8 +4859,15 @@
   // Historial propio de rutas: si la nueva es la anterior, es "Atrás" y se recupera dónde estaba.
   var pilaRutas = [];
   var primeraPantalla = true;
+  // S17-F11: quien compra para vivir no ve Inversiones, salvo que lo pida en Perfil o ya tenga inversiones.
+  function actualizarBarraInversiones() {
+    var a = document.querySelector('.barra a[data-seccion="inversiones"]');
+    if (!a) return;
+    a.parentElement.hidden = estado.modo === 'vivir' && !estado.quiereInvertir && !estado.inversiones.length;
+  }
   function mostrar() {
     cerrarHoja(false);
+    cerrarToastViejo();
     var legado = rutaLegada(location.hash);
     if (legado) { location.replace(legado); return; }
     var hashNuevo = location.hash;
@@ -4017,6 +4879,8 @@
     // Si la pantalla redirigió mientras se dibujaba, la nueva dirección se encarga.
     if (location.hash !== hashNuevo) return;
     document.body.classList.toggle('en-intro', destino.pantalla === 'intro');
+    if (destino.pantalla !== 'inicio') document.body.classList.remove('en-preguntas');
+    actualizarBarraInversiones();
     document.body.classList.toggle('en-familia', destino.pantalla === 'regalo');
     var volviendo = pilaRutas.length > 1 && pilaRutas[pilaRutas.length - 2].hash === hashNuevo;
     if (pilaRutas.length) pilaRutas[pilaRutas.length - 1].y = yAntes;
