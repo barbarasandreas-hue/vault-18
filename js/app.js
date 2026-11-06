@@ -53,20 +53,22 @@
     conQuien: null,          // S16-F2: 'solo', 'pareja' o 'familia'
     piezas: {},              // S17-F7: piezas sumadas en Llega antes { grupo, subsidio, iva, regalo, respaldo }
     modoElegido: false,      // S17-F3: la primera pregunta no viene marcada
-    quiereInvertir: false    // S17-F11: en modo vivir, Inversiones aparece solo si lo pide
+    quiereInvertir: false,   // S17-F11: en modo vivir, Inversiones aparece solo si lo pide
+    ultimaVisita: null,      // S19-B4: foto de Inicio la última vez { proyecto, mes, cupos, etapa, llegada }
+    novedades: []            // S19-B4: lo que cambió desde la última visita (cambiosDesdeVisita), hasta que se ve
   };
 
   // ---------- Elecciones que se recuerdan entre visitas (S3-F3) ----------
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
-    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false };
+    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [] };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -308,6 +310,14 @@
         estado.listaRegalos = { ocasion: g.listaRegalos.ocasion, mostrarMontos: g.listaRegalos.mostrarMontos === true };
       }
       estado.avatar = normalizarAvatar(g.avatar);
+      var num = function (v) { return typeof v === 'number' && isFinite(v) ? v : null; };
+      if (g.ultimaVisita && typeof g.ultimaVisita.proyecto === 'string' && buscarProyecto(g.ultimaVisita.proyecto)) {
+        var u = g.ultimaVisita;
+        estado.ultimaVisita = { proyecto: u.proyecto, mes: num(u.mes) || 0, cupos: num(u.cupos) || 0, etapa: num(u.etapa) || 0, llegada: num(u.llegada) };
+      }
+      estado.novedades = Array.isArray(g.novedades) ? g.novedades.filter(function (x) {
+        return x && ['cuotas', 'cupos', 'etapa', 'antes', 'despues'].indexOf(x.tipo) !== -1 && Number.isInteger(x.n || x.etapa);
+      }).slice(0, 4) : [];
       estado.piezas = {};
       if (g.piezas && typeof g.piezas === 'object') ORDEN_PIEZAS.forEach(function (id) { if (g.piezas[id] === true) estado.piezas[id] = true; });
       estado.modoElegido = g.modoElegido === true || g.preguntasListas === true;
@@ -342,6 +352,7 @@
     estado.unidosGrupo = {};
     estado.equipo = [];
     estado.piezas = {};
+    estado.novedades = [];
     estado.compra = null;
     estado.inversiones = [];
     estado.introVista = false;
@@ -841,6 +852,39 @@
     }).join('') + '</ol>';
   }
 
+  var NOMBRE_HITO = { 0.25: 'el primer cuarto de tu pie', 0.5: 'la mitad de tu pie', 0.75: 'los tres cuartos de tu pie', 1: 'juntar tu pie' };
+
+  // S19-B4: "Desde tu última visita". Se compara con la foto de la vez anterior; lo nuevo queda hasta que se ve.
+  function fotoVisita(x) {
+    var p = x.p;
+    var grupo = p.tipo === 'conjunto';
+    var plazo = x.paso === 2 && estado.ahorroIniciado ? plazoTuPie(p, metaCompra(p)).meses : null;
+    return { proyecto: p.id, mes: estado.mesAhorro || 0, cupos: grupo ? resumen(p).cuposTomados : 0, etapa: grupo ? etapaObraHoy(p) : 0,
+      llegada: typeof plazo === 'number' ? (estado.mesAhorro || 0) + plazo : null };
+  }
+  function textoNovedad(c) {
+    if (c.tipo === 'cuotas') return c.n === 1 ? 'Sumaste 1 cuota a tu pie' : 'Sumaste ' + c.n + ' cuotas a tu pie';
+    if (c.tipo === 'cupos') return c.n === 1 ? 'Se sumó 1 persona al grupo' : 'Se sumaron ' + c.n + ' personas al grupo';
+    if (c.tipo === 'etapa') return 'La obra pasó a ' + ETAPAS_OBRA[c.etapa].toLowerCase();
+    if (c.tipo === 'antes') return 'Llegas ' + plural(c.n, 'mes', 'meses') + ' antes';
+    return 'Tu fecha se movió ' + plural(c.n, 'mes', 'meses');
+  }
+  function novedadesInicio(x) {
+    var ahora = fotoVisita(x);
+    var cambios = cambiosDesdeVisita(estado.ultimaVisita, ahora);
+    if (cambios.length) estado.novedades = cambios;
+    estado.ultimaVisita = ahora;
+    guardarEstado();
+    if (!estado.novedades.length) return '';
+    return '<section class="novedades" aria-labelledby="titulo-novedades">' +
+      '<h2 class="h6" id="titulo-novedades">Desde tu última visita</h2>' +
+      '<ul class="lista-check">' + estado.novedades.map(function (c) {
+        return '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>' + textoNovedad(c) + '</span></li>';
+      }).join('') + '</ul>' +
+      '<button type="button" class="enlace" id="btn-novedades-ok">Entendido</button>' +
+    '</section>';
+  }
+
   // Avisos: máximo 2, calculados con reglas fijas sobre datos del proyecto y del ahorro.
   function avisosIA(x) {
     var p = x.p;
@@ -859,12 +903,9 @@
         : 'Ya se reunió el ' + formatoPorcentaje(r.avanceFinanciamiento, 0) + ' de la participación de 15\u00a0% con inversionistas.'
     };
     if (x.paso === 2 && estado.ahorroIniciado) {
-      var meta = metaCompra(p);
-      var siguiente = HITOS_AHORRO.filter(function (h) { return avance(estado.ahorrado, meta) < h; })[0];
-      if (siguiente) {
-        avisos.push('Te faltan ' + formatoPesos(Math.ceil(meta * siguiente - estado.ahorrado)) +
-          ' para llegar al ' + porcentajeEntero(siguiente) + '\u00a0% de tu meta.');
-      }
+      // S19-B4: el próximo hito en meses, no en montos exactos.
+      var hs = hitoSiguiente(estado.ahorrado, metaCompra(p), estado.ahorroMensual);
+      if (hs && hs.meses) avisos.push((hs.meses === 1 ? 'Te falta 1 mes para ' : 'Te faltan ' + hs.meses + ' meses para ') + NOMBRE_HITO[hs.hito] + '.');
       if (aviso.cierre) avisos.push(aviso.cierre);
     } else if (x.paso === 4) {
       var m = mesDelDepartamento(p, departamentoDeMiCompra(p));
@@ -886,6 +927,7 @@
         campana() + '<h1 id="titulo-inicio" class="h2" tabindex="-1">Tu camino</h1>' +
         '<p class="texto-apoyo">' + esc(x.p.nombre) + SEP + esc(x.p.comuna) + '</p>' +
       '</header>' +
+      novedadesInicio(x) +
       '<section class="tarjeta proximo" aria-label="Dónde vas">' +
         '<p class="chip">' + x.etapa + '</p>' +
         '<p class="etiqueta">' + x.etiqueta + '</p>' +
@@ -905,6 +947,13 @@
           '</section>'
         : '');
     $('inicio-principal').insertAdjacentHTML('beforeend', lineaInversiones());
+    if ($('btn-novedades-ok')) $('btn-novedades-ok').addEventListener('click', function () {
+      estado.novedades = [];
+      guardarEstado();
+      var s = document.querySelector('.novedades');
+      if (s) s.remove();
+      $('titulo-inicio').focus();
+    });
   }
 
   // Solo inversiones, sin compra: el número es lo cobrado a la fecha (S6-F4).
@@ -1368,7 +1417,7 @@
       '</header>' +
       (justo
         ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
-            '<h2 class="h3" id="titulo-plazo">' + razon + ' ' + ayuda('tu-limite') + '</h2></section>'
+            '<h2 class="h3" id="titulo-plazo">' + razon + ' ' + ayuda('tu-limite') + '</h2></section>' + metaMesHtml()
         : '<section class="noche" aria-labelledby="titulo-plazo">' +
             '<span class="noche-luna" aria-hidden="true"></span>' +
             '<p class="noche-etiqueta" id="titulo-plazo">Tus llaves</p>' +
@@ -1416,6 +1465,27 @@
     rm.addEventListener('change', function () { estado.ahorroMensual = Number(rm.value); guardarEstado(); });
     if ($('btn-ver-departamentos')) $('btn-ver-departamentos').addEventListener('click', function () { prepararProyectos(estado.caminoElegido); });
     $('btn-cambiar-departamento').addEventListener('click', function () { abrirCambiarRango($('btn-cambiar-departamento')); });
+    if ($('btn-meta-rango')) $('btn-meta-rango').addEventListener('click', function () { abrirCambiarRango($('btn-meta-rango')); });
+  }
+
+  // S19-B4: cuando todavía no llega, una meta concreta para este mes (metaDelMes en calculos.js).
+  function metaMesHtml() {
+    var on = piezasOn();
+    var lista = metaDelMes({ ahorroMensual: estado.ahorroMensual || 0, otrasCuotas: estado.otrasCuotas || 0,
+      subsidio: on.subsidio ? false : cabeCon('subsidio'), iva: on.iva ? false : cabeCon('iva') });
+    var texto = function (m) {
+      if (m.tipo === 'ahorrar') return 'Aparta ' + formatoRedondeado(m.monto) + ' este mes';
+      if (m.tipo === 'subsidio') return '<a href="#camino/caminos">Revisa el subsidio del Estado</a>';
+      if (m.tipo === 'iva') return '<a href="#camino/caminos">Mira los terminados sin IVA</a>';
+      if (m.tipo === 'cuota') return 'Termina una de tus otras cuotas';
+      return '<button type="button" class="enlace" id="btn-meta-rango" aria-haspopup="dialog">Prueba un rango más bajo</button>';
+    };
+    return '<section class="tarjeta bloque meta-mes" aria-labelledby="titulo-meta-mes">' +
+      '<h2 class="h5" id="titulo-meta-mes">Tu meta de este mes</h2>' +
+      '<ul class="lista-check">' + lista.map(function (m) {
+        return '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>' + texto(m) + '</span></li>';
+      }).join('') + '</ul>' +
+    '</section>';
   }
 
   // S17-F9: Llega antes. Cada pieza es una fila: nombre, efecto, "?" e interruptor. La recomendada lleva ★.
@@ -1492,7 +1562,7 @@
       (justo ? '<p class="texto-centro"><a class="enlace" href="#camino/ficha/arriendo-opcion">Mientras tanto: arriendo con opción de compra</a></p>' : '') +
       '<div class="accion-fija">' + (justo
         ? (registro.recordarme ? '<a href="#camino" class="btn btn-secundario-dark btn-lg btn-bloque">Volver a mi camino</a>'
-          : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-recordarme" data-meses="' + mesesRecordar(perfilActual(), 'individual-vivir') + '">Recordarme en ' + mesesRecordar(perfilActual(), 'individual-vivir') + ' meses</button>')
+          : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-recordarme" data-meses="1">Recordarme cada mes</button>')
         : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-llega-elegir">Elegir departamento</button>') + '</div>';
 
     iniciarPlegables();
@@ -1521,7 +1591,7 @@
     if ($('btn-recordarme')) $('btn-recordarme').addEventListener('click', function () {
       registro.recordarme = Number($('btn-recordarme').dataset.meses);
       guardarRegistro();
-      toast('Listo: te avisamos en ' + registro.recordarme + ' meses (simulado).');
+      toast('Listo: te recordamos tu meta cada mes (simulado).');
       renderLlegaAntes();
     });
     if ($('btn-llega-elegir')) $('btn-llega-elegir').addEventListener('click', function () {
@@ -3252,6 +3322,8 @@
       renderTu5(p, d);
       var faltanAhora = plazoTuPie(p, meta).meses;
       if (nuevos.length) {
+        // S19-B4: cada hito se celebra una sola vez (solo los recién cruzados) y sin movimiento si se pidió reducirlo.
+        confeti();
         toast(textoHito(nuevos[nuevos.length - 1], enGrupo ? (p.etapaObra || 0) : undefined));
         if (navigator.vibrate) navigator.vibrate(40);
       }
@@ -4123,7 +4195,6 @@
   }
   function bloqueTodaviaNo(r, perfil) {
     var cambios = cambiosTodaviaNo(perfil, r.id);
-    var meses = mesesRecordar(perfil, r.id);
     var avisado = registro.recordarme;
     return '<section class="tarjeta todavia-no" aria-labelledby="titulo-todavia-no">' +
       '<p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
@@ -4136,7 +4207,7 @@
       '<div id="simulacion" aria-live="polite"></div>' +
       '<div class="acciones">' +
         (avisado ? ''
-          : '<button type="button" class="btn btn-primario btn-bloque" id="btn-recordarme" data-meses="' + meses + '">Recordarme en ' + meses + ' meses</button>') +
+          : '<button type="button" class="btn btn-primario btn-bloque" id="btn-recordarme" data-meses="1">Recordarme cada mes</button>') +
         '<button type="button" class="btn btn-terciario btn-bloque" id="btn-ver-estudios">Ver estudios</button>' +
       '</div>' +
     '</section>';
@@ -4347,7 +4418,7 @@
       registro.recordarme = Number($('btn-recordarme').dataset.meses);
       guardarRegistro();
       $('btn-recordarme').remove();
-      toast('Listo: te avisamos en ' + registro.recordarme + ' meses (simulado).');
+      toast('Listo: te recordamos tu meta cada mes (simulado).');
     });
     if ($('btn-ver-estudios')) $('btn-ver-estudios').addEventListener('click', function () {
       estado.masBaratoTipo = 'estudio';
@@ -4937,6 +5008,7 @@
         fila('a', '#bienvenida', 'i-casa', 'Ver la introducción', '') +
         fila('a', '#registro', 'i-documento', 'Sesión de prueba', '') +
       '</ul>' +
+      '<p class="texto-apoyo bloque-chico">Tus datos quedan solo en este teléfono.</p>' +
       '<div class="acciones">' +
         '<button type="button" class="btn btn-terciario btn-bloque" id="btn-reiniciar" aria-expanded="false" aria-controls="confirmar-reinicio">Empezar de nuevo</button>' +
         '<div id="confirmar-reinicio" class="confirmar" hidden>' +

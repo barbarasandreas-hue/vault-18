@@ -1795,3 +1795,13 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .galeria-punto { width: 44px; height: 28px; border: 0; background: none; padding: 0; display: grid; place-items: center; cursor: pointer; }
 .galeria-punto::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--gray-semilight); transition: transform var(--dur-corta) var(--ease-salida), background-color var(--dur-corta); }
 .galeria-punto[aria-current="true"]::before { background: var(--blue-dark); transform: scale(1.25); }
+
+/* S19-B4: Desde tu última visita */
+.novedades { background: var(--blue-20); border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; }
+.novedades h2 { margin: 0 0 6px; color: var(--blue-dark); }
+.novedades .lista-check { margin: 0 0 6px; }
+.novedades .enlace { font-size: 14px; }
+@media (prefers-reduced-motion: no-preference) { .novedades { animation: entrar var(--dur-media) var(--ease-salida, ease-out); } }
+/* S19-B4: la meta de este mes (Todavía no) */
+.meta-mes h2 { margin-top: 0; }
+.meta-mes .lista-check a { color: var(--blue-dark); }

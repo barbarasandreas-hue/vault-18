@@ -76,3 +76,31 @@ test('Sin IVA y subsidio se suman en un terminado de UF 2.300', () => {
   assert.strictEqual(Math.round(r.precioUF), 2070);
   assert.strictEqual(r.freno, 'cuenta-vivienda');
 });
+
+// Sprint 19, Bloque 4: razones para volver
+test('Hito siguiente: cuántas cuotas faltan para el próximo hito', () => {
+  assert.deepStrictEqual(c.hitoSiguiente(3000000, 12000000, 600000), { hito: 0.5, falta: 3000000, meses: 5 });
+  assert.strictEqual(c.hitoSiguiente(100, 12000000, 600000).hito, 0.25);
+  assert.strictEqual(c.hitoSiguiente(12000000, 12000000, 600000), null);
+  assert.strictEqual(c.hitoSiguiente(0, 1000, 0).meses, null);
+  assert.strictEqual(c.hitoSiguiente(2999000, 12000000, 600000).meses, 1); // nunca 0 meses
+});
+
+test('Desde tu última visita: cupos nuevos, avance de obra y cambio de fecha', () => {
+  const antes = { proyecto: 'a', cupos: 6, etapa: 1, llegada: 15 };
+  assert.deepStrictEqual(c.cambiosDesdeVisita(antes, { proyecto: 'a', cupos: 6, etapa: 1, llegada: 15 }), []);
+  assert.deepStrictEqual(c.cambiosDesdeVisita(Object.assign({ mes: 2 }, antes), { proyecto: 'a', mes: 3, cupos: 6, etapa: 1, llegada: 15 }), [{ tipo: 'cuotas', n: 1 }]);
+  assert.deepStrictEqual(c.cambiosDesdeVisita(antes, { proyecto: 'a', cupos: 8, etapa: 2, llegada: 14 }),
+    [{ tipo: 'cupos', n: 2 }, { tipo: 'etapa', etapa: 2 }, { tipo: 'antes', n: 1 }]);
+  assert.deepStrictEqual(c.cambiosDesdeVisita(antes, { proyecto: 'a', cupos: 6, etapa: 1, llegada: 17 }), [{ tipo: 'despues', n: 2 }]);
+  assert.deepStrictEqual(c.cambiosDesdeVisita(antes, { proyecto: 'b', cupos: 9, etapa: 3, llegada: 1 }), []);
+  assert.deepStrictEqual(c.cambiosDesdeVisita(null, antes), []);
+});
+
+test('Meta del mes: siempre una acción, y la que más acerca el sí', () => {
+  assert.deepStrictEqual(c.metaDelMes({ ahorroMensual: 250000, otrasCuotas: 0, subsidio: 'con-otra', iva: 'con-otra' }),
+    [{ tipo: 'ahorrar', monto: 250000 }, { tipo: 'subsidio', con: 'con-otra' }]);
+  assert.deepStrictEqual(c.metaDelMes({ ahorroMensual: 0, otrasCuotas: 80000, subsidio: false, iva: false }), [{ tipo: 'cuota' }]);
+  assert.deepStrictEqual(c.metaDelMes({ ahorroMensual: 100000, otrasCuotas: 0, subsidio: false, iva: 'sola' })[1], { tipo: 'iva', con: 'sola' });
+  assert.strictEqual(c.metaDelMes({ ahorroMensual: 100000, otrasCuotas: 0, subsidio: false, iva: false })[1].tipo, 'rango');
+});

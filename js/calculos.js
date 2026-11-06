@@ -340,6 +340,42 @@ function hitosAlcanzados(ahorrado, meta) {
   return HITOS_AHORRO.filter(function (h) { return a >= h; });
 }
 
+// S19-B4: el próximo hito del pie y cuántas cuotas faltan para llegar a él (los avisos hablan en meses, no en montos).
+function hitoSiguiente(ahorrado, meta, mensual) {
+  var a = avance(ahorrado, meta);
+  var h = HITOS_AHORRO.filter(function (x) { return a < x; })[0];
+  if (!h) return null;
+  var falta = Math.max(0, meta * h - ahorrado);
+  return { hito: h, falta: falta, meses: mensual > 0 ? Math.max(1, Math.ceil(falta / mensual)) : null };
+}
+
+// S19-B4: qué cambió desde la última vez que se vio Inicio.
+// Cada foto es { proyecto, mes, cupos, etapa, llegada } (llegada = mes de la demo + meses que faltan).
+function cambiosDesdeVisita(antes, ahora) {
+  if (!antes || !ahora || antes.proyecto !== ahora.proyecto) return [];
+  var c = [];
+  if (ahora.mes > antes.mes) c.push({ tipo: 'cuotas', n: ahora.mes - antes.mes });
+  if (ahora.cupos > antes.cupos) c.push({ tipo: 'cupos', n: ahora.cupos - antes.cupos });
+  if (ahora.etapa > antes.etapa) c.push({ tipo: 'etapa', etapa: ahora.etapa });
+  if (typeof antes.llegada === 'number' && typeof ahora.llegada === 'number' && ahora.llegada !== antes.llegada) {
+    c.push({ tipo: ahora.llegada < antes.llegada ? 'antes' : 'despues', n: Math.abs(antes.llegada - ahora.llegada) });
+  }
+  return c;
+}
+
+// S19-B4: la meta de este mes cuando todavía no llega. Siempre una acción concreta:
+// apartar lo que puede juntar y, además, lo que más acerca el "sí".
+// o: { ahorroMensual, otrasCuotas, subsidio, iva } (subsidio e iva: 'sola', 'con-otra' o false, según si hacen caber).
+function metaDelMes(o) {
+  var lista = [];
+  if (o.ahorroMensual > 0) lista.push({ tipo: 'ahorrar', monto: o.ahorroMensual });
+  if (o.subsidio === 'sola' || o.subsidio === 'con-otra') lista.push({ tipo: 'subsidio', con: o.subsidio });
+  else if (o.iva === 'sola' || o.iva === 'con-otra') lista.push({ tipo: 'iva', con: o.iva });
+  else if (o.otrasCuotas > 0) lista.push({ tipo: 'cuota' });
+  else lista.push({ tipo: 'rango' });
+  return lista;
+}
+
 // Un mes más de ahorro, sin pasarse de la meta.
 function sumarMes(ahorrado, ahorroMensual, meta) {
   return Math.min(meta, (ahorrado || 0) + (ahorroMensual || 0));
@@ -1434,6 +1470,9 @@ if (typeof module !== 'undefined') module.exports = {
   diasHasta: diasHasta,
   diasDeAhorro: diasDeAhorro,
   HITOS_AHORRO: HITOS_AHORRO,
+  hitoSiguiente: hitoSiguiente,
+  cambiosDesdeVisita: cambiosDesdeVisita,
+  metaDelMes: metaDelMes,
   hitosAlcanzados: hitosAlcanzados,
   sumarMes: sumarMes,
   ingresoTotal: ingresoTotal,
