@@ -2405,11 +2405,17 @@
     return '<p class="paso-de">Paso ' + (pasoCompra + 1) + ' de 5' + SEP + CAMINO[pasoCompra] + '</p>';
   }
 
+  // S19-B3: un ejemplo en cada campo de dinero, para saber qué escribir.
+  var EJEMPLOS_DINERO = { 'q-propio': '1.200.000', 'q-pareja': '1.000.000', 'q-ahorro': '3.000.000',
+    'q-mensual': '300.000', 'q-arriendo': '450.000', 'ahorro-mensual': '300.000', 'datos-propio': '1.200.000', 'datos-pareja': '1.000.000',
+    'datos-ahorro': '3.000.000', 'datos-mensual': '300.000', 'datos-arriendo': '450.000',
+    'sueldo-propio': '1.200.000', 'sueldo-pareja': '1.000.000', 'arriendo-antes': '450.000', 'arriendo-mes': '450.000' };
   function campoDinero(id, etiqueta, valor) {
     return '<div class="campo">' +
       '<label for="' + id + '">' + etiqueta + '</label>' +
       '<div class="campo-caja"><span class="prefijo" aria-hidden="true">$</span>' +
-      '<input id="' + id + '" type="text" inputmode="numeric" autocomplete="off" enterkeyhint="next"' +
+      '<input id="' + id + '" name="' + id + '" type="text" inputmode="numeric" autocomplete="off" enterkeyhint="next"' +
+      (EJEMPLOS_DINERO[id] ? ' placeholder="Ej.: ' + EJEMPLOS_DINERO[id] + '…"' : '') +
       ' aria-describedby="' + id + '-error" value="' + (valor ? formatoMiles(valor) : '') + '"></div>' +
       '<p class="error" id="' + id + '-error" hidden><svg aria-hidden="true"><use href="#i-no"/></svg><span></span></p>' +
       '</div>';
