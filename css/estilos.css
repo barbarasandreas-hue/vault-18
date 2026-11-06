@@ -1721,6 +1721,12 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .linea-siempre { margin: 8px 0 0; }
 .linea-siempre s { font-weight: 700; }
 /* Llega antes */
+/* S19-B2: Llega antes, el plazo en una línea */
+.llaves-linea { position: relative; background: var(--white); border: 1px solid var(--gray-semilight); border-radius: 16px; padding: 12px 16px; margin-bottom: 12px; display: grid; gap: 2px; }
+.llaves-linea p:first-child { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0; }
+.llaves-linea strong { font-size: 22px; color: var(--blue-dark); }
+.llaves-linea .texto-apoyo { margin: 0; }
+.llaves-linea .cambio-llaves { top: 12px; }
 .llaves-hero { position: relative; border-radius: 20px; padding: 16px; color: var(--white); background: linear-gradient(#14233A, #1D3B63); display: grid; gap: 4px; margin-bottom: 12px; }
 .llaves-hero .noche-plazo { font-size: 34px; line-height: 1.05; }
 .pista-llaves { display: flex; align-items: center; gap: 8px; margin-top: 8px; }

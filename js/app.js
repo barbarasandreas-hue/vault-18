@@ -607,7 +607,7 @@
     return '<div class="grupo-edificio">' + edificioGrupo(proyecto, r) +
       '<div class="grupo-datos">' +
         '<p class="etiqueta">' + icono('i-grupo') + 'Compradores</p>' +
-        '<strong class="numero display-3">' + r.cuposTomados + ' de ' + r.cupos + '</strong>' +
+        '<strong class="numero h3">' + r.cuposTomados + ' de ' + r.cupos + '</strong>' +
         actividadGrupo(proyecto, r) +
       '</div></div>';
   }
@@ -1343,10 +1343,6 @@
       '<span>Tu departamento</span><span class="b azul" style="transform:scaleX(' + (div / max).toFixed(3) + ')"></span><b>' + formatoRedondeado(div) + '</b>' +
     '</div>';
   }
-  function barraLlaves(avance) {
-    return '<div class="pista-llaves" aria-hidden="true"><span class="barra-llaves"><i style="transform:scaleX(' + avance.toFixed(3) + ')"' + (avance >= 0.75 ? ' class="cerca"' : '') + '></i></span>' +
-      '<span class="llave-meta">' + icono('i-llave') + '</span></div>';
-  }
 
   // S17-F8: Tu camino en modo vivir: ahora (tus llaves) y después (lo que pagas al mes, junto a tu arriendo).
   function renderTuCaminoVivir() {
@@ -1390,7 +1386,7 @@
       '</section>' +
       '<section class="tarjeta bloque despues" aria-labelledby="titulo-despues">' +
         '<p class="etiqueta" id="titulo-despues">Después, pagas al mes</p>' +
-        '<strong class="numero display-4">' + formatoRango(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
+        '<strong class="numero h3">' + formatoRango(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
         vsArriendo(x.hasta.dividendo) +
       '</section>' +
       (siempre !== null ? '<p class="texto-apoyo linea-siempre">Sin garantía: ' + textoMeses(siempre) + ' ' + ayuda('garantia') + '</p>' : '') +
@@ -1474,13 +1470,12 @@
       (justo
         ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-llaves"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
             '<h2 class="h3" id="titulo-llaves" aria-live="polite">' + razon + ' ' + ayuda('tu-limite') + '</h2></section>'
-        : '<section class="llaves-hero" aria-labelledby="titulo-llaves">' +
-        '<p class="noche-etiqueta" id="titulo-llaves">Tus llaves</p>' +
-        '<strong class="numero noche-plazo" aria-live="polite">' + textoMesesRango(x.desde.meses, x.hasta.meses) + '</strong>' +
-        '<p class="noche-sub">' + textoLlavesRango(x) + '</p>' +
-        barraLlaves(x.hasta.avance) +
-        '<span class="freno-llaves">' + (x.hasta.ivaTarde ? 'Sin IVA vence antes' + SEP : '') + FRENO[x.hasta.freno] + '</span>' +
-        (cambio ? '<span class="cambio-llaves" aria-hidden="true">' + (cambio > 0 ? '−' : '+') + plural(Math.abs(cambio), 'mes', 'meses') + '</span>' : '') +
+        // S19-B2: el plazo ya está en Tu camino; aquí, una línea que cambia con cada pieza.
+        : '<section class="llaves-linea" aria-labelledby="titulo-llaves">' +
+        '<p><span class="etiqueta" id="titulo-llaves">Tus llaves</span>' +
+          '<strong class="numero" aria-live="polite">' + textoMesesRango(x.desde.meses, x.hasta.meses) + '</strong>' +
+          (cambio ? '<span class="cambio-llaves" aria-hidden="true">' + (cambio > 0 ? '−' : '+') + plural(Math.abs(cambio), 'mes', 'meses') + '</span>' : '') + '</p>' +
+        '<p class="texto-apoyo">' + (x.hasta.ivaTarde ? 'Sin IVA vence antes' + SEP : '') + FRENO[x.hasta.freno] + '</p>' +
       '</section>') +
       grupo('menos', 'Paga menos') + grupo('ayuda', 'Recibe ayuda') +
       (siempre !== null ? '<p class="texto-apoyo linea-siempre">Sin garantía: ' + textoMeses(siempre) + ' ' + ayuda('garantia') + '</p>' : '') +
@@ -2591,7 +2586,7 @@
     var e = resumen(p).escenario;
     var yaTiene = estado.sueldoPropio > 0 && !editandoPostula;
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Pagas al mes', e.totalMes) +
+      tarjetaCompacta(p, 'Pagas al mes', e.totalMes, formatoRedondeado) +
       listaPasos(1) +
       '<section class="bloque" aria-labelledby="titulo-postula">' +
         '<h2 class="h3" id="titulo-postula">Postula</h2>' +
@@ -2615,7 +2610,7 @@
         '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-postular" aria-describedby="postular-explica">Postular</button></div>' +
           '<div class="acciones">' +
           '<p class="texto-apoyo" id="postular-explica"></p>' +
-          '<button type="button" class="btn btn-terciario btn-bloque" id="btn-salir">Salir de esta compra</button>' +
+          '<p class="texto-centro"><button type="button" class="enlace" id="btn-salir">Salir de esta compra</button></p>' +
         '</div>' +
       '</section>';
 
@@ -2732,7 +2727,7 @@
     }
 
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Pagas al mes', resumen(p).escenario.totalMes) +
+      tarjetaCompacta(p, 'Pagas al mes', resumen(p).escenario.totalMes, formatoRedondeado) +
       listaPasos(1) +
       '<section class="bloque" aria-labelledby="titulo-documentos">' +
         '<h2 class="h3" id="titulo-documentos">Tus documentos</h2>' +
@@ -3014,7 +3009,6 @@
         '<rect class="chancho-ranura" x="42" y="27" width="22" height="4.5" rx="2.25"/>' +
       '</svg>' +
       '<div class="alcancia-datos">' +
-        '<strong class="numero display-3">' + pct + NBSP + '%</strong>' +
         '<p class="avance-texto">Llevas ' + formatoPesos(ahorrado) + ' de ' + formatoPesos(meta) + '</p>' +
         '<ol class="hitos-lista" aria-label="Hitos">' + hitos + '</ol>' +
       '</div>' +
@@ -3100,7 +3094,7 @@
     var meta = metaCompra(p);
     // Si ya se juntó todo (por ejemplo, al cambiar a un proyecto más barato), se pasa a la firma.
     var enGrupo = p.tipo === 'conjunto';
-    var cabecera = tarjetaCompacta(p, 'Pagas al mes', resumen(p).escenario.totalMes) + listaPasos(2) +
+    var cabecera = tarjetaCompacta(p, 'Pagas al mes', resumen(p).escenario.totalMes, formatoRedondeado) + listaPasos(2) +
       '<h2 class="h3 bloque" id="titulo-tu5">' + (enGrupo ? 'Tu pie en cuotas ' : 'Tu pie ') + ayuda('pie') + '</h2>';
     // S10-F3: en la compra en grupo, el pie va a una cuenta bloqueada de Bci y se puede salir sin multa.
     var cuentaGrupo = (enGrupo
@@ -3116,7 +3110,7 @@
           cuentaGrupo +
           '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-empezar">Empezar a ahorrar</button></div>' +
             '<div class="acciones">' +
-            '<button type="button" class="btn btn-terciario btn-bloque" id="btn-salir">Salir de esta compra</button>' +
+            '<p class="texto-centro"><button type="button" class="enlace" id="btn-salir">Salir de esta compra</button></p>' +
           '</div>' +
         '</section>';
 
@@ -3194,9 +3188,9 @@
           puntosRacha() +
           cuentaGrupo +
         '</div>' +
-        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-simular-mes">Próximo mes · demo</button></div>' +
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-simular-mes">Pagar mi cuota</button></div>' +
         // S17-F10: lo que no es la acción del mes queda plegado.
-        plegable('mas-opciones', 'Más opciones', '',
+        plegable('mas-opciones', enGrupo ? 'Tu cuota' : 'Tu ahorro', '',
           '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + estado.cuotaAutomatica + '" id="btn-cuota-automatica">' +
             '<span>' + icono('i-calendario') + 'Pagar mi cuota sola el día 5</span>' +
             '<span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
@@ -3255,7 +3249,7 @@
         toast(textoHito(nuevos[nuevos.length - 1], enGrupo ? (p.etapaObra || 0) : undefined));
         if (navigator.vibrate) navigator.vibrate(40);
       }
-      else anunciar('Sumaste un mes. Te faltan ' + textoMeses(faltanAhora) + '.');
+      else anunciar('Cuota pagada (simulado). Te faltan ' + textoMeses(faltanAhora) + '.');
       $('btn-simular-mes').focus();
     });
     iniciarMoneda();
@@ -3724,10 +3718,11 @@
   }
 
   // Versión corta para los pasos: nombre del proyecto (enlace) y una cifra, en una fila.
-  function tarjetaCompacta(p, etiqueta, pesos) {
+  // S19-B2: antes de la preaprobación, la cifra va redondeada (formato = formatoRedondeado).
+  function tarjetaCompacta(p, etiqueta, pesos, formato) {
     return '<div class="tarjeta compacta">' +
       '<a class="enlace" href="#camino/proyecto/' + esc(p.id) + '">' + esc(p.nombre) + '</a>' +
-      '<p class="compacta-cifra"><span>' + etiqueta + '</span><strong>' + formatoPesos(pesos) + '</strong></p>' +
+      '<p class="compacta-cifra"><span>' + etiqueta + '</span><strong>' + (formato || formatoPesos)(pesos) + '</strong></p>' +
     '</div>';
   }
 
@@ -4666,7 +4661,7 @@
     var cerrado = grupoCerrado(p);
     var mEntrega = mesesParaEntrega(p);
     var entrega = mEntrega > 0 ? 'Entrega en ' + textoMeses(mEntrega) : 'Edificio entregado';
-    return plegable('grupo', 'Tu grupo', r.cuposTomados + ' de ' + r.cupos + ' compradores' + (cerrado ? SEP + 'cerrado' : ''),
+    return plegable('grupo', 'Tu grupo y tu obra', r.cuposTomados + ' de ' + r.cupos + ' compradores' + (cerrado ? SEP + 'cerrado' : '') + SEP + entrega,
         grupoConEdificio(p, r) +
         '<ul class="datos-inversion">' +
           '<li><span>' + icono('i-alcancia') + 'Entre todos llevan ' + ayuda('meta-comun') + '</span><strong>' + formatoRedondeado(juntos) + '</strong></li>' +
@@ -4674,11 +4669,10 @@
           (g.faltan > 0 && !cerrado ? '<li><span>Con ' + plural(g.faltan, 'persona', 'personas') + ' más</span><strong>' + formatoPorcentaje(g.descuentoSiguiente, 0) + '</strong></li>' : '') +
         '</ul>' +
         (cerrado ? '' : '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-compartir">Compartir el proyecto</button>' +
-        (r.cuposLibres > 0 ? '<button type="button" class="btn btn-terciario btn-bloque" id="btn-se-une">Simular que alguien se une</button>' : ''))) +
-      // S18-F2: la obra dice la entrega del edificio, con el mismo reloj que Tus llaves.
-      plegable('obra', 'Tu obra', entrega,
-        '<p class="llaves-en">' + icono('i-calendario', 'icono-llave') + '<span><strong class="numero">' + entrega + '</strong></span></p>' +
-        '<p class="texto-apoyo">Entrega estimada: ' + fechaLlaves(0, p.entregaEstimada) + '</p>' +
+        (r.cuposLibres > 0 ? '<button type="button" class="btn btn-terciario btn-bloque" id="btn-se-une">Simular que alguien se une</button>' : '')) +
+        // S18-F2: la obra dice la entrega del edificio, con el mismo reloj que Tus llaves.
+        '<h3 class="h5 bloque">Tu obra</h3>' +
+        '<p class="texto-apoyo">' + entrega + SEP + fechaLlaves(0, p.entregaEstimada) + '</p>' +
         obra);
   }
 
@@ -4883,10 +4877,8 @@
   var loTuyoMostrado = null;
   function loTuyo(m) {
     var html = '<section class="tarjeta bloque lo-tuyo" aria-labelledby="titulo-lo-tuyo">' +
-      '<p class="etiqueta" id="titulo-lo-tuyo">Tu patrimonio ' + ayuda('patrimonio') + '</p>' +
-      '<strong class="numero display-3" id="lo-tuyo"></strong>' +
+      '<ul class="datos-inversion"><li><span id="titulo-lo-tuyo">Tu patrimonio ' + ayuda('patrimonio') + '</span><strong class="numero" id="lo-tuyo"></strong></li></ul>' +
       '<p class="crecio">' + icono('i-sube', 'icono-crecio') + 'Creció ' + formatoPesos(ufAPesos(m.crecimientoUF)) + ' este mes</p>' +
-      '<p class="sello">' + icono('i-escudo') + 'Sin plusvalía</p>' +
     '</section>';
     return html;
   }
