@@ -9,6 +9,7 @@ var FECHA_REFERENCIA = '2026-11-03';
 
 // tipo: 'conjunto' = compra en grupo (descuento de 3 % desde 5 unidades y 5 % desde 10)
 //       'financiamiento' = pie compartido (un departamento a precio de lista; inversionistas ponen el 15 %)
+//       'venta' = departamento nuevo terminado, se compra solo (S18-F6). Solo en modo vivir; es el que puede ir sin IVA.
 // cupos: compradores que caben en el lote; cuposTomados: los que ya se unieron.
 // ufFinanciadas: parte de la participación de 15 % que ya pusieron inversionistas.
 // cierre: fecha en que se cierra el proyecto.
@@ -26,6 +27,24 @@ var PROYECTOS = [
     cupos: 10, cuposTomados: 4, ufFinanciadas: 0, cierre: '2027-02-26' },
   { id: 'altos-recoleta', fachada: { color: 'blue-dark', pisos: 5 }, clienteBci: false, grupo: { cuotaPromedio: 700000, mesesAhorrando: 3, unidoHaceDias: 8, pagaronMes: 2 }, etapaObra: 1, entregaEstimada: '2027-10-31', nombre: 'Edificio Altos de Recoleta', comuna: 'Recoleta', tipo: 'conjunto',
     cupos: 10, cuposTomados: 3, ufFinanciadas: 0, cierre: '2026-12-30' },
+  // S18-F6: más ejemplos para vivir, al menos 3 por rango. En obra (compra en grupo):
+  { id: 'nodo-estacion', fachada: { color: 'blue-80', pisos: 6 }, clienteBci: true, grupo: { cuotaPromedio: 520000, mesesAhorrando: 3, unidoHaceDias: 3, pagaronMes: 4 }, etapaObra: 1, entregaEstimada: '2028-01-31', nombre: 'Edificio Nodo Estación', comuna: 'Estación Central', tipo: 'conjunto',
+    cupos: 10, cuposTomados: 5, ufFinanciadas: 0, cierre: '2027-01-15' },
+  { id: 'vista-independencia', fachada: { color: 'green-normal', pisos: 5 }, clienteBci: false, grupo: { cuotaPromedio: 480000, mesesAhorrando: 1, unidoHaceDias: 4, pagaronMes: 3 }, etapaObra: 0, entregaEstimada: '2028-05-31', nombre: 'Edificio Vista Independencia', comuna: 'Independencia', tipo: 'conjunto',
+    cupos: 8, cuposTomados: 4, ufFinanciadas: 0, cierre: '2027-02-15' },
+  { id: 'pasaje-recoleta', fachada: { color: 'gray-semidark', pisos: 4 }, clienteBci: true, grupo: { cuotaPromedio: 380000, mesesAhorrando: 2, unidoHaceDias: 6, pagaronMes: 2 }, etapaObra: 1, entregaEstimada: '2027-11-30', nombre: 'Edificio Pasaje Recoleta', comuna: 'Recoleta', tipo: 'conjunto',
+    cupos: 6, cuposTomados: 2, ufFinanciadas: 0, cierre: '2027-01-31' },
+  { id: 'terrazas-quinta', fachada: { color: 'blue-normal', pisos: 7 }, clienteBci: false, grupo: { cuotaPromedio: 760000, mesesAhorrando: 5, unidoHaceDias: 1, pagaronMes: 6 }, etapaObra: 2, entregaEstimada: '2027-09-30', nombre: 'Edificio Terrazas Quinta Normal', comuna: 'Quinta Normal', tipo: 'conjunto',
+    cupos: 10, cuposTomados: 7, ufFinanciadas: 0, cierre: '2026-12-20' },
+  // Terminados (se compran solos, se entregan al firmar):
+  { id: 'acacias-quinta', fachada: { color: 'green-dark', pisos: 5 }, clienteBci: true, etapaObra: 4, nombre: 'Edificio Las Acacias', comuna: 'Quinta Normal', tipo: 'venta',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
+  { id: 'aromos-estacion', fachada: { color: 'blue-dark', pisos: 4 }, clienteBci: false, etapaObra: 4, nombre: 'Edificio Los Aromos', comuna: 'Estación Central', tipo: 'venta',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
+  { id: 'cerezos-recoleta', fachada: { color: 'gray-dark', pisos: 4 }, clienteBci: true, etapaObra: 4, nombre: 'Edificio Los Cerezos', comuna: 'Recoleta', tipo: 'venta',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
+  { id: 'robles-independencia', fachada: { color: 'blue-80', pisos: 6 }, clienteBci: false, etapaObra: 4, nombre: 'Edificio Los Robles', comuna: 'Independencia', tipo: 'venta',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
   { id: 'plaza-estacion', fachada: { color: 'green-dark', pisos: 4 }, clienteBci: false, nombre: 'Edificio Plaza Estación', comuna: 'Estación Central', tipo: 'financiamiento',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 108, cierre: '2027-02-10' },
   { id: 'jardin-independencia', fachada: { color: 'blue-80', pisos: 4 }, clienteBci: true, nombre: 'Edificio Jardín Independencia', comuna: 'Independencia', tipo: 'financiamiento',
@@ -54,6 +73,15 @@ var DEPARTAMENTOS = [
   // Altos de Recoleta: rinde menos de 3,9 % neto (la IA lo saca en modo arrendar)
   { id: 'ar-502', proyectoId: 'altos-recoleta', comuna: 'Recoleta', piso: 5, m2: 52, dormitorios: 2, banos: 2, listaUF: 2600, arriendoEstimadoIA: 370000, origenArriendo: ORIGEN_ARRIENDO },
   { id: 'ar-901', proyectoId: 'altos-recoleta', comuna: 'Recoleta', piso: 9, m2: 52, dormitorios: 2, banos: 2, listaUF: 2600, arriendoEstimadoIA: 380000, origenArriendo: ORIGEN_ARRIENDO },
+  // S18-F6: nuevos para vivir (arriendo estimado igual que el resto, para comparar)
+  { id: 'ne-504', proyectoId: 'nodo-estacion', comuna: 'Estación Central', piso: 5, m2: 44, dormitorios: 2, banos: 1, listaUF: 2150, arriendoEstimadoIA: 330000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'vi-302', proyectoId: 'vista-independencia', comuna: 'Independencia', piso: 3, m2: 40, dormitorios: 1, banos: 1, listaUF: 1900, arriendoEstimadoIA: 290000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'pr-201', proyectoId: 'pasaje-recoleta', comuna: 'Recoleta', piso: 2, m2: 34, dormitorios: 1, banos: 1, listaUF: 1450, arriendoEstimadoIA: 220000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'tq-603', proyectoId: 'terrazas-quinta', comuna: 'Quinta Normal', piso: 6, m2: 56, dormitorios: 2, banos: 2, listaUF: 2800, arriendoEstimadoIA: 430000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ac-402', proyectoId: 'acacias-quinta', comuna: 'Quinta Normal', piso: 4, m2: 46, dormitorios: 2, banos: 1, listaUF: 2300, arriendoEstimadoIA: 370000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ae-305', proyectoId: 'aromos-estacion', comuna: 'Estación Central', piso: 3, m2: 36, dormitorios: 1, banos: 1, listaUF: 1650, arriendoEstimadoIA: 270000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'cr-203', proyectoId: 'cerezos-recoleta', comuna: 'Recoleta', piso: 2, m2: 32, dormitorios: 1, banos: 1, listaUF: 1300, arriendoEstimadoIA: 205000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ri-506', proyectoId: 'robles-independencia', comuna: 'Independencia', piso: 5, m2: 54, dormitorios: 2, banos: 2, listaUF: 2700, arriendoEstimadoIA: 410000, origenArriendo: ORIGEN_ARRIENDO },
   // Pie compartido: un departamento por proyecto
   { id: 'pe-601', proyectoId: 'plaza-estacion', comuna: 'Estación Central', piso: 6, m2: 22, dormitorios: 0, banos: 1, listaUF: 1200, arriendoEstimadoIA: 200000, origenArriendo: ORIGEN_ARRIENDO },
   { id: 'ji-303', proyectoId: 'jardin-independencia', comuna: 'Independencia', piso: 3, m2: 50, dormitorios: 2, banos: 1, listaUF: 2450, arriendoEstimadoIA: 410000, origenArriendo: ORIGEN_ARRIENDO },

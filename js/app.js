@@ -462,7 +462,9 @@
       plural(d.banos, 'baño', 'baños') + SEP + d.m2 + NBSP + 'm²';
   }
 
-  var NOMBRE_TIPO = { conjunto: 'Compra en grupo', financiamiento: 'Pie compartido' };
+  var NOMBRE_TIPO = { conjunto: 'Compra en grupo', financiamiento: 'Pie compartido', venta: 'Terminado' };
+  // S18-F6: los terminados se compran solos y solo para vivir.
+  function paraVivir(p) { return p.tipo === 'conjunto' || p.tipo === 'venta'; }
 
   function cuposExtra(proyecto) {
     var tuyo = estado.compra && estado.compra.proyectoId === proyecto.id ? 1 : 0;
@@ -492,7 +494,17 @@
     if (p.tipo !== 'conjunto' || !p.entregaEstimada || (p.etapaObra || 0) >= 4) return 0;
     return Math.max(0, mesesEntre(hoyDemo(), p.entregaEstimada));
   }
-  function entregaPendiente(p) { return estado.modo === 'vivir' && mesesParaEntrega(p) > 0; }
+  // S18-F6: lo que hay que esperar aunque el pie esté listo: la entrega del edificio o los 12 meses de la cuenta de vivienda.
+  function esperaMinima(p) {
+    if (estado.modo !== 'vivir') return { meses: 0, freno: null };
+    var e = { meses: mesesParaEntrega(p), freno: 'entrega' };
+    if (plazoDepartamento(p).on.subsidio) {
+      var cuenta = Math.max(0, SUPUESTOS_PIEZAS.mesesCuentaVivienda - (estado.mesAhorro || 0));
+      if (cuenta > e.meses) e = { meses: cuenta, freno: 'cuenta-vivienda' };
+    }
+    return e;
+  }
+  function entregaPendiente(p) { return esperaMinima(p).meses > 0; }
 
   function barraAvance(texto, detalle, fraccion) {
     var pct = porcentajeEntero(fraccion);
@@ -592,6 +604,7 @@
   }
 
   function avanceDe(proyecto, r) {
+    if (proyecto.tipo === 'venta') return '';
     return proyecto.tipo === 'conjunto' ? personasGrupo(proyecto, r) : casaParticipacion(r);
   }
 
@@ -604,12 +617,16 @@
       texto: 'Es la cuota que pagas cada mes a Bci por el crédito hipotecario, con los seguros incluidos.' },
     'pie': { termino: 'Pie', pregunta: '¿Qué es el pie?',
       texto: 'Es la parte del precio que pones tú al comprar: 10 % si es para vivir, 5 % si es para arrendar, más los gastos de escritura.' },
+    'tu-limite': { termino: 'Tu límite', pregunta: '¿Cuál es el límite?',
+      texto: 'Lo que pagas al mes no puede pasar de 25 % de lo que ganan tú y tu pareja, y te tiene que quedar al menos 40 % para vivir.' },
     'carga': { termino: 'Carga', pregunta: '¿Qué es la carga?',
       texto: 'Es la parte de lo que ganan tú y tu pareja que se va cada mes en el dividendo. Bci pide que no pase de 25 %.' },
     'participacion': { termino: 'Participación', pregunta: '¿Qué es la participación de los inversionistas?',
       texto: 'Es el 15 % del departamento que ponen inversionistas. No es un préstamo: no te cobran una cuota, y el arriendo se los va recomprando.' },
     'cuenta-custodia': { termino: 'Cuenta custodia', pregunta: '¿Qué es la cuenta custodia?',
       texto: 'Es una cuenta de Bci donde entra el arriendo y desde la que se paga a los inversionistas y se recompra su parte.' },
+    'terminado': { termino: 'Departamento terminado', pregunta: '¿Qué es un departamento terminado?',
+      texto: 'Un departamento nuevo ya construido. Lo compras solo, sin grupo, y lo recibes al firmar.' },
     'compra-conjunto': { termino: 'Compra en grupo', pregunta: '¿Qué es la compra en grupo?',
       texto: 'Varias personas compran juntas en un proyecto y todas pagan menos: 3 % desde 5 unidades y 5 % desde 10.' },
     'comprador-respaldo': { termino: 'Comprador de respaldo', pregunta: '¿Qué es el comprador de respaldo?',
@@ -802,7 +819,7 @@
     var p = x.p;
     var r = resumen(p);
     var avisos = [];
-    var dias = diasEntre(hoyDemo(), p.cierre);
+    var dias = p.cierre ? diasEntre(hoyDemo(), p.cierre) : 0;
     var aviso = {
       cierre: dias > 0 ? 'El proyecto cierra en ' + plural(dias, 'día', 'días') + ', el ' + formatoFecha(p.cierre) + '.' : null,
       cupos: p.tipo === 'conjunto'
@@ -811,6 +828,7 @@
           : r.cuposLibres > 0
           ? 'El grupo lleva ' + r.cuposTomados + ' de ' + r.cupos + ' cupos: ' + (r.cuposLibres === 1 ? 'falta 1' : 'faltan ' + r.cuposLibres) + ' para completarlo.'
           : 'El grupo ya está completo.')
+        : p.tipo === 'venta' ? null
         : 'Ya se reunió el ' + formatoPorcentaje(r.avanceFinanciamiento, 0) + ' de la participación de 15\u00a0% con inversionistas.'
     };
     if (x.paso === 2 && estado.ahorroIniciado) {
@@ -1090,6 +1108,7 @@
   function proyectosDelModo() {
     return PROYECTOS.filter(function (p) {
       if (estado.modo === 'vivir' && p.tipo === 'financiamiento') return false;
+      if (estado.modo === 'arrendar' && p.tipo === 'venta') return false;
       return estado.modo !== 'arrendar' || resumen(p).pasaFiltro;
     });
   }
@@ -1189,31 +1208,43 @@
   // Los departamentos de verdad que hay para vivir en su rango.
   function candidatosVivir() {
     var r = rangoActual();
-    return PROYECTOS.filter(function (p) { return p.tipo === 'conjunto' && (!r || enRango(departamentosDe(p.id)[0].listaUF, r)); });
+    return PROYECTOS.filter(function (p) { return paraVivir(p) && (!r || enRango(departamentosDe(p.id)[0].listaUF, r)); });
   }
   // Sin departamento elegido: el piso y el techo del rango, con la entrega más próxima y la más lejana.
+  // S18-F6: los departamentos del rango que calzan con las piezas (grupo = en obra; sin IVA = terminados).
+  // El piso es el caso más rápido (un terminado, si hay) y el techo el más lento (la entrega más lejana).
   function deptosRango(on) {
+    on = on || {};
     var r = rangoActual() || { desde: 2000, hasta: LISTA_REFERENCIA_UF };
     var c = candidatosVivir().map(deptoDeProyecto);
-    var enObra = c.length > 0;
-    var entregas = c.map(function (x) { return x.mesesEntrega; });
+    if (on.grupo) c = c.filter(function (x) { return x.enObra; });
+    else if (on.iva) c = c.filter(function (x) { return !x.enObra; });
+    var obras = c.filter(function (x) { return x.enObra; });
+    var hayTerminado = c.some(function (x) { return !x.enObra; });
+    var entregas = obras.map(function (x) { return x.mesesEntrega; });
     // S18-F1: el descuento en grupo es el que los grupos del rango ya tienen hoy, no el 5 % de completarlos.
-    var desc = enObra ? Math.max.apply(null, c.map(function (x) { return x.descuento; })) : 0;
+    var desc = obras.length ? Math.max.apply(null, obras.map(function (x) { return x.descuento; })) : 0;
     var hasta = r.hasta;
-    if (on && on.subsidio) hasta = Math.min(hasta, SUPUESTOS_PIEZAS.topeSubsidioUF / (on.grupo ? 1 - desc : 1));
+    if (on.subsidio) hasta = Math.min(hasta, SUPUESTOS_PIEZAS.topeSubsidioUF / ((on.grupo ? 1 - desc : 1) * (on.iva ? 1 - SUPUESTOS_PIEZAS.bajaIVA : 1)));
+    var conObra = obras.length > 0;
     return {
-      desde: { listaUF: r.desde, enObra: enObra, mesesEntrega: enObra ? Math.min.apply(null, entregas) : 0, descuento: desc },
-      hasta: { listaUF: hasta, enObra: enObra, mesesEntrega: enObra ? Math.max.apply(null, entregas) : 0, descuento: desc }
+      desde: { listaUF: r.desde, enObra: conObra && !hayTerminado, mesesEntrega: conObra && !hayTerminado ? Math.min.apply(null, entregas) : 0, descuento: desc },
+      hasta: { listaUF: hasta, enObra: conObra, mesesEntrega: conObra ? Math.max.apply(null, entregas) : 0, descuento: desc }
     };
   }
   // Bloqueos de la pieza contando lo que hay de verdad en su rango (la app solo ofrece lo que puede cumplir).
   function bloqueoApp(id, on) {
     var c = candidatosVivir();
+    // S18-F6: el grupo compra en obra y sin IVA es solo para terminados: no se suman.
+    if (id === 'iva' && on && on.grupo) return { razon: 'En obra', como: 'Sin IVA es para terminados, y el grupo compra en obra.' };
+    if (id === 'grupo' && on && on.iva) return { razon: 'Terminado', como: 'El grupo compra en obra. Quita "Sin IVA" para sumarlo.' };
     if (id === 'iva' && !c.some(function (p) { return !deptoDeProyecto(p).enObra; }))
       return { razon: 'Sin terminados', como: 'Hoy no hay departamentos terminados en tu rango.' };
     if (id === 'subsidio' && !c.some(function (p) {
       var d = deptoDeProyecto(p);
-      return precioConPiezas(d.listaUF, Object.assign({}, on, { subsidio: false }), d.descuento) <= SUPUESTOS_PIEZAS.topeSubsidioUF + 1e-9;
+      var o = Object.assign({}, on, { subsidio: false });
+      if (o.grupo && !d.enObra || o.iva && d.enObra) return false;
+      return precioConPiezas(d.listaUF, o, d.descuento) <= SUPUESTOS_PIEZAS.topeSubsidioUF + 1e-9;
     })) return { razon: 'Sobre UF 2.200', como: 'En tu rango no hay de hasta UF 2.200. Prueba otro rango.' };
     if (id === 'grupo' && !c.length) return { razon: 'Sin grupos', como: 'Hoy no hay grupos en tu rango.' };
     return null;
@@ -1224,12 +1255,21 @@
     return v;
   }
   // El plazo de Mi camino: un rango (piso y techo) mientras no haya departamento.
-  function plazoVivir(mensual) {
-    var on = piezasValidas(piezasOn());
+  function plazoVivir(mensual, onForzado) {
+    var on = piezasValidas(onForzado || piezasOn());
     var pf = perfilPiezas();
     if (mensual) pf.ahorroMensual = mensual;
     var d = deptosRango(on);
     return { on: on, desde: calcularPiezas(pf, on, d.desde, hoyDemo()), hasta: calcularPiezas(pf, on, d.hasta, hoyDemo()), deptos: d, perfil: pf };
+  }
+  // S18-F5: "Todavía no" con piezas. Justo = ni el más barato del rango cabe con las piezas que elegiste.
+  function razonJusto(res) { return res && res.dividendo ? razonTodaviaNo(perfilActual(), res.dividendo) : null; }
+  // ¿Esta pieza (sumada a las que ya están) hace que el rango quepa?
+  function cabeCon(id, mensual) {
+    var on = Object.assign({}, piezasOn()); on[id] = true;
+    var v = piezasValidas(on);
+    if (!v[id]) return false;
+    return !razonJusto(plazoVivir(mensual, on).desde);
   }
   // El plazo de una compra o de un departamento elegido (un solo número).
   function plazoDepartamento(p, mensual) {
@@ -1240,7 +1280,7 @@
   }
   // Lo que hay que juntar antes de firmar en una compra: para vivir, con las piezas que aplican a ese departamento.
   function metaCompra(p) {
-    return estado.modo === 'vivir' && p.tipo === 'conjunto' ? plazoDepartamento(p).meta : resumen(p).escenario.alEscriturar;
+    return estado.modo === 'vivir' && paraVivir(p) ? plazoDepartamento(p).meta : resumen(p).escenario.alEscriturar;
   }
   function ahorradoTuPie(meta) { return estado.ahorroIniciado ? estado.ahorrado : Math.min(meta, estado.ahorroActual || 0); }
   // S17-F1: Tu pie usa la misma regla que Inicio: lo que falta y la entrega del edificio (si es en obra).
@@ -1249,6 +1289,8 @@
     if (estado.modo === 'vivir') {
       var d = deptoDeProyecto(p);
       if (d.enObra && d.mesesEntrega > 0) pisos.push({ meses: d.mesesEntrega, freno: 'entrega' });
+      var esp = esperaMinima(p);
+      if (esp.freno === 'cuenta-vivienda') pisos.push({ meses: esp.meses, freno: 'cuenta-vivienda' });
     }
     return plazoConPisos(meta - ahorradoTuPie(meta), estado.ahorroMensual, pisos);
   }
@@ -1290,7 +1332,9 @@
     var rango = rangoActual();
     var eligio = !!estado.caminoElegido;
     var siempre = plazoCreditoSiempre(x.perfil, x.deptos.hasta.listaUF);
-    var justo = rec && rec.todaviaNo;
+    var razon = razonJusto(x.desde);
+    var justo = !!razon;
+    var techoJusto = !justo && !!razonJusto(x.hasta);
 
     c.innerHTML =
       '<header class="encabezado">' + FIGURAS + campana() +
@@ -1299,7 +1343,7 @@
       '</header>' +
       (justo
         ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
-            '<h2 class="h3" id="titulo-plazo">Hoy te dejaría muy justo</h2></section>'
+            '<h2 class="h3" id="titulo-plazo">' + razon + ' ' + ayuda('tu-limite') + '</h2></section>'
         : '<section class="noche" aria-labelledby="titulo-plazo">' +
             '<span class="noche-luna" aria-hidden="true"></span>' +
             '<p class="noche-etiqueta" id="titulo-plazo">Tus llaves</p>' +
@@ -1309,6 +1353,7 @@
               VENTANAS_NOCHE.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
             '</div></div>' +
             '<span class="freno-llaves" id="freno-llaves">' + FRENO[x.hasta.freno] + '</span>' +
+            (techoJusto ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(x.deptos.hasta.listaUF) + ' te dejarían justo.</p>' : '') +
           '</section>') +
       '<p class="sello sello-bci">' + icono('i-escudo') + 'Con la garantía del Estado pones solo el 10 %</p>' +
       '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
@@ -1358,15 +1403,23 @@
     var x = plazoVivir();
     var on = x.on;
     var rango = rangoActual();
+    var razon = razonJusto(x.desde);
+    var justo = !!razon;
     var mejor = mejorPieza(x.perfil, on, x.deptos.hasta, hoyDemo());
     if (mejor && bloqueoApp(mejor, on)) mejor = null;
+    // S18-F5: con "Todavía no", la recomendada es la primera que lo cambia (y que existe hoy).
+    var cambia = {};
+    if (justo) {
+      ORDEN_PIEZAS.forEach(function (id) { cambia[id] = !on[id] && cabeCon(id); });
+      mejor = ['subsidio', 'iva', 'grupo'].filter(function (id) { return cambia[id] && !bloqueoApp(id, on); })[0] || null;
+    }
     var siempre = plazoCreditoSiempre(x.perfil, x.deptos.hasta.listaUF);
     var fila = function (id) {
       var pz = PIEZAS_VIVIR[id];
       var b = bloqueoApp(id, on) || (id === 'iva' || id === 'subsidio' ? bloqueoPieza(id, on, x.deptos.desde) : null);
       var activo = !!on[id];
-      var ef = b ? b.razon : efectoPieza(id, x.perfil, on, x.deptos.hasta, hoyDemo()).texto;
-      return '<li class="pieza-fila' + (activo ? ' on' : '') + (b ? ' bloq' : '') + '">' +
+      var ef = b ? b.razon : justo && !activo ? (cambia[id] ? 'Así cabe' : 'Aún no') : efectoPieza(id, x.perfil, on, x.deptos.hasta, hoyDemo()).texto;
+      return '<li class="pieza-fila' + (activo ? ' on' : '') + (b ? ' bloq' : '') + (justo && !b && !activo ? (cambia[id] ? ' cabe' : ' aun') : '') + '">' +
         '<span class="pieza-nombre">' + (mejor === id ? '<span class="pieza-estrella" aria-label="Recomendado">★</span>' : '') + pz.nombre +
           (pz.existeHoy ? '' : '<span class="chip-propuesta-mini">Propuesta</span>') + '</span>' +
         '<span class="pieza-efecto">' + ef + '</span>' +
@@ -1379,20 +1432,23 @@
       return '<h2 class="grupo-piezas" id="titulo-' + g + '">' + titulo + '</h2><ul class="lista-piezas" aria-labelledby="titulo-' + g + '">' +
         ORDEN_PIEZAS.filter(function (id) { return PIEZAS_VIVIR[id].grupo === g; }).map(fila).join('') + '</ul>';
     };
-    var cambio = mesesLlegaAntes !== null && x.hasta.meses !== null && mesesLlegaAntes !== x.hasta.meses ? mesesLlegaAntes - x.hasta.meses : 0;
-    mesesLlegaAntes = x.hasta.meses;
+    var cambio = !justo && mesesLlegaAntes !== null && x.hasta.meses !== null && mesesLlegaAntes !== x.hasta.meses ? mesesLlegaAntes - x.hasta.meses : 0;
+    mesesLlegaAntes = justo ? null : x.hasta.meses;
     cont.innerHTML =
       '<a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Mi camino</a>' +
       '<header class="encabezado"><h1 id="titulo-caminos" class="h2">Llega antes</h1>' +
         '<p class="texto-apoyo">' + (rango ? textoRango(rango) + SEP : '') + '<button type="button" class="enlace" id="btn-caminos-rango" aria-haspopup="dialog">Cambiar</button></p></header>' +
-      '<section class="llaves-hero" aria-labelledby="titulo-llaves">' +
+      (justo
+        ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-llaves"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
+            '<h2 class="h3" id="titulo-llaves" aria-live="polite">' + razon + ' ' + ayuda('tu-limite') + '</h2></section>'
+        : '<section class="llaves-hero" aria-labelledby="titulo-llaves">' +
         '<p class="noche-etiqueta" id="titulo-llaves">Tus llaves</p>' +
         '<strong class="numero noche-plazo" aria-live="polite">' + textoMesesRango(x.desde.meses, x.hasta.meses) + '</strong>' +
         '<p class="noche-sub">' + textoLlavesRango(x) + '</p>' +
         barraLlaves(x.hasta.avance) +
         '<span class="freno-llaves">' + (x.hasta.ivaTarde ? 'Sin IVA vence antes' + SEP : '') + FRENO[x.hasta.freno] + '</span>' +
         (cambio ? '<span class="cambio-llaves" aria-hidden="true">' + (cambio > 0 ? '−' : '+') + plural(Math.abs(cambio), 'mes', 'meses') + '</span>' : '') +
-      '</section>' +
+      '</section>') +
       '<div class="mini-datos">' +
         '<div><small>Juntas al mes</small><strong class="numero">' + (x.hasta.falta > 0 ? formatoRedondeado(x.hasta.freno === 'ahorro' ? estado.ahorroMensual : x.hasta.basta) : '$0') + '</strong></div>' +
         '<div><small>Después pagas al mes</small><strong class="numero">' + formatoRango(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
@@ -1410,7 +1466,11 @@
         '</ul>' +
         '<button type="button" class="btn btn-terciario btn-bloque" data-simular="' + (on.grupo ? 'grupo-vivir' : 'individual-vivir') + '" aria-haspopup="dialog">Ver simulación</button>') +
       '<p class="sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
-      '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-llega-elegir">Elegir departamento</button></div>';
+      (justo ? '<p class="texto-centro"><a class="enlace" href="#camino/ficha/arriendo-opcion">Mientras tanto: arriendo con opción de compra</a></p>' : '') +
+      '<div class="accion-fija">' + (justo
+        ? (registro.recordarme ? '<a href="#camino" class="btn btn-secundario-dark btn-lg btn-bloque">Volver a mi camino</a>'
+          : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-recordarme" data-meses="' + mesesRecordar(perfilActual(), 'individual-vivir') + '">Recordarme en ' + mesesRecordar(perfilActual(), 'individual-vivir') + ' meses</button>')
+        : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-llega-elegir">Elegir departamento</button>') + '</div>';
 
     iniciarPlegables();
     cont.querySelectorAll('[data-q]').forEach(function (b) {
@@ -1435,7 +1495,13 @@
     });
     cont.querySelectorAll('[data-simular]').forEach(function (b) { b.addEventListener('click', function () { abrirSimulacion(b.dataset.simular, b); }); });
     $('btn-caminos-rango').addEventListener('click', function () { abrirCambiarRango($('btn-caminos-rango')); });
-    $('btn-llega-elegir').addEventListener('click', function () {
+    if ($('btn-recordarme')) $('btn-recordarme').addEventListener('click', function () {
+      registro.recordarme = Number($('btn-recordarme').dataset.meses);
+      guardarRegistro();
+      toast('Listo: te avisamos en ' + registro.recordarme + ' meses (simulado).');
+      renderLlegaAntes();
+    });
+    if ($('btn-llega-elegir')) $('btn-llega-elegir').addEventListener('click', function () {
       // El camino sale de las piezas: con grupo, compra en grupo; si no, el crédito con la garantía del Estado.
       elegirCamino(piezasValidas(piezasOn()).grupo ? 'grupo-vivir' : 'individual-vivir');
     });
@@ -1589,8 +1655,10 @@
     var d = departamentosDe(p.id)[0];
     // S18-F1 y F4: el ahorro de hoy, redondeado; el de completar el grupo, como posibilidad.
     var completo = r.ahorroCompleto > r.ahorro ? formatoRedondeado(r.ahorroCompleto) + ' si se completa' : '';
+    var conIva = p.tipo === 'venta' && estado.modo === 'vivir' && piezasValidas(piezasOn()).iva;
     var numero = p.tipo !== 'conjunto'
-      ? '<p class="etiqueta">Precio del departamento</p><strong class="numero display-4">' + formatoRedondeado(r.escenario.precio) + '</strong>'
+      ? '<p class="etiqueta">Precio' + (conIva ? ' sin IVA' : ' del departamento') + '</p><strong class="numero display-4">' +
+        formatoRedondeado(p.tipo === 'venta' && estado.modo === 'vivir' ? ufAPesos(plazoDepartamento(p).precioUF) : r.escenario.precio) + '</strong>'
       : r.ahorro > 0
       ? '<p class="etiqueta">Ahorras al unirte</p><strong class="numero display-4">' + formatoRedondeado(r.ahorro) + '</strong>' +
         (completo ? '<p class="texto-apoyo">' + completo + '</p>' : '')
@@ -1602,7 +1670,7 @@
       numero +
       lineaMasBarato(p, r, d) +
       avanceDe(p, r) +
-      '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
+      '<p class="cierre">' + (p.cierre ? 'Cierra el ' + formatoFecha(p.cierre) : 'Terminado' + SEP + 'lo recibes al firmar') + '</p>' +
       '<span class="ver">Ver proyecto <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span>' +
       '</a></li>';
   }
@@ -1622,12 +1690,16 @@
   function proyectosVisibles(ctx) {
     var arrendar = estado.modo === 'arrendar';
     var lista = PROYECTOS.filter(function (p) {
-      return (arrendar || p.tipo === 'conjunto') && (!arrendar || resumen(p).pasaFiltro);
+      return arrendar ? p.tipo !== 'venta' && resumen(p).pasaFiltro : paraVivir(p);
     });
     var soloCamino = ctx === 'camino' || !estado.verTodos;
     var c = estado.caminoElegido && CAMINOS[estado.caminoElegido];
     if (soloCamino && c && !c.ficha) {
       if (c.grupo) lista = lista.filter(function (p) { return p.tipo === 'conjunto'; });
+      // S18-F6: con "Sin IVA", solo los terminados (es donde aplica).
+      else if (estado.modo === 'vivir' && piezasValidas(piezasOn()).iva) lista = lista.filter(function (p) { return p.tipo === 'venta'; });
+      // Con el subsidio, solo los que quedan bajo el tope con las demás piezas.
+      if (estado.modo === 'vivir' && piezasValidas(piezasOn()).subsidio) lista = lista.filter(function (p) { return plazoDepartamento(p).on.subsidio; });
       else if (c.inversionistas > 0) lista = lista.filter(function (p) { return p.tipo === 'financiamiento'; });
     }
     var rango = rangoActual();
@@ -1843,6 +1915,15 @@
     return partes;
   }
 
+  // S18-F6: para vivir, el reparto sale de las piezas: Bci, el subsidio del Estado (si se suma) y tú.
+  function partesPiezas(pd) {
+    var precio = pd.precioUF;
+    var partes = [{ clave: 'bci', icono: 'i-banco', nombre: 'Bci', pct: pd.creditoUF / precio, monto: ufAPesos(pd.creditoUF) }];
+    if (pd.subsidioUF > 0) partes.push({ clave: 'estado', icono: 'i-escudo', nombre: 'subsidio', pct: pd.subsidioUF / precio, monto: ufAPesos(pd.subsidioUF) });
+    partes.push({ clave: 'tu', icono: 'i-persona', nombre: 'tú', pct: pd.pie / ufAPesos(precio), monto: pd.pie });
+    return partes;
+  }
+
   // S15: el detalle muestra solo la acción de la pestaña desde la que se llegó.
   // ctx: 'camino' (Elegir este departamento), 'departamentos' (Llevar a mi camino) o 'inversiones' (Invertir aquí).
   var VOLVER_DETALLE = {
@@ -1850,6 +1931,7 @@
   };
   function caminoParaProyecto(p) {
     var c = estado.caminoElegido && CAMINOS[estado.caminoElegido];
+    if (p.tipo === 'venta') return 'individual-vivir';
     if (p.tipo === 'conjunto') {
       if (c && c.grupo) return estado.caminoElegido;
       return estado.modo === 'vivir' ? 'grupo-vivir' : 'grupo-pie-compartido';
@@ -1876,7 +1958,7 @@
     var d = departamentosDe(p.id)[0];
     var conjunto = p.tipo === 'conjunto';
     var esMiCompra = estado.compra && estado.compra.proyectoId === p.id;
-    var vivirAqui = estado.modo === 'vivir' && conjunto && ctx !== 'inversiones' && estado.preguntasListas;
+    var vivirAqui = estado.modo === 'vivir' && paraVivir(p) && ctx !== 'inversiones' && estado.preguntasListas;
     var pd = vivirAqui ? plazoDepartamento(p) : null;
 
     var precio = conjunto
@@ -1896,7 +1978,7 @@
 
     var invertiste = invertidoEn(p.id) > 0;
     var comprar;
-    if (!conjunto && estado.modo === 'vivir' && !esMiCompra) {
+    if (p.tipo === 'financiamiento' && estado.modo === 'vivir' && !esMiCompra) {
       comprar = '<p class="aviso">El pie compartido es para comprar para arrendar: los inversionistas recuperan su parte con el arriendo.</p>' +
         '<button type="button" class="btn btn-terciario btn-bloque" id="btn-detalle-datos">Cambiar mis datos</button>';
     } else if (esMiCompra) {
@@ -1935,7 +2017,7 @@
     contenedor.innerHTML =
       '<header class="detalle-cabecera">' +
         '<p class="chip-fila"><span class="chip">' + NOMBRE_TIPO[p.tipo] + '</span> ' +
-          ayuda(conjunto ? 'compra-conjunto' : 'financiamiento-pie') + '</p>' +
+          ayuda(conjunto ? 'compra-conjunto' : p.tipo === 'venta' ? 'terminado' : 'financiamiento-pie') + '</p>' +
         '<h1 id="titulo-proyecto" class="h2">' + esc(p.nombre) + '</h1>' +
         '<p class="texto-apoyo">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       '</header>' +
@@ -1949,7 +2031,7 @@
             '<ul class="datos-inversion">' +
               '<li><span>Juntas antes de firmar</span><strong>' + formatoRedondeado(pd.meta) + '</strong></li>' +
               '<li><span>Después pagas al mes</span><strong>' + formatoRedondeado(pd.dividendo) + '</strong></li>' +
-              '<li><span>Precio' + (conjunto ? ' con descuento' : '') + '</span><strong>' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong></li>' +
+              '<li><span>Precio' + (conjunto ? ' con descuento' : p.tipo === 'venta' && piezasValidas(piezasOn()).iva ? ' sin IVA' : '') + '</span><strong>' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong></li>' +
               (conjunto ? '<li><span>Ahorras en grupo hoy</span><strong>' + formatoRedondeado(r.ahorro) + '</strong></li>' : '') +
               (conjunto && r.ahorroCompleto > r.ahorro ? '<li><span>Si se completa</span><strong>' + formatoRedondeado(r.ahorroCompleto) + '</strong></li>' : '') +
             '</ul>' +
@@ -1965,20 +2047,22 @@
       '<div class="tarjeta bloque">' +
         '<h2 class="h5">De dónde sale el precio</h2>' +
         // S18-F4: para vivir, redondeado; los exactos quedan en la simulación, la preaprobación y Firmar.
-        repartoCasa(partesEscenario(e), vivirAqui ? formatoRedondeado : formatoPesos) +
+        (vivirAqui ? repartoCasa(partesPiezas(pd), formatoRedondeado) : repartoCasa(partesEscenario(e))) +
         '<ul class="datos-inversion">' +
-          '<li><span>Gastos de escritura</span><strong>' + (vivirAqui ? formatoRedondeado : formatoPesos)(e.gastos) + '</strong></li>' +
+          '<li><span>Gastos de escritura</span><strong>' + (vivirAqui ? formatoRedondeado(pd.gastos) : formatoPesos(e.gastos)) + '</strong></li>' +
           (vivirAqui ? '' : '<li><span>Juntas antes de firmar</span><strong>' + formatoPesos(e.alEscriturar) + '</strong></li>') +
-          '<li><span>Sin subsidio a la tasa ' + ayuda('dividendo') + '</span><strong>' + (vivirAqui ? formatoRedondeado : formatoPesos)(e.dividendoSinSubsidio) + ' al mes</strong></li>' +
+          '<li><span>Sin subsidio a la tasa ' + ayuda('dividendo') + '</span><strong>' + (vivirAqui ? formatoRedondeado(pd.dividendoSinSubsidio) : formatoPesos(e.dividendoSinSubsidio)) + ' al mes</strong></li>' +
           '<li><span>Inmobiliaria cliente de Bci ' + ayuda('cliente-bci') + '</span><strong>' + (p.clienteBci ? 'Sí' : 'No') + '</strong></li>' +
         '</ul>' +
       '</div>' +
 
-      '<div class="tarjeta bloque">' +
+      (p.tipo === 'venta'
+        ? '<div class="tarjeta bloque"><p class="llaves-en">' + icono('i-llave', 'icono-llave') + '<span><strong>Edificio terminado</strong>' + SEP + 'lo recibes al firmar</span></p></div>'
+        : '<div class="tarjeta bloque">' +
         (p.tipo === 'conjunto' ? grupoConEdificio(p, r) : avanceDe(p, r)) +
         '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
         '<p class="frase-cierre">' + frase + '</p>' +
-      '</div>' +
+      '</div>') +
 
       (ctx !== 'inversiones' ? '' :
       '<section class="tarjeta bloque" aria-labelledby="titulo-para-invertir">' +
@@ -3093,26 +3177,27 @@
 
   // S18-F2: el pie está listo y falta la entrega. Tus llaves las fija el edificio; la demo puede saltar a ese mes.
   function renderPieListo(p, d, meta, cabecera, cuentaGrupo) {
-    var m = mesesParaEntrega(p);
+    var esp = esperaMinima(p);
+    var m = esp.meses;
     $('panel-compra').innerHTML = cabecera +
       '<section aria-labelledby="titulo-tu5">' +
         '<div class="tarjeta resultado-meses">' +
           '<p class="sello"><svg aria-hidden="true"><use href="#i-ok"/></svg>Tu pie está listo</p>' +
           '<p class="etiqueta">Tus llaves en</p>' +
           '<strong class="numero display-2">' + textoMeses(m) + '</strong>' +
-          '<p class="texto-apoyo">' + fechaLlaves(m, hoyDemo()) + SEP + FRENO.entrega + '</p>' +
+          '<p class="texto-apoyo">' + fechaLlaves(m, hoyDemo()) + SEP + FRENO[esp.freno] + '</p>' +
           barraHitos(estado.ahorrado, meta) +
           cuentaGrupo +
         '</div>' +
-        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-saltar-entrega">Ir a la entrega · demo</button></div>' +
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-saltar-entrega">' + (esp.freno === 'entrega' ? 'Ir a la entrega · demo' : 'Ir a tu firma · demo') + '</button></div>' +
         bloqueJuntos() +
-        tuGrupoYObra(p) +
+        (p.tipo === 'conjunto' ? tuGrupoYObra(p) : '') +
       '</section>';
     iniciarJuntos(p, d);
     iniciarPlegables();
     prepararSeUne(p, d);
     $('btn-saltar-entrega').addEventListener('click', function () {
-      estado.mesAhorro = (estado.mesAhorro || 0) + mesesParaEntrega(p);
+      estado.mesAhorro = (estado.mesAhorro || 0) + esperaMinima(p).meses;
       guardarEstado();
       guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
       llegoAFirma = true;
@@ -4091,7 +4176,8 @@
     var perfil = perfilActual();
     var r = recomendarCamino(perfil);
     // S17-F9: para vivir, Llega antes reemplaza el carrusel y la carrera.
-    if (estado.modo === 'vivir' && !r.todaviaNo) return renderLlegaAntes();
+    // S18-F5: también para "Todavía no": las piezas dicen si lo cambian.
+    if (estado.modo === 'vivir') return renderLlegaAntes();
     // S15-F3: no todas las opciones: las que sirven, comparadas con el crédito de siempre.
     var sel = caminosParaMostrar(perfil, r);
     var ids = sel.mostrados;

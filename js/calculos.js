@@ -621,6 +621,14 @@ var CAMINOS = {
     ficha: true, existeHoy: false }
 };
 
+// S18-F5: ¿Cabe con estas piezas? La misma regla (carga y Tu mes real) con la cuota que dan las piezas.
+// Devuelve null si cabe, o la razón en pocas palabras.
+function razonTodaviaNo(perfil, dividendo) {
+  var s = sostenible(perfil, dividendo);
+  if (!s || s.cumple) return null;
+  return !s.cumpleCarga ? 'La cuota pasa tu límite' : 'Te quedaría poco para vivir';
+}
+
 // Los caminos de cada modo, en el orden en que se muestran.
 function caminosDelModo(modo) {
   return modo === 'vivir'
@@ -1308,6 +1316,8 @@ function calcularPiezas(perfil, onEntrada, depto, hoyISO) {
     pie: ufAPesos(pie), gastos: ufAPesos(gastos), meta: ufAPesos(metaUF), tienes: ufAPesos(tienesUF), falta: ufAPesos(faltaUF),
     meses: plazo.meses, freno: plazo.freno, basta: plazo.basta, avance: metaUF > 0 ? Math.min(1, tienesUF / metaUF) : 1,
     dividendo: dividendo,
+    // Peor caso: sin subsidio a la tasa (si se acaban los cupos).
+    dividendoSinSubsidio: ufAPesos(cuotaFija(credito, SUPUESTOS.tasaSinSubsidio, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF),
     ivaTarde: on.iva && plazo.meses !== null && plazo.meses > mesesEntre(hoy, S.finIVA),
     llaves: plazo.meses === null ? null : fechaLlaves(plazo.meses, hoy)
   };
@@ -1466,6 +1476,7 @@ if (typeof module !== 'undefined') module.exports = {
   mesesEntre: mesesEntre,
   fechaLlaves: fechaLlaves,
   fechaMasMeses: fechaMasMeses,
+  razonTodaviaNo: razonTodaviaNo,
   unidadesHoy: unidadesHoy,
   plazoConPisos: plazoConPisos,
   formatoRedondeado: formatoRedondeado,

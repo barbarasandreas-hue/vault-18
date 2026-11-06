@@ -42,3 +42,37 @@ test('Un solo reloj: la fecha de la demo avanza mes a mes', () => {
   assert.strictEqual(c.mesesEntre('2026-11-03', mirador.entregaEstimada), 14);
   assert.strictEqual(c.mesesEntre(c.fechaMasMeses('2026-11-03', 14), mirador.entregaEstimada), 0);
 });
+
+// Bloque 2
+test('Datos: al menos 3 departamentos para vivir por rango, con un terminado y uno de hasta UF 2.200 en UF 2.000 a 2.500', () => {
+  const vivir = datos.PROYECTOS.filter((p) => p.tipo === 'conjunto' || p.tipo === 'venta');
+  for (const r of c.RANGOS_PRECIO) {
+    const en = vivir.filter((p) => c.enRango(datos.departamentosDe(p.id)[0].listaUF, r));
+    assert.ok(en.length >= 3, `${r.id}: ${en.length}`);
+  }
+  const r25 = c.RANGOS_PRECIO.find((r) => r.id === '2000-2500');
+  const en25 = vivir.filter((p) => c.enRango(datos.departamentosDe(p.id)[0].listaUF, r25));
+  assert.ok(en25.some((p) => p.tipo === 'venta'), 'falta un terminado');
+  assert.ok(en25.some((p) => datos.departamentosDe(p.id)[0].listaUF <= 2200), 'falta uno de hasta UF 2.200');
+  for (const p of datos.PROYECTOS.filter((x) => x.tipo === 'venta')) assert.strictEqual(p.etapaObra, 4);
+});
+
+test('Todavía no con piezas: la razón y el subsidio que lo cambia', () => {
+  const solo = { modo: 'vivir', sueldoPropio: 1100000, sueldoPareja: 0, otrasCuotas: 0 };
+  const pf = { ahorroActual: 0, ahorroMensual: 250000 };
+  const sin = c.calcularPiezas(pf, {}, { listaUF: 1500, enObra: false, mesesEntrega: 0 }, '2026-11-03');
+  assert.strictEqual(c.razonTodaviaNo(solo, sin.dividendo), 'La cuota pasa tu límite');
+  const con = c.calcularPiezas(pf, { subsidio: true }, { listaUF: 1500, enObra: false, mesesEntrega: 0 }, '2026-11-03');
+  assert.ok(con.dividendo < sin.dividendo);
+  assert.strictEqual(c.razonTodaviaNo(solo, con.dividendo), null);
+});
+
+test('Sin IVA y subsidio se suman en un terminado de UF 2.300', () => {
+  const pf = { ahorroActual: 3000000, ahorroMensual: 600000 };
+  const d = { listaUF: 2300, enObra: false, mesesEntrega: 0 };
+  assert.ok(c.bloqueoPieza('subsidio', {}, d)); // sobre UF 2.200 sin rebaja
+  const r = c.calcularPiezas(pf, { iva: true, subsidio: true }, d, '2026-11-03');
+  assert.ok(r.on.iva && r.on.subsidio);
+  assert.strictEqual(Math.round(r.precioUF), 2070);
+  assert.strictEqual(r.freno, 'cuenta-vivienda');
+});
