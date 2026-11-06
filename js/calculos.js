@@ -473,8 +473,10 @@ function saldoDeuda(montoUF, tasaAnual, meses, cuotasPagadas, abonos) {
   return Math.max(0, saldo - descuento);
 }
 
-function saldoBciUF(precio, cuotasPagadas, modo) {
-  return saldoDeuda(precio * modoDe(modo).credito, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci, cuotasPagadas, []);
+// pctCredito (S18-F7): la parte que presta Bci si no es la del modo (por ejemplo, con subsidio o respaldo).
+function saldoBciUF(precio, cuotasPagadas, modo, pctCredito) {
+  var pct = typeof pctCredito === 'number' ? pctCredito : modoDe(modo).credito;
+  return saldoDeuda(precio * pct, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci, cuotasPagadas, []);
 }
 
 // Pesos a UF (para registrar un abono).
@@ -970,9 +972,9 @@ function patrimonioUF(precioUF, saldoBciUF, saldoParticipacionUF) {
   return Math.max(0, precioUF - saldoBciUF - (saldoParticipacionUF || 0));
 }
 // Cuánto creció en un mes: lo que se recompró más lo que bajó la deuda con Bci.
-function crecimientoMesUF(precioUF, mes, modo, recompraUF) {
-  var antes = saldoBciUF(precioUF, mes - 1, modo);
-  var despues = saldoBciUF(precioUF, mes, modo);
+function crecimientoMesUF(precioUF, mes, modo, recompraUF, pctCredito) {
+  var antes = saldoBciUF(precioUF, mes - 1, modo, pctCredito);
+  var despues = saldoBciUF(precioUF, mes, modo, pctCredito);
   return (recompraUF || 0) + (antes - despues);
 }
 

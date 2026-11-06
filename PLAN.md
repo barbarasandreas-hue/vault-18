@@ -959,6 +959,6 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 | 18 | S18-F4 Precisión en Elegir y Detalle | en progreso |
 | 18 | S18-F5 Tu camino y Llega antes también para "Todavía no" | en progreso |
 | 18 | S18-F6 Datos de ejemplo para que las piezas se vean | en progreso |
-| 18 | S18-F7 Firmar en filas y con las piezas elegidas | pendiente |
-| 18 | S18-F8 Mi departamento e Inicio después de firmar | pendiente |
-| 18 | S18-F9 Revisión de palabras en todo el modo vivir | pendiente |
+| 18 | S18-F7 Firmar en filas y con las piezas elegidas | en progreso |
+| 18 | S18-F8 Mi departamento e Inicio después de firmar | en progreso |
+| 18 | S18-F9 Revisión de palabras en todo el modo vivir | en progreso |

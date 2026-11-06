@@ -180,10 +180,16 @@
     return avatarSVG(estado.avatar, tam, clase) + companeros().map(function (m) { return avatarMiembro(m, Math.round(tam * 0.88), clase); }).join('');
   }
   function textoEquipo() {
+    // S18-F8: dice a quién, no cuántos: "Con tu pareja y 2 personas más".
     var n = contarEquipo(estado.equipo, estado.avatar && estado.avatar.mascota);
     if (!n.personas && !n.mascotas) return '';
-    return 'Tu equipo te acompañó: ' + [n.personas ? plural(n.personas, 'persona', 'personas') : '', n.mascotas ? plural(n.mascotas, 'mascota', 'mascotas') : '']
-      .filter(Boolean).join(' y ');
+    var pareja = (estado.equipo || []).some(function (x) { return x.relacion === 'pareja'; });
+    var otros = n.personas - (pareja ? 1 : 0);
+    var partes = [];
+    if (pareja) partes.push('tu pareja');
+    if (otros) partes.push(pareja ? plural(otros, 'persona más', 'personas más') : plural(otros, 'persona', 'personas'));
+    if (n.mascotas) partes.push(n.mascotas === 1 ? 'tu mascota' : plural(n.mascotas, 'mascota', 'mascotas'));
+    return 'Con ' + partes.join(' y ').replace(/ y (?=[^y]* y )/, ', ');
   }
 
   // S16-F1: el creador, en una hoja. Sin opción de género; lo que no se elige queda neutro.
@@ -482,9 +488,28 @@
   }
 
   // S18-F1: para vivir, el precio usa el descuento que el grupo ya tiene (contándote); completar el grupo es posibilidad.
-  function resumen(proyecto) {
+  function resumenBase(proyecto) {
     var op = estado.modo === 'vivir' ? { descuentoHoy: true, yaEstas: esMiProyecto(proyecto) } : null;
     return resumenProyecto(proyecto, departamentosDe(proyecto.id), cuposExtra(proyecto), invertidoEn(proyecto.id), modoFinanciero(proyecto), op);
+  }
+  // S18-F7: para vivir, el crédito de toda la compra (Postular, preaprobación, Firmar y Mi departamento)
+  // sale de las mismas piezas que el Detalle y Tu pie: precio con descuento o sin IVA, subsidio y respaldo.
+  function resumen(proyecto) {
+    var r = resumenBase(proyecto);
+    if (estado.modo === 'vivir' && paraVivir(proyecto)) r.escenario = escenarioConPiezas(proyecto, r.escenario);
+    return r;
+  }
+  function escenarioConPiezas(p, e) {
+    var pd = plazoDepartamento(p);
+    var precio = ufAPesos(pd.precioUF), bci = ufAPesos(pd.creditoUF), subsidio = ufAPesos(pd.subsidioUF);
+    return Object.assign({}, e, {
+      precioUF: pd.precioUF, precio: precio,
+      pctCredito: pd.creditoUF / pd.precioUF, pctUsuario: pd.pie / precio, pctInversionistas: 0, pctSubsidio: pd.subsidioUF / pd.precioUF,
+      pie: pd.pie, gastos: pd.gastos, alEscriturar: pd.meta,
+      dividendo: pd.dividendo, totalMes: pd.dividendo, dividendoSinSubsidio: pd.dividendoSinSubsidio,
+      participacionUF: 0, subsidio: subsidio, conPiezas: pd.on,
+      reparto: { bci: bci, inversionistas: 0, usuario: precio - bci - subsidio, subsidio: subsidio }
+    });
   }
   // S18-F2: un solo reloj. Cada "mes" de la demo mueve la fecha de hoy para el ahorro, la obra, el cierre y los avisos.
   function hoyDemo() { return fechaMasMeses(FECHA_REFERENCIA, estado.mesAhorro || 0); }
@@ -750,7 +775,7 @@
       p: p, paso: 4, etapa: 'Paso 5 de 5' + SEP + 'Mi departamento, mes ' + m.mes,
       etiqueta: m.excedente > 0 ? 'Este mes te sobraron' : (estado.modo === 'arrendar' ? 'Este mes pusiste' : 'Este mes pagaste'),
       numero: formatoPesos(m.excedente > 0 ? m.excedente : m.pone),
-      detalle: estado.modo !== 'arrendar' ? 'Tu dividendo, en vez del arriendo que pagabas.'
+      detalle: estado.modo !== 'arrendar' ? (estado.arriendoActual > 0 ? 'Antes pagabas ' + formatoRedondeado(estado.arriendoActual) + ' de arriendo.' : 'En algo que es tuyo.')
         : (m.porcentajeTuyo < 100 ? 'Ya es tuyo el ' + m.porcentajeTuyo + '\u00a0% del departamento.'
           : (m.excedente > 0 ? 'El arriendo alcanzó para todo el dividendo.' : 'El arriendo cubrió ' + formatoPesos(m.cascada.aUsuario) + ' del dividendo.')),
       accion: 'Ver mi departamento'
@@ -1203,7 +1228,7 @@
     var d = departamentosDe(p.id)[0];
     return { listaUF: d.listaUF, enObra: p.tipo === 'conjunto' && (p.etapaObra || 0) < 4,
       mesesEntrega: mesesParaEntrega(p),
-      descuento: p.tipo === 'conjunto' ? resumen(p).descuento : 0 };
+      descuento: p.tipo === 'conjunto' ? resumenBase(p).descuento : 0 };
   }
   // Los departamentos de verdad que hay para vivir en su rango.
   function candidatosVivir() {
@@ -1264,12 +1289,36 @@
   }
   // S18-F5: "Todavía no" con piezas. Justo = ni el más barato del rango cabe con las piezas que elegiste.
   function razonJusto(res) { return res && res.dividendo ? razonTodaviaNo(perfilActual(), res.dividendo) : null; }
-  // ¿Esta pieza (sumada a las que ya están) hace que el rango quepa?
-  function cabeCon(id, mensual) {
+  // ¿Algún departamento real del rango cabe con estas piezas? (no el piso teórico del rango:
+  // "Así cabe" tiene que poder cumplirse al elegir). Devuelve { cabe, razon } con el más barato.
+  function evaluarCabe(onEntrada) {
+    var v = piezasValidas(onEntrada || piezasOn());
+    var pf = perfilPiezas();
+    var mejor = null;
+    candidatosVivir().forEach(function (p) {
+      var d = deptoDeProyecto(p);
+      if (v.grupo && !d.enObra || v.iva && d.enObra) return;
+      var res = calcularPiezas(pf, Object.assign({}, v, { grupo: p.tipo === 'conjunto' }), d, hoyDemo());
+      if (!mejor || res.dividendo < mejor.dividendo) mejor = res;
+    });
+    if (!mejor) return { cabe: true, razon: null };
+    var razon = razonJusto(mejor);
+    return { cabe: !razon, razon: razon };
+  }
+  // ¿Esta pieza (sumada a las que ya están) hace que quepa?
+  // 'sola' si basta con esta; 'con-otra' si cabe sumando una pieza más que también lo baja; si no, false.
+  function cabeCon(id) {
     var on = Object.assign({}, piezasOn()); on[id] = true;
-    var v = piezasValidas(on);
-    if (!v[id]) return false;
-    return !razonJusto(plazoVivir(mensual, on).desde);
+    if (!piezasValidas(on)[id]) return false;
+    if (evaluarCabe(on).cabe) return 'sola';
+    var otra = ['subsidio', 'iva', 'grupo'].some(function (o) {
+      if (o === id || on[o]) return false;
+      var on2 = Object.assign({}, on); on2[o] = true;
+      var sinEsta = Object.assign({}, piezasOn()); sinEsta[o] = true;
+      // Solo cuenta si esta pieza hace falta: con la otra sola no basta.
+      return piezasValidas(on2)[o] && evaluarCabe(on2).cabe && !evaluarCabe(sinEsta).cabe;
+    });
+    return otra ? 'con-otra' : false;
   }
   // El plazo de una compra o de un departamento elegido (un solo número).
   function plazoDepartamento(p, mensual) {
@@ -1332,7 +1381,7 @@
     var rango = rangoActual();
     var eligio = !!estado.caminoElegido;
     var siempre = plazoCreditoSiempre(x.perfil, x.deptos.hasta.listaUF);
-    var razon = razonJusto(x.desde);
+    var razon = evaluarCabe().razon;
     var justo = !!razon;
     var techoJusto = !justo && !!razonJusto(x.hasta);
 
@@ -1403,7 +1452,7 @@
     var x = plazoVivir();
     var on = x.on;
     var rango = rangoActual();
-    var razon = razonJusto(x.desde);
+    var razon = evaluarCabe(on).razon;
     var justo = !!razon;
     var mejor = mejorPieza(x.perfil, on, x.deptos.hasta, hoyDemo());
     if (mejor && bloqueoApp(mejor, on)) mejor = null;
@@ -1411,14 +1460,15 @@
     var cambia = {};
     if (justo) {
       ORDEN_PIEZAS.forEach(function (id) { cambia[id] = !on[id] && cabeCon(id); });
-      mejor = ['subsidio', 'iva', 'grupo'].filter(function (id) { return cambia[id] && !bloqueoApp(id, on); })[0] || null;
+      mejor = ['subsidio', 'iva', 'grupo'].filter(function (id) { return cambia[id] === 'sola' && !bloqueoApp(id, on); })[0] ||
+        ['subsidio', 'iva', 'grupo'].filter(function (id) { return cambia[id] && !bloqueoApp(id, on); })[0] || null;
     }
     var siempre = plazoCreditoSiempre(x.perfil, x.deptos.hasta.listaUF);
     var fila = function (id) {
       var pz = PIEZAS_VIVIR[id];
       var b = bloqueoApp(id, on) || (id === 'iva' || id === 'subsidio' ? bloqueoPieza(id, on, x.deptos.desde) : null);
       var activo = !!on[id];
-      var ef = b ? b.razon : justo && !activo ? (cambia[id] ? 'Así cabe' : 'Aún no') : efectoPieza(id, x.perfil, on, x.deptos.hasta, hoyDemo()).texto;
+      var ef = b ? b.razon : justo && activo ? 'Sumado' : justo && !activo ? (cambia[id] === 'sola' ? 'Así cabe' : cambia[id] ? 'Con otra, cabe' : 'Aún no') : efectoPieza(id, x.perfil, on, x.deptos.hasta, hoyDemo()).texto;
       return '<li class="pieza-fila' + (activo ? ' on' : '') + (b ? ' bloq' : '') + (justo && !b && !activo ? (cambia[id] ? ' cabe' : ' aun') : '') + '">' +
         '<span class="pieza-nombre">' + (mejor === id ? '<span class="pieza-estrella" aria-label="Recomendado">★</span>' : '') + pz.nombre +
           (pz.existeHoy ? '' : '<span class="chip-propuesta-mini">Propuesta</span>') + '</span>' +
@@ -1669,6 +1719,8 @@
       '<p class="texto-apoyo ficha">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       numero +
       lineaMasBarato(p, r, d) +
+      (estado.modo === 'vivir' && estado.preguntasListas && paraVivir(p) && razonJusto(plazoDepartamento(p))
+        ? '<p class="texto-apoyo aviso-justo">' + icono('i-alerta') + 'Te dejaría justo</p>' : '') +
       avanceDe(p, r) +
       '<p class="cierre">' + (p.cierre ? 'Cierra el ' + formatoFecha(p.cierre) : 'Terminado' + SEP + 'lo recibes al firmar') + '</p>' +
       '<span class="ver">Ver proyecto <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span>' +
@@ -1707,6 +1759,11 @@
     if (estado.masBaratoTipo !== null) lista = lista.filter(function (p) { return departamentosDe(p.id)[0].dormitorios === DORMITORIOS[estado.masBaratoTipo]; });
     var cap = capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo);
     if (estado.meAlcanza && cap !== null) lista = lista.filter(function (p) { return resumen(p).escenario.precioUF <= cap; });
+    // S18-F5: para vivir, primero los que te caben con tus piezas.
+    if (estado.modo === 'vivir' && estado.preguntasListas) {
+      lista = lista.map(function (p, i) { return { p: p, i: i, justo: !!razonJusto(plazoDepartamento(p)) }; })
+        .sort(function (a, b) { return (a.justo - b.justo) || (a.i - b.i); }).map(function (x) { return x.p; });
+    }
     return lista;
   }
   function filtrosActivos() {
@@ -2049,7 +2106,7 @@
         // S18-F4: para vivir, redondeado; los exactos quedan en la simulación, la preaprobación y Firmar.
         (vivirAqui ? repartoCasa(partesPiezas(pd), formatoRedondeado) : repartoCasa(partesEscenario(e))) +
         '<ul class="datos-inversion">' +
-          '<li><span>Gastos de escritura</span><strong>' + (vivirAqui ? formatoRedondeado(pd.gastos) : formatoPesos(e.gastos)) + '</strong></li>' +
+          '<li><span>Gastos al firmar</span><strong>' + (vivirAqui ? formatoRedondeado(pd.gastos) : formatoPesos(e.gastos)) + '</strong></li>' +
           (vivirAqui ? '' : '<li><span>Juntas antes de firmar</span><strong>' + formatoPesos(e.alEscriturar) + '</strong></li>') +
           '<li><span>Sin subsidio a la tasa ' + ayuda('dividendo') + '</span><strong>' + (vivirAqui ? formatoRedondeado(pd.dividendoSinSubsidio) : formatoPesos(e.dividendoSinSubsidio)) + ' al mes</strong></li>' +
           '<li><span>Inmobiliaria cliente de Bci ' + ayuda('cliente-bci') + '</span><strong>' + (p.clienteBci ? 'Sí' : 'No') + '</strong></li>' +
@@ -2846,7 +2903,7 @@
         '<section class="tarjeta bloque" aria-labelledby="titulo-falta">' +
           '<h3 class="h5" id="titulo-falta">Lo que falta</h3>' +
           '<p class="texto-apoyo">La aprobación final depende de la tasación y del estudio de títulos del departamento.</p>' +
-          '<ol class="lista-numerada"><li>Tasación</li><li>Estudio de títulos</li><li>Escritura</li></ol>' +
+          '<ol class="lista-numerada"><li>Tasación</li><li>Estudio de títulos</li><li>Firma</li></ol>' +
         '</section>' +
         (puedeSeguir
           ? '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-seguir-pie">Seguir a Tu pie</button></div>'
@@ -3226,16 +3283,29 @@
   function renderFirma(p, d, recienLlegado) {
     var e = resumen(p).escenario;
     var arrendar = estado.modo === 'arrendar';
-    var credito = filaFirma('Crédito hipotecario Bci ' + ayuda('dividendo'),
-      Math.round(e.pctCredito * 100) + ' % (' + formatoPesos(e.reparto.bci) + ') a 30 años, al 3,9 %: ' + formatoPesos(e.dividendo) + ' al mes.');
+    // S18-F7: para vivir, lo que firmas en filas (aquí sí van los montos exactos) y con las piezas elegidas.
+    var credito = arrendar
+      ? filaFirma('Crédito hipotecario Bci ' + ayuda('dividendo'),
+          Math.round(e.pctCredito * 100) + ' % (' + formatoPesos(e.reparto.bci) + ') a 30 años, al 3,9 %: ' + formatoPesos(e.dividendo) + ' al mes.')
+      : '';
+    var filasVivir = arrendar ? '' :
+      '<ul class="datos-inversion">' +
+        '<li><span>Precio' + (e.conPiezas && e.conPiezas.iva ? ' sin IVA' : '') + '</span><strong>' + formatoPesos(e.precio) + '</strong></li>' +
+        '<li><span>Bci te presta</span><strong>' + formatoPesos(e.reparto.bci) + '</strong></li>' +
+        (e.subsidio ? '<li><span>Subsidio del Estado</span><strong>' + formatoPesos(e.subsidio) + '</strong></li>' : '') +
+        '<li><span>Pagas al mes</span><strong>' + formatoPesos(e.dividendo) + '</strong></li>' +
+        '<li><span>Plazo</span><strong>30 años</strong></li>' +
+        '<li><span>Tasa ' + ayuda('dividendo') + '</span><strong>3,9 %</strong></li>' +
+        '<li><span>Sin subsidio a la tasa</span><strong>' + formatoPesos(e.dividendoSinSubsidio) + ' al mes</strong></li>' +
+      '</ul>';
     var segunda = arrendar && e.pctInversionistas === 0 ? ''
       : arrendar
       ? filaFirma('Participación de los inversionistas ' + ayuda('participacion'),
           '15 % (' + formatoPesos(e.reparto.inversionistas) + '). Sin cuota para ti: el arriendo les paga 6 % al año en UF y recompra su parte.') +
         filaFirma('Cuenta custodia Bci ' + ayuda('cuenta-custodia'),
           'Recibe el arriendo y paga a los inversionistas.')
-      : filaFirma('Garantía del Estado (FOGAES)',
-          'Para tu primera vivienda. Se usa una sola vez.');
+      : filaFirma(e.conPiezas && e.conPiezas.respaldo ? 'Respaldo familiar · propuesta' : 'Garantía del Estado (FOGAES)',
+          e.conPiezas && e.conPiezas.respaldo ? 'Un familiar deja una garantía en Bci.' : 'Para tu primera vivienda. Se usa una sola vez.');
 
     $('panel-compra').innerHTML =
       tarjetaCompacta(p, 'Juntas antes de firmar', metaCompra(p)) + listaPasos(3) +
@@ -3245,6 +3315,7 @@
       '</div>' +
       '<section class="tarjeta bloque" aria-labelledby="titulo-firma">' +
         '<h2 class="h3" id="titulo-firma">Lo que firmas</h2>' +
+        filasVivir +
         '<ul class="lista-check">' + credito + segunda + '</ul>' +
         '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
       '</section>' +
@@ -3349,11 +3420,11 @@
       plazo: plazoRecompra(saldo, netoUF, fraccion, mes - 1),
       plazoPeor: plazoRecompra(saldo, arriendoNeto(arriendo * 0.9) / SUPUESTOS.uf, fraccion, mes - 1),
       conInversionistas: arrendar && e.pctInversionistas > 0,
-      patrimonioUF: patrimonioUF(e.precioUF, saldoBciUF(e.precioUF, mes, modoFinanciero(p)), arrendar ? cascada.saldoDespuesUF : 0),
-      crecimientoUF: crecimientoMesUF(e.precioUF, mes, modoFinanciero(p), arrendar ? pesosAUF(cascada.recompra) : 0),
+      patrimonioUF: patrimonioUF(e.precioUF, saldoBciUF(e.precioUF, mes, modoFinanciero(p), arrendar ? undefined : e.pctCredito), arrendar ? cascada.saldoDespuesUF : 0),
+      crecimientoUF: crecimientoMesUF(e.precioUF, mes, modoFinanciero(p), arrendar ? pesosAUF(cascada.recompra) : 0, arrendar ? undefined : e.pctCredito),
       pone: arrendar ? cascada.pone : e.totalMes,
       excedente: arrendar ? cascada.excedente : 0,
-      saldoBci: ufAPesos(saldoBciUF(e.precioUF, mes, estado.modo)),
+      saldoBci: ufAPesos(saldoBciUF(e.precioUF, mes, estado.modo, arrendar ? undefined : e.pctCredito)),
       avanceBci: avance(mes, SUPUESTOS.mesesBci)
     };
   }
@@ -3536,24 +3607,21 @@
         '</section>';
     } else {
       // S5-F3: modo vivir, comparado con el arriendo que pagaba.
+      // S18-F8: el arriendo ya se dio en las preguntas; solo se pide si falta. Los datos van en filas.
       var antes = estado.arriendoActual;
-      var comparacion = '';
-      if (antes !== null && antes !== undefined) {
-        var dif = m.e.totalMes - antes;
-        comparacion = '<p class="comparacion">' + (dif > 0
-          ? 'Antes pagabas ' + formatoPesos(antes) + ' de arriendo: ahora pagas <strong>' + formatoPesos(dif) + ' más</strong> al mes, pero en algo que es tuyo.'
-          : (dif < 0
-            ? 'Antes pagabas ' + formatoPesos(antes) + ' de arriendo: ahora pagas <strong>' + formatoPesos(-dif) + ' menos</strong> al mes.'
-            : 'Pagas lo mismo que antes de arriendo, pero en algo que es tuyo.')) + '</p>';
-      }
+      var tiene = antes !== null && antes !== undefined && antes > 0;
+      var dif = tiene ? m.e.totalMes - antes : 0;
       cuerpo =
         '<div class="tarjeta protagonista">' +
           '<p class="etiqueta">Este mes pagaste</p>' +
           '<strong class="numero display-3">' + formatoPesos(m.e.totalMes) + '</strong>' +
-          '<p class="texto-apoyo">Tu dividendo, con subsidio a la tasa y seguros.</p>' +
-          comparacion +
+          '<p class="texto-apoyo">Con seguros incluidos.</p>' +
+          (tiene ? '<ul class="datos-inversion">' +
+            '<li><span>Antes, de arriendo</span><strong>' + formatoPesos(antes) + '</strong></li>' +
+            '<li><span>Diferencia</span><strong>' + (dif === 0 ? 'Lo mismo' : (dif > 0 ? '+' : '−') + formatoPesos(Math.abs(dif)) + ' al mes') + '</strong></li>' +
+          '</ul>' : '') +
         '</div>' +
-        campoDinero('arriendo-antes', 'Lo que pagabas de arriendo', antes);
+        (tiene ? '' : campoDinero('arriendo-antes', 'Lo que pagabas de arriendo', antes));
     }
 
     $('panel-compra').innerHTML =
@@ -3597,12 +3665,11 @@
           $(r.id).focus();
         });
       });
-    } else {
+    } else if ($('arriendo-antes')) {
       $('arriendo-antes').addEventListener('change', function () {
         estado.arriendoActual = formatearCampo($('arriendo-antes'));
         guardarEstado();
         renderMiCompra();
-        $('arriendo-antes').focus();
       });
       $('arriendo-antes').addEventListener('input', function () { formatearCampo($('arriendo-antes')); });
     }
@@ -4824,7 +4891,7 @@
     c.innerHTML =
       '<ul class="filas tarjeta">' +
         '<li><button type="button" class="fila fila-avatar" id="btn-perfil-avatar" aria-haspopup="dialog">' + avatarSVG(estado.avatar, 48, 'fila-av') +
-          '<span><strong>Tu avatar</strong><small>' + (estado.avatar ? 'Editar' : 'Créalo') + (estado.equipo.length ? SEP + 'Tu equipo: ' + estado.equipo.length : '') + '</small></span>' +
+          '<span><strong>Tu avatar</strong><small>' + (estado.avatar ? 'Editar' : 'Créalo') + (estado.equipo.length ? SEP + 'Tu equipo: ' + plural(estado.equipo.length + 1, 'persona', 'personas') : '') + '</small></span>' +
           '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button></li>' +
         fila('b', '', 'i-persona', 'Mis datos', (estado.modo === 'vivir' ? 'Para vivir' : 'Para arrendar') + (ingreso ? SEP + formatoPesos(ingreso) + ' al mes' : ''), 'btn-mis-datos') +
         fila('a', '#perfil/avisos', 'i-campana', 'Avisos', activos + ' de ' + TIPOS_AVISO.length + ' activos') +

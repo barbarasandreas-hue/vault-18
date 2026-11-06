@@ -1766,3 +1766,6 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
   .cambio-llaves { animation: none; opacity: 1; }
   .barra-llaves i, .vs-arriendo .b, .pieza-sw::after { transition: none; }
 }
+/* S18-F5: en Elegir, el departamento que con tus piezas te dejaría justo. */
+.aviso-justo { display: flex; gap: 6px; align-items: center; color: var(--gray-dark); font-weight: 600; }
+.aviso-justo .icono { color: var(--red-normal); margin: 0; }
