@@ -843,6 +843,15 @@ Ahorro por unirse a una compra en conjunto: UF 2.500 → $10.266.250; UF 3.000 �
 
 ---
 
+## Sprint 19 · Menos texto y razones para volver
+
+Origen: revisión de diseño, textos y retorno (5-nov-2026), doc "Primer Peldaño · Revisión de diseño, textos y retorno". Encontró 41 textos innecesarios en 23 pantallas, y que la persona que todavía no llega no tiene nada que hacer este mes.
+
+- **S19-B1 · Limpiar textos.** Aplicar la tabla de 41 textos (quitar, acortar, mover al glosario, corregir). Aceptación: ninguna frase salta de línea a 360 px; no queda "A ·", "(80 %)", "Casi igual" ni "Para la facilitadora"; con "Solo yo" todo en singular; Detalle con 5 filas visibles.
+- **S19-B2 · Una cifra y una acción por pantalla.** Mi departamento con una cifra grande y un sello sin plusvalía; Tu pie con un solo botón "Pagar mi cuota" (el avance de mes de la demo va a Perfil); Llega antes con héroe de una línea; Postular con montos redondeados y "Salir de esta compra" como enlace. Aceptación: a lo más una cifra Display por pantalla en la auditoría.
+- **S19-B3 · Preguntas sin interrupciones.** El avatar se crea al final, la hoja no se abre sola; "Con mascota" sale de la pantalla de sueldos; campos con `name`, `autocomplete="off"` y ejemplo. Aceptación: cero hojas emergentes de la introducción a Tu camino.
+- **S19-B4 · Razones para volver.** "Desde tu última visita" en Inicio; Todavía no con "Mi meta de este mes" y recordatorio mensual; avisos por hito; puntos en la galería; aviso de que los datos quedan en este teléfono. Fórmulas nuevas en `js/calculos.js` con prueba. Aceptación: al volver con un mes avanzado Inicio muestra un cambio; la persona sola de $1,1 millones ve una acción para este mes.
+
 ## Estado
 
 | Sprint | Feature | Estado |
