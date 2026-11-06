@@ -605,15 +605,15 @@ var PEOR_CASO_ARRIENDO = 0.9;   // peor caso: arriendo 10 % más bajo
 // grupo: compra en grupo (5 % de descuento, lote de 10). existeHoy: si se puede hacer hoy en Chile.
 // ficha: camino informativo (no se compra desde la app).
 var CAMINOS = {
-  'grupo-vivir': { nombre: 'A · Compra en grupo', corto: 'Compra en grupo', modo: 'vivir', grupo: true,
+  'grupo-vivir': { nombre: 'Compra en grupo', corto: 'Compra en grupo', modo: 'vivir', grupo: true,
     credito: 0.90, usuario: 0.10, inversionistas: 0, existeHoy: false },
   'individual-vivir': { nombre: 'Crédito con garantía del Estado', corto: 'Crédito con FOGAES', modo: 'vivir', grupo: false,
     credito: 0.90, usuario: 0.10, inversionistas: 0, existeHoy: true },
-  'grupo-pie-compartido': { nombre: 'A + B · Grupo y pie compartido', corto: 'Grupo y pie compartido', modo: 'arrendar', grupo: true,
+  'grupo-pie-compartido': { nombre: 'Grupo y pie compartido', corto: 'Grupo y pie compartido', modo: 'arrendar', grupo: true,
     credito: 0.80, usuario: 0.05, inversionistas: 0.15, existeHoy: false },
-  'pie-compartido': { nombre: 'B · Pie compartido', corto: 'Pie compartido', modo: 'arrendar', grupo: false,
+  'pie-compartido': { nombre: 'Pie compartido', corto: 'Pie compartido', modo: 'arrendar', grupo: false,
     credito: 0.80, usuario: 0.05, inversionistas: 0.15, existeHoy: false },
-  'grupo-invertir': { nombre: 'A · Compra en grupo', corto: 'Compra en grupo', modo: 'arrendar', grupo: true,
+  'grupo-invertir': { nombre: 'Compra en grupo', corto: 'Compra en grupo', modo: 'arrendar', grupo: true,
     credito: 0.80, usuario: 0.20, inversionistas: 0, existeHoy: false },
   'individual-invertir': { nombre: 'Crédito al 80 %', corto: 'Crédito al 80 %', modo: 'arrendar', grupo: false,
     credito: 0.80, usuario: 0.20, inversionistas: 0, existeHoy: true },
@@ -1342,7 +1342,7 @@ function efectoPieza(id, perfil, on, depto, hoyISO) {
   if (dp > 100000) return { texto: '−' + formatoRedondeado(dp), meses: 0 };
   var db = (a.basta || 0) - (b.basta || 0);
   if (db > 20000) return { texto: '−' + formatoRedondeado(db) + ' al mes', meses: 0 };
-  return { texto: 'Casi igual', meses: 0 };
+  return { texto: 'Misma fecha', meses: 0 };
 }
 // La pieza que más acerca ahora. Nunca propone el respaldo familiar: depende de otra persona.
 function mejorPieza(perfil, on, depto, hoyISO) {

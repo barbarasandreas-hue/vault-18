@@ -174,7 +174,7 @@ test('Registro: el texto para copiar', () => {
   const t = c.textoRegistro({ plazoAntes: 8, plazoDespues: 3, camino: 'pie-compartido', explicacion: 2, confianza: 4,
     meInteresa: ['respaldo-familiar'], recordarme: null }, '2026-11-04');
   assert.match(t, /Plazo que cree necesitar antes: 8 años/);
-  assert.match(t, /Camino elegido: B · Pie compartido/);
+  assert.match(t, /Camino elegido: Pie compartido/);
   assert.match(t, /Me interesa: Respaldo familiar/);
   assert.match(c.textoRegistro({}, null), /Camino elegido: sin elegir/);
 });
