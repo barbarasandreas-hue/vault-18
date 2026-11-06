@@ -1769,3 +1769,23 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 /* S18-F5: en Elegir, el departamento que con tus piezas te dejaría justo. */
 .aviso-justo { display: flex; gap: 6px; align-items: center; color: var(--gray-dark); font-weight: 600; }
 .aviso-justo .icono { color: var(--red-normal); margin: 0; }
+
+/* ---------- Fotos referenciales ---------- */
+/* La tarjeta muestra la fachada en 4:3; si no hay foto, sigue el edificio dibujado. */
+.fachada-foto { position: relative; display: block; height: auto; padding: 0; overflow: hidden; aspect-ratio: 16 / 10; background: var(--gray-light); }
+.fachada-foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.fachada-foto .fachada-tuyo { position: absolute; left: 10px; bottom: 10px; }
+/* Galería deslizable: una foto por vez, con puntos y el sello "Fotos referenciales". */
+.galeria { position: relative; margin: 0 0 16px; }
+.galeria-pista { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; border-radius: var(--radio); scrollbar-width: none; background: var(--gray-light); }
+.galeria-pista::-webkit-scrollbar { display: none; }
+.galeria-pista:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.galeria-foto { position: relative; flex: 0 0 100%; margin: 0; scroll-snap-align: start; aspect-ratio: 4 / 3; }
+.galeria-foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.galeria-foto figcaption { position: absolute; left: 12px; bottom: 12px; padding: 4px 10px; border-radius: 999px; background: rgba(38, 50, 56, .78); color: var(--white); font-size: 13px; font-weight: 700; }
+.galeria-sello { position: absolute; right: 12px; top: 12px; margin: 0; padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, .9); color: var(--gray-dark); font-size: 12px; font-weight: 700; }
+.galeria-puntos { display: flex; justify-content: center; gap: 4px; margin-top: 4px; }
+/* Zona táctil de 44 px; el punto visible es de 8 px. */
+.galeria-punto { width: 44px; height: 28px; border: 0; background: none; padding: 0; display: grid; place-items: center; cursor: pointer; }
+.galeria-punto::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--gray-semilight); transition: transform var(--dur-corta) var(--ease-salida), background-color var(--dur-corta); }
+.galeria-punto[aria-current="true"]::before { background: var(--blue-dark); transform: scale(1.25); }

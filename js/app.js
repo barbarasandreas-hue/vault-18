@@ -1577,7 +1577,7 @@
     var plazo = plazosCon(perfil, mensual);
     var base = caminoBase(perfil.modo);
     var dif = !esFicha && idCamino !== base ? diferenciaConBase(idCamino, numCamino, numerosCamino(base, listaMeta(), perfil)) : null;
-    var subtitulo = (eligio ? 'Tu camino: ' : 'Te recomendamos ') + CAMINOS[idCamino].corto.toLowerCase() +
+    var subtitulo = (eligio ? 'Tu camino: ' : 'Te recomendamos ') + primeraMinuscula(CAMINOS[idCamino].corto) +
       (dif && dif.descuento > 0.001 ? SEP + formatoPorcentaje(dif.descuento, 0) + ' más barato' : '');
     var prest = preaprobacion(estado.sueldoPropio, estado.sueldoPareja, estado.otrasCuotas);
 
@@ -1688,7 +1688,65 @@
 
   // ---------- Proyectos: el marketplace ----------
   // S16-F7: cada proyecto con su edificio dibujado. La ventana de tu compra está encendida.
+  // ---------- Fotos (referenciales) ----------
+  // Solo se usa una foto si está anotada en js/fotos.js; si no, se dibuja el edificio. Así nunca hay una imagen rota.
+  var ESPACIOS = { estudio: ['living', 'cocina', 'bano'], '1d': ['living', 'cocina', 'dormitorio'], '2d': ['living', 'cocina', 'dormitorio'], '2d2b': ['living', 'cocina', 'dormitorio'] };
+  var NOMBRE_ESPACIO = { living: 'Living', cocina: 'Cocina', dormitorio: 'Dormitorio', bano: 'Baño' };
+  // Pasa a minúscula solo la primera letra (no las siglas: FOGAES, IVA).
+  function primeraMinuscula(t) { return t.charAt(0).toLowerCase() + t.slice(1); }
+  function hayFotos() { return typeof FOTOS !== 'undefined'; }
+  function fotoEdificio(p) { return hayFotos() && FOTOS.edificios[p.id] ? 'fotos/edificios/' + encodeURI(FOTOS.edificios[p.id]) : null; }
+  function tipologia(d) { return d.dormitorios === 0 ? 'estudio' : d.dormitorios === 1 ? '1d' : d.banos >= 2 ? '2d2b' : '2d'; }
+  // Las fotos del detalle: la fachada y los interiores de su tipología que existan.
+  function fotosDe(p, d) {
+    var lista = [];
+    var f = fotoEdificio(p);
+    if (f) lista.push({ src: f, alt: 'Fachada del ' + p.nombre, nombre: 'Fachada' });
+    var t = tipologia(d);
+    ESPACIOS[t].forEach(function (e) {
+      if (hayFotos() && FOTOS.interiores[t + '-' + e])
+        lista.push({ src: 'fotos/interiores/' + encodeURI(FOTOS.interiores[t + '-' + e]), alt: NOMBRE_ESPACIO[e] + ' de un departamento de ' + ficha(d).replace(/·/g, ','), nombre: NOMBRE_ESPACIO[e] });
+    });
+    return lista;
+  }
+  // Galería deslizable (scroll-snap) con puntos y botones; un toque en el punto lleva a esa foto.
+  var idGaleria = 0;
+  function galeria(fotos) {
+    if (!fotos.length) return '';
+    var id = 'galeria-' + (++idGaleria);
+    return '<div class="galeria" id="' + id + '">' +
+      '<div class="galeria-pista" tabindex="0" aria-label="Fotos referenciales">' +
+        fotos.map(function (x, i) {
+          return '<figure class="galeria-foto"><img src="' + x.src + '" alt="' + esc(x.alt) + '" loading="' + (i ? 'lazy' : 'eager') + '" width="800" height="600">' +
+            '<figcaption>' + x.nombre + '</figcaption></figure>';
+        }).join('') +
+      '</div>' +
+      '<p class="galeria-sello">Fotos referenciales</p>' +
+      (fotos.length > 1 ? '<div class="galeria-puntos">' + fotos.map(function (x, i) {
+        return '<button type="button" class="galeria-punto" data-ir="' + i + '" aria-label="Ver ' + x.nombre.toLowerCase() + '"' + (i ? '' : ' aria-current="true"') + '></button>';
+      }).join('') + '</div>' : '') +
+    '</div>';
+  }
+  function iniciarGalerias(cont) {
+    (cont || document).querySelectorAll('.galeria').forEach(function (g) {
+      var pista = g.querySelector('.galeria-pista');
+      var puntos = g.querySelectorAll('.galeria-punto');
+      var reducir = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      puntos.forEach(function (b) {
+        b.addEventListener('click', function () { pista.scrollTo({ left: Number(b.dataset.ir) * pista.clientWidth, behavior: reducir ? 'auto' : 'smooth' }); });
+      });
+      pista.addEventListener('scroll', function () {
+        var i = Math.round(pista.scrollLeft / Math.max(1, pista.clientWidth));
+        puntos.forEach(function (b, j) { if (j === i) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
+      }, { passive: true });
+    });
+  }
+
   function fachada(p) {
+    // Con foto, la tarjeta muestra la fachada real (referencial); sin foto, el edificio dibujado.
+    var foto = fotoEdificio(p);
+    if (foto) return '<span class="fachada fachada-foto"><img src="' + foto + '" alt="" loading="lazy" width="800" height="600">' +
+      (esMiProyecto(p) ? '<span class="fachada-tuyo">Tu edificio</span>' : '') + '</span>';
     var f = p.fachada || { color: 'blue-normal', pisos: 5 };
     var tuyo = esMiProyecto(p);
     var alto = f.pisos * 16 + 14, ventanas = '';
@@ -2078,6 +2136,7 @@
         '<h1 id="titulo-proyecto" class="h2">' + esc(p.nombre) + '</h1>' +
         '<p class="texto-apoyo">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       '</header>' +
+      galeria(fotosDe(p, d)) +
 
       (vivirAqui
         // S17-F1 y F2: para vivir, el mismo plazo que Inicio y Tu pie, con cifras redondeadas.
@@ -2136,6 +2195,7 @@
 
       '<div class="acciones">' + comprar + '</div>';
 
+    iniciarGalerias(contenedor);
     var botonComprar = $('btn-comprar');
     if (botonComprar) {
       botonComprar.addEventListener('click', function () {
@@ -3628,6 +3688,8 @@
       tarjetaCompacta(p, 'Pagas al mes', m.e.totalMes) + listaPasos(4) +
       (recienFirmado || Date.now() < puertaHasta ? puertaEquipo() : '') +
       '<h2 class="h3 bloque" id="titulo-departamento">' + (recienFirmado ? '<span class="llave-firma" aria-hidden="true">' + icono('i-llave', 'icono-grande') + '</span>' : '') + 'Mi departamento <span class="texto-apoyo titulo-apoyo">mes ' + m.mes + ' desde que firmaste</span></h2>' +
+      // Fotos: tu departamento, con la misma galería del detalle (referencial).
+      galeria(fotosDe(p, departamentoDeMiCompra(p))) +
       cuerpo +
       loTuyo(m) +
       '<section class="tarjeta bloque" aria-labelledby="titulo-deudas">' +
@@ -3649,6 +3711,7 @@
       b.setAttribute('aria-expanded', String(!abierto));
       $('arrepiento').hidden = abierto;
     });
+    iniciarGalerias($('panel-compra'));
 
     if (arrendar) {
       $('arriendo-mes').addEventListener('change', function () {
@@ -4331,7 +4394,7 @@
     registro.camino = id;
     guardarRegistro();
     prepararProyectos(id);
-    toast('Tu camino: ' + CAMINOS[id].corto.toLowerCase() + '.');
+    toast('Tu camino: ' + primeraMinuscula(CAMINOS[id].corto) + '.');
     location.hash = '#camino/elegir';
   }
 
