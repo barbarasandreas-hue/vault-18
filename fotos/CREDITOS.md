@@ -4,7 +4,7 @@ Todas son de [Unsplash](https://unsplash.com) con la licencia gratuita de Unspla
 
 | Archivo | Foto en Unsplash |
 |---|---|
-| mirador-independencia | https://images.unsplash.com/photo-1516069429726-51d80d545cbf |
+| mirador-independencia | https://images.unsplash.com/photo-1612637968894-660373e23b03 |
 | parque-quinta-normal | https://images.unsplash.com/photo-1696454597435-b7ad1a2351d5 |
 | portal-estacion | https://images.unsplash.com/photo-1692681272972-ad7ae5a8a7fd |
 | altos-recoleta | https://images.unsplash.com/photo-1448630360428-65456885c650 |
