@@ -2,7 +2,16 @@
 
 App de Bci para que jóvenes profesionales compren su primer departamento sin tener que juntar el pie completo. Es un prototipo para el Taller de Interacción IV (UDD), desafío Bci Labs. El dinero, los inversionistas y la parte legal son simulados; los cálculos son reales. La app debe ser facil de comprender para el usuario. **Función principal:** te decimos cuándo puedes tener tu primer departamento, por qué camino y qué hacer este mes, y te llevamos hasta ahí. Los proyectos (compra en grupo y pie compartido) son un medio dentro del camino, no la portada.
 
-**Qué ve el usuario al entrar:** Inicio siempre responde "¿cuánto me falta y cuándo llego?", con un número y una acción según su etapa. El plazo se calcula con **el rango de precio que elige la usuaria** (de su piso a su techo), nunca con un departamento genérico. Las pestañas son **Mi camino** (todo el recorrido de compra: Elegir → Postular → Juntar el pie → Firmar → Mi departamento, cada paso con su dirección), **Departamentos** (explorar sin compromiso), **Inversiones** (invertir en el pie de otros) y **Perfil**. La barra solo cambia cuando se toca; el único cruce (Departamentos → Mi camino) se confirma. Mapa completo: `claude/mapa-navegacion-nov2026.md` en el proyecto.
+**Las tres intenciones de la app (7-nov-2026):** 1) acercar la primera vivienda, que deje de sentirse lejana; 2) dejar todo claro, con los pasos que ya se pueden dar; 3) asesorar y acompañar toda la compra.
+
+**Qué ve el usuario (estructura acordada el 7-nov-2026; la app todavía tiene la anterior hasta que se programe).** La barra tiene 4 pestañas: **Inicio · Tus pasos · Explorar · Perfil** (cuándo llego, qué me falta, cómo y qué compro, mis cosas). Mapa completo: `claude/mapa-navegacion-nov2026.md` en el proyecto.
+
+- **Inicio**, solo tres bloques: cuándo llegas (el mes, única cifra grande), qué haces ahora (la tarjeta del siguiente paso, con una acción) y cuánto llevas (Tu pie, compacto; al tocarlo abre la pantalla Tu pie). Nunca muestra listas. El plazo se calcula con **el rango de precio que elige la usuaria** (de su piso a su techo), nunca con un departamento genérico.
+- **Tus pasos**: la escalera de 6 hitos en orden (Tus números → Tu cuenta de vivienda → Juntar tu pie → Preaprobación Bci → Asegurar tu departamento → Es tuyo; en grupo la preaprobación va antes del pie) y las misiones, que se hacen en cualquier orden (DS1, Registro Social de Hogares, documentos, guardar bajo llave, ahorro automático, equipo, elegir camino y departamento). Nunca muestra el mes ni el saldo. El paso actual de Tus pasos es la tarjeta de Inicio.
+- **Explorar**: "¿Qué quieres explorar?" con un botón grande por camino (con su fecha de llegada) → un camino (una línea de qué es, "¿Cómo funciona?", chips de piezas y sus departamentos, "Hacerlo mi camino") → un departamento ("Calza con: …"). Mirar otro camino no cambia el plan; hacerlo tuyo pide confirmar y muestra qué cambia. Lo hecho nunca se pierde.
+- **Perfil**: tus datos, tu equipo, avisos e "Invertir en el pie de otros" (otro papel, no el de quien compra).
+- **Tu pie** es una cuenta real de Bci (cuenta de ahorro para la vivienda, en UF; en grupo, la cuenta bloqueada) y la app es su ventana. "Tu pie está protegido" muestra sus capas; la misión "Guardar bajo llave" activa el giro diferido.
+- La barra solo cambia cuando se toca; Atrás es el paso anterior; una acción principal por pantalla.
 
 ## El modelo (v3, 4-nov-2026)
 
