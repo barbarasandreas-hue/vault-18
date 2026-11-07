@@ -37,7 +37,9 @@ test('Números según lo decidido: rango, redondeado o exacto', () => {
 test('Piezas: lo que no se suma y por qué', () => {
   assert.deepStrictEqual(c.bloqueoPieza('iva', {}, enObra), { razon: 'En obra', como: 'Elige uno terminado.' });
   assert.strictEqual(c.bloqueoPieza('grupo', {}, terminado).razon, 'Terminado');
-  assert.strictEqual(c.bloqueoPieza('subsidio', { grupo: true }, enObra).razon, 'Sobre UF 2.200');
+  // S20-T2: el DS1 llega a UF 4.000 (tramo 4); sobre eso se bloquea.
+  assert.strictEqual(c.bloqueoPieza('subsidio', { grupo: true }, enObra), null);
+  assert.strictEqual(c.bloqueoPieza('subsidio', {}, { listaUF: 4200, enObra: false, mesesEntrega: 0 }).razon, 'Sobre UF 4.000');
   assert.strictEqual(c.bloqueoPieza('subsidio', {}, terminado), null);
   // Sin departamento, comprar en grupo implica en obra: grupo y sin IVA no se suman.
   assert.strictEqual(c.bloqueoPieza('iva', { grupo: true }, null).razon, 'En obra');

@@ -1066,7 +1066,7 @@ function caminoBase(modo) { return modo === 'vivir' ? 'individual-vivir' : 'indi
 // Devuelve { base, mostrados: [ids], noMostrados: [{ id, razon }] }.
 var RAZON_NO_MOSTRADO = {
   'otro-modo-arrendar': 'es para comprar y arrendar.',
-  'otro-modo-vivir': 'es solo para vivir en tu primera vivienda.',
+  'otro-modo-vivir': 'es para comprar y vivir.',
   'sin-grupo': 'no hay grupos en tu rango.',
   'no-alcanza': 'con tus números te dejaría muy justo.',
   'parecido': 'se parece a los que ya te mostramos.'
@@ -1283,10 +1283,7 @@ function formatoSegunEtapa(valor, etapa) {
 // existeHoy: false = propuesta del proyecto. cond: una línea, se muestra solo en "?".
 var SUPUESTOS_PIEZAS = {
   descuentoGrupo: 0.05,       // lote de 10 (descuentoGrupo)
-  subsidioUF: 270,            // DS1 tramo 3: promedio; el real sale de una tabla por precio (por validar)
-  ahorroMinimoSubsidioUF: 80,
-  mesesCuentaVivienda: 12,
-  topeSubsidioUF: 2200,       // Región Metropolitana
+  // El DS1 (subsidio del Estado) va en DS1, abajo: dos tramos según el precio (S20-T2).
   bajaIVA: 0.10,              // supuesto (el gobierno estima hasta ~14 %)
   finIVA: '2027-12-01',
   regalo: 300000,
@@ -1296,15 +1293,40 @@ var PIEZAS_VIVIR = {
   grupo: { nombre: 'Descuento en grupo', grupo: 'menos', existeHoy: false,
     cond: '5 % menos. Solo edificios en obra. Tu pie va a una cuenta Bci bloqueada.' },
   subsidio: { nombre: 'Subsidio del Estado', grupo: 'menos', existeHoy: true,
-    cond: 'Hasta UF 2.200. Cuenta de vivienda con 12 meses y 80 UF. Registro Social de Hogares.' },
+    cond: 'Hasta UF 4.000, sin otra vivienda. Cuenta de vivienda con UF 80 a 200 y Registro Social de Hogares.' },
   iva: { nombre: 'Sin IVA', grupo: 'menos', existeHoy: true,
-    cond: 'Solo terminados. Firmar antes del 1 de diciembre de 2027.' },
+    cond: 'Solo terminados antes del 17 de octubre de 2026. Firma la promesa hasta noviembre de 2027.' },
   regalo: { nombre: 'Regalo de tu familia', grupo: 'ayuda', existeHoy: false,
-    cond: '$300 mil en una ocasión: cumpleaños o Navidad.' },
+    cond: '$300 mil en una ocasión. Hasta nov-2027, si tu familia te dona por escritura, paga la mitad del impuesto.' },
   respaldo: { nombre: 'Respaldo familiar', grupo: 'ayuda', existeHoy: false,
     cond: 'Un familiar deja el 10 % en garantía y lo recupera. Sube lo que pagas al mes.' }
 };
 var ORDEN_PIEZAS = ['grupo', 'subsidio', 'iva', 'regalo', 'respaldo'];
+
+// S20-T2: el DS1 en dos tramos (Región Metropolitana). Fuentes: guía del Serviu RM (tramo 3) y
+// Res. Ex. 1.649 del Minvu, 29-oct-2026 (tramo 4). rentaMax: ingreso neto mensual del núcleo por número
+// de integrantes (1, 2, 3, 4 o más); solo se exige a quien está sobre el 90 % del Registro Social de Hogares.
+var DS1 = {
+  tramo3: { hastaUF: 2200, ahorroUF: 80, mesesCuenta: 12, rentaMax: [1992086, 2788921, 3107655, 3426388] },
+  tramo4: { hastaUF: 4000, ahorroUF: 200, mesesCuenta: 0, montoUF: 410, rentaMax: [2673511, 3496130, 3825177, 4154225] }
+};
+// Tramo 3: 850 − 0,375 × precio, entre UF 250 y 400 (de UF 1.600 a 2.200 son UF 250).
+function montoDS1Tramo3(precioUF) { return Math.min(400, Math.max(250, 850 - 0.375 * precioUF)); }
+// El DS1 para un precio (sin el subsidio) y un perfil: { tramo, montoUF, ahorroUF, mesesCuenta } o { bloqueo }.
+// perfil.rshSobre90: false si la persona dice estar en el 90 % del Registro Social (sin tope de sueldo);
+// sin respuesta se aplica el tope, que es el caso más común de un joven profesional.
+function ds1Para(precioUF, perfil) {
+  if (perfil && perfil.modo === 'arrendar')
+    return { bloqueo: { razon: 'Para invertir', como: 'El DS1 exige no tener otra vivienda: no sirve para comprar y arrendar.' } };
+  if (precioUF > DS1.tramo4.hastaUF + 1e-9) return { bloqueo: { razon: 'Sobre UF 4.000', como: 'Elige uno de hasta UF 4.000.' } };
+  var tramo = precioUF <= DS1.tramo3.hastaUF + 1e-9 ? 3 : 4;
+  var t = tramo === 3 ? DS1.tramo3 : DS1.tramo4;
+  var ingreso = perfil ? (perfil.sueldoPropio || 0) + (perfil.sueldoPareja || 0) : 0;
+  var n = perfil && perfil.sueldoPareja ? 2 : 1;
+  if (perfil && perfil.rshSobre90 !== false && ingreso > t.rentaMax[n - 1])
+    return { bloqueo: { razon: 'Sobre tope de sueldo', como: 'Tu sueldo pasa el tope de este tramo. Si estás en el 90 % del Registro Social, no hay tope.' } };
+  return { tramo: tramo, montoUF: tramo === 3 ? montoDS1Tramo3(precioUF) : t.montoUF, ahorroUF: t.ahorroUF, mesesCuenta: t.mesesCuenta };
+}
 
 // depto: { listaUF, enObra, mesesEntrega, descuento (del grupo, opcional) }. Sin departamento elegido, comprar en grupo implica en obra.
 function deptoPiezas(depto, on) {
@@ -1318,13 +1340,14 @@ function precioConPiezas(listaUF, on, descuento) {
   return p;
 }
 // Por qué una pieza no se suma (razón en dos palabras y cómo desbloquearla), o null.
-function bloqueoPieza(id, on, depto) {
+function bloqueoPieza(id, on, depto, perfil) {
   var d = deptoPiezas(depto, on);
   if (id === 'grupo' && depto && !depto.enObra) return { razon: 'Terminado', como: 'Elige uno en obra.' };
   if (id === 'iva' && d.enObra) return { razon: 'En obra', como: 'Elige uno terminado.' };
   if (id === 'subsidio') {
     var p = precioConPiezas(d.listaUF, Object.assign({}, on, { subsidio: false }), d.descuento);
-    if (p > SUPUESTOS_PIEZAS.topeSubsidioUF + 1e-9) return { razon: 'Sobre UF 2.200', como: 'Elige uno de hasta UF 2.200.' };
+    var ds1 = ds1Para(p, perfil);
+    if (ds1.bloqueo) return ds1.bloqueo;
   }
   return null;
 }
@@ -1334,25 +1357,28 @@ function calcularPiezas(perfil, onEntrada, depto, hoyISO) {
   var on = {};
   ORDEN_PIEZAS.forEach(function (id) { on[id] = !!(onEntrada && onEntrada[id]); });
   var d = deptoPiezas(depto, on);
-  ORDEN_PIEZAS.forEach(function (id) { if (on[id] && bloqueoPieza(id, on, depto)) on[id] = false; });
+  ORDEN_PIEZAS.forEach(function (id) { if (on[id] && bloqueoPieza(id, on, depto, perfil)) on[id] = false; });
   var S = SUPUESTOS_PIEZAS;
   var p = precioConPiezas(d.listaUF, on, d.descuento);
   var creditoMax = (on.respaldo ? 1 : MODOS.vivir.credito) * p;
-  var subsidio = on.subsidio ? S.subsidioUF : 0;
-  var pie = Math.max(on.subsidio ? S.ahorroMinimoSubsidioUF : 0, p - creditoMax - subsidio);
+  // S20-T2: el DS1 según su tramo. Crédito = precio − ahorro − subsidio, con tope de 90 %.
+  var ds1 = on.subsidio ? ds1Para(p, perfil) : null;
+  var subsidio = ds1 ? ds1.montoUF : 0;
+  var pie = Math.max(ds1 ? ds1.ahorroUF : 0, p - creditoMax - subsidio);
   var gastos = gastosUF(p);
   var metaUF = pie + gastos;
   var tienesUF = ((perfil && perfil.ahorroActual) || 0) / SUPUESTOS.uf + (on.regalo ? S.regalo / SUPUESTOS.uf : 0);
   var faltaUF = Math.max(0, metaUF - tienesUF);
   var pisos = [];
   if (d.enObra && d.mesesEntrega > 0) pisos.push({ meses: d.mesesEntrega, freno: 'entrega' });
-  if (on.subsidio) pisos.push({ meses: S.mesesCuentaVivienda, freno: 'cuenta-vivienda' });
+  if (ds1 && ds1.mesesCuenta > 0) pisos.push({ meses: ds1.mesesCuenta, freno: 'cuenta-vivienda' });
   var plazo = plazoConPisos(ufAPesos(faltaUF), perfil && perfil.ahorroMensual, pisos);
   var credito = p - subsidio - pie;
   var dividendo = ufAPesos(cuotaFija(credito, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
   var hoy = hoyISO || '2026-11-03';
   return {
     on: on, precioUF: p, creditoUF: credito, pctCredito: credito / p, subsidioUF: subsidio,
+    ds1: ds1 ? { tramo: ds1.tramo, montoUF: ds1.montoUF, ahorroUF: ds1.ahorroUF, mesesCuenta: ds1.mesesCuenta } : null,
     pie: ufAPesos(pie), gastos: ufAPesos(gastos), meta: ufAPesos(metaUF), tienes: ufAPesos(tienesUF), falta: ufAPesos(faltaUF),
     meses: plazo.meses, freno: plazo.freno, basta: plazo.basta, avance: metaUF > 0 ? Math.min(1, tienesUF / metaUF) : 1,
     dividendo: dividendo,
@@ -1386,7 +1412,7 @@ function efectoPieza(id, perfil, on, depto, hoyISO) {
 function mejorPieza(perfil, on, depto, hoyISO) {
   var a = calcularPiezas(perfil, on, depto, hoyISO), mejor = null;
   ORDEN_PIEZAS.forEach(function (id) {
-    if (on[id] || id === 'respaldo' || bloqueoPieza(id, on, depto)) return;
+    if (on[id] || id === 'respaldo' || bloqueoPieza(id, on, depto, perfil)) return;
     var con = Object.assign({}, on); con[id] = true;
     var b = calcularPiezas(perfil, con, depto, hoyISO);
     if (b.ivaTarde || a.meses === null || b.meses === null) return;
@@ -1489,6 +1515,7 @@ if (typeof module !== 'undefined') module.exports = {
   arriendoNeto: arriendoNeto,
   rentabilidad: rentabilidad,
   RENTABILIDAD_MINIMA: RENTABILIDAD_MINIMA,
+  DS1: DS1, ds1Para: ds1Para, montoDS1Tramo3: montoDS1Tramo3,
   pasaFiltroIA: pasaFiltroIA,
   ahorroPorUnirseUF: ahorroPorUnirseUF,
   porFinanciarUF: porFinanciarUF,

@@ -67,10 +67,12 @@ test('Todavía no con piezas: la razón y el subsidio que lo cambia', () => {
   assert.strictEqual(c.razonTodaviaNo(solo, con.dividendo), null);
 });
 
-test('Sin IVA y subsidio se suman en un terminado de UF 2.300', () => {
+test('Sin IVA y subsidio se suman en un terminado de UF 2.300 (y bajan al tramo 3 del DS1)', () => {
   const pf = { ahorroActual: 3000000, ahorroMensual: 600000 };
   const d = { listaUF: 2300, enObra: false, mesesEntrega: 0 };
-  assert.ok(c.bloqueoPieza('subsidio', {}, d)); // sobre UF 2.200 sin rebaja
+  // S20-T2: sin rebaja es tramo 4 (UF 410, sin 12 meses de cuenta); con IVA cero queda en UF 2.070, tramo 3.
+  assert.strictEqual(c.bloqueoPieza('subsidio', {}, d), null);
+  assert.strictEqual(c.calcularPiezas(pf, { subsidio: true }, d, '2026-11-03').ds1.tramo, 4);
   const r = c.calcularPiezas(pf, { iva: true, subsidio: true }, d, '2026-11-03');
   assert.ok(r.on.iva && r.on.subsidio);
   assert.strictEqual(Math.round(r.precioUF), 2070);

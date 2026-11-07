@@ -534,8 +534,9 @@
   function esperaMinima(p) {
     if (estado.modo !== 'vivir') return { meses: 0, freno: null };
     var e = { meses: mesesParaEntrega(p), freno: 'entrega' };
-    if (plazoDepartamento(p).on.subsidio) {
-      var cuenta = Math.max(0, SUPUESTOS_PIEZAS.mesesCuentaVivienda - (estado.mesAhorro || 0));
+    var pdep = plazoDepartamento(p);
+    if (pdep.on.subsidio && pdep.ds1 && pdep.ds1.mesesCuenta > 0) {
+      var cuenta = Math.max(0, pdep.ds1.mesesCuenta - (estado.mesAhorro || 0));
       if (cuenta > e.meses) e = { meses: cuenta, freno: 'cuenta-vivienda' };
     }
     return e;
@@ -1287,7 +1288,7 @@
     // S18-F1: el descuento en grupo es el que los grupos del rango ya tienen hoy, no el 5 % de completarlos.
     var desc = obras.length ? Math.max.apply(null, obras.map(function (x) { return x.descuento; })) : 0;
     var hasta = r.hasta;
-    if (on.subsidio) hasta = Math.min(hasta, SUPUESTOS_PIEZAS.topeSubsidioUF / ((on.grupo ? 1 - desc : 1) * (on.iva ? 1 - SUPUESTOS_PIEZAS.bajaIVA : 1)));
+    if (on.subsidio) hasta = Math.min(hasta, DS1.tramo4.hastaUF / ((on.grupo ? 1 - desc : 1) * (on.iva ? 1 - SUPUESTOS_PIEZAS.bajaIVA : 1)));
     var conObra = obras.length > 0;
     return {
       desde: { listaUF: r.desde, enObra: conObra && !hayTerminado, mesesEntrega: conObra && !hayTerminado ? Math.min.apply(null, entregas) : 0, descuento: desc },
@@ -1306,8 +1307,8 @@
       var d = deptoDeProyecto(p);
       var o = Object.assign({}, on, { subsidio: false });
       if (o.grupo && !d.enObra || o.iva && d.enObra) return false;
-      return precioConPiezas(d.listaUF, o, d.descuento) <= SUPUESTOS_PIEZAS.topeSubsidioUF + 1e-9;
-    })) return { razon: 'Sobre UF 2.200', como: 'En tu rango no hay de hasta UF 2.200. Prueba otro rango.' };
+      return precioConPiezas(d.listaUF, o, d.descuento) <= DS1.tramo4.hastaUF + 1e-9;
+    })) return { razon: 'Sobre UF 4.000', como: 'En tu rango no hay de hasta UF 4.000. Prueba otro rango.' };
     if (id === 'grupo' && !c.length) return { razon: 'Sin grupos', como: 'Hoy no hay grupos en tu rango.' };
     return null;
   }
@@ -1523,7 +1524,7 @@
     });
     var fila = function (id) {
       var pz = PIEZAS_VIVIR[id];
-      var b = bloqueoApp(id, on) || (id === 'iva' || id === 'subsidio' ? bloqueoPieza(id, on, x.deptos.desde) : null);
+      var b = bloqueoApp(id, on) || (id === 'iva' || id === 'subsidio' ? bloqueoPieza(id, on, x.deptos.desde, x.perfil) : null);
       var activo = !!on[id];
       var ef = b ? b.razon : justo && activo ? 'Sumado' : justo && !activo ? (cambia[id] === 'sola' ? 'Así cabe' : cambia[id] ? 'Con otra, cabe' : 'Aún no') : efectoPieza(id, x.perfil, on, x.deptos.hasta, hoyDemo()).texto;
       return '<li class="pieza-fila' + (activo ? ' on' : '') + (b ? ' bloq' : '') + (justo && !b && !activo ? (cambia[id] ? ' cabe' : ' aun') : '') + '">' +
@@ -3420,7 +3421,7 @@
         filaFirma('Cuenta custodia Bci ' + ayuda('cuenta-custodia'),
           'Recibe el arriendo y paga a los inversionistas.')
       : filaFirma(e.conPiezas && e.conPiezas.respaldo ? 'Respaldo familiar · propuesta' : 'Garantía del Estado (FOGAES)',
-          e.conPiezas && e.conPiezas.respaldo ? 'Un familiar deja una garantía en Bci.' : 'Para tu primera vivienda. Se usa una sola vez.');
+          e.conPiezas && e.conPiezas.respaldo ? 'Un familiar deja una garantía en Bci.' : 'Departamentos nuevos de hasta UF 6.000. Bci te presta hasta el 90 %.');
 
     $('panel-compra').innerHTML =
       tarjetaCompacta(p, 'Ya tienes', metaCompra(p)) + listaPasos(3) +

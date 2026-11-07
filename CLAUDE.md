@@ -21,9 +21,8 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 ### Crédito según el modo
 
 - **Para vivir:** Bci presta el 90% con la garantía estatal FOGAES y el subsidio a la tasa (Ley 21.836). El usuario pone el 10% de pie.
-  - **FOGAES hoy (Minvu, nov-2026):** "Garantía de Apoyo a la Vivienda Nueva" de la Ley 21.748, ampliada por la Ley 21.836: solo vivienda nueva, hasta UF 6.000, personas naturales, 80.000 cupos compartidos con el subsidio a la tasa, hasta el 31-may-2028. La página del Minvu no pide primera vivienda.
-  - **Por validar con Bci:** si sigue vigente el FOGAES original de 2023 (Ley 21.543: primera vivienda, hasta UF 4.500, nueva o usada) y si el FOGAES de hoy exige primera vivienda o habitarla. La app sigue usando "primera vivienda" como supuesto hasta confirmarlo.
-- **Para invertir:** Bci presta el 80% con el subsidio a la tasa (exige primera venta, no primera vivienda, así que sirve para invertir). **Sin FOGAES**, que queda guardado para la vivienda futura del usuario (supuesto por validar: si el FOGAES de hoy no exige primera vivienda ni se usa una sola vez, este argumento se debilita).
+  - **FOGAES hoy (validado con la Ley 21.543, art. sexto transitorio, 7-nov-2026):** "Garantía de Apoyo a la Vivienda Nueva": solo vivienda nueva en primera venta, hasta UF 6.000, personas naturales, crédito hasta 90 % (la garantía cubre hasta 60 % del valor), promesa desde el 31-dic-2024, pedirlo hasta el 31-may-2028. **No exige primera vivienda ni habitarla**, y viene junto con el subsidio a la tasa (80.000 cupos). El FOGAES original de 2023 (primera vivienda, UF 4.500) terminó el 31-dic-2024.
+- **Para invertir:** Bci presta el 80 % con el subsidio a la tasa (exige primera venta, no primera vivienda). Como la garantía tampoco exige primera vivienda, también podría prestar el 90 %; la app usa 80 % para invertir como supuesto conservador. Lo que se pierde al invertir es el DS1 y el DS19, que exigen no tener vivienda, también para la vivienda futura.
 - Crédito mancomunado (usuario y pareja), a 30 años.
 - **Tasa de ejemplo (7-nov-2026):** la tasa la fija cada banco según el cliente; la app usa un ejemplo, no una promesa.
   - Con subsidio: 3,46 % (Bci, noviembre de 2026, 90 % a 30 años, CAE 3,99 %; 3,41 % al 80 %).
@@ -43,7 +42,7 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 | **Respaldo familiar** | Vivir o invertir | Ficha informativa: un familiar deja el 10% en una cuenta bloqueada en Bci ≈ 5 años y lo recupera con intereses (referente: Barclays Family Springboard). |
 | **Todavía no** | Los dos | Cuando ningún camino es sostenible, la app lo dice y muestra qué cambiar (ver "Tu mes real"). |
 
-**Comprar más barato** es un filtro sobre todos los caminos: estudio, 1 dormitorio, usado, IVA cero (Ley 21.850, del 1-dic-2026 al 1-dic-2027; por validar en el texto de la ley: una nota de TVU del 29-sep-2026 habla de efecto retroactivo desde el 22-abr-2026).
+**Comprar más barato** es un filtro sobre todos los caminos: estudio, 1 dormitorio, usado, IVA cero (Ley 21.850, art. 4.° transitorio, validado el 7-nov-2026): un año desde el 1-dic-2026; solo viviendas con recepción definitiva anterior al 17-oct-2026, en primera venta, sin tope de valor; vale también si la promesa se firma dentro del año y la escritura después; retroactivo para escrituras del 22-abr al 1-dic-2026.
 
 ### Reglas que no se rompen
 
@@ -70,11 +69,11 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 - Hoja de Simulación (Decreto 49, vigente desde el 27-feb-2027): tasa, dividendo con y sin seguros, CAE y costo total. CAE = tasa interna de retorno mensual × 12 de los flujos del crédito: se recibe el crédito menos los gastos de escritura y se pagan 360 dividendos con seguros (supuesto de diseño: todos los gastos de escritura cuentan como gastos del crédito). Costo total = 360 dividendos con seguros + gastos.
 - Caminos: se muestran el recomendado, siempre el crédito de siempre (FOGAES para vivir, 80 % para invertir) y a lo más uno más; los demás, con su razón en "Por qué no te mostramos otros".
 - Sostener: "Este mes no pude" mantiene la racha una vez cada 6 meses. Lo ahorrado nunca se pierde.
-- **Piezas de Llega antes (Sprint 17, modo vivir).** Cada pieza baja el precio, pone dinero en el pie o fija una fecha mínima. Plazo = el mayor entre (lo que falta ÷ lo que juntas al mes) y las fechas mínimas: la entrega del edificio y los 12 meses de la cuenta de vivienda. Supuestos:
+- **Piezas de Llega antes (Sprint 17, modo vivir).** Cada pieza baja el precio, pone dinero en el pie o fija una fecha mínima. Plazo = el mayor entre (lo que falta ÷ lo que juntas al mes) y las fechas mínimas: la entrega del edificio y, en el DS1 tramo 3, los 12 meses de la cuenta de vivienda. Supuestos:
   - descuento en grupo según los cupos del lote;
-  - subsidio DS1 tramo 3 de UF 270 (promedio, hasta tener la tabla oficial), con tope de UF 2.200 y ahorro mínimo de 80 UF;
-  - sin IVA = −10 %, solo departamentos terminados y firmando antes del 1-dic-2027;
-  - regalo de $300 mil;
+  - subsidio DS1 en dos tramos (S20-T2; `DS1` y `ds1Para` en `js/calculos.js`): tramo 3 hasta UF 2.200, monto = 850 − 0,375 × precio entre UF 250 y 400, ahorro UF 80 y cuenta con 12 meses; tramo 4 de UF 2.200 a 4.000, UF 410 (promedio del llamado), ahorro UF 200 y sin 12 meses de cuenta. Tope de sueldo neto del núcleo para quien está sobre el 90 % del Registro Social (RM): tramo 3, $1.992.086 una persona y $2.788.921 dos; tramo 4, $2.673.511 una persona y $3.496.130 dos. Exige no tener vivienda: bloqueado para invertir. Se combina con la garantía y el subsidio a la tasa en departamentos nuevos: crédito = precio − ahorro − subsidio, con tope de 90 %;
+  - sin IVA = −10 %, solo departamentos terminados (recepción antes del 17-oct-2026) y con la promesa firmada hasta noviembre de 2027;
+  - regalo de $300 mil; hasta nov-2027, una donación por escritura a hijos o nietos paga la mitad del impuesto, una vez por donante (Ley 21.850, art. 1.° transitorio);
   - respaldo familiar = Bci presta el 100 % (propuesta).
 
   La app solo ofrece una pieza si hay un departamento de ejemplo que la cumpla. Las fórmulas están en `calcularPiezas` y `plazoConPisos`.
