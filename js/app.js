@@ -5,10 +5,12 @@
   // Ruta → pantalla que se muestra y botón de la barra que queda activo.
   // S15-F1: cuatro pestañas. La primera parte de la dirección dice la pestaña; el resto, la pantalla.
   var RUTAS = {
-    'bienvenida': 'bienvenida', 'camino': 'inicio', 'pasos': 'pasos', 'explorar': 'explorar', 'departamentos': 'explorar',
+    'bienvenida': 'bienvenida', 'camino': 'inicio', 'pasos': 'pasos', 'pie': 'pasos', 'explorar': 'explorar', 'departamentos': 'explorar',
     'inversiones': 'perfil', 'perfil': 'perfil', 'registro': 'perfil', 'regalo': 'inicio'
   };
 
+  // S21-B3: hitos y misiones que se marcan como hechos (simulado).
+  var CLAVES_PASOS = ['cuentaVivienda', 'rsh', 'ds1Postulado', 'documentos', 'bajoLlave', 'preaprobado'];
   var CLAVE_COMPRA = 'primer-peldano-compra';
   var CLAVE_INVERSIONES = 'primer-peldano-inversiones';
 
@@ -55,20 +57,21 @@
     modoElegido: false,      // S17-F3: la primera pregunta no viene marcada
     quiereInvertir: false,   // S17-F11: en modo vivir, Inversiones aparece solo si lo pide
     ultimaVisita: null,      // S19-B4: foto de Inicio la última vez { proyecto, mes, cupos, etapa, llegada }
-    novedades: []            // S19-B4: lo que cambió desde la última visita (cambiosDesdeVisita), hasta que se ve
+    novedades: [],           // S19-B4: lo que cambió desde la última visita (cambiosDesdeVisita), hasta que se ve
+    pasos: {}                // S21-B3: hitos y misiones hechos { cuentaVivienda, rsh, ds1Postulado, documentos, bajoLlave, preaprobado }
   };
 
   // ---------- Elecciones que se recuerdan entre visitas (S3-F3) ----------
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
-    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [] };
+    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {} };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -322,6 +325,8 @@
       if (g.piezas && typeof g.piezas === 'object') ORDEN_PIEZAS.forEach(function (id) { if (g.piezas[id] === true) estado.piezas[id] = true; });
       estado.modoElegido = g.modoElegido === true || g.preguntasListas === true;
       estado.quiereInvertir = g.quiereInvertir === true;
+      estado.pasos = {};
+      if (g.pasos && typeof g.pasos === 'object') CLAVES_PASOS.forEach(function (k) { if (g.pasos[k] === true) estado.pasos[k] = true; });
       if (['solo', 'pareja', 'familia'].indexOf(g.conQuien) !== -1) estado.conQuien = g.conQuien;
       estado.equipo = [];
       if (Array.isArray(g.equipo)) g.equipo.forEach(function (m) { if (m) estado.equipo = agregarMiembro(estado.equipo, m.relacion, m.avatar); });
@@ -4362,18 +4367,214 @@
   // S21-B1: desde Explorar se llega a todos los departamentos.
   var VER_TODOS = '<p class="texto-centro"><a class="enlace" href="#departamentos">Ver todos los departamentos</a></p>';
 
-  // S21-B1: Tus pasos. Por ahora muestra la escalera de la compra y lleva al paso de hoy (B3 trae hitos y misiones).
+  // ---------- S21-B3: Tus pasos, hitos y misiones ----------
+  function proyectoCompra() { return estado.compra ? buscarProyecto(estado.compra.proyectoId) : null; }
+  function esGrupo() {
+    var p = proyectoCompra();
+    if (p) return p.tipo === 'conjunto';
+    return !!(estado.caminoElegido && CAMINOS[estado.caminoElegido] && CAMINOS[estado.caminoElegido].grupo);
+  }
+  // Lo que hay que juntar: con compra, la de su departamento; sin compra, la del techo de su rango.
+  function metaPie() {
+    var p = proyectoCompra();
+    if (p) return metaCompra(p);
+    if (!estado.preguntasListas || !rangoActual()) return 0;
+    if (estado.modo === 'vivir') return plazoVivir(estado.ahorroMensual || 300000).hasta.meta;
+    var id = estado.caminoElegido || recomendarCamino(perfilActual()).id;
+    return CAMINOS[id].ficha ? 0 : numerosCamino(id, listaMeta(), perfilActual()).alEscriturar;
+  }
+  // El DS1 aparece como misión si sirve para lo que busca (para vivir, precio y sueldo dentro del tramo).
+  function ds1Mision() {
+    if (estado.modo !== 'vivir' || !estado.preguntasListas || !rangoActual()) return null;
+    var p = proyectoCompra();
+    var precio = p ? deptoDeProyecto(p).listaUF : deptosRango({}).desde.listaUF;
+    var r = ds1Para(precio, perfilPiezas());
+    return r && r.montoUF ? { montoUF: r.montoUF } : null;
+  }
+  // La foto del estado que usan hitoActual, misiones y siguientePaso (js/calculos.js).
+  function fotoPasos() {
+    var ps = estado.pasos, c = estado.compra, meta = metaPie();
+    var paso = c ? pasoEfectivo() : 0;
+    var preaprobado = !!ps.preaprobado || !!(c && c.carga);
+    return {
+      grupo: esGrupo(), numeros: !!(estado.preguntasListas && rangoActual()),
+      cuentaVivienda: !!ps.cuentaVivienda || estado.ahorroIniciado,
+      ahorrado: ahorradoTuPie(meta), meta: meta,
+      preaprobado: preaprobado, asegurado: !!(c && c.carga), esTuyo: paso === 4,
+      ds1: ds1Mision(), rsh: !!ps.rsh, ds1Postulado: !!ps.ds1Postulado, documentos: !!ps.documentos || preaprobado,
+      bajoLlave: !!ps.bajoLlave, ahorroAutomatico: !!estado.cuotaAutomatica, equipo: estado.equipo.length > 0,
+      eligio: !!c, cuotaPendiente: false
+    };
+  }
+  function nombreCaminoActual() {
+    var p = proyectoCompra();
+    if (p) return p.tipo === 'conjunto' ? CAMINOS['grupo-' + (estado.modo === 'vivir' ? 'vivir' : 'invertir')].corto : CAMINOS[estado.modo === 'vivir' ? 'individual-vivir' : 'individual-invertir'].corto;
+    return estado.caminoElegido && CAMINOS[estado.caminoElegido] ? CAMINOS[estado.caminoElegido].corto : null;
+  }
+  function filaHito(h, i) {
+    var marca = h.estado === 'hecho' ? icono('i-check') : String(i + 1);
+    var sub = h.estado === 'hecho' ? 'Listo' : (h.estado === 'actual' ? 'Ahora' + SEP + h.cuesta : '');
+    return '<li class="hito ' + h.estado + '"' + (h.estado === 'actual' ? ' aria-current="step"' : '') + '>' +
+      '<button type="button" class="fila hito-fila" data-hito="' + h.id + '" aria-haspopup="dialog">' +
+        '<span class="hito-marca" aria-hidden="true">' + marca + '</span>' +
+        '<span><strong>' + h.nombre + '</strong>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' +
+        '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg>' +
+      '</button></li>';
+  }
+  function filaMision(x) {
+    return '<li><button type="button" class="fila mision-fila' + (x.hecho ? ' hecha' : '') + '" data-mision="' + x.id + '" aria-haspopup="dialog">' +
+      (x.hecho ? icono('i-check', 'icono-grande mision-check') : '') +
+      '<span><strong>' + x.titulo + '</strong>' +
+        (x.fecha && !x.hecho ? '<small>Hasta el ' + formatoFecha(x.fecha).replace(/ de \d{4}$/, '') + '</small>' : '') + '</span>' +
+      '<span class="chip">' + x.etiqueta + '</span></button></li>';
+  }
+
   function renderTusPasos() {
     var cont = $('pasos-contenido');
-    var accion;
-    if (!estado.preguntasListas) accion = ['#camino', 'Contar mis números'];
-    else if (estado.compra) accion = ['#camino/' + rutaPasoActual(), 'Ir a mi paso de hoy'];
-    else if (estado.caminoElegido) accion = ['#camino/elegir', 'Elegir departamento'];
-    else accion = ['#explorar', 'Explorar caminos'];
+    var s = fotoPasos();
+    var h = hitoActual(s);
+    var ms = misiones(s, hoyDemo());
+    var pendientes = ms.filter(function (x) { return !x.hecho; });
+    var camino = nombreCaminoActual();
+    var todaviaNo = estado.preguntasListas && rangoActual() && !estado.compra && (estado.modo === 'vivir' ? evaluarCabe().razon : recomendarCamino(perfilActual()).todaviaNo);
     cont.innerHTML =
-      '<header class="encabezado"><img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24"><h1 id="titulo-pasos" class="h2">Tus pasos</h1></header>' +
-      recorridoCamino(estado.compra ? proximoPaso().paso : 0) +
-      '<div class="accion"><a href="' + accion[0] + '" class="btn btn-primario btn-lg btn-bloque">' + accion[1] + '</a></div>';
+      '<header class="encabezado"><img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24">' +
+        '<h1 id="titulo-pasos" class="h2">Tus pasos</h1>' +
+        '<p class="texto-apoyo">' + (camino ? 'Tu camino: ' + primeraMinuscula(camino) : 'Todavía no eliges camino') + '</p></header>' +
+      (todaviaNo ? '<p class="tarjeta compacta aviso-todavia">' + icono('i-pronto') + '<span><strong>Todavía no</strong> ' +
+        '<a class="enlace" href="#explorar">Ver qué lo cambia</a></span></p>' : '') +
+      '<section aria-labelledby="titulo-hitos" class="bloque">' +
+        '<h2 class="h4" id="titulo-hitos">Hitos' + SEP + '<span class="texto-apoyo">' + (h.terminado ? 'Todos listos' : h.indice + ' de ' + h.total) + '</span></h2>' +
+        '<ol class="hitos tarjeta">' + h.hitos.map(filaHito).join('') + '</ol>' +
+      '</section>' +
+      '<section aria-labelledby="titulo-misiones" class="bloque">' +
+        '<h2 class="h4" id="titulo-misiones">Misiones</h2>' +
+        '<p class="texto-apoyo">En cualquier orden.</p>' +
+        (pendientes.length ? '<ul class="filas tarjeta">' + pendientes.slice(0, 3).map(filaMision).join('') + '</ul>'
+          : '<p class="tarjeta compacta">Hiciste todas tus misiones.</p>') +
+        '<button type="button" class="btn btn-terciario btn-bloque bloque-chico" id="btn-todas-misiones" aria-haspopup="dialog">Ver todas y las fechas que importan</button>' +
+      '</section>';
+    cont.querySelectorAll('[data-hito]').forEach(function (b) {
+      b.addEventListener('click', function () { abrirHito(b.dataset.hito, b); });
+    });
+    cont.querySelectorAll('[data-mision]').forEach(function (b) {
+      b.addEventListener('click', function () { abrirMision(b.dataset.mision, b); });
+    });
+    $('btn-todas-misiones').addEventListener('click', function () { abrirTodasMisiones($('btn-todas-misiones')); });
+  }
+
+  // Marca un hito o misión como hecho (simulado), avisa y vuelve a dibujar donde esté.
+  function marcarPaso(clave, mensaje) {
+    estado.pasos[clave] = true;
+    guardarEstado();
+    cerrarHoja(false);
+    toast(mensaje);
+    mostrar();
+  }
+  function botonEnHoja(id, texto) { return '<button type="button" class="btn btn-primario btn-bloque" id="' + id + '">' + texto + '</button>'; }
+  function enlaceHoja(href, texto) { return '<a class="btn btn-primario btn-bloque" href="' + href + '">' + texto + '</a>'; }
+  function rutaTuPie() { return estado.compra ? '#camino/pie' : '#pie'; }
+
+  function abrirHito(id, boton) {
+    var s = fotoPasos();
+    var h = hitoActual(s).hitos.filter(function (x) { return x.id === id; })[0];
+    var hecho = h.estado === 'hecho';
+    var c = estado.compra;
+    var texto = '', accion = '';
+    if (id === 'numeros') {
+      texto = 'Con tus sueldos y tu ahorro calculamos cuándo llegas.';
+      accion = hecho ? botonEnHoja('btn-hito-accion', 'Cambiar mis números') : enlaceHoja('#camino', 'Contar mis números');
+    } else if (id === 'cuenta') {
+      texto = 'Una cuenta de ahorro para la vivienda en Bci, en UF. Todo tu pie pasa por ella y el DS1 la pide.';
+      accion = hecho ? '' : botonEnHoja('btn-hito-accion', 'Abrir mi cuenta');
+    } else if (id === 'pie') {
+      texto = s.grupo ? 'Pagas tu pie en cuotas durante la obra, en una cuenta bloqueada a tu nombre.' : 'Lo juntas cada mes en tu cuenta de vivienda.';
+      accion = enlaceHoja(rutaTuPie(), 'Ver tu pie');
+    } else if (id === 'preaprobacion') {
+      var pr = preaprobacion(estado.sueldoPropio, estado.sueldoPareja, estado.otrasCuotas);
+      texto = (s.grupo ? 'Bci revisa tus sueldos y aseguras tu cupo en el grupo.' : 'Bci revisa tus sueldos. Pídela con tu pie casi listo: la preaprobación vence.') +
+        (pr && pr.cumple ? '</p><p class="texto-apoyo">Bci te podría prestar hasta <strong>' + formatoRedondeado(ufAPesos(pr.creditoUF)) + '</strong>' + SEP + 'simulado' : '');
+      accion = hecho ? '' : (c && !c.carga ? enlaceHoja('#camino/' + rutaPasoActual(), 'Ir a postular') : botonEnHoja('btn-hito-accion', 'Pedir mi preaprobación'));
+    } else if (id === 'asegurar' || id === 'aprobacion') {
+      texto = id === 'asegurar' ? 'Eliges tu departamento, lo reservas y firmas la promesa.' : 'Bci confirma tu crédito con la tasación del departamento.';
+      accion = hecho ? '' : (c ? enlaceHoja('#camino/' + rutaPasoActual(), 'Seguir mi compra')
+        : (estado.caminoElegido ? enlaceHoja('#camino/elegir', 'Elegir departamento') : enlaceHoja('#explorar', 'Explorar caminos')));
+    } else {
+      texto = 'Tasación, seguros, escritura, inscripción y llaves: todo en un solo momento.';
+      accion = c && pasoEfectivo() >= 3 ? enlaceHoja('#camino/' + rutaPasoActual(), hecho ? 'Ver mi departamento' : 'Preparar mi firma') : '';
+    }
+    abrirHojaContenido(h.nombre + (hecho ? ' ' + icono('i-check', 'hoja-check') : ''),
+      '<p class="texto-apoyo">' + texto + '</p>' +
+      (!hecho && h.estado === 'pendiente' ? '<p class="texto-apoyo"><small>Va después de ' + hitoActual(s).nombre.toLowerCase() + '.</small></p>' : '') +
+      (accion ? '<div class="acciones">' + accion + '</div>' : ''), boton, function () {
+        var b = $('btn-hito-accion');
+        if (!b) return;
+        b.addEventListener('click', function () {
+          if (id === 'numeros') { cerrarHoja(false); abrirMisDatos(boton); }
+          else if (id === 'cuenta') marcarPaso('cuentaVivienda', 'Abriste tu cuenta de vivienda (simulado).');
+          else if (id === 'preaprobacion') {
+            if (!s.documentos) { toast('Primero: completa tus datos y documentos.'); return; }
+            marcarPaso('preaprobado', 'Bci te preaprobó (simulado).');
+          }
+        });
+      });
+  }
+
+  var MISIONES_TEXTO = {
+    ds1: ['Subsidio del Estado para tu primera vivienda. Se postula en línea en el Minvu.', 'Ya postulé'],
+    rsh: ['Lo pide el DS1. Te inscribes en línea con tu ClaveÚnica.', 'Ya me inscribí'],
+    documentos: ['Liquidaciones de sueldo, cotizaciones y carnet. Si eres cliente Bci, ya los tenemos.', 'Completar'],
+    'bajo-llave': ['Para sacar plata de tu pie avisas 30 días antes. Así no se gasta.', 'Guardar bajo llave'],
+    'ahorro-auto': ['Bci pasa tu cuota a tu cuenta de vivienda el día de pago.', 'Activar'],
+    equipo: ['Suma a tu pareja o familia para que te acompañen.', null],
+    elegir: ['Mira tus caminos y elige un departamento.', null]
+  };
+  var MISION_CLAVE = { ds1: 'ds1Postulado', rsh: 'rsh', documentos: 'documentos', 'bajo-llave': 'bajoLlave' };
+  var MISION_LISTA = { ds1: 'Postulaste al DS1 (simulado).', rsh: 'Te inscribiste en el Registro Social (simulado).',
+    documentos: 'Tus documentos están listos (simulado).', 'bajo-llave': 'Tu pie quedó bajo llave (simulado).' };
+
+  function abrirMision(id, boton) {
+    var s = fotoPasos();
+    var x = misiones(s, hoyDemo()).filter(function (m) { return m.id === id; })[0];
+    var t = MISIONES_TEXTO[id];
+    var falta = id === 'ds1' && !x.hecho ? (!s.cuentaVivienda ? 'tu cuenta de vivienda' : (!s.rsh ? 'el Registro Social de Hogares' : null)) : null;
+    var accion = x.hecho ? '' :
+      id === 'equipo' ? enlaceHoja('#perfil', 'Ir a Tu equipo') :
+      id === 'elegir' ? enlaceHoja(estado.caminoElegido ? '#camino/elegir' : '#explorar', estado.caminoElegido ? 'Elegir departamento' : 'Explorar caminos') :
+      botonEnHoja('btn-mision-accion', t[1]);
+    abrirHojaContenido(x.titulo + (x.hecho ? ' ' + icono('i-check', 'hoja-check') : ''),
+      '<p><span class="chip">' + x.etiqueta + '</span>' + (x.fecha ? ' <small class="texto-apoyo">Hasta el ' + formatoFecha(x.fecha) + '</small>' : '') + '</p>' +
+      '<p class="texto-apoyo">' + t[0] + '</p>' +
+      (falta ? '<p class="texto-apoyo">' + icono('i-alerta') + ' Primero: ' + falta + '.</p>' : '') +
+      (accion ? '<div class="acciones">' + accion + '</div>' : ''), boton, function () {
+        var b = $('btn-mision-accion');
+        if (!b) return;
+        if (falta) b.disabled = true;
+        b.addEventListener('click', function () {
+          if (id === 'ahorro-auto') {
+            estado.cuotaAutomatica = true; guardarEstado(); cerrarHoja(false);
+            toast('Ahorro automático activo (simulado).'); mostrar(); return;
+          }
+          marcarPaso(MISION_CLAVE[id], MISION_LISTA[id]);
+        });
+      });
+  }
+
+  function abrirTodasMisiones(boton) {
+    var s = fotoPasos();
+    var hoy = hoyDemo();
+    var ms = misiones(s, hoy);
+    var fechas = FECHAS_IMPORTAN.filter(function (f) { return diasHastaFecha(f.fecha, hoy) >= 0 && (f.id !== 'ds1' || s.ds1); });
+    abrirHojaContenido('Todas tus misiones',
+      '<ul class="filas">' + ms.map(filaMision).join('') + '</ul>' +
+      '<h3 class="h4 bloque-chico">Fechas que importan</h3>' +
+      '<ul class="filas">' + fechas.map(function (f) {
+        return '<li><div class="fila">' + icono('i-calendario', 'icono-grande') + '<span><strong>' + formatoFecha(f.fecha) + '</strong><small>' + f.texto + '</small></span></div></li>';
+      }).join('') + '</ul>', boton, function (hoja) {
+        hoja.querySelectorAll('[data-mision]').forEach(function (b) {
+          b.addEventListener('click', function () { abrirMision(b.dataset.mision, boton); });
+        });
+      });
   }
 
   function renderCaminos() {
@@ -5102,6 +5303,7 @@
     if (p[0] === 'perfil') return r('perfil', 'perfil', function () { renderPerfil(p[1]); });
     // S21-B1: cuatro pestañas. Las direcciones de antes se mantienen; cambia la pestaña que se marca.
     if (p[0] === 'pasos') return r('pasos', 'pasos', renderTusPasos);
+    if (p[0] === 'pie') return r('pasos', 'pasos', function () { if (estado.compra) location.replace('#camino/pie'); else renderTusPasos(); });
     if (p[0] === 'explorar') return r('caminos', 'explorar', function () { cambiosActivos = {}; renderCaminos(); });
     if (p[0] === 'departamentos') {
       if (p[1]) return r('proyecto', 'explorar', function () { renderDetalle(p[1], 'departamentos'); });

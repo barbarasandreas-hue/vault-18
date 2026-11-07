@@ -1422,7 +1422,149 @@ function mejorPieza(perfil, on, depto, hoyISO) {
   return mejor ? mejor.id : null;
 }
 
+
+// ---------- Sprint 21: hitos, misiones y siguiente paso ----------
+// Funciones puras: reciben una foto del estado (s) que arma app.js:
+// { grupo, numeros, cuentaVivienda, ahorrado, meta, preaprobado, asegurado, esTuyo,
+//   ds1: null | { montoUF }, rsh, ds1Postulado, documentos, bajoLlave, ahorroAutomatico, equipo, eligio, cuotaPendiente }
+var HITOS_CAMINO = {
+  individual: ['numeros', 'cuenta', 'pie', 'preaprobacion', 'asegurar', 'es-tuyo'],
+  grupo: ['numeros', 'cuenta', 'preaprobacion', 'pie', 'aprobacion', 'es-tuyo']
+};
+var HITOS = {
+  numeros: { nombre: 'Tus números', accion: 'Cuéntanos tus números', gana: 'Sabes cuándo llegas', cuesta: '2 minutos' },
+  cuenta: { nombre: 'Tu cuenta de vivienda', accion: 'Abre tu cuenta de vivienda', gana: 'Tu pie crece en UF', cuesta: '5 minutos' },
+  pie: { nombre: 'Juntar tu pie', accion: 'Mira tu pie', gana: 'Llegas a tu meta', cuesta: 'Cada mes' },
+  preaprobacion: { nombre: 'Preaprobación Bci', accion: 'Pide tu preaprobación', gana: 'Sabes cuánto te presta Bci', cuesta: '10 minutos' },
+  asegurar: { nombre: 'Asegurar tu departamento', accion: 'Elige tu departamento', gana: 'Reservas tu departamento', cuesta: '15 minutos' },
+  aprobacion: { nombre: 'Aprobación final', accion: 'Revisa tu aprobación', gana: 'Bci confirma tu crédito', cuesta: '15 minutos' },
+  'es-tuyo': { nombre: 'Es tuyo', accion: 'Prepara tu firma', gana: 'Recibes tus llaves', cuesta: '1 día' }
+};
+// En grupo, el hito 3 también asegura tu cupo y el pie se paga en cuotas durante la obra.
+var HITOS_GRUPO = {
+  preaprobacion: { nombre: 'Preaprobación y tu cupo', accion: 'Pide tu preaprobación', gana: 'Aseguras tu cupo en el grupo' },
+  pie: { nombre: 'Juntar tu pie en cuotas', gana: 'Pagas tu pie durante la obra' }
+};
+function datosHito(id, grupo) { return Object.assign({ id: id }, HITOS[id], grupo ? HITOS_GRUPO[id] : null); }
+
+function hitoHecho(id, s) {
+  switch (id) {
+    case 'numeros': return !!s.numeros;
+    case 'cuenta': return !!s.cuentaVivienda;
+    case 'pie': return s.meta > 0 && s.ahorrado >= s.meta;
+    case 'preaprobacion': return !!s.preaprobado;
+    case 'asegurar': case 'aprobacion': return !!s.asegurado;
+    case 'es-tuyo': return !!s.esTuyo;
+  }
+  return false;
+}
+
+// El hito actual es el primero que falta. Devuelve { indice (1 a 6), id, nombre, total, terminado, hitos }.
+function hitoActual(s) {
+  var ids = HITOS_CAMINO[s.grupo ? 'grupo' : 'individual'];
+  var todo = !!s.esTuyo;
+  var hechos = ids.map(function (id) { return todo || hitoHecho(id, s); });
+  var i = hechos.indexOf(false);
+  var terminado = i === -1;
+  if (terminado) i = ids.length - 1;
+  return {
+    indice: i + 1, id: ids[i], nombre: datosHito(ids[i], s.grupo).nombre, total: ids.length, terminado: terminado,
+    hitos: ids.map(function (id, k) {
+      return Object.assign(datosHito(id, s.grupo), { estado: hechos[k] ? 'hecho' : (k === i && !terminado ? 'actual' : 'pendiente') });
+    })
+  };
+}
+
+// Fechas que importan (validadas el 7-nov-2026; CLAUDE.md).
+var FECHAS_IMPORTAN = [
+  { id: 'ds1', texto: 'Cierra la postulación al DS1', fecha: '2026-11-27' },
+  { id: 'iva', texto: 'Último mes para firmar la promesa sin IVA', fecha: '2027-11-30' },
+  { id: 'garantia', texto: 'Último día para pedir la garantía del Estado', fecha: '2028-05-31' }
+];
+var DIAS_PRONTO = 30;
+function diasHastaFecha(fechaISO, hoy) {
+  var a = new Date(fechaISO + 'T00:00:00'), b = new Date(hoy);
+  b = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((a - b) / 86400000);
+}
+
+// Misiones: en cualquier orden. Cada una dice a qué ayuda (etiqueta) y a qué hito sirve (ayudaA).
+function misiones(s, hoy) {
+  var lista = [];
+  var m = function (id, titulo, etiqueta, ayudaA, hecho, extra) {
+    lista.push(Object.assign({ id: id, titulo: titulo, etiqueta: etiqueta, ayudaA: ayudaA, hecho: !!hecho, fecha: null, requiere: [] }, extra));
+  };
+  if (s.ds1) {
+    m('ds1', 'Postula al DS1', '+UF ' + Math.round(s.ds1.montoUF), 'pie', s.ds1Postulado, { fecha: FECHAS_IMPORTAN[0].fecha, requiere: ['cuenta', 'rsh'] });
+    m('rsh', 'Inscríbete en el Registro Social de Hogares', 'DS1', 'pie', s.rsh || s.ds1Postulado);
+  }
+  m('documentos', 'Completa tus datos y documentos', 'Preaprobación', 'preaprobacion', s.documentos || s.preaprobado);
+  m('ahorro-auto', 'Activa el ahorro automático', 'Pie', 'pie', s.ahorroAutomatico);
+  if (s.cuentaVivienda) m('bajo-llave', 'Guarda tu pie bajo llave', 'Protege', 'pie', s.bajoLlave);
+  m('equipo', 'Suma a tu equipo', 'Ánimo', null, s.equipo);
+  m('elegir', 'Elige tu camino y tu departamento', s.grupo ? 'Tu cupo' : 'Asegurar', s.grupo ? 'preaprobacion' : 'asegurar', s.eligio);
+  var actual = hitoActual(s).id;
+  var peso = function (x) {
+    if (x.hecho) return 9;
+    if (x.fecha && hoy && diasHastaFecha(x.fecha, hoy) >= 0 && diasHastaFecha(x.fecha, hoy) <= DIAS_PRONTO) return 0;
+    if (x.ayudaA === actual) return 1;
+    return 2;
+  };
+  return lista.map(function (x, i) { return { x: x, p: peso(x), i: i }; })
+    .sort(function (a, b) { return a.p - b.p || a.i - b.i; })
+    .map(function (o) { return o.x; });
+}
+
+// Lo que necesita cada hito antes de poder hacerse (misiones).
+var REQUISITOS_HITO = { preaprobacion: ['documentos'], asegurar: ['elegir'], aprobacion: [] };
+
+// La tarjeta de Inicio: 1) lo que vence pronto · 2) lo que destraba el siguiente hito ·
+// 3) lo que más adelanta la fecha · 4) lo más rápido.
+// Devuelve { tipo: 'hito' | 'mision' | 'cuota' | 'listo', id, titulo, gana, cuesta, plazo, hito: { indice, total } }.
+function siguientePaso(s, hoy) {
+  var h = hitoActual(s);
+  var ms = misiones(s, hoy);
+  var pend = ms.filter(function (x) { return !x.hecho; });
+  var porId = {}; ms.forEach(function (x) { porId[x.id] = x; });
+  var base = { hito: { indice: h.indice, total: h.total } };
+  var deHito = function (id, plazo) {
+    var d = datosHito(id, s.grupo);
+    return Object.assign({ tipo: 'hito', id: id, titulo: d.accion, gana: d.gana, cuesta: d.cuesta, plazo: plazo || null }, base);
+  };
+  var deMision = function (x, plazo) {
+    return Object.assign({ tipo: 'mision', id: x.id, titulo: x.titulo, gana: x.etiqueta, cuesta: CUESTA_MISION[x.id], plazo: plazo || x.fecha }, base);
+  };
+  if (h.terminado) return Object.assign({ tipo: 'listo', id: 'es-tuyo', titulo: 'Ya es tuyo', gana: null, cuesta: null, plazo: null }, base);
+  // 1) Vence pronto: primero lo que la misión necesita.
+  var pronto = pend.filter(function (x) { return x.fecha && hoy && diasHastaFecha(x.fecha, hoy) >= 0 && diasHastaFecha(x.fecha, hoy) <= DIAS_PRONTO; })[0];
+  if (pronto) {
+    for (var k = 0; k < pronto.requiere.length; k++) {
+      var r = pronto.requiere[k];
+      if (HITOS[r] && !hitoHecho(r, s)) return deHito(r, pronto.fecha);
+      if (porId[r] && !porId[r].hecho) return deMision(porId[r], pronto.fecha);
+    }
+    return deMision(pronto);
+  }
+  // 2) Destraba el hito actual: sus requisitos y después el hito mismo.
+  var req = (REQUISITOS_HITO[h.id] || []).concat(s.grupo && h.id === 'preaprobacion' ? ['elegir'] : []);
+  for (var j = 0; j < req.length; j++) if (porId[req[j]] && !porId[req[j]].hecho) return deMision(porId[req[j]]);
+  if (h.id !== 'pie') return deHito(h.id);
+  // Juntar el pie es un hábito: el día de pago la tarjeta es la cuota.
+  if (s.cuotaPendiente) return Object.assign({ tipo: 'cuota', id: 'cuota', titulo: 'Paga tu cuota de este mes', gana: 'Tu pie avanza', cuesta: '1 minuto', plazo: null }, base);
+  // 3) Lo que más adelanta la fecha y 4) lo más rápido.
+  var ayuda = pend.filter(function (x) { return x.ayudaA === 'pie'; })[0] || pend[0];
+  return ayuda ? deMision(ayuda) : deHito('pie');
+}
+var CUESTA_MISION = { ds1: '20 minutos', rsh: '15 minutos', documentos: '5 minutos', 'bajo-llave': '1 minuto', 'ahorro-auto': '1 minuto', equipo: '2 minutos', elegir: '10 minutos' };
+
 if (typeof module !== 'undefined') module.exports = {
+  HITOS_CAMINO: HITOS_CAMINO,
+  HITOS: HITOS,
+  FECHAS_IMPORTAN: FECHAS_IMPORTAN,
+  diasHastaFecha: diasHastaFecha,
+  hitoActual: hitoActual,
+  misiones: misiones,
+  siguientePaso: siguientePaso,
   LISTA_REFERENCIA_UF: LISTA_REFERENCIA_UF,
   MINIMO_PARA_VIVIR: MINIMO_PARA_VIVIR,
   UMBRAL_AHORRO: UMBRAL_AHORRO,

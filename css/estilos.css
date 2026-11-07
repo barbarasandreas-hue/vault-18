@@ -1805,3 +1805,28 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 /* S19-B4: la meta de este mes (Todavía no) */
 .meta-mes h2 { margin-top: 0; }
 .meta-mes .lista-check a { color: var(--blue-dark); }
+
+/* ===== S21-B3: Tus pasos, hitos y misiones ===== */
+.hitos { list-style: none; margin: 0; padding: 4px 0; display: grid; }
+.hito { position: relative; }
+.hito + .hito::before { content: ''; position: absolute; left: 31px; top: -16px; height: 32px; width: 2px; background: var(--gray-semilight); }
+.hito.hecho + .hito::before { background: var(--green-normal); }
+.fila > .hito-marca, .hito-marca {
+  flex: 0 0 32px; position: relative; z-index: 1; flex: none; display: grid; place-items: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 2px solid var(--gray-neutral); background: var(--white); color: var(--gray-semidark); font-weight: 800;
+}
+.hito.hecho .hito-marca { border: 0; background: none; }
+.hito-marca .icono { margin: 0; width: 32px; height: 32px; color: var(--green-normal); vertical-align: 0; }
+.hito.actual .hito-marca { background: var(--green-dark); border-color: var(--green-dark); color: var(--white); box-shadow: 0 0 0 4px var(--green-20); }
+.hito.actual strong { color: var(--green-dark); }
+.hito.actual small { color: var(--green-dark); font-weight: 700; }
+.hito.pendiente strong { color: var(--gray-semidark); font-weight: 600; }
+.mision-fila .chip { flex: none; }
+.mision-fila.hecha strong { color: var(--gray-semidark); font-weight: 600; }
+.mision-check { color: var(--green-normal); width: 24px; height: 24px; }
+.hoja-check { width: 20px; height: 20px; color: var(--green-normal); vertical-align: -3px; }
+.aviso-todavia { display: flex; gap: 10px; align-items: center; }
+@media (prefers-reduced-motion: no-preference) {
+  .hito.actual .hito-marca { transition: box-shadow var(--dur-corta) var(--ease-salida); }
+}
