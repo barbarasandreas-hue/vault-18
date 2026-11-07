@@ -1261,7 +1261,11 @@
 
   // ---------- Sprint 17: un solo plazo, piezas que se suman y texto mínimo (modo vivir) ----------
   function piezasOn() { return estado.piezas || {}; }
-  function perfilPiezas() { return { ahorroActual: estado.ahorroActual || 0, ahorroMensual: estado.ahorroMensual }; }
+  // S20-T2: el DS1 mira el sueldo del núcleo (tope de su tramo) y el modo (no sirve para invertir).
+  function perfilPiezas() {
+    return { ahorroActual: estado.ahorroActual || 0, ahorroMensual: estado.ahorroMensual,
+      sueldoPropio: estado.sueldoPropio, sueldoPareja: estado.sueldoPareja, modo: estado.modo };
+  }
   function deptoDeProyecto(p) {
     var d = departamentosDe(p.id)[0];
     return { listaUF: d.listaUF, enObra: p.tipo === 'conjunto' && (p.etapaObra || 0) < 4,
