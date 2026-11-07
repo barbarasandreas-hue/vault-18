@@ -870,6 +870,7 @@ Origen: doc "Beneficios del Estado para la vivienda y los caminos de Primer Peld
   - **IVA cero:** recepción definitiva anterior al 17-oct-2026; vale si la promesa se firma dentro del año (desde el 1-dic-2026), aunque la escritura sea después.
   - **Regalo:** en el "?", "Hasta nov-2027, si tu familia te dona por escritura, paga la mitad del impuesto" (Ley 21.850, art. 1.° transitorio).
   - Aceptación: pruebas nuevas para los dos tramos del DS1, el tope de sueldo y el bloqueo en invertir; un departamento de UF 2.500 muestra el DS1 tramo 4 con UF 410; pasan todas las pruebas.
+  - Hecho (7-nov-2026, commits a5604b4, 38c1429 y d03335e): tasa de ejemplo 3,46 % / 4,06 % / 4,45 % con botón "i" en firma, detalle del crédito y simulación; DS1 en dos tramos con tope de sueldo y bloqueo para invertir; textos de Sin IVA y Regalo; `CLAUDE.md` al día. Para que el filtro de rentabilidad siga sacando departamentos en la demo, bajó el arriendo estimado de ar-502, ar-901 y br-1004. 177 pruebas pasan.
 - Lo que queda de la ola anterior pasa al Sprint 22. "Misiones que destraban piezas" quedó cubierto por las misiones del Sprint 21.
 
 ## Sprint 21 · Cuatro pestañas: Inicio, Tus pasos, Explorar y Perfil
