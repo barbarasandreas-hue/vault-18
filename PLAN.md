@@ -856,6 +856,13 @@ Origen: revisión de diseño, textos y retorno (5-nov-2026), doc "Primer Peldañ
 - **S19-B4 · Razones para volver.** "Desde tu última visita" en Inicio; Todavía no con "Mi meta de este mes" y recordatorio el día de pago; avisos por hito; hitos con celebración (primer mes, 25 %, la mitad, 12 meses de cuenta de vivienda); puntos en la galería; aviso de que los datos quedan en este teléfono. Fórmulas nuevas en `js/calculos.js` con prueba. Aceptación: al volver con un mes avanzado Inicio muestra un cambio; la persona sola de $1,1 millones ve una acción para este mes; cada hito se celebra una sola vez. Siguiente ola (Sprint 20): avance de obra con foto, misiones que destraban piezas, Tu equipo que anima y regalo de pie.
   - Hecho (6-nov-2026): "Desde tu última visita" en Inicio (cuotas sumadas, personas nuevas en el grupo, etapa de obra y cambio de fecha; queda hasta tocar "Entendido"); "Tu meta de este mes" en Tu camino cuando todavía no llega (apartar lo del mes y la pieza que más acerca el sí); "Recordarme cada mes" en vez de 24 meses; avisos del pie en meses ("Te faltan 2 meses para la mitad de tu pie"); confeti al cruzar un hito, una sola vez y nunca con movimiento reducido; "Tus datos quedan solo en este teléfono" en Perfil. La galería ya tenía puntos. Fórmulas nuevas en `js/calculos.js` (hitoSiguiente, cambiosDesdeVisita, metaDelMes) con 3 pruebas.
 
+## Sprint 20 · Tasa de ejemplo y beneficios validados
+
+Origen: doc "Beneficios del Estado para la vivienda y los caminos de Primer Peldaño" (7-nov-2026), sección 6, validada con la Ley 21.543, la Ley 21.850, la Res. Ex. 1.649 del Minvu y la Res. Ex. 668 de Hacienda.
+
+- **S20-T1 · Tasa de ejemplo con "i" (hacer primero).** Cambiar en `js/calculos.js` la tasa con subsidio a 3,46 %, la sin subsidio a 4,06 % y el peor caso a 4,45 % (ver `CLAUDE.md`, "Tasa de ejemplo"). En cada pantalla donde aparece una tasa (simulación, Detalle del crédito, preaprobación, Firmar), la etiqueta pasa a "Tasa de ejemplo" con un botón "i" al lado. El "i" abre una hoja corta: "Cada banco fija su tasa según tu caso. Se fija el día que firmas." Ícono SVG de línea del Bci Kit, área táctil de 44 px, `aria-label="Qué significa tasa de ejemplo"`. Actualizar las pruebas que usan 3,9 % y 4,5 %. Aceptación: ninguna tasa en pantalla sin su "i"; el peor caso usa 4,45 %; pasan todas las pruebas.
+- Pendientes de la ola anterior: avance de obra con foto, misiones que destraban piezas, Tu equipo que anima y regalo de pie.
+
 ## Estado
 
 | Sprint | Feature | Estado |

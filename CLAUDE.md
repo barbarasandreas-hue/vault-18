@@ -14,7 +14,13 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
   - **FOGAES hoy (Minvu, nov-2026):** "Garantía de Apoyo a la Vivienda Nueva" de la Ley 21.748, ampliada por la Ley 21.836: solo vivienda nueva, hasta UF 6.000, personas naturales, 80.000 cupos compartidos con el subsidio a la tasa, hasta el 31-may-2028. La página del Minvu no pide primera vivienda.
   - **Por validar con Bci:** si sigue vigente el FOGAES original de 2023 (Ley 21.543: primera vivienda, hasta UF 4.500, nueva o usada) y si el FOGAES de hoy exige primera vivienda o habitarla. La app sigue usando "primera vivienda" como supuesto hasta confirmarlo.
 - **Para invertir:** Bci presta el 80% con el subsidio a la tasa (exige primera venta, no primera vivienda, así que sirve para invertir). **Sin FOGAES**, que queda guardado para la vivienda futura del usuario (supuesto por validar: si el FOGAES de hoy no exige primera vivienda ni se usa una sola vez, este argumento se debilita).
-- Crédito mancomunado (usuario y pareja), a 30 años. Tasa con subsidio: 3,9% (4,5% − 0,6). Si se acaban los cupos del subsidio, 4,5%.
+- Crédito mancomunado (usuario y pareja), a 30 años.
+- **Tasa de ejemplo (7-nov-2026):** la tasa la fija cada banco según el cliente; la app usa un ejemplo, no una promesa.
+  - Con subsidio: 3,46 % (Bci, noviembre de 2026, 90 % a 30 años, CAE 3,99 %; 3,41 % al 80 %).
+  - Sin subsidio: 4,06 % (3,46 + 0,6; cálculo propio, Bci no la publica).
+  - Peor caso: 4,45 %, la tasa de referencia de Hacienda para bancos en noviembre de 2026 (Res. Ex. 668). Si la tasa del banco sin subsidio la supera, no hay subsidio. Se revisa cada mes en el Diario Oficial, cerca del día 16.
+  - En pantalla, toda tasa lleva la etiqueta "Tasa de ejemplo" y un botón "i" al lado que abre: "Cada banco fija su tasa según tu caso. Se fija el día que firmas." No se muestra una tasa sin ese "i".
+  - Fuente: bci.cl/personas/credito-hipotecario.
 
 ### Los caminos
 
@@ -47,7 +53,7 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 - UF de referencia: $41.065.
 - Seguros del crédito: ≈ UF 0,7 al mes.
 - Arriendo neto = arriendo bruto × 0,9 (administración) × 11/12 (1 mes vacío al año). Peor caso: arriendo 10% más bajo.
-- Rentabilidad neta = arriendo neto × 12 / precio. En modo invertir la IA solo muestra departamentos con rentabilidad neta ≥ 3,9% (la tasa con subsidio).
+- Rentabilidad neta = arriendo neto × 12 / precio. En modo invertir la IA solo muestra departamentos con rentabilidad neta ≥ la tasa con subsidio de ejemplo (3,46 %).
 - Límite de carga: dividendo ≤ 25% del ingreso líquido familiar, y dividendo + otras cuotas ≤ 30%. Sobre eso, no aprueba.
 - **Tu mes real:** ingreso líquido − arriendo que paga hoy (si sigue arrendando) − otras cuotas − dividendo. Si no cumple el límite de carga, o si queda menos del 40% del ingreso para vivir (supuesto de diseño, a validar en las sesiones), el camino es "Todavía no".
 - Si el comprador vende (¿Y si me arrepiento?): costos de venta de 2 % del precio (supuesto de diseño). Orden de pago: Bci, inversionistas según su parte del valor neto de costos, costos y el resto para el comprador. Siempre sin plusvalía.
