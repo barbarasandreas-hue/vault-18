@@ -5,8 +5,8 @@
   // Ruta → pantalla que se muestra y botón de la barra que queda activo.
   // S15-F1: cuatro pestañas. La primera parte de la dirección dice la pestaña; el resto, la pantalla.
   var RUTAS = {
-    'bienvenida': 'bienvenida', 'camino': 'camino', 'departamentos': 'departamentos',
-    'inversiones': 'inversiones', 'perfil': 'perfil', 'registro': 'perfil', 'regalo': 'camino'
+    'bienvenida': 'bienvenida', 'camino': 'inicio', 'pasos': 'pasos', 'explorar': 'explorar', 'departamentos': 'explorar',
+    'inversiones': 'perfil', 'perfil': 'perfil', 'registro': 'perfil', 'regalo': 'inicio'
   };
 
   var CLAVE_COMPRA = 'primer-peldano-compra';
@@ -830,7 +830,7 @@
   function rutaEscalon(n, estadoPaso) {
     if (n === 1) {
       if (estado.compra) return '#camino/proyecto/' + encodeURIComponent(estado.compra.proyectoId);
-      return estado.caminoElegido ? '#camino/elegir' : '#camino/caminos';
+      return estado.caminoElegido ? '#camino/elegir' : '#explorar';
     }
     if (estadoPaso === 'actual' && estado.compra) return '#camino/' + rutaPasoActual();
     return '#camino/' + ['', '', 'postular/datos', 'pie', 'firmar', 'mi-departamento'][n];
@@ -1454,9 +1454,9 @@
       (siempre !== null ? '<p class="texto-apoyo linea-siempre">Sin garantía: ' + textoMeses(siempre) + ' ' + ayuda('garantia') + '</p>' : '') +
       '<div class="accion-fija">' + (eligio
         ? '<a href="#camino/elegir" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-departamentos">Elegir departamento</a>'
-        : '<a href="#camino/caminos" class="btn btn-primario btn-lg btn-bloque">' + (justo ? 'Ver qué lo cambia' : 'Ver cómo llegar antes') + '</a>') +
+        : '<a href="#explorar" class="btn btn-primario btn-lg btn-bloque">' + (justo ? 'Ver qué lo cambia' : 'Ver cómo llegar antes') + '</a>') +
       '</div>' +
-      (eligio ? '<p class="texto-centro"><a href="#camino/caminos" class="enlace">Ver cómo llegar antes</a></p>' : '') +
+      (eligio ? '<p class="texto-centro"><a href="#explorar" class="enlace">Ver cómo llegar antes</a></p>' : '') +
       recorridoCamino(0) +
       lineaInversiones();
 
@@ -1488,8 +1488,8 @@
       subsidio: on.subsidio ? false : cabeCon('subsidio'), iva: on.iva ? false : cabeCon('iva') });
     var texto = function (m) {
       if (m.tipo === 'ahorrar') return 'Aparta ' + formatoRedondeado(m.monto) + ' este mes';
-      if (m.tipo === 'subsidio') return '<a href="#camino/caminos">Revisa el subsidio del Estado</a>';
-      if (m.tipo === 'iva') return '<a href="#camino/caminos">Mira los terminados sin IVA</a>';
+      if (m.tipo === 'subsidio') return '<a href="#explorar">Revisa el subsidio del Estado</a>';
+      if (m.tipo === 'iva') return '<a href="#explorar">Mira los terminados sin IVA</a>';
       if (m.tipo === 'cuota') return 'Termina una de tus otras cuotas';
       return '<button type="button" class="enlace" id="btn-meta-rango" aria-haspopup="dialog">Prueba un rango más bajo</button>';
     };
@@ -1547,7 +1547,6 @@
     var cambio = !justo && mesesLlegaAntes !== null && x.hasta.meses !== null && mesesLlegaAntes !== x.hasta.meses ? mesesLlegaAntes - x.hasta.meses : 0;
     mesesLlegaAntes = justo ? null : x.hasta.meses;
     cont.innerHTML =
-      '<a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Mi camino</a>' +
       '<header class="encabezado"><h1 id="titulo-caminos" class="h2">Llega antes</h1>' +
         '<p class="texto-apoyo">' + (rango ? textoRango(rango) + SEP : '') + '<button type="button" class="enlace" id="btn-caminos-rango" aria-haspopup="dialog">Cambiar</button></p></header>' +
       (justo
@@ -1572,6 +1571,7 @@
         '</ul>' +
         '<button type="button" class="btn btn-terciario btn-bloque" data-simular="' + (on.grupo ? 'grupo-vivir' : 'individual-vivir') + '" aria-haspopup="dialog">Ver simulación</button>') +
       '<p class="sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
+      VER_TODOS +
       (justo ? '<p class="texto-centro"><a class="enlace" href="#camino/ficha/arriendo-opcion">Mientras tanto: arriendo con opción de compra</a></p>' : '') +
       '<div class="accion-fija">' + (justo
         ? (registro.recordarme ? '<a href="#camino" class="btn btn-secundario-dark btn-lg btn-bloque">Volver a mi camino</a>'
@@ -1680,9 +1680,9 @@
       (justo ? '' : datos) +
       '<div class="accion-fija">' + (eligio
         ? '<a href="#camino/elegir" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-departamentos">Elegir departamento</a>'
-        : '<a href="#camino/caminos" class="btn btn-primario btn-lg btn-bloque">' + (r.todaviaNo ? 'Ver qué lo cambia' : 'Elegir mi camino') + '</a>') +
+        : '<a href="#explorar" class="btn btn-primario btn-lg btn-bloque">' + (r.todaviaNo ? 'Ver qué lo cambia' : 'Elegir mi camino') + '</a>') +
       '</div>' +
-      (eligio ? '<p class="texto-centro"><a href="#camino/caminos" class="enlace">Ver mis caminos</a></p>' : '') +
+      (eligio ? '<p class="texto-centro"><a href="#explorar" class="enlace">Ver mis caminos</a></p>' : '') +
       recorridoCamino(0) +
       lineaInversiones();
 
@@ -1732,7 +1732,6 @@
     var c = $('inicio-principal');
     c.innerHTML = '';
     document.body.classList.remove('en-preguntas');
-    actualizarBarraInversiones();
     if (estado.compra) return renderCamino();
     if (estado.inversiones.length && !estado.preguntasListas) return renderSoloInversiones();
     if (!estado.preguntasListas) return renderPreguntas();
@@ -1885,7 +1884,7 @@
   function renderLista(ctx) {
     var camino = ctx === 'camino';
     if (camino && (!estado.preguntasListas || !estado.caminoElegido || CAMINOS[estado.caminoElegido].ficha)) {
-      location.replace(estado.preguntasListas ? '#camino/caminos' : '#camino');
+      location.replace(estado.preguntasListas ? '#explorar' : '#camino');
       return;
     }
     var rango = rangoActual();
@@ -1894,7 +1893,7 @@
     var soloCamino = camino || !estado.verTodos;
     var n = filtrosActivos();
     $('lista-contenido').innerHTML =
-      (camino ? '<a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Mi camino</a>' : '') +
+      (camino ? '<a href="#explorar" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Explorar</a>' : '') +
       '<header class="encabezado">' + (camino ? '' : FIGURAS) +
         '<h1 id="titulo-proyectos" class="h2">' + (camino ? 'Elige tu departamento' : 'Departamentos') + '</h1>' +
         '<p class="texto-apoyo">' + (camino ? CAMINOS[estado.caminoElegido].nombre : (arrendar ? 'Para arrendar' : 'Para vivir')) + '</p>' +
@@ -4360,6 +4359,23 @@
     });
   }
 
+  // S21-B1: desde Explorar se llega a todos los departamentos.
+  var VER_TODOS = '<p class="texto-centro"><a class="enlace" href="#departamentos">Ver todos los departamentos</a></p>';
+
+  // S21-B1: Tus pasos. Por ahora muestra la escalera de la compra y lleva al paso de hoy (B3 trae hitos y misiones).
+  function renderTusPasos() {
+    var cont = $('pasos-contenido');
+    var accion;
+    if (!estado.preguntasListas) accion = ['#camino', 'Contar mis números'];
+    else if (estado.compra) accion = ['#camino/' + rutaPasoActual(), 'Ir a mi paso de hoy'];
+    else if (estado.caminoElegido) accion = ['#camino/elegir', 'Elegir departamento'];
+    else accion = ['#explorar', 'Explorar caminos'];
+    cont.innerHTML =
+      '<header class="encabezado"><img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24"><h1 id="titulo-pasos" class="h2">Tus pasos</h1></header>' +
+      recorridoCamino(estado.compra ? proximoPaso().paso : 0) +
+      '<div class="accion"><a href="' + accion[0] + '" class="btn btn-primario btn-lg btn-bloque">' + accion[1] + '</a></div>';
+  }
+
   function renderCaminos() {
     var cont = $('caminos-contenido');
     if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return sinSueldos(cont, 'Tus caminos', 'titulo-caminos');
@@ -4375,7 +4391,6 @@
     var rango = rangoActual();
 
     cont.innerHTML =
-      '<a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Mi camino</a>' +
       '<header class="encabezado">' +
         '<h1 id="titulo-caminos" class="h2">Tus caminos</h1>' +
       '</header>' +
@@ -4404,6 +4419,7 @@
         '</ul>' +
       '</section>' +
       barraMes(r.numeros) +
+      VER_TODOS +
       '<p class="sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>';
 
     iniciarCarrusel();
@@ -4492,7 +4508,7 @@
     }
     var interesa = registro.meInteresa.indexOf(id) !== -1;
     cont.innerHTML =
-      '<a href="#caminos" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Tus caminos</a>' +
+      '<a href="#explorar" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Explorar</a>' +
       '<header class="encabezado">' +
         '<div class="camino-cabeza">' + chipExiste(id) + '</div>' +
         '<h1 id="titulo-ficha" class="h2">' + c.nombre + '</h1>' +
@@ -5015,8 +5031,7 @@
           '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button></li>' +
         fila('b', '', 'i-persona', 'Mis datos', (estado.modo === 'vivir' ? 'Para vivir' : 'Para arrendar') + (ingreso ? SEP + formatoPesos(ingreso) + ' al mes' : ''), 'btn-mis-datos') +
         fila('a', '#perfil/avisos', 'i-campana', 'Avisos', activos + ' de ' + TIPOS_AVISO.length + ' activos') +
-        (estado.modo === 'vivir' ? '<li><button type="button" class="interruptor fila-interruptor" role="switch" aria-checked="' + !!estado.quiereInvertir + '" id="btn-quiero-invertir">' +
-          '<span>' + icono('i-sube', 'icono-grande') + 'También quiero invertir</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button></li>' : '') +
+        fila('a', '#inversiones', 'i-sube', 'Invertir en el pie de otros', estado.inversiones.length ? plural(estado.inversiones.length, 'inversión', 'inversiones') : '6' + NBSP + '% al año en UF') +
         fila('a', '#perfil/ayuda', 'i-ayuda', 'Ayuda', 'Qué significa cada término') +
         fila('a', '#bienvenida', 'i-casa', 'Ver la introducción', '') +
         fila('a', '#registro', 'i-documento', 'Sesión de prueba', '') +
@@ -5032,13 +5047,6 @@
       '</div>';
     $('btn-mis-datos').addEventListener('click', function () { abrirMisDatos($('btn-mis-datos')); });
     $('btn-perfil-avatar').addEventListener('click', function () { editarMiAvatar($('btn-perfil-avatar')); });
-    if ($('btn-quiero-invertir')) $('btn-quiero-invertir').addEventListener('click', function () {
-      estado.quiereInvertir = !estado.quiereInvertir;
-      guardarEstado();
-      $('btn-quiero-invertir').setAttribute('aria-checked', String(estado.quiereInvertir));
-      actualizarBarraInversiones();
-      toast(estado.quiereInvertir ? 'Inversiones está en la barra.' : 'Inversiones salió de la barra.');
-    });
     var confirmar = $('confirmar-reinicio');
     $('btn-reiniciar').addEventListener('click', function () {
       confirmar.hidden = false;
@@ -5072,7 +5080,8 @@
     var p = hash.replace('#', '').split('/');
     switch (p[0]) {
       case '': case 'inicio': return '#camino';
-      case 'caminos': case 'mes-real': return '#camino/caminos';
+      case 'caminos': case 'mes-real': return '#explorar';
+      case 'camino': return p[1] === 'caminos' ? '#explorar' : null;
       case 'ficha': return '#camino/ficha/' + (p[1] || '');
       case 'avisos': return '#camino/avisos';
       case 'proyectos': return estado.preguntasListas && estado.caminoElegido && !estado.compra ? '#camino/elegir' : '#departamentos';
@@ -5091,26 +5100,28 @@
     if (p[0] === 'regalo') return r('regalo', null, renderRegaloFamilia);
     if (p[0] === 'registro') return r('registro', 'perfil', renderRegistro);
     if (p[0] === 'perfil') return r('perfil', 'perfil', function () { renderPerfil(p[1]); });
+    // S21-B1: cuatro pestañas. Las direcciones de antes se mantienen; cambia la pestaña que se marca.
+    if (p[0] === 'pasos') return r('pasos', 'pasos', renderTusPasos);
+    if (p[0] === 'explorar') return r('caminos', 'explorar', function () { cambiosActivos = {}; renderCaminos(); });
     if (p[0] === 'departamentos') {
-      if (p[1]) return r('proyecto', 'departamentos', function () { renderDetalle(p[1], 'departamentos'); });
-      return r('proyectos', 'departamentos', function () { renderLista('explorar'); });
+      if (p[1]) return r('proyecto', 'explorar', function () { renderDetalle(p[1], 'departamentos'); });
+      return r('proyectos', 'explorar', function () { renderLista('explorar'); });
     }
     if (p[0] === 'inversiones') {
-      if (p[1] && p[2] === 'invertir') return r('invertir', 'inversiones', function () { renderInvertir(p[1]); });
-      if (p[1]) return r('proyecto', 'inversiones', function () { renderDetalle(p[1], 'inversiones'); });
-      return r('inversiones', 'inversiones', renderInversiones);
+      if (p[1] && p[2] === 'invertir') return r('invertir', 'perfil', function () { renderInvertir(p[1]); });
+      if (p[1]) return r('proyecto', 'perfil', function () { renderDetalle(p[1], 'inversiones'); });
+      return r('inversiones', 'perfil', renderInversiones);
     }
-    // Mi camino
+    // #camino/…: Explorar (fichas, elegir, departamento), Tus pasos (pasos de la compra) o Inicio.
     switch (p[1]) {
-      case 'caminos': return r('caminos', 'camino', function () { cambiosActivos = {}; renderCaminos(); });
-      case 'ficha': return r('ficha', 'camino', function () { renderFicha(p[2]); });
-      case 'elegir': return r('proyectos', 'camino', function () { renderLista('camino'); });
-      case 'proyecto': return r('proyecto', 'camino', function () { renderDetalle(p[2], 'camino'); });
-      case 'avisos': return r('avisos', 'camino', renderAvisos);
+      case 'ficha': return r('ficha', 'explorar', function () { renderFicha(p[2]); });
+      case 'elegir': return r('proyectos', 'explorar', function () { renderLista('camino'); });
+      case 'proyecto': return r('proyecto', 'explorar', function () { renderDetalle(p[2], 'camino'); });
+      case 'avisos': return r('avisos', 'inicio', renderAvisos);
       case 'postular': case 'pie': case 'firmar': case 'mi-departamento':
-        return r('mis-proyectos', 'camino', function () { renderPaso(p[1], p[2]); });
+        return r('mis-proyectos', 'pasos', function () { renderPaso(p[1], p[2]); });
     }
-    return r('inicio', 'camino', renderInicio);
+    return r('inicio', 'inicio', renderInicio);
   }
 
   // Cada pestaña recuerda dónde quedaste; tocar la pestaña en la que estás vuelve a su raíz.
@@ -5136,12 +5147,6 @@
   // Historial propio de rutas: si la nueva es la anterior, es "Atrás" y se recupera dónde estaba.
   var pilaRutas = [];
   var primeraPantalla = true;
-  // S17-F11: quien compra para vivir no ve Inversiones, salvo que lo pida en Perfil o ya tenga inversiones.
-  function actualizarBarraInversiones() {
-    var a = document.querySelector('.barra a[data-seccion="inversiones"]');
-    if (!a) return;
-    a.parentElement.hidden = estado.modo === 'vivir' && !estado.quiereInvertir && !estado.inversiones.length;
-  }
   function mostrar() {
     cerrarHoja(false);
     cerrarToastViejo();
@@ -5157,7 +5162,6 @@
     if (location.hash !== hashNuevo) return;
     document.body.classList.toggle('en-intro', destino.pantalla === 'intro');
     if (destino.pantalla !== 'inicio') document.body.classList.remove('en-preguntas');
-    actualizarBarraInversiones();
     document.body.classList.toggle('en-familia', destino.pantalla === 'regalo');
     var volviendo = pilaRutas.length > 1 && pilaRutas[pilaRutas.length - 2].hash === hashNuevo;
     if (pilaRutas.length) pilaRutas[pilaRutas.length - 1].y = yAntes;
