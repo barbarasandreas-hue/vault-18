@@ -1830,3 +1830,16 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 @media (prefers-reduced-motion: no-preference) {
   .hito.actual .hito-marca { transition: box-shadow var(--dur-corta) var(--ease-salida); }
 }
+
+/* ===== S21-B5: Tu pie y su protección ===== */
+.saldo-pie .numero { display: block; margin: 4px 0; }
+.sello-capas h2 { display: flex; align-items: center; color: var(--green-dark); }
+.sello-capas h2 .icono { color: var(--green-dark); }
+.capas { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 12px; }
+.capa { display: flex; gap: 12px; align-items: flex-start; }
+.capa > span { display: grid; gap: 2px; }
+.capa small { color: var(--gray-semidark); font-size: 14px; }
+.capa-icono { width: 24px; height: 24px; flex: none; color: var(--gray-neutral); }
+.capa.activa .capa-icono { color: var(--green-normal); }
+.capa:not(.activa) strong { color: var(--gray-semidark); }
+.interruptor-cuota + .interruptor-cuota { margin-top: 4px; }

@@ -5,7 +5,7 @@
   // Ruta → pantalla que se muestra y botón de la barra que queda activo.
   // S15-F1: cuatro pestañas. La primera parte de la dirección dice la pestaña; el resto, la pantalla.
   var RUTAS = {
-    'bienvenida': 'bienvenida', 'camino': 'inicio', 'pasos': 'pasos', 'pie': 'pasos', 'explorar': 'explorar', 'departamentos': 'explorar',
+    'bienvenida': 'bienvenida', 'camino': 'inicio', 'pasos': 'pasos', 'pie': 'inicio', 'explorar': 'explorar', 'departamentos': 'explorar',
     'inversiones': 'perfil', 'perfil': 'perfil', 'registro': 'perfil', 'regalo': 'inicio'
   };
 
@@ -1752,6 +1752,7 @@
   var NOMBRE_ESPACIO = { living: 'Living', cocina: 'Cocina', dormitorio: 'Dormitorio', bano: 'Baño' };
   // Pasa a minúscula solo la primera letra (no las siglas: FOGAES, IVA).
   function primeraMinuscula(t) { return t.charAt(0).toLowerCase() + t.slice(1); }
+  function primeraMayuscula(t) { return t.charAt(0).toUpperCase() + t.slice(1); }
   function hayFotos() { return typeof FOTOS !== 'undefined'; }
   function fotoEdificio(p) { return hayFotos() && FOTOS.edificios[p.id] ? 'fotos/edificios/' + encodeURI(FOTOS.edificios[p.id]) : null; }
   function tipologia(d) { return d.dormitorios === 0 ? 'estudio' : d.dormitorios === 1 ? '1d' : d.banos >= 2 ? '2d2b' : '2d'; }
@@ -4473,7 +4474,7 @@
   }
   function botonEnHoja(id, texto) { return '<button type="button" class="btn btn-primario btn-bloque" id="' + id + '">' + texto + '</button>'; }
   function enlaceHoja(href, texto) { return '<a class="btn btn-primario btn-bloque" href="' + href + '">' + texto + '</a>'; }
-  function rutaTuPie() { return estado.compra ? '#camino/pie' : '#pie'; }
+  function rutaTuPie() { return '#pie'; }
 
   function abrirHito(id, boton) {
     var s = fotoPasos();
@@ -4518,6 +4519,104 @@
           }
         });
       });
+  }
+
+
+  // ---------- S21-B5: Tu pie y su protección ----------
+  function selloProteccion(s) {
+    var p = proyectoCompra();
+    var capas = capasProteccion({ grupo: s.grupo, cuentaVivienda: s.cuentaVivienda, bajoLlave: s.bajoLlave,
+      enVerde: !!(p && s.asegurado && deptoDeProyecto(p).enObra) });
+    return '<section class="tarjeta bloque sello-capas" aria-labelledby="titulo-protegido">' +
+      '<h2 class="h4" id="titulo-protegido">' + icono('i-escudo') + 'Tu pie está protegido</h2>' +
+      '<ul class="capas">' + capas.map(function (c) {
+        return '<li class="capa' + (c.activa ? ' activa' : '') + '">' + icono(c.activa ? 'i-check' : 'i-candado', 'capa-icono') +
+          '<span><strong>' + c.titulo + (c.propuesta ? '<span class="chip-propuesta-mini">Propuesta</span>' : '') + '</strong>' +
+          '<small>' + (c.activa ? c.de : 'Actívalo abajo, en Tu cuota') + '</small></span></li>';
+      }).join('') + '</ul></section>';
+  }
+  function movimientosPie() {
+    var h = estado.historialMeses || [];
+    if (!h.length) return '<p class="texto-apoyo">Todavía no hay movimientos.</p>';
+    var n = h.length;
+    return '<ul class="filas">' + h.map(function (r, k) {
+      var mes = fechaMasMeses(FECHA_REFERENCIA, estado.mesAhorro - (n - k));
+      var nombre = MESES[Number(mes.split('-')[1]) - 1];
+      var texto = r === 'pago' ? 'Cuota de ' + nombre : (r === 'protector' ? nombre + ': usaste tu protector' : nombre + ': no pagaste');
+      return '<li><div class="fila"><span><strong>' + primeraMayuscula(texto) + '</strong></span>' +
+        (r === 'pago' ? '<strong class="numero">+' + formatoPesos(estado.ahorroMensual) + '</strong>' : '') + '</div></li>';
+    }).reverse().join('') + '</ul>';
+  }
+  function renderTuPie() {
+    var cont = $('pie-contenido');
+    var s = fotoPasos();
+    var meta = s.meta;
+    var cabeza = '<a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Inicio</a>' +
+      '<header class="encabezado"><h1 id="titulo-tu-pie" class="h2">Tu pie</h1></header>';
+    if (!s.numeros) {
+      cont.innerHTML = cabeza + '<p class="texto-apoyo">Primero, tus números.</p>' +
+        '<div class="accion"><a class="btn btn-primario btn-lg btn-bloque" href="#camino">Contar mis números</a></div>';
+      return;
+    }
+    if (!s.cuentaVivienda) {
+      cont.innerHTML = cabeza +
+        '<section class="tarjeta bloque"><p class="texto-apoyo">Tu pie vive en una cuenta de ahorro para la vivienda en Bci, en UF. La app es su ventana.</p></section>' +
+        selloProteccion(s) +
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-abrir-cuenta">Abrir mi cuenta</button></div>';
+      $('btn-abrir-cuenta').addEventListener('click', function () { marcarPaso('cuentaVivienda', 'Abriste tu cuenta de vivienda (simulado).'); });
+      return;
+    }
+    var listo = meta > 0 && s.ahorrado >= meta;
+    cont.innerHTML = cabeza +
+      '<section class="tarjeta bloque saldo-pie" aria-labelledby="titulo-saldo">' +
+        '<p class="etiqueta" id="titulo-saldo">Llevas</p>' +
+        '<strong class="numero display-2">' + formatoPesos(s.ahorrado) + '</strong>' +
+        '<p class="texto-apoyo">' + (s.grupo ? 'Cuenta bloqueada' + SEP + 'tu grupo' : 'Cuenta de vivienda Bci') + '</p>' +
+        barraHitos(s.ahorrado, meta) +
+        (estado.ahorroIniciado ? puntosRacha() : '') +
+      '</section>' +
+      '<div class="accion-fija">' + (listo
+        ? '<a class="btn btn-primario btn-lg btn-bloque" href="#pasos">Ver tu siguiente hito</a>'
+        : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-pagar-cuota">Pagar mi cuota</button>') + '</div>' +
+      plegable('pie-cuota', 'Tu cuota', formatoRedondeado(estado.ahorroMensual || 0) + ' al mes',
+        '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + !!estado.cuotaAutomatica + '" id="btn-pie-auto">' +
+          '<span>' + icono('i-calendario') + 'Ahorro automático el día de pago</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
+        '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + !!estado.pasos.bajoLlave + '" id="btn-pie-llave">' +
+          '<span>' + icono('i-candado') + 'Guardar bajo llave</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
+        (listo ? '' : '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-pie-no-pude">Este mes no pude</button>')) +
+      selloProteccion(s) +
+      plegable('pie-movimientos', 'Movimientos', '', movimientosPie());
+    iniciarPlegables();
+    var pagar = function (pago) {
+      if (!estado.ahorroIniciado) { estado.ahorrado = Math.min(meta, estado.ahorroActual || 0); estado.ahorroIniciado = true; }
+      var antes = hitosAlcanzados(estado.ahorrado, meta);
+      if (pago) estado.ahorrado = sumarMes(estado.ahorrado, estado.ahorroMensual, meta);
+      var r = registrarMes({ mes: estado.mesAhorro, racha: estado.racha, ultimoProtector: estado.ultimoProtector }, pago);
+      estado.mesAhorro = r.mes; estado.racha = r.racha; estado.ultimoProtector = r.ultimoProtector;
+      estado.historialMeses = (estado.historialMeses || []).concat([r.resultado]).slice(-6);
+      guardarEstado();
+      var nuevos = hitosAlcanzados(estado.ahorrado, meta).filter(function (h) { return antes.indexOf(h) === -1; });
+      renderTuPie();
+      if (!pago) toast(r.resultado === 'protector' ? 'Usaste tu protector: tu racha sigue.' : 'Tu racha vuelve a empezar. Lo ahorrado sigue ahí.');
+      else if (nuevos.length) { confeti(); toast(textoHito(nuevos[nuevos.length - 1])); if (navigator.vibrate) navigator.vibrate(40); }
+      else anunciar('Cuota pagada (simulado).');
+    };
+    if ($('btn-pagar-cuota')) $('btn-pagar-cuota').addEventListener('click', function () {
+      if (!(estado.ahorroMensual > 0)) { abrirMisDatos($('btn-pagar-cuota')); return; }
+      pagar(true);
+      if ($('btn-pagar-cuota')) $('btn-pagar-cuota').focus();
+    });
+    if ($('btn-pie-no-pude')) $('btn-pie-no-pude').addEventListener('click', function () { pagar(false); });
+    $('btn-pie-auto').addEventListener('click', function () {
+      estado.cuotaAutomatica = !estado.cuotaAutomatica; guardarEstado();
+      plegablesAbiertos['pie-cuota'] = true; renderTuPie(); $('btn-pie-auto').focus();
+      toast(estado.cuotaAutomatica ? 'Ahorro automático activo (simulado).' : 'Pagas tu cuota a mano.');
+    });
+    $('btn-pie-llave').addEventListener('click', function () {
+      estado.pasos.bajoLlave = !estado.pasos.bajoLlave; guardarEstado();
+      plegablesAbiertos['pie-cuota'] = true; renderTuPie(); $('btn-pie-llave').focus();
+      toast(estado.pasos.bajoLlave ? 'Tu pie quedó bajo llave (simulado).' : 'Tu pie ya no está bajo llave.');
+    });
   }
 
   var MISIONES_TEXTO = {
@@ -5303,7 +5402,8 @@
     if (p[0] === 'perfil') return r('perfil', 'perfil', function () { renderPerfil(p[1]); });
     // S21-B1: cuatro pestañas. Las direcciones de antes se mantienen; cambia la pestaña que se marca.
     if (p[0] === 'pasos') return r('pasos', 'pasos', renderTusPasos);
-    if (p[0] === 'pie') return r('pasos', 'pasos', function () { if (estado.compra) location.replace('#camino/pie'); else renderTusPasos(); });
+    // S21-B5: Tu pie. Si la compra está en su paso del pie, se usa esa pantalla.
+    if (p[0] === 'pie') return r('pie', 'inicio', function () { if (estado.compra && pasoEfectivo() === 2) location.replace('#camino/pie'); else renderTuPie(); });
     if (p[0] === 'explorar') return r('caminos', 'explorar', function () { cambiosActivos = {}; renderCaminos(); });
     if (p[0] === 'departamentos') {
       if (p[1]) return r('proyecto', 'explorar', function () { renderDetalle(p[1], 'departamentos'); });

@@ -89,3 +89,16 @@ test('S21: fechas que importan, en orden', () => {
   assert.deepStrictEqual(f.slice().sort(), f);
   assert.strictEqual(c.diasHastaFecha('2026-11-27', HOY), 20);
 });
+
+test('S21-B5: el sello lista solo capas reales para el camino', () => {
+  const ids = (s) => c.capasProteccion(s).map((x) => x.id);
+  assert.deepStrictEqual(ids({ cuentaVivienda: false }), ['mes-malo']);
+  assert.deepStrictEqual(ids({ cuentaVivienda: true }), ['bajo-llave', 'uf', 'mes-malo']);
+  assert.deepStrictEqual(ids({ cuentaVivienda: true, grupo: true }), ['bajo-llave', 'uf', 'bloqueada', 'salida', 'mes-malo']);
+  assert.ok(ids({ cuentaVivienda: true, enVerde: true }).includes('poliza'));
+  // Bajo llave es la única capa que se elige.
+  const capas = c.capasProteccion({ cuentaVivienda: true, bajoLlave: false });
+  assert.deepStrictEqual(capas.filter((x) => !x.activa).map((x) => x.id), ['bajo-llave']);
+  // Lo que es propuesta de Primer Peldaño se marca.
+  assert.ok(c.capasProteccion({ cuentaVivienda: true, grupo: true }).filter((x) => x.propuesta).every((x) => ['bloqueada', 'salida'].includes(x.id)));
+});

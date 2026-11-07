@@ -1557,7 +1557,26 @@ function siguientePaso(s, hoy) {
 }
 var CUESTA_MISION = { ds1: '20 minutos', rsh: '15 minutos', documentos: '5 minutos', 'bajo-llave': '1 minuto', 'ahorro-auto': '1 minuto', equipo: '2 minutos', elegir: '10 minutos' };
 
+
+// S21-B5: "Tu pie está protegido": solo las capas reales para ese camino y esa etapa.
+// s: { grupo, cuentaVivienda, bajoLlave, enVerde (promesa de un departamento en obra) }.
+// Cada capa: { id, titulo, de, activa, propuesta }.
+function capasProteccion(s) {
+  var capas = [];
+  var capa = function (id, titulo, de, activa, propuesta) { capas.push({ id: id, titulo: titulo, de: de, activa: !!activa, propuesta: !!propuesta }); };
+  if (s.cuentaVivienda) {
+    capa('bajo-llave', 'Separado y bajo llave', 'Avisas 30 días antes de sacar', s.bajoLlave);
+    capa('uf', 'En UF', 'No lo come la inflación', true);
+  }
+  if (s.grupo) capa('bloqueada', 'Cuenta bloqueada', 'Nadie lo saca hasta la escritura', true, true);
+  else if (s.enVerde) capa('poliza', 'Póliza de la inmobiliaria', 'Si no entrega, recuperas lo pagado', true);
+  if (s.grupo) capa('salida', 'Salida sin multa', 'Si Bci no aprueba, vuelve entero', true, true);
+  capa('mes-malo', 'Un mes malo', 'Lo ahorrado no se pierde', true);
+  return capas;
+}
+
 if (typeof module !== 'undefined') module.exports = {
+  capasProteccion: capasProteccion,
   HITOS_CAMINO: HITOS_CAMINO,
   HITOS: HITOS,
   FECHAS_IMPORTAN: FECHAS_IMPORTAN,
