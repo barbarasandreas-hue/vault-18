@@ -2,13 +2,13 @@ const test = require('node:test');
 const assert = require('node:assert');
 const c = require('../js/calculos.js');
 
-// Números de referencia v3 (SPEC.md, sección 0). UF $41.065, tasa con subsidio 3,9 %,
+// Números de referencia v3 (SPEC.md, sección 0). UF $41.065, tasa de ejemplo con subsidio 3,46 % (peor caso 4,45 %; S20-T1),
 // 30 años, seguros UF 0,7. Se acepta ±$1 por redondeo.
 const referencia = [
-  { nombre: 'Vivir individual (FOGAES 90 %)', lista: 2500, tipo: 'individual', modo: 'vivir', precioUF: 2500, pie: 10266250, dividendo: 464549, sinSubsidio: 496904 },
-  { nombre: 'Vivir en grupo', lista: 2500, tipo: 'lote', modo: 'vivir', precioUF: 2375, pie: 9752938, dividendo: 442759, sinSubsidio: 473496 },
-  { nombre: 'Invertir individual (80 %) + pie compartido', lista: 2500, tipo: 'individual', modo: 'arrendar', precioUF: 2500, pie: 5133125, dividendo: 416127, sinSubsidio: 444886, participacion: 15399375 },
-  { nombre: 'Invertir en grupo + pie compartido', lista: 2500, tipo: 'lote', modo: 'arrendar', precioUF: 2375, pie: 4876469, dividendo: 396758, sinSubsidio: 424079, participacion: 14629406 }
+  { nombre: 'Vivir individual (FOGAES 90 %)', lista: 2500, tipo: 'individual', modo: 'vivir', precioUF: 2500, pie: 10266250, dividendo: 441586, sinSubsidio: 494163 },
+  { nombre: 'Vivir en grupo', lista: 2500, tipo: 'lote', modo: 'vivir', precioUF: 2375, pie: 9752938, dividendo: 420944, sinSubsidio: 470892 },
+  { nombre: 'Invertir individual (80 %) + pie compartido', lista: 2500, tipo: 'individual', modo: 'arrendar', precioUF: 2500, pie: 5133125, dividendo: 395715, sinSubsidio: 442450, participacion: 15399375 },
+  { nombre: 'Invertir en grupo + pie compartido', lista: 2500, tipo: 'lote', modo: 'arrendar', precioUF: 2375, pie: 4876469, dividendo: 377366, sinSubsidio: 421765, participacion: 14629406 }
 ];
 
 function cerca(real, esperado, campo) {
@@ -85,12 +85,12 @@ test('arriendo neto: $600.000 → $495.000', () => {
   assert.strictEqual(Math.round(c.arriendoNeto(600000)), 495000);
 });
 
-test('rentabilidad neta de UF 2.375: $400.000 pasa el filtro de 3,9 %, $370.000 no', () => {
+test('rentabilidad neta de UF 2.375: $400.000 pasa el filtro de 3,46 %, $330.000 no', () => {
   const alta = c.rentabilidad(400000, 2375);
-  const baja = c.rentabilidad(370000, 2375);
+  const baja = c.rentabilidad(330000, 2375);
   assert.strictEqual(c.formatoPorcentaje(alta, 1), '4,1\u00a0%');
   assert.strictEqual(c.pasaFiltroIA(alta), true);
-  assert.strictEqual(c.formatoPorcentaje(baja, 1), '3,8\u00a0%');
+  assert.strictEqual(c.formatoPorcentaje(baja, 1), '3,3\u00a0%');
   assert.strictEqual(c.pasaFiltroIA(baja), false);
 });
 
@@ -164,7 +164,7 @@ test('datos de ejemplo v3 (S8-F5)', () => {
     assert.ok(bruta >= 0.04 && bruta <= 0.05, `${d.id}: rentabilidad bruta ${bruta}`);
     return !c.pasaFiltroIA(c.rentabilidad(d.arriendoEstimadoIA, precio));
   });
-  assert.ok(bajos.length >= 2, `solo ${bajos.length} departamentos bajo 3,9 % neto`);
+  assert.ok(bajos.length >= 2, `solo ${bajos.length} departamentos bajo la tasa con subsidio (neto)`);
   assert.ok(datos.DEPARTAMENTOS.some((d) => d.dormitorios === 0 && Math.abs(d.listaUF - 1200) <= 100), 'falta un estudio de ≈ UF 1.200');
   assert.ok(datos.DEPARTAMENTOS.some((d) => d.dormitorios === 1 && Math.abs(d.listaUF - 1750) <= 100), 'falta un 1 dormitorio de ≈ UF 1.750');
   for (const p of datos.PROYECTOS) {
@@ -184,24 +184,24 @@ test('en modo arrendar la IA deja proyectos en las dos pestañas', () => {
 
 // ---------- Postula: carga (S3-F1) ----------
 
-test('carga: invertir en grupo con $1.500.000 + $1.000.000 → 15,9 %, holgado', () => {
+test('carga: invertir en grupo con $1.500.000 + $1.000.000 → 15,1 %, holgado', () => {
   const total = c.escenario(2500, 'lote', 'arrendar', 10).totalMes;
   const k = c.carga(total, 1500000, 1000000);
-  assert.strictEqual(c.formatoPorcentaje(k, 1), '15,9\u00a0%');
+  assert.strictEqual(c.formatoPorcentaje(k, 1), '15,1\u00a0%');
   assert.strictEqual(c.nivelCarga(k), 'holgado');
 });
 
-test('carga v3: dividendo de 28,3 % no aprueba (máximo 25 %)', () => {
+test('carga v3: dividendo de 27,0 % no aprueba (máximo 25 %)', () => {
   const total = c.escenario(2500, 'lote', 'arrendar', 10).totalMes;
   const k = c.carga(total, 900000, 500000);
-  assert.strictEqual(c.formatoPorcentaje(k, 1), '28,3\u00a0%');
+  assert.strictEqual(c.formatoPorcentaje(k, 1), '27,0\u00a0%');
   assert.strictEqual(c.nivelCarga(k), 'no-aprueba');
 });
 
-test('carga v3: vivir individual con $1.000.000 + $500.000 → 31,0 %, no aprueba', () => {
+test('carga v3: vivir individual con $1.000.000 + $500.000 → 29,4 %, no aprueba', () => {
   const total = c.escenario(2500, 'individual', 'vivir').totalMes;
   const k = c.carga(total, 1000000, 500000);
-  assert.strictEqual(c.formatoPorcentaje(k, 1), '31,0\u00a0%');
+  assert.strictEqual(c.formatoPorcentaje(k, 1), '29,4\u00a0%');
   assert.strictEqual(c.nivelCarga(k), 'no-aprueba');
 });
 
@@ -235,15 +235,15 @@ test('carga v3: el semáforo usa la carga redondeada que muestra la pantalla', (
 test('ingreso total, mínimo y faltante (v3)', () => {
   assert.strictEqual(c.ingresoTotal(900000, 800000), 1700000);
   assert.strictEqual(c.ingresoTotal(900000, null), 900000);
-  const total = c.escenario(2500, 'lote', 'arrendar', 10).totalMes; // $396.758
-  // sin cuotas manda el 25 %: 396.758 / 0,25
-  assert.strictEqual(c.ingresoMinimo(total), 1587032);
-  assert.strictEqual(c.ingresoFaltante(total, 700000, 500000), 387032);
+  const total = c.escenario(2500, 'lote', 'arrendar', 10).totalMes; // $377.366
+  // sin cuotas manda el 25 %: 377.366 / 0,25
+  assert.strictEqual(c.ingresoMinimo(total), 1509464);
+  assert.strictEqual(c.ingresoFaltante(total, 700000, 500000), 309464);
   assert.strictEqual(c.ingresoFaltante(total, 1500000, 1000000), 0);
-  assert.strictEqual(c.evaluarCarga(total, 0, 1587032, null).nivel, 'holgado');
-  // con $200.000 de cuotas manda el 30 %: 596.758 / 0,30
-  assert.strictEqual(c.ingresoMinimo(total, 200000), 1989194);
-  assert.notStrictEqual(c.evaluarCarga(total, 200000, 1989194, null).nivel, 'no-aprueba');
+  assert.strictEqual(c.evaluarCarga(total, 0, 1509464, null).nivel, 'holgado');
+  // con $200.000 de cuotas manda el 30 %: 577.366 / 0,30
+  assert.strictEqual(c.ingresoMinimo(total, 200000), 1924554);
+  assert.notStrictEqual(c.evaluarCarga(total, 200000, 1924554, null).nivel, 'no-aprueba');
 });
 
 test('carga: sin ingreso no calcula', () => {
@@ -307,10 +307,10 @@ test('ahorro: hitos alcanzados y un mes más sin pasarse de la meta', () => {
 // ---------- Inicio: ¿cuánto puedo comprar? (S5-F0) ----------
 
 for (const [propio, pareja, modo, uf] of [
-  [1500000, 1000000, 'arrendar', 3847],
-  [1500000, 1000000, 'vivir', 3420],
-  [1200000, 800000, 'vivir', 2703],
-  [2000000, 1000000, 'arrendar', 4654]
+  [1500000, 1000000, 'arrendar', 4062],
+  [1500000, 1000000, 'vivir', 3610],
+  [1200000, 800000, 'vivir', 2853],
+  [2000000, 1000000, 'arrendar', 4913]
 ]) {
   test(`capacidad (${modo}): $${propio} + $${pareja} → UF ${uf}`, () => {
     const cap = c.capacidadCompraUF(propio, pareja, modo);
@@ -505,9 +505,9 @@ test('campo de UF: acepta un decimal con coma y punto de miles', () => {
 // ---------- Preaprobación simulada (S8-F1) ----------
 
 for (const [nombre, propio, pareja, otras, tasa, uf] of [
-  ['sin otras cuotas', 1500000, 1000000, 0, undefined, 3078],
-  ['con $200.000 de otras cuotas', 1500000, 1000000, 200000, undefined, 2691],
-  ['con $500.000 de otras cuotas', 1500000, 1000000, 500000, undefined, 1142],
+  ['sin otras cuotas', 1500000, 1000000, 0, undefined, 3249],
+  ['con $200.000 de otras cuotas', 1500000, 1000000, 200000, undefined, 2840],
+  ['con $500.000 de otras cuotas', 1500000, 1000000, 500000, undefined, 1205],
   ['sin subsidio, sin otras cuotas', 1500000, 1000000, 0, 0.045, 2865],
   ['sin subsidio, con $200.000', 1500000, 1000000, 200000, 0.045, 2505],
   ['sin subsidio, con $500.000', 1500000, 1000000, 500000, 0.045, 1063]
@@ -520,8 +520,8 @@ for (const [nombre, propio, pareja, otras, tasa, uf] of [
   });
 }
 
-test('preaprobación: dividendo máximo $624.925 con subsidio y $1,5 M + $1 M', () => {
-  assert.strictEqual(c.preaprobacion(1500000, 1000000, 0).dividendo, 624925);
+test('preaprobación: dividendo máximo $624.887 con subsidio y $1,5 M + $1 M', () => {
+  assert.strictEqual(c.preaprobacion(1500000, 1000000, 0).dividendo, 624887);
 });
 
 test('preaprobación: requisito de renta (UF 23 titular, o UF 39 familiar y UF 16 la pareja)', () => {

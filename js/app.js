@@ -651,6 +651,8 @@
       texto: 'Si un mes no puedes pagar tu cuota, tu racha sigue, una vez cada 6 meses. Lo ahorrado nunca se pierde.' },
     'garantia': { termino: 'Garantía del Estado', pregunta: '¿Qué es la garantía del Estado?',
       texto: 'Con la garantía FOGAES, Bci te presta el 90 % y pones solo el 10 % de pie. Sin ella, Bci presta el 80 % y juntas más tiempo.' },
+    'tasa-ejemplo': { termino: 'Tasa de ejemplo', pregunta: 'Qué significa tasa de ejemplo',
+      texto: 'Cada banco fija su tasa según tu caso. Se fija el día que firmas.' },
     'dividendo': { termino: 'Dividendo', pregunta: '¿Qué es el dividendo?',
       texto: 'Es la cuota que pagas cada mes a Bci por el crédito hipotecario, con los seguros incluidos.' },
     'pie': { termino: 'Pie', pregunta: '¿Qué es el pie?',
@@ -691,6 +693,12 @@
   function ayuda(clave) {
     return '<button type="button" class="btn-ayuda" data-ayuda="' + clave + '" aria-expanded="false" aria-label="' +
       GLOSARIO[clave].pregunta + '"><svg aria-hidden="true"><use href="#i-ayuda"/></svg></button>';
+  }
+
+  // S20-T1: el botón "i" de la tasa de ejemplo. Mismo globo que el "?", con el ícono de información.
+  function info(clave) {
+    return '<button type="button" class="btn-ayuda btn-info" data-ayuda="' + clave + '" aria-expanded="false" aria-label="' +
+      GLOSARIO[clave].pregunta + '"><svg aria-hidden="true"><use href="#i-info"/></svg></button>';
   }
 
   // Un solo manejador para todos los botones de ayuda: abre o cierra la explicación debajo del término.
@@ -1893,7 +1901,7 @@
           (estado.verTodos ? 'Ver solo mi camino' : 'Solo mi camino <span class="quitar" aria-hidden="true">×</span>') + '</button>' : '') +
         '<button type="button" class="btn btn-terciario btn-sm" id="btn-filtrar" aria-haspopup="dialog">' + icono('i-filtro') + 'Filtrar' + (n ? ' (' + n + ')' : '') + '</button>' +
       '</div>' +
-      (arrendar ? '<p class="chip chip-ia">' + icono('i-escudo') + 'Filtrado por IA: rinde 3,9' + NBSP + '% o más</p>' : '') +
+      (arrendar ? '<p class="chip chip-ia">' + icono('i-escudo') + 'Filtrado por IA: rinde ' + formatoPorcentaje(RENTABILIDAD_MINIMA, 2) + ' o más</p>' : '') +
       (visibles.length
         ? '<ul class="lista-proyectos" id="lista-proyectos">' + visibles.map(function (p) { return tarjetaProyecto(p, camino ? '#camino/proyecto/' : '#departamentos/'); }).join('') + '</ul>'
         : '<div class="vacio"><svg aria-hidden="true"><use href="#i-proyectos"/></svg>' +
@@ -3393,7 +3401,7 @@
     // S18-F7: para vivir, lo que firmas en filas (aquí sí van los montos exactos) y con las piezas elegidas.
     var credito = arrendar
       ? filaFirma('Crédito hipotecario Bci ' + ayuda('dividendo'),
-          Math.round(e.pctCredito * 100) + ' % (' + formatoPesos(e.reparto.bci) + ') a 30 años, al 3,9 %: ' + formatoPesos(e.dividendo) + ' al mes.')
+          Math.round(e.pctCredito * 100) + ' % (' + formatoPesos(e.reparto.bci) + ') a 30 años, tasa de ejemplo ' + formatoPorcentaje(SUPUESTOS.tasaBci, 2) + ' ' + info('tasa-ejemplo') + ': ' + formatoPesos(e.dividendo) + ' al mes.')
       : '';
     var filasVivir = arrendar ? '' :
       '<ul class="datos-inversion">' +
@@ -3402,7 +3410,7 @@
         (e.subsidio ? '<li><span>Subsidio del Estado</span><strong>' + formatoPesos(e.subsidio) + '</strong></li>' : '') +
         '<li><span>Pagas al mes</span><strong>' + formatoPesos(e.dividendo) + '</strong></li>' +
         '<li><span>Plazo</span><strong>30 años</strong></li>' +
-        '<li><span>Tasa ' + ayuda('dividendo') + '</span><strong>3,9 %</strong></li>' +
+        '<li><span>Tasa de ejemplo ' + info('tasa-ejemplo') + '</span><strong>' + formatoPorcentaje(SUPUESTOS.tasaBci, 2) + '</strong></li>' +
         '<li><span>Sin subsidio a la tasa</span><strong>' + formatoPesos(e.dividendoSinSubsidio) + ' al mes</strong></li>' +
       '</ul>';
     var segunda = arrendar && e.pctInversionistas === 0 ? ''
@@ -3959,7 +3967,7 @@
     try { localStorage.setItem(CLAVE_REGISTRO, JSON.stringify(registro)); } catch (e) { /* queda en memoria */ }
   }
 
-  // ¿Hay una compra en grupo que le alcance? (en modo arrendar, solo las que pasan el filtro de 3,9 %)
+  // ¿Hay una compra en grupo que le alcance? (en modo arrendar, solo las que pasan el filtro de rentabilidad)
   function hayGrupoQueAlcanza() {
     var cap = capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo);
     if (cap === null) return false;
@@ -4102,17 +4110,17 @@
     var n = numerosCamino(id, listaMeta(), perfilActual());
     var c = CAMINOS[id];
     var s = simulacionCredito(n.precioUF, c.credito);
-    var sin = simulacionCredito(n.precioUF, c.credito, SUPUESTOS.tasaSinSubsidio);
+    var sin = simulacionCredito(n.precioUF, c.credito, SUPUESTOS.tasaPeorCaso);
     abrirHojaContenido('Simulación: ' + c.corto,
       '<p class="texto-apoyo">Departamento de ' + formatoUF(n.precioUF) + SEP + '30 años</p>' +
       '<ul class="datos-inversion">' +
         '<li><span>Crédito Bci</span><strong>' + formatoPesos(ufAPesos(s.creditoUF)) + '</strong></li>' +
-        '<li><span>Tasa, con subsidio</span><strong>' + formatoPorcentaje(s.tasa, 1) + '</strong></li>' +
+        '<li><span>Tasa de ejemplo, con subsidio ' + info('tasa-ejemplo') + '</span><strong>' + formatoPorcentaje(s.tasa, 2) + '</strong></li>' +
         '<li><span>Dividendo sin seguros</span><strong>' + formatoPesos(s.dividendoSinSeguros) + '</strong></li>' +
         '<li><span>Dividendo con seguros</span><strong>' + formatoPesos(s.dividendoConSeguros) + '</strong></li>' +
         '<li><span>CAE ' + ayuda('simulacion') + '</span><strong>' + formatoPorcentaje(s.cae, 2) + '</strong></li>' +
         '<li><span>Costo total del crédito</span><strong>' + formatoPesos(s.costoTotal) + '</strong></li>' +
-        '<li><span>Sin subsidio a la tasa: CAE</span><strong>' + formatoPorcentaje(sin.cae, 2) + '</strong></li>' +
+        '<li><span>Peor caso, sin subsidio: CAE</span><strong>' + formatoPorcentaje(sin.cae, 2) + '</strong></li>' +
       '</ul>' +
       '<p class="sello">' + icono('i-documento') + 'Simulación referencial</p>', boton);
   }

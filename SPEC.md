@@ -31,6 +31,8 @@ Especificación del producto. La fuente de verdad del modelo y de las reglas es 
 
 ### Números de referencia v3 (UF $41.065, UF 2.500 de lista, tasa con subsidio 3,9%, 30 años, seguros UF 0,7)
 
+> Nota (S20-T1, 7-nov-2026): desde el Sprint 20 la tasa de ejemplo es 3,46 % con subsidio, 4,06 % sin subsidio y 4,45 % como peor caso (ver `CLAUDE.md`, "Tasa de ejemplo"). Las cifras de esta sección son las de la versión con 3,9 %; las vigentes están en `tests/calculos.test.js`.
+
 | Escenario | Precio | Crédito | Pie del usuario | Dividendo + seguros | Sin subsidio (4,5%) |
 |---|---|---|---|---|---|
 | Vivir individual (FOGAES 90%) | UF 2.500 | UF 2.250 | 10% = $10.266.250 | $464.549 | $496.904 |

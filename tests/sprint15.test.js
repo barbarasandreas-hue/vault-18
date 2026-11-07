@@ -56,11 +56,11 @@ test('Diferencia con el crédito base', () => {
 
 test('Hoja de Simulación: CAE mayor que la tasa y costo total coherente', () => {
   const s = c.simulacionCredito(2500, 0.9);
-  assert.strictEqual(s.tasa, 0.039);
+  assert.strictEqual(s.tasa, c.SUPUESTOS.tasaBci);
   assert.ok(s.cae > s.tasa && s.cae < 0.06, 'CAE ' + s.cae);
   assert.ok(s.dividendoConSeguros > s.dividendoSinSeguros);
   // El costo total es 360 dividendos con seguros más los gastos.
   assert.ok(Math.abs(s.costoTotal - (s.dividendoConSeguros * 360 + s.gastos)) < 400);
-  const sin = c.simulacionCredito(2500, 0.9, 0.045);
+  const sin = c.simulacionCredito(2500, 0.9, c.SUPUESTOS.tasaPeorCaso);
   assert.ok(sin.cae > s.cae);
 });

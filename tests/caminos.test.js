@@ -35,12 +35,12 @@ test('Tu mes real: menos de 40 % para vivir no alcanza', () => {
 });
 
 test('Caminos: los números de SPEC.md, sección 0', () => {
-  assert.strictEqual(c.numerosCamino('individual-vivir', 2500).dividendo, 464549);
-  assert.strictEqual(c.numerosCamino('grupo-vivir', 2500).dividendo, 442759);
-  assert.strictEqual(c.numerosCamino('pie-compartido', 2500).dividendo, 416127);
+  assert.strictEqual(c.numerosCamino('individual-vivir', 2500).dividendo, 441586);
+  assert.strictEqual(c.numerosCamino('grupo-vivir', 2500).dividendo, 420944);
+  assert.strictEqual(c.numerosCamino('pie-compartido', 2500).dividendo, 395715);
   const ab = c.numerosCamino('grupo-pie-compartido', 2500);
-  assert.strictEqual(ab.dividendo, 396758);
-  assert.strictEqual(ab.dividendoSinSubsidio, 424079);
+  assert.strictEqual(ab.dividendo, 377366);
+  assert.strictEqual(ab.dividendoSinSubsidio, 421765);
   assert.strictEqual(ab.pie, 4876469);
   assert.strictEqual(ab.inversionistas, 14629406);
   assert.strictEqual(c.numerosCamino('pie-compartido', 2500).mesesRecompra, 51);
@@ -50,7 +50,7 @@ test('Caminos: los números de SPEC.md, sección 0', () => {
   // A para invertir: el usuario pone el 20 % del precio con descuento
   assert.strictEqual(c.numerosCamino('grupo-invertir', 2500).pie, c.ufAPesos(2375 * 0.2));
   // Peor caso del grupo: si no se completa, a precio de lista
-  assert.strictEqual(c.numerosCamino('grupo-vivir', 2500).dividendoSinGrupo, 464549);
+  assert.strictEqual(c.numerosCamino('grupo-vivir', 2500).dividendoSinGrupo, 441586);
 });
 
 test('Caminos: meses para juntar lo que falta', () => {
@@ -112,11 +112,11 @@ test('Todavía no: hasta 3 cambios calculados', () => {
   assert.deepStrictEqual(cambios.map((x) => x.cumple), [false, false, true]);
   assert.ok(cambios[0].evaluacion.cargaDividendo > 0.25);
   assert.ok(cambios[1].evaluacion.cargaTotal > 0.30);
-  assert.ok(Math.abs(cambios[0].cargaTotal - 0.369) < 1e-9);
+  assert.ok(Math.abs(cambios[0].cargaTotal - 0.351) < 1e-9);
   assert.strictEqual(cambios[1].dividendo, c.numerosCamino('grupo-vivir', 1200).dividendo);
   assert.strictEqual(cambios[1].meses, Math.ceil(cambios[1].alEscriturar / 200000));
   // Renta necesaria: el mayor entre dividendo / 25 %, (dividendo + cuotas) / 30 % y lo que deja 40 % para vivir
-  assert.strictEqual(cambios[2].ingreso, Math.ceil(Math.max(442759 / 0.25, 642759 / 0.30, 642759 / 0.60) / 1000) * 1000);
+  assert.strictEqual(cambios[2].ingreso, Math.ceil(Math.max(420944 / 0.25, 620944 / 0.30, 620944 / 0.60) / 1000) * 1000);
   // Con esa renta, el camino ya es sostenible
   const conRenta = { ...p, sueldoPropio: cambios[2].ingreso };
   assert.strictEqual(c.recomendarCamino({ ...conRenta, hayGrupo: true }).todaviaNo, false);
@@ -137,7 +137,7 @@ test('Ficha arriendo con opción de compra: pie de 10 % en 30 meses', () => {
   assert.ok(Math.abs(a.arriendo - 355000) < 1000);
   assert.ok(Math.abs(a.alPie - 343000) < 1000);
   assert.strictEqual(a.meses, 30);
-  assert.strictEqual(a.dividendoDespues, 464549);
+  assert.strictEqual(a.dividendoDespues, 441586);
 });
 
 test('Ficha respaldo familiar: 5 % propio, 10 % del familiar y cuándo se libera', () => {
@@ -145,8 +145,8 @@ test('Ficha respaldo familiar: 5 % propio, 10 % del familiar y cuándo se libera
   assert.strictEqual(r.pie, 5133125);
   assert.strictEqual(r.deposito, 10266250);
   const credito = 2500 * 0.95;
-  assert.ok(c.saldoDeuda(credito, 0.039, 360, r.mesesLibera, []) <= 2000);
-  assert.ok(c.saldoDeuda(credito, 0.039, 360, r.mesesLibera - 1, []) > 2000);
+  assert.ok(c.saldoDeuda(credito, c.SUPUESTOS.tasaBci, 360, r.mesesLibera, []) <= 2000);
+  assert.ok(c.saldoDeuda(credito, c.SUPUESTOS.tasaBci, 360, r.mesesLibera - 1, []) > 2000);
 });
 
 test('Comprar más barato: usado e IVA cero bajan el pie del mismo departamento', () => {
@@ -154,7 +154,7 @@ test('Comprar más barato: usado e IVA cero bajan el pie del mismo departamento'
   assert.strictEqual(u.pie, c.ufAPesos(2500 * 0.824 * 0.1));
   assert.strictEqual(u.baja, 10266250 - u.pie);
   assert.strictEqual(u.sinSubsidio, true);
-  assert.strictEqual(u.dividendo, c.ufAPesos(c.dividendoUF(2500 * 0.824, 'vivir', 0.045)));
+  assert.strictEqual(u.dividendo, c.ufAPesos(c.dividendoUF(2500 * 0.824, 'vivir', c.SUPUESTOS.tasaSinSubsidio)));
   const i = c.pieMasBarato(2500, 'individual', 'vivir', 1, 'iva-cero');
   assert.strictEqual(i.pie, c.ufAPesos(2500 * 0.935 * 0.1));
   assert.strictEqual(i.sinSubsidio, false);
@@ -187,7 +187,7 @@ test('Todavía no con interruptores: cada cambio recalcula el camino', () => {
   const p = { ...base, modo: 'vivir', sueldoPropio: 1200000, sueldoPareja: null, otrasCuotas: 200000, ahorroActual: 0, ahorroMensual: 200000, hayGrupo: true };
   const nada = c.simularCambios(p, 'grupo-vivir', {});
   assert.strictEqual(nada.cumple, false);
-  assert.strictEqual(nada.numeros.dividendo, 442759);
+  assert.strictEqual(nada.numeros.dividendo, 420944);
   // Sin cuotas: la carga baja pero el dividendo sigue sobre 25 %
   const sinCuotas = c.simularCambios(p, 'grupo-vivir', { cuotas: true });
   assert.strictEqual(sinCuotas.perfil.otrasCuotas, 0);
@@ -234,7 +234,7 @@ test('Rango de precio: el plazo va del piso al techo del rango', () => {
   assert.strictEqual(pr.hasta.numeros.precioUF, 2000 * 0.95);
   assert.ok(pr.desde.numeros.meses <= pr.hasta.numeros.meses);
   // El techo del rango es el caso conservador: si no conviene, el piso puede convenir igual
-  const justo = { ...base, modo: 'vivir', sueldoPropio: 1400000, sueldoPareja: null, arriendoActual: 0 };
+  const justo = { ...base, modo: 'vivir', sueldoPropio: 1300000, sueldoPareja: null, arriendoActual: 0 };
   const pj = c.plazoRango(justo, c.buscarRango('1500-2000'));
   assert.strictEqual(pj.hasta.todaviaNo, true);
   assert.strictEqual(pj.desde.todaviaNo, false);

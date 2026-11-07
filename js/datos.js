@@ -71,8 +71,8 @@ var DEPARTAMENTOS = [
   { id: 'pt-208', proyectoId: 'portal-estacion', comuna: 'Estación Central', piso: 2, m2: 22, dormitorios: 0, banos: 1, listaUF: 1200, arriendoEstimadoIA: 190000, origenArriendo: ORIGEN_ARRIENDO },
   { id: 'pt-715', proyectoId: 'portal-estacion', comuna: 'Estación Central', piso: 7, m2: 22, dormitorios: 0, banos: 1, listaUF: 1200, arriendoEstimadoIA: 195000, origenArriendo: ORIGEN_ARRIENDO },
   // Altos de Recoleta: rinde menos de 3,9 % neto (la IA lo saca en modo arrendar)
-  { id: 'ar-502', proyectoId: 'altos-recoleta', comuna: 'Recoleta', piso: 5, m2: 52, dormitorios: 2, banos: 2, listaUF: 2600, arriendoEstimadoIA: 370000, origenArriendo: ORIGEN_ARRIENDO },
-  { id: 'ar-901', proyectoId: 'altos-recoleta', comuna: 'Recoleta', piso: 9, m2: 52, dormitorios: 2, banos: 2, listaUF: 2600, arriendoEstimadoIA: 380000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ar-502', proyectoId: 'altos-recoleta', comuna: 'Recoleta', piso: 5, m2: 52, dormitorios: 2, banos: 2, listaUF: 2600, arriendoEstimadoIA: 345000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ar-901', proyectoId: 'altos-recoleta', comuna: 'Recoleta', piso: 9, m2: 52, dormitorios: 2, banos: 2, listaUF: 2600, arriendoEstimadoIA: 350000, origenArriendo: ORIGEN_ARRIENDO },
   // S18-F6: nuevos para vivir (arriendo estimado igual que el resto, para comparar)
   { id: 'ne-504', proyectoId: 'nodo-estacion', comuna: 'Estación Central', piso: 5, m2: 44, dormitorios: 2, banos: 1, listaUF: 2150, arriendoEstimadoIA: 330000, origenArriendo: ORIGEN_ARRIENDO },
   { id: 'vi-302', proyectoId: 'vista-independencia', comuna: 'Independencia', piso: 3, m2: 40, dormitorios: 1, banos: 1, listaUF: 1900, arriendoEstimadoIA: 290000, origenArriendo: ORIGEN_ARRIENDO },
@@ -86,7 +86,7 @@ var DEPARTAMENTOS = [
   { id: 'pe-601', proyectoId: 'plaza-estacion', comuna: 'Estación Central', piso: 6, m2: 22, dormitorios: 0, banos: 1, listaUF: 1200, arriendoEstimadoIA: 200000, origenArriendo: ORIGEN_ARRIENDO },
   { id: 'ji-303', proyectoId: 'jardin-independencia', comuna: 'Independencia', piso: 3, m2: 50, dormitorios: 2, banos: 1, listaUF: 2450, arriendoEstimadoIA: 410000, origenArriendo: ORIGEN_ARRIENDO },
   // Barrio Recoleta: rinde menos de 3,9 % neto
-  { id: 'br-1004', proyectoId: 'barrio-recoleta', comuna: 'Recoleta', piso: 10, m2: 40, dormitorios: 1, banos: 1, listaUF: 1950, arriendoEstimadoIA: 285000, origenArriendo: ORIGEN_ARRIENDO }
+  { id: 'br-1004', proyectoId: 'barrio-recoleta', comuna: 'Recoleta', piso: 10, m2: 40, dormitorios: 1, banos: 1, listaUF: 1950, arriendoEstimadoIA: 275000, origenArriendo: ORIGEN_ARRIENDO }
 ];
 
 function departamentosDe(proyectoId) {

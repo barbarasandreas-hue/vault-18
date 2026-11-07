@@ -8,7 +8,7 @@ test('modo propio: arrendar sin pie compartido, el usuario pone el 20 %', () => 
   assert.strictEqual(e.pie, c.ufAPesos(2375 * 0.2));
   assert.strictEqual(e.pctInversionistas, 0);
   assert.strictEqual(e.reparto.inversionistas, 0);
-  assert.strictEqual(e.dividendo, 396758); // mismo crédito del 80 %
+  assert.strictEqual(e.dividendo, 377366); // mismo crédito del 80 %
   assert.strictEqual(e.modo, 'arrendar');
 });
 

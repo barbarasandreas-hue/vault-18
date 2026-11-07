@@ -5,8 +5,10 @@
 var SUPUESTOS = {
   uf: 41065,                // pesos por UF
   pctGastos: 0.02,          // gastos de escritura
-  tasaBci: 0.039,           // anual, con subsidio a la tasa (4,5 % − 0,6; Ley 21.836)
-  tasaSinSubsidio: 0.045,   // anual, si se acaban los cupos del subsidio
+  // S20-T1: tasa de ejemplo (la fija cada banco según el cliente; ver CLAUDE.md, "Tasa de ejemplo").
+  tasaBci: 0.0346,          // anual, con subsidio a la tasa: Bci, noviembre de 2026, 90 % a 30 años (CAE 3,99 %)
+  tasaSinSubsidio: 0.0406,  // anual, sin subsidio (3,46 + 0,6; cálculo propio): el usado, que no tiene subsidio
+  tasaPeorCaso: 0.0445,     // peor caso: tasa de referencia de Hacienda para bancos, nov-2026 (Res. Ex. 668)
   mesesBci: 360,
   segurosUF: 0.7,           // al mes
   rentaParticipacion: 0.06, // anual en UF, sobre la parte de los inversionistas (pie compartido)
@@ -108,7 +110,7 @@ function escenario(listaUF, tipo, modo, unidades) {
     gastos: gastos,
     alEscriturar: usuario + gastos,
     dividendo: dividendo,
-    dividendoSinSubsidio: ufAPesos(dividendoUF(precio, modo, SUPUESTOS.tasaSinSubsidio)),
+    dividendoSinSubsidio: ufAPesos(dividendoUF(precio, modo, SUPUESTOS.tasaPeorCaso)),
     totalMes: dividendo,
     participacionUF: reparto.inversionistas,
     reparto: { bci: bci, inversionistas: inversionistas, usuario: usuario }
@@ -127,9 +129,9 @@ function rentabilidad(arriendoBruto, precioPagadoUF) {
   return arriendoNeto(arriendoBruto) * 12 / (precioPagadoUF * SUPUESTOS.uf);
 }
 
-// En modo arrendar la IA solo muestra departamentos con rentabilidad neta de 3,9 % o más
-// (la tasa con subsidio: bajo eso, el crédito cuesta más de lo que rinde el arriendo).
-var RENTABILIDAD_MINIMA = 0.039;
+// En modo arrendar la IA solo muestra departamentos con rentabilidad neta igual o mayor a la tasa
+// con subsidio (bajo eso, el crédito cuesta más de lo que rinde el arriendo).
+var RENTABILIDAD_MINIMA = SUPUESTOS.tasaBci;
 function pasaFiltroIA(rent) { return rent >= RENTABILIDAD_MINIMA; }
 
 // Ahorro por unirse a una compra en grupo: el descuento según las unidades del lote.
@@ -384,7 +386,7 @@ function sumarMes(ahorrado, ahorroMensual, meta) {
 // ---------- Inicio: ¿cuánto puedo comprar? (S5-F0) ----------
 
 // Mayor precio, en UF enteras hacia abajo, con un dividendo de 25 % o menos del ingreso (holgado).
-// Dividendo = crédito del modo (90 % vivir, 80 % arrendar) a 3,9 % y 360 meses + seguros.
+// Dividendo = crédito del modo (90 % vivir, 80 % arrendar) a la tasa de ejemplo con subsidio y 360 meses + seguros.
 // En modo vivir no pasa del tope del FOGAES (UF 4.500).
 function capacidadCompraUF(sueldoPropio, sueldoPareja, modo) {
   var ingreso = ingresoTotal(sueldoPropio, sueldoPareja);
@@ -716,7 +718,7 @@ function numerosCamino(id, listaUF, perfil, tasa) {
   var cupos = perfil && perfil.cuposGrupo ? perfil.cuposGrupo : 10;
   var precio = c.grupo ? listaUF * (1 - descuentoGrupo(cupos)) : listaUF;
   var dividendo = ufAPesos(cuotaFija(precio * c.credito, tasa || SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
-  var sinSubsidio = ufAPesos(cuotaFija(precio * c.credito, SUPUESTOS.tasaSinSubsidio, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
+  var sinSubsidio = ufAPesos(cuotaFija(precio * c.credito, SUPUESTOS.tasaPeorCaso, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
   var pie = ufAPesos(precio * c.usuario);
   var gastos = ufAPesos(gastosUF(precio));
   var alEscriturar = pie + gastos;
@@ -1355,7 +1357,7 @@ function calcularPiezas(perfil, onEntrada, depto, hoyISO) {
     meses: plazo.meses, freno: plazo.freno, basta: plazo.basta, avance: metaUF > 0 ? Math.min(1, tienesUF / metaUF) : 1,
     dividendo: dividendo,
     // Peor caso: sin subsidio a la tasa (si se acaban los cupos).
-    dividendoSinSubsidio: ufAPesos(cuotaFija(credito, SUPUESTOS.tasaSinSubsidio, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF),
+    dividendoSinSubsidio: ufAPesos(cuotaFija(credito, SUPUESTOS.tasaPeorCaso, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF),
     ivaTarde: on.iva && plazo.meses !== null && plazo.meses > mesesEntre(hoy, S.finIVA),
     llaves: plazo.meses === null ? null : fechaLlaves(plazo.meses, hoy)
   };
