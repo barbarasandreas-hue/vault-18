@@ -861,7 +861,16 @@ Origen: revisión de diseño, textos y retorno (5-nov-2026), doc "Primer Peldañ
 Origen: doc "Beneficios del Estado para la vivienda y los caminos de Primer Peldaño" (7-nov-2026), sección 6, validada con la Ley 21.543, la Ley 21.850, la Res. Ex. 1.649 del Minvu y la Res. Ex. 668 de Hacienda.
 
 - **S20-T1 · Tasa de ejemplo con "i" (hacer primero).** Cambiar en `js/calculos.js` la tasa con subsidio a 3,46 %, la sin subsidio a 4,06 % y el peor caso a 4,45 % (ver `CLAUDE.md`, "Tasa de ejemplo"). En cada pantalla donde aparece una tasa (simulación, Detalle del crédito, preaprobación, Firmar), la etiqueta pasa a "Tasa de ejemplo" con un botón "i" al lado. El "i" abre una hoja corta: "Cada banco fija su tasa según tu caso. Se fija el día que firmas." Ícono SVG de línea del Bci Kit, área táctil de 44 px, `aria-label="Qué significa tasa de ejemplo"`. Actualizar las pruebas que usan 3,9 % y 4,5 %. Aceptación: ninguna tasa en pantalla sin su "i"; el peor caso usa 4,45 %; pasan todas las pruebas.
-- Pendientes de la ola anterior: avance de obra con foto, misiones que destraban piezas, Tu equipo que anima y regalo de pie.
+- **S20-T2 · Beneficios validados en los cálculos (hacer después de S20-T1).** Fuente: doc del proyecto "Beneficios del Estado para la vivienda y los caminos de Primer Peldaño", sección 6 (textos oficiales: Ley 21.543, Ley 21.850, Res. Ex. 1.649 del Minvu, Res. Ex. 668 de Hacienda). Cambios en `js/calculos.js` (`SUPUESTOS_PIEZAS` y `calcularPiezas`) y en `CLAUDE.md`, con pruebas:
+  - **DS1 en dos tramos.** Tramo 3: hasta UF 2.200; monto = 850 − 0,375 × precio, entre UF 250 y 400 (de UF 1.600 a 2.200 son UF 250, no 270); ahorro UF 80 y cuenta con 12 meses. Tramo 4: más de UF 2.200 y hasta UF 4.000; UF 410 de subsidio (promedio del llamado); ahorro UF 200, sin 12 meses de cuenta. El bloqueo "Sobre UF 2.200" pasa a "Sobre UF 4.000".
+  - **Sueldo máximo del DS1** (solo si está sobre el 90 % del Registro Social de Hogares, RM, ingreso neto del núcleo). Tramo 3: 1 persona $1.992.086; 2, $2.788.921; 3, $3.107.655; 4, $3.426.388. Tramo 4: 1 persona $2.673.511; 2, $3.496.130; 3, $3.825.177; 4 o más, $4.154.225. Sobre el tope, la pieza se bloquea con "Sobre el tope de sueldo".
+  - **DS1 exige no tener vivienda:** bloqueado en el modo invertir, con "Ya tienes vivienda" en el "?".
+  - **DS1 con garantía y subsidio a la tasa:** se combinan en departamentos nuevos (la vía general llega a UF 6.000). Crédito = precio − ahorro − subsidio, con tope de 90 %. Sacar la condición "hasta UF 3.000".
+  - **Garantía y subsidio a la tasa sin primera vivienda:** quitar ese supuesto de `CLAUDE.md` (Ley 21.543, art. sexto transitorio) y el argumento "guardas el FOGAES para tu vivienda" del modo invertir.
+  - **IVA cero:** recepción definitiva anterior al 17-oct-2026; vale si la promesa se firma dentro del año (desde el 1-dic-2026), aunque la escritura sea después.
+  - **Regalo:** en el "?", "Hasta nov-2027, si tu familia te dona por escritura, paga la mitad del impuesto" (Ley 21.850, art. 1.° transitorio).
+  - Aceptación: pruebas nuevas para los dos tramos del DS1, el tope de sueldo y el bloqueo en invertir; un departamento de UF 2.500 muestra el DS1 tramo 4 con UF 410; pasan todas las pruebas.
+- Lo que queda de la ola anterior pasa al Sprint 22. "Misiones que destraban piezas" quedó cubierto por las misiones del Sprint 21.
 
 ## Sprint 21 · Cuatro pestañas: Inicio, Tus pasos, Explorar y Perfil
 
@@ -881,6 +890,17 @@ Bloques (cada uno se puede ver y probar solo; un commit por bloque):
 - **S21-B5 · Tu pie y su protección.** Pantalla Tu pie: saldo, "Pagar mi cuota", filas de cuota, ahorro automático, "Guardar bajo llave", sello "Tu pie está protegido" con sus capas según camino y etapa, movimientos. En grupo, "Cuenta bloqueada · tu grupo". Todo simulado. Aceptación: una sola acción; el sello lista solo capas reales para ese camino.
 
 Fuera de este sprint: campos nuevos de `js/datos.js` para filtros (usado, recepción definitiva, ds19, dfl2) y la fila de usados; la regla de arrepentirse en el grupo (pendiente de decidir).
+
+## Sprint 22 · Volver cada mes y datos para explorar
+
+Origen: ideas acordadas en el Sprint 19 (B4, "siguiente ola") y filtros por camino del 7-nov-2026. Hacer después del Sprint 21.
+
+- **S22-F1 · Avance de obra con foto.** En la compra en grupo, la hoja del hito "Juntar tu pie" y "Desde tu última visita" muestran la etapa de la obra con una foto referencial y la fecha de entrega. Aceptación: al avanzar un mes en la demo cambia la etapa o la foto; las fotos tienen su crédito en `fotos/CREDITOS.md`.
+- **S22-F2 · Tu equipo anima.** Las personas de Tu equipo pueden mandar un "¡Bien!" cuando se completa un hito o una misión; aparece en "Desde tu última visita". Simulado en la demo. Aceptación: sin nombres de personas; un "¡Bien!" por hito.
+- **S22-F3 · Regalo de pie por enlace.** Desde la pieza Regalo, "Compartir enlace" genera un mensaje para la familia con la meta y lo que falta, sin montos exactos. El aporte entra a Tu pie (simulado), con el aviso de la rebaja a las donaciones. Aceptación: el enlace no expone datos personales; el regalo suma una vez y queda en movimientos.
+- **S22-F4 · Datos para los filtros de Explorar.** Campos nuevos en `js/datos.js`: `usado`, `recepcionDefinitiva` (fecha), `ds19`, `dfl2` (o m²). Departamentos usados de ejemplo (al menos 3, en las comunas de los ejemplos) para la fila "Crédito de siempre". Chips "Sin IVA", "Con DS1", "Proyecto DS19" y "DFL-2" (este último solo en el modo invertir), con bloqueo automático de lo que no se combina. Aceptación: cada chip filtra con su regla y lo bloqueado dice su razón en dos palabras.
+
+Pendiente de decidir (no entra hasta que se decida): qué pasa si alguien del grupo se arrepiente antes de escriturar.
 
 ## Estado
 
