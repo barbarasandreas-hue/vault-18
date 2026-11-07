@@ -12,6 +12,7 @@ App de Bci para que jóvenes profesionales compren su primer departamento sin te
 - **Perfil**: tus datos, tu equipo, avisos e "Invertir en el pie de otros" (otro papel, no el de quien compra).
 - **Tu pie** es una cuenta real de Bci (cuenta de ahorro para la vivienda, en UF; en grupo, la cuenta bloqueada) y la app es su ventana. "Tu pie está protegido" muestra sus capas; la misión "Guardar bajo llave" activa el giro diferido.
 - La barra solo cambia cuando se toca; Atrás es el paso anterior; una acción principal por pantalla.
+- Decisiones del 7-nov: "Llega antes" (las piezas) vive en Explorar → Un camino → "¿Cómo funciona?"; "Todavía no" se ve en Inicio y en Tus pasos, sin pantalla aparte; después de "Es tuyo", Inicio cambia de modo a Mi departamento. Plan: `PLAN.md`, Sprint 21.
 
 ## El modelo (v3, 4-nov-2026)
 

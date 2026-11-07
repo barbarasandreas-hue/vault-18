@@ -863,6 +863,25 @@ Origen: doc "Beneficios del Estado para la vivienda y los caminos de Primer Peld
 - **S20-T1 · Tasa de ejemplo con "i" (hacer primero).** Cambiar en `js/calculos.js` la tasa con subsidio a 3,46 %, la sin subsidio a 4,06 % y el peor caso a 4,45 % (ver `CLAUDE.md`, "Tasa de ejemplo"). En cada pantalla donde aparece una tasa (simulación, Detalle del crédito, preaprobación, Firmar), la etiqueta pasa a "Tasa de ejemplo" con un botón "i" al lado. El "i" abre una hoja corta: "Cada banco fija su tasa según tu caso. Se fija el día que firmas." Ícono SVG de línea del Bci Kit, área táctil de 44 px, `aria-label="Qué significa tasa de ejemplo"`. Actualizar las pruebas que usan 3,9 % y 4,5 %. Aceptación: ninguna tasa en pantalla sin su "i"; el peor caso usa 4,45 %; pasan todas las pruebas.
 - Pendientes de la ola anterior: avance de obra con foto, misiones que destraban piezas, Tu equipo que anima y regalo de pie.
 
+## Sprint 21 · Cuatro pestañas: Inicio, Tus pasos, Explorar y Perfil
+
+Origen: replanteamiento del 7-nov-2026 (doc del proyecto `claude/mapa-navegacion-nov2026.md` y `CLAUDE.md`, "Qué ve el usuario"). Hacer después de S20-T1 (tasa de ejemplo). Antes de empezar: `git push` (respaldo).
+
+Decisiones del 7-nov que este sprint aplica:
+- "Llega antes" (las piezas con interruptores y su efecto en la fecha) pasa a vivir dentro de Explorar → Un camino → "¿Cómo funciona?".
+- "Todavía no" se ve en Inicio (la cifra grande dice "Todavía no" con lo que falta) y en Tus pasos ("Tu meta de este mes" y los puentes como misiones). No hay pantalla aparte.
+- Después del hito "Es tuyo", Inicio cambia de modo a Mi departamento (dividendo, fotos, arriendo si invierte); Tus pasos queda como recuerdo del recorrido.
+- "Invertir en el pie de otros" (hoy la pestaña Inversiones) pasa a Perfil.
+
+Bloques (cada uno se puede ver y probar solo; un commit por bloque):
+- **S21-B1 · La barra nueva, sin cambiar contenido.** Barra Inicio · Tus pasos · Explorar · Perfil (ícono de escalera en SVG de línea). Mover las pantallas actuales a su lugar: Mi camino → Tus pasos; Departamentos → Explorar; Inversiones → Perfil. Direcciones nuevas para Atrás. Aceptación: se llega a todas las pantallas de antes; ninguna queda huérfana; pasan todas las pruebas.
+- **S21-B2 · Inicio con tres bloques.** Cuándo llegas (única cifra grande) · tarjeta del siguiente paso (con "Hito N de 6", lo que gana, lo que cuesta, el plazo y "Recuérdamelo") · Tu pie compacto. Nada de listas. Modo "Todavía no" y modo Mi departamento. Fórmula nueva en `js/calculos.js`: `siguientePaso(estado)` con la prioridad: vence pronto → destraba el siguiente hito → más adelanta la fecha → más rápido, con pruebas. Aceptación: a lo más una cifra Display; una sola acción; la tarjeta cambia al completar un paso.
+- **S21-B3 · Tus pasos: hitos y misiones.** Escalera vertical de 6 hitos según el camino (crédito con garantía: números → cuenta de vivienda → juntar pie → preaprobación → asegurar → es tuyo; en grupo la preaprobación va antes del pie). Cada hito tocable con su hoja. Misiones (DS1, Registro Social, documentos, bajo llave, ahorro automático, equipo, elegir camino y departamento) con su etiqueta; se ven 3 y una hoja con todas y "Fechas que importan". Fórmulas `hitoActual(estado)` y `misiones(estado)` con pruebas. Aceptación: nunca muestra el mes ni el saldo; el "Ahora" coincide con la tarjeta de Inicio; cambiar de camino conserva lo hecho.
+- **S21-B4 · Explorar: caminos primero.** Pantalla 1 "¿Qué quieres explorar?" con un botón grande por camino (fecha de llegada, etiqueta) + "Ver todos los departamentos" + "Por qué no te mostramos otros". Pantalla 2 Un camino: una línea, "¿Cómo funciona?" (aquí vive Llega antes), chips de piezas y comuna, lista, "Hacerlo mi camino" con confirmación que muestra qué cambia. Pantalla 3 Un departamento con "Calza con". Aceptación: máximo 1 toque de Explorar a la lista de un camino; mirar otro camino no cambia el plan.
+- **S21-B5 · Tu pie y su protección.** Pantalla Tu pie: saldo, "Pagar mi cuota", filas de cuota, ahorro automático, "Guardar bajo llave", sello "Tu pie está protegido" con sus capas según camino y etapa, movimientos. En grupo, "Cuenta bloqueada · tu grupo". Todo simulado. Aceptación: una sola acción; el sello lista solo capas reales para ese camino.
+
+Fuera de este sprint: campos nuevos de `js/datos.js` para filtros (usado, recepción definitiva, ds19, dfl2) y la fila de usados; la regla de arrepentirse en el grupo (pendiente de decidir).
+
 ## Estado
 
 | Sprint | Feature | Estado |
