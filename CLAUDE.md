@@ -10,8 +10,10 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 
 ### Crédito según el modo
 
-- **Para vivir:** Bci presta el 90% con la garantía estatal FOGAES (primera vivienda, intención de habitarla, hasta UF 4.500) y el subsidio a la tasa (Ley 21.836). El usuario pone el 10% de pie.
-- **Para invertir:** Bci presta el 80% con el subsidio a la tasa (exige primera venta, no primera vivienda, así que sirve para invertir). **Sin FOGAES**, que queda guardado para la vivienda futura del usuario.
+- **Para vivir:** Bci presta el 90% con la garantía estatal FOGAES y el subsidio a la tasa (Ley 21.836). El usuario pone el 10% de pie.
+  - **FOGAES hoy (Minvu, nov-2026):** "Garantía de Apoyo a la Vivienda Nueva" de la Ley 21.748, ampliada por la Ley 21.836: solo vivienda nueva, hasta UF 6.000, personas naturales, 80.000 cupos compartidos con el subsidio a la tasa, hasta el 31-may-2028. La página del Minvu no pide primera vivienda.
+  - **Por validar con Bci:** si sigue vigente el FOGAES original de 2023 (Ley 21.543: primera vivienda, hasta UF 4.500, nueva o usada) y si el FOGAES de hoy exige primera vivienda o habitarla. La app sigue usando "primera vivienda" como supuesto hasta confirmarlo.
+- **Para invertir:** Bci presta el 80% con el subsidio a la tasa (exige primera venta, no primera vivienda, así que sirve para invertir). **Sin FOGAES**, que queda guardado para la vivienda futura del usuario (supuesto por validar: si el FOGAES de hoy no exige primera vivienda ni se usa una sola vez, este argumento se debilita).
 - Crédito mancomunado (usuario y pareja), a 30 años. Tasa con subsidio: 3,9% (4,5% − 0,6). Si se acaban los cupos del subsidio, 4,5%.
 
 ### Los caminos
@@ -25,7 +27,7 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 | **Respaldo familiar** | Vivir o invertir | Ficha informativa: un familiar deja el 10% en una cuenta bloqueada en Bci ≈ 5 años y lo recupera con intereses (referente: Barclays Family Springboard). |
 | **Todavía no** | Los dos | Cuando ningún camino es sostenible, la app lo dice y muestra qué cambiar (ver "Tu mes real"). |
 
-**Comprar más barato** es un filtro sobre todos los caminos: estudio, 1 dormitorio, usado, IVA cero (Ley 21.850, del 1-dic-2026 al 1-dic-2027).
+**Comprar más barato** es un filtro sobre todos los caminos: estudio, 1 dormitorio, usado, IVA cero (Ley 21.850, del 1-dic-2026 al 1-dic-2027; por validar en el texto de la ley: una nota de TVU del 29-sep-2026 habla de efecto retroactivo desde el 22-abr-2026).
 
 ### Reglas que no se rompen
 
