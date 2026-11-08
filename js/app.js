@@ -5131,11 +5131,12 @@
       '<h2 class="h4">' + plural(lista.length, 'departamento', 'departamentos') + '</h2>' +
       (lista.length ? '<ul class="lista-usados">' + lista.map(function (u) {
         var calza = vivir && u.listaUF <= DS1.tramo4.hastaUF;
-        var tipo = (u.dormitorios === 2 ? '2d' : u.dormitorios === 1 ? '1d' : 'estudio') + '-living';
+        // Para que dos usados iguales no muestren la misma foto, se alterna living y cocina.
+        var tipo = (u.dormitorios === 2 ? '2d' : u.dormitorios === 1 ? '1d' : 'estudio') + (USADOS.indexOf(u) % 2 ? '-cocina' : '-living');
         var foto = FOTOS.interiores[tipo];
         var titulo = (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + ' en ' + esc(u.comuna);
         return '<li class="tarjeta usado">' +
-          (foto ? '<img class="usado-foto" src="fotos/interiores/' + encodeURI(foto) + '" alt="Living de un departamento de ' + (u.dormitorios || 1) + ' dormitorio' + (u.dormitorios > 1 ? 's' : '') + ' (foto referencial)" loading="lazy" width="800" height="600">' : '') +
+          (foto ? '<img class="usado-foto" src="fotos/interiores/' + encodeURI(foto) + '" alt="' + (tipo.indexOf('cocina') !== -1 ? 'Cocina' : 'Living') + ' de un departamento de ' + (u.dormitorios || 1) + ' dormitorio' + (u.dormitorios > 1 ? 's' : '') + ' (foto referencial)" loading="lazy" width="800" height="600">' : '') +
           botonFavorito({ id: u.id, nombre: titulo }) +
           '<p class="usado-etiqueta">Usado' + SEP + 'de ' + u.anio + (!vivir && u.dfl2 ? SEP + 'DFL-2' : '') + '</p>' +
           '<h3 class="h4">' + titulo + '</h3>' +

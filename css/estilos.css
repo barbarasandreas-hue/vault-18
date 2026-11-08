@@ -2039,7 +2039,7 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .camino-boton strong, .camino-boton-fecha, .camino-boton-fecha .icono { color: inherit; }
 .camino-boton strong { font-size: 22px; line-height: 1.2; font-weight: 600; }
 .camino-boton-texto { font-size: 15px; line-height: 1.45; opacity: .92; }
-.camino-boton-cabeza { justify-content: space-between; align-items: flex-start; margin-right: -48px; }
+.camino-boton .camino-boton-cabeza { justify-content: space-between; align-items: flex-start; margin-right: -48px; }
 .camino-boton .chip { background: rgba(255, 255, 255, .18); color: var(--white); border-color: transparent; font-weight: 700; }
 .camino-boton.color-2 .chip { background: rgba(55, 71, 79, .1); color: var(--gray-dark); }
 .camino-dibujo { width: 36px; height: 36px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -2144,3 +2144,6 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .respaldo-anotado .icono { flex: none; margin: 0; width: 28px; height: 28px; color: var(--green-dark); }
 .respaldo-anotado span { display: grid; }
 .respaldo-anotado small { color: var(--gray-dark); }
+.fila > .circulo-icono, .tarjeta.fila > .circulo-icono { flex: 0 0 44px; width: 44px; }
+.respaldo-compara strong { font-size: 18px; white-space: nowrap; }
+.tarjeta.respaldo-riesgo { display: flex; }
