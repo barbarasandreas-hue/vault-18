@@ -2104,3 +2104,43 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .usado-etiqueta { justify-self: start; margin: 0 0 4px; padding: 2px 10px; border-radius: 999px; background: var(--gray-light); font-size: 13px; font-weight: 700; color: var(--gray-semidark); }
 .usado .texto-apoyo { margin: 0; }
 .usado-precio { margin: 6px 0 0; }
+.respaldo-heroe { position: relative; overflow: hidden; margin: 8px 0 16px; padding: 20px 18px 22px; border-radius: 24px; color: var(--white); background: var(--green-dark); display: grid; gap: 8px; }
+.respaldo-heroe::after { content: ''; position: absolute; right: -40px; bottom: -50px; width: 170px; height: 170px; border-radius: 50%; background: rgba(255, 255, 255, .08); }
+.respaldo-heroe > * { position: relative; z-index: 1; }
+.respaldo-heroe h1 { margin: 0; color: var(--white); }
+.respaldo-heroe p { margin: 0; line-height: 1.5; }
+.respaldo-chip { justify-self: start; padding: 4px 12px; border-radius: 999px; background: rgba(255, 255, 255, .18); font-size: 13px; font-weight: 700; }
+.respaldo-dibujo { width: 100%; height: 110px; margin-top: 6px; }
+.respaldo-pestanas { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 10px 0 14px; border-radius: 999px; background: var(--gray-light); }
+.respaldo-pestanas button { min-height: 44px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 15px; font-weight: 700; color: var(--gray-semidark); cursor: pointer; }
+.respaldo-pestanas button[aria-selected="true"] { background: var(--white); color: var(--green-dark); box-shadow: 0 1px 4px rgba(55, 71, 79, .18); }
+.respaldo-pestanas button:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.respaldo-titular { margin: 0 0 10px; font-weight: 700; color: var(--green-dark); }
+.respaldo-compara { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.respaldo-compara p { margin: 0; display: grid; gap: 2px; padding: 12px; border-radius: 14px; background: var(--gray-light); }
+.respaldo-compara p.con { background: var(--green-20); }
+.respaldo-compara strong { font-size: 20px; }
+.respaldo-compara p:first-child strong { color: var(--gray-semidark); text-decoration: line-through; text-decoration-thickness: 2px; }
+.respaldo-compara p.con strong { color: var(--green-dark); }
+.respaldo-compara small { font-size: 13px; color: var(--gray-semidark); }
+.respaldo-dividendo { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--gray-semilight); }
+.respaldo-deposito { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; margin: 0; padding: 12px; border-radius: 14px; background: var(--blue-20); }
+.respaldo-deposito span { display: grid; }
+.respaldo-deposito strong { font-size: 22px; color: var(--blue-dark); }
+.respaldo-deposito small { font-size: 13px; color: var(--gray-dark); }
+.respaldo-pasos { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 14px; }
+.respaldo-pasos li { display: flex; gap: 12px; align-items: flex-start; }
+.respaldo-pasos li > span:last-child { display: grid; gap: 2px; }
+.respaldo-pasos small { font-size: 14px; color: var(--gray-semidark); }
+.respaldo-num { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: var(--white); font-weight: 700; }
+.respaldo-num.azul { background: var(--blue-normal); }
+.respaldo-num.verde { background: var(--green-normal); }
+.respaldo-num.azul-oscuro { background: var(--blue-dark); }
+.respaldo-riesgo { display: flex; gap: 10px; align-items: flex-start; margin: 16px 0 8px; background: var(--yellow-20); box-shadow: none; }
+.respaldo-riesgo .icono { flex: none; margin: 2px 0 0; color: var(--gray-dark); }
+.respaldo-riesgo span { display: grid; gap: 2px; }
+.respaldo-riesgo small { font-size: 14px; }
+.respaldo-anotado { display: flex; gap: 10px; align-items: center; margin: 0; padding: 14px 16px; border-radius: 16px; background: var(--green-20); color: var(--green-dark); }
+.respaldo-anotado .icono { flex: none; margin: 0; width: 28px; height: 28px; color: var(--green-dark); }
+.respaldo-anotado span { display: grid; }
+.respaldo-anotado small { color: var(--gray-dark); }

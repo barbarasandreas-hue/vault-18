@@ -5281,6 +5281,7 @@
   function renderFicha(id) {
     var cont = $('ficha-contenido');
     if (id !== 'arriendo-opcion' && id !== 'respaldo-familiar') { location.replace('#caminos'); return; }
+    if (id === 'respaldo-familiar') return renderRespaldo(cont);
     var c = CAMINOS[id];
     var pasos, numeros, peor, referente;
     if (id === 'arriendo-opcion') {
@@ -5342,6 +5343,99 @@
       $('btn-me-interesa').setAttribute('aria-pressed', String(ahora));
       $('btn-me-interesa').textContent = ahora ? 'Te interesa ✓' : 'Me interesa';
       toast(ahora ? 'Anotado: te interesa.' : 'Quitado de lo que te interesa.');
+    });
+  }
+
+  // ---------- S24-B2: Respaldo familiar, como en el canvas ----------
+  // Héroe con dibujo, "Tú / Tu familiar", un slider de precio y los pasos.
+  var respaldoVista = 'tu', respaldoUF = null;
+  var DIBUJO_RESPALDO = '<svg class="respaldo-dibujo" aria-hidden="true" viewBox="0 0 320 110">' +
+    '<rect x="0" y="104" width="320" height="6" rx="3" fill="rgba(255,255,255,0.25)"/>' +
+    '<circle cx="48" cy="44" r="13" fill="#E8BFA0"/><path d="M35 40a13 13 0 0 1 26 0c-6-5-18-5-26 0z" fill="#BBC5CA"/><path d="M24 104c0-24 11-40 24-40s24 16 24 40z" fill="#FFE300"/>' +
+    '<circle cx="112" cy="50" r="12" fill="#E8BFA0"/><path d="M100 46a12 12 0 0 1 24 0c-6-4-17-4-24 0z" fill="#37474F"/><path d="M90 104c0-22 10-36 22-36s22 14 22 36z" fill="#28892B"/>' +
+    '<path d="M80 30s-9-5.5-9-11.5a5 5 0 0 1 9-2.8 5 5 0 0 1 9 2.8c0 6-9 11.5-9 11.5z" fill="#ED0C19"/>' +
+    '<path d="M150 80h60" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 8"/><path d="M206 74l8 6-8 6" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<rect x="236" y="24" width="64" height="80" rx="4" fill="#1B3A63"/>' +
+    '<rect x="246" y="34" width="12" height="10" rx="2" fill="#FFE300"/><rect x="266" y="34" width="12" height="10" rx="2" fill="#2E4F80"/><rect x="286" y="34" width="6" height="10" rx="2" fill="#FFE300"/>' +
+    '<rect x="246" y="52" width="12" height="10" rx="2" fill="#2E4F80"/><rect x="266" y="52" width="12" height="10" rx="2" fill="#FFF499"/><rect x="286" y="52" width="6" height="10" rx="2" fill="#2E4F80"/>' +
+    '<rect x="246" y="70" width="12" height="10" rx="2" fill="#FFE300"/><rect x="286" y="70" width="6" height="10" rx="2" fill="#FFE300"/>' +
+    '<rect x="262" y="84" width="16" height="20" rx="2" fill="#2772CC"/></svg>';
+  function renderRespaldo(cont) {
+    var id = 'respaldo-familiar';
+    if (respaldoUF === null) respaldoUF = Math.min(3000, Math.max(1500, Math.round(listaMeta() / 100) * 100));
+    var f = respaldoFamiliar(respaldoUF);
+    var interesa = registro.meInteresa.indexOf(id) !== -1;
+    var tu = respaldoVista === 'tu';
+    var pasos = [['Tu familiar deja el 10' + NBSP + '%', 'Lo guarda en una cuenta Bci con intereses, como garantía.', 'azul'],
+      ['Bci te presta el 95' + NBSP + '%', 'Tú pones solo el 5' + NBSP + '% de pie.', 'verde'],
+      ['La plata vuelve a tu familiar', 'Cuando tu deuda baja al 80' + NBSP + '% del valor, el depósito se libera.', 'azul-oscuro']];
+    cont.innerHTML =
+      '<a href="#explorar" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Explorar</a>' +
+      '<section class="respaldo-heroe" aria-labelledby="titulo-ficha">' +
+        '<span class="respaldo-chip">Propuesta' + SEP + 'aún no existe en Chile</span>' +
+        '<h1 id="titulo-ficha" class="h2">Respaldo familiar</h1>' +
+        '<p>Un familiar te ayuda con el pie <strong>sin regalarte la plata</strong>: la deja guardada en Bci como garantía y la recupera después.</p>' +
+        DIBUJO_RESPALDO +
+      '</section>' +
+      '<section class="tarjeta bloque" aria-labelledby="titulo-vista">' +
+        '<h2 class="h4" id="titulo-vista">¿Cómo lo vive cada uno?</h2>' +
+        '<div class="respaldo-pestanas" role="tablist" aria-label="Punto de vista">' +
+          '<button type="button" role="tab" id="tab-tu" aria-selected="' + tu + '" aria-controls="vista-tu">Tú</button>' +
+          '<button type="button" role="tab" id="tab-fam" aria-selected="' + !tu + '" aria-controls="vista-fam">Tu familiar</button></div>' +
+        '<div id="vista-tu" role="tabpanel" aria-labelledby="tab-tu"' + (tu ? '' : ' hidden') + '>' +
+          '<p class="respaldo-titular">Juntas la mitad del pie</p>' +
+          '<div class="respaldo-compara">' +
+            '<p><small>Sin respaldo</small><strong id="rf-pie10">' + formatoRedondeado(ufAPesos(respaldoUF * 0.1)) + '</strong><small>10' + NBSP + '% de pie</small></p>' +
+            '<p class="con"><small>Con respaldo</small><strong id="rf-pie5">' + formatoRedondeado(f.pie) + '</strong><small>5' + NBSP + '% de pie</small></p></div>' +
+          '<p class="respaldo-dividendo"><span>Tu dividendo al mes</span><span class="en-uf"><strong id="rf-div-uf">' + formatoUF(f.dividendo / SUPUESTOS.uf) + '</strong><small id="rf-div">hoy son ' + formatoRedondeado(f.dividendo) + '</small></span></p>' +
+        '</div>' +
+        '<div id="vista-fam" role="tabpanel" aria-labelledby="tab-fam"' + (tu ? ' hidden' : '') + '>' +
+          '<p class="respaldo-titular">Deja su plata guardada, no la regala</p>' +
+          '<p class="respaldo-deposito"><span><small>Deja en Bci</small><strong id="rf-deposito">' + formatoRedondeado(f.deposito) + '</strong></span><small>10' + NBSP + '%' + SEP + 'con intereses</small></p>' +
+          '<p class="respaldo-dividendo"><span>La recupera en</span><strong>' + (f.mesesLibera / 12).toFixed(1).replace('.', ',') + ' años</strong></p>' +
+          '<p class="texto-apoyo"><small>Cuando tu deuda baja al 80' + NBSP + '%</small></p>' +
+        '</div>' +
+      '</section>' +
+      '<section class="tarjeta bloque si-juntas" aria-labelledby="rf-precio">' +
+        '<p class="si-juntas-fila"><label for="rf-rango" id="rf-precio">Si tu departamento cuesta</label><strong class="numero" id="rf-uf">' + formatoUF(respaldoUF) + '</strong></p>' +
+        '<input type="range" id="rf-rango" min="1500" max="3000" step="100" value="' + respaldoUF + '">' +
+        '<p class="texto-apoyo"><small>Mueve la barra: los montos de arriba cambian.</small></p>' +
+      '</section>' +
+      '<section class="tarjeta bloque" aria-labelledby="rf-como">' +
+        '<h2 class="h4" id="rf-como">Cómo funciona</h2>' +
+        '<ol class="respaldo-pasos">' + pasos.map(function (x, i) {
+          return '<li><span class="respaldo-num ' + x[2] + '" aria-hidden="true">' + (i + 1) + '</span><span><strong>' + x[0] + '</strong><small>' + x[1] + '</small></span></li>';
+        }).join('') + '</ol>' +
+      '</section>' +
+      '<p class="tarjeta compacta respaldo-riesgo">' + icono('i-alerta') + '<span><strong>Lo que hay que saber</strong><small>Si no pagas y hay remate, tu familiar puede perder su depósito.</small></span></p>' +
+      '<p class="sello">' + icono('i-escudo') + 'Se inspira en Barclays Family Springboard, del Reino Unido.</p>' +
+      '<div class="accion-fija" id="rf-accion">' + (interesa
+        ? '<p class="respaldo-anotado" role="status">' + icono('i-check') + '<span><strong>¡Anotado!</strong><small>Te avisamos si Bci lo lanza.</small></span></p>'
+        : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-me-interesa">Me interesa</button>') + '</div>';
+
+    ['tu', 'fam'].forEach(function (v) {
+      $('tab-' + v).addEventListener('click', function () { respaldoVista = v; renderRespaldo(cont); $('tab-' + v).focus(); });
+    });
+    var rango = $('rf-rango');
+    var pintar = function () { rango.style.setProperty('--lleno', ((respaldoUF - 1500) / 1500 * 100).toFixed(1) + '%'); };
+    pintar();
+    rango.addEventListener('input', function () {
+      respaldoUF = Number(rango.value);
+      var g = respaldoFamiliar(respaldoUF);
+      $('rf-uf').textContent = formatoUF(respaldoUF);
+      $('rf-pie10').textContent = formatoRedondeado(ufAPesos(respaldoUF * 0.1));
+      $('rf-pie5').textContent = formatoRedondeado(g.pie);
+      $('rf-div-uf').textContent = formatoUF(g.dividendo / SUPUESTOS.uf);
+      $('rf-div').textContent = 'hoy son ' + formatoRedondeado(g.dividendo);
+      $('rf-deposito').textContent = formatoRedondeado(g.deposito);
+      rango.setAttribute('aria-valuetext', formatoUF(respaldoUF) + ': pones ' + formatoRedondeado(g.pie));
+      pintar();
+    });
+    if ($('btn-me-interesa')) $('btn-me-interesa').addEventListener('click', function () {
+      registro.meInteresa.push(id);
+      guardarRegistro();
+      renderRespaldo(cont);
+      confeti();
     });
   }
 
