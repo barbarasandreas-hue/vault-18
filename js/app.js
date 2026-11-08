@@ -2824,11 +2824,26 @@
   }
 
   var PARTES_POSTULA = ['Tus datos', 'Tus documentos', 'Resultado'];
+  // S24-B3: las tres partes como un indicador con colores Bci (azul, verde, amarillo) y un check en las hechas.
+  var COLOR_PARTE = ['azul', 'verde', 'amarillo'];
   function partesPostula(actual) {
     var i = PARTES_POSTULA.indexOf(actual);
-    return '<p class="partes-postula">' + (i + 1) + ' de 3' + SEP + actual + '</p>';
+    return '<ol class="pasos-postula" aria-label="Parte ' + (i + 1) + ' de 3: ' + actual + '">' + PARTES_POSTULA.map(function (nombre, j) {
+      var est = j < i ? 'hecha' : (j === i ? 'actual' : 'pendiente');
+      return '<li class="' + est + ' ' + COLOR_PARTE[j] + '"' + (j === i ? ' aria-current="step"' : '') + '>' +
+        '<span class="paso-postula-marca" aria-hidden="true">' + (j < i ? '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : (j + 1)) + '</span>' +
+        '<span class="paso-postula-nombre">' + nombre.replace('Tus ', '') + '</span></li>';
+    }).join('') + '</ol>';
   }
 
+  // S24-B3: el ingreso del hogar y cuánto pone cada uno, en una barra partida.
+  function ingresoHogar() {
+    var a = estado.sueldoPropio || 0, b = estado.sueldoPareja || 0, t = a + b;
+    if (!t) return '';
+    return '<p class="ingreso-hogar"><span class="etiqueta">Ingreso del hogar</span><strong class="numero h3">' + formatoRedondeado(t) + '</strong></p>' +
+      (b ? '<p class="barra-partida" aria-hidden="true"><i class="tu" style="flex:' + a + '"></i><i class="pareja" style="flex:' + b + '"></i></p>' +
+        '<p class="barra-partida-leyenda"><span><i class="tu"></i>Tú</span><span><i class="pareja"></i>Tu pareja</span></p>' : '');
+  }
   var editandoPostula = false;
   function renderPostula(p, d) {
     var sp = subpasoPostula();
@@ -2845,7 +2860,7 @@
         partesPostula('Tus datos') +
         // S17-F5: no se vuelve a pedir lo ya respondido: se muestra con "Cambiar".
         (yaTiene
-          ? '<div class="tarjeta compacta resumen-datos" id="resumen-datos"><ul class="datos-inversion">' +
+          ? '<div class="tarjeta compacta resumen-datos" id="resumen-datos">' + ingresoHogar() + '<ul class="datos-inversion">' +
               '<li><span>Tu sueldo</span><strong>' + formatoPesos(estado.sueldoPropio) + '</strong></li>' +
               (estado.sueldoPareja ? '<li><span>Tu pareja</span><strong>' + formatoPesos(estado.sueldoPareja) + '</strong></li>' : '') +
               '<li><span>Otras cuotas</span><strong>' + formatoPesos(estado.otrasCuotas || 0) + '</strong></li>' +
@@ -2964,7 +2979,11 @@
     if (c.cliente === false) {
       // S16-F6: pasaporte con timbres. Cada página es un documento; al subirlo cae el timbre "Listo".
       var listos = DOCUMENTOS.filter(function (x) { return !!docs[x.id]; }).length;
-      lista = '<p class="pasaporte-cuenta">' + listos + ' de ' + DOCUMENTOS.length + ' timbrados</p>' +
+      var vuelta = 2 * Math.PI * 22;
+      lista = '<div class="docs-avance"><svg class="docs-anillo" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="22"/>' +
+          '<circle class="lleno" cx="26" cy="26" r="22" style="stroke-dasharray:' + vuelta.toFixed(1) + ';stroke-dashoffset:' + (vuelta * (1 - listos / DOCUMENTOS.length)).toFixed(1) + '"/></svg>' +
+          '<span class="docs-anillo-texto" aria-hidden="true">' + listos + '/' + DOCUMENTOS.length + '</span>' +
+          '<p class="pasaporte-cuenta">' + (listos === DOCUMENTOS.length ? '¡Todo listo!' : listos + ' de ' + DOCUMENTOS.length + ' timbrados') + '</p></div>' +
         '<ul class="pasaporte">' + DOCUMENTOS.map(function (x) {
         var archivo = docs[x.id];
         return '<li class="documento pagina' + (archivo ? ' listo' : '') + '" id="doc-' + x.id + '">' +
@@ -3161,12 +3180,24 @@
       puedeSeguir = true;
       var alcanza = r.creditoUF >= creditoNecesario - 1e-9;
       // S17-F5: el resultado en palabras de la persona; las cifras del crédito, en "Ver números".
+      var usa = Math.min(1, creditoNecesario / r.creditoUF);
       cuerpo =
-        '<div class="tarjeta protagonista aprobado' + (alcanza ? '' : ' no-alcanza') + '">' +
-          (alcanza
-            ? '<p class="estado-semaforo">' + icono('i-ok') + 'Simulado</p><strong class="h3 aprobado-titulo">Bci te aprueba este departamento</strong>'
-            : '<p class="estado-semaforo">' + icono('i-alerta') + 'Simulado</p><strong class="h3 aprobado-titulo">Este departamento supera lo que Bci te presta</strong>') +
-        '</div>' +
+        (alcanza
+          // S24-B3: la alegría de llegar y, debajo, los números serios del crédito.
+          ? '<div class="aprobado-heroe"><span class="aprobado-confeti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>' +
+              '<p class="aprobado-chip">' + icono('i-ok') + 'Preaprobado' + SEP + 'simulado</p>' +
+              '<strong class="h3 aprobado-titulo">¡Bci te aprueba este departamento!</strong>' +
+              '<p class="aprobado-monto"><small>Bci te presta hasta</small><strong class="numero">' + formatoRedondeado(ufAPesos(r.creditoUF)) + '</strong></p>' +
+            '</div>' +
+            '<div class="tarjeta bloque aprobado-cobertura">' +
+              '<p class="etiqueta">Este departamento usa ' + formatoPorcentaje(usa, 0) + ' de lo que te prestan</p>' +
+              '<p class="cobertura-barra" aria-hidden="true"><i style="width:' + (usa * 100).toFixed(1) + '%"></i></p>' +
+              '<p class="cobertura-leyenda"><span>Necesita ' + formatoRedondeado(ufAPesos(creditoNecesario)) + '</span><span>Tope ' + formatoRedondeado(ufAPesos(r.creditoUF)) + '</span></p>' +
+              '<p class="aprobado-dividendo"><span>Pagarías hasta al mes</span><span class="en-uf"><strong>' + formatoUF(r.dividendo / SUPUESTOS.uf) + '</strong><small>hoy son ' + formatoRedondeado(r.dividendo) + '</small></span></p>' +
+            '</div>'
+          : '<div class="tarjeta protagonista aprobado no-alcanza">' +
+              '<p class="estado-semaforo">' + icono('i-alerta') + 'Simulado</p><strong class="h3 aprobado-titulo">Este departamento supera lo que Bci te presta</strong>' +
+            '</div>') +
         plegable('numeros-pre', 'Ver números', '',
           '<ul class="datos-inversion">' +
             '<li><span>Bci te presta hasta</span><strong>' + formatoRedondeado(ufAPesos(r.creditoUF)) + '</strong></li>' +
@@ -3185,7 +3216,7 @@
         cuerpo +
         '<section class="tarjeta bloque" aria-labelledby="titulo-falta">' +
           '<h3 class="h5" id="titulo-falta">Lo que falta</h3>' +
-          '<ol class="lista-numerada"><li>Tasación</li><li>Estudio de títulos</li><li>Firma</li></ol>' +
+          '<ol class="falta-linea"><li>Tasación</li><li>Estudio de títulos</li><li>Firma</li></ol>' +
         '</section>' +
         (puedeSeguir
           ? '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-seguir-pie">Seguir a Tu pie</button></div>'
@@ -3194,6 +3225,7 @@
       '</section>';
 
     iniciarPlegables();
+    if (puedeSeguir) confeti();
     var seguir = $('btn-seguir-pie');
     if (seguir) {
       seguir.addEventListener('click', function () {
