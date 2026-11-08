@@ -1638,7 +1638,21 @@ function animosNuevos(hechos, dados, equipo) {
   return { nuevos: nuevos.slice(-MAXIMO_ANIMOS), dados: ya };
 }
 
+
+// ---------- S22-F3: regalo de pie por enlace ----------
+// El mensaje dice la meta y lo que falta sin montos exactos ni datos personales: porcentaje y meses.
+function mensajeRegalo(o) {
+  var pct = Math.max(0, Math.min(100, Math.round(o.pct || 0)));
+  var falta = o.mesesFaltan > 0 ? ' y me faltan unos ' + (o.mesesFaltan === 1 ? '1 mes' : o.mesesFaltan + ' meses') : '';
+  var antes = { 'Cumpleaños': 'Para mi cumpleaños', 'Navidad': 'Para esta Navidad', 'Titulación': 'Para mi titulación' }[o.ocasion];
+  return (antes ? antes + ': e' : 'E') + 'stoy juntando el pie para mi primer departamento. Llevo el ' + pct + ' %' + falta + '. ' +
+    'Si quieres ayudarme, puedes aportar aquí: ' + o.enlace;
+}
+// El enlace lleva un código al azar, nunca el nombre, el RUT, el sueldo ni el saldo.
+function enlaceRegalo(codigo) { return 'https://primerpeldano.cl/regalo/' + String(codigo).replace(/[^a-z0-9]/gi, '').slice(0, 12); }
 if (typeof module !== 'undefined') module.exports = {
+  mensajeRegalo: mensajeRegalo,
+  enlaceRegalo: enlaceRegalo,
   animosNuevos: animosNuevos,
   MOTIVO_ANIMO: MOTIVO_ANIMO,
   CORTE_IVA_CERO: CORTE_IVA_CERO,

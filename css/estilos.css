@@ -1914,3 +1914,7 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
   .animos { animation: animo-entra var(--dur-media) var(--ease-resorte); }
   @keyframes animo-entra { from { transform: scale(0.96); opacity: 0; } to { transform: none; opacity: 1; } }
 }
+
+/* ===== S22-F3: regalo de pie por enlace ===== */
+.fila-regalo { margin-top: 16px; border: 1px solid var(--gray-semilight); }
+.mensaje-regalo { margin: 4px 0 8px; padding: 12px 14px; border-left: 4px solid var(--green-normal); background: var(--gray-light); border-radius: 0 var(--radio-campo) var(--radio-campo) 0; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }

@@ -691,6 +691,8 @@
       texto: 'La carga anual equivalente: el costo real del crédito en un año, con intereses, seguros y gastos. Sirve para comparar créditos entre bancos.' },
     'patrimonio': { termino: 'Tu patrimonio', pregunta: '¿Qué es tu patrimonio?',
       texto: 'Lo que vale tu departamento, sin plusvalía, menos lo que aún debes a Bci y la parte de los inversionistas.' },
+    'donacion': { termino: 'Rebaja a las donaciones', pregunta: '¿Paga impuesto el regalo?',
+      texto: 'Hasta noviembre de 2027, una donación por escritura de padres o abuelos a sus hijos o nietos paga la mitad del impuesto, una vez por donante (Ley 21.850).' },
     'regalo-pie': { termino: 'Regalo para tu pie', pregunta: '¿Cómo funciona el regalo para tu pie?',
       texto: 'Para un cumpleaños o una Navidad, tu familia aporta a tu cuenta Bci con un enlace, sin descargar la app. Tú eliges si ven los montos o solo el avance.' },
     'mas-barato': { termino: 'Comprar más barato', pregunta: '¿Cómo baja el precio?',
@@ -4593,9 +4595,12 @@
   }
   function movimientosPie() {
     var h = estado.historialMeses || [];
-    if (!h.length) return '<p class="texto-apoyo">Todavía no hay movimientos.</p>';
+    if (!h.length && !estado.regalos.length) return '<p class="texto-apoyo">Todavía no hay movimientos.</p>';
     var n = h.length;
-    return '<ul class="filas">' + h.map(function (r, k) {
+    var regalos = estado.regalos.map(function (x) {
+      return '<li><div class="fila"><span><strong>Regalo de tu ' + esc(x.relacion) + '</strong></span><strong class="numero">+' + formatoPesos(x.monto) + '</strong></div></li>';
+    }).reverse().join('');
+    return '<ul class="filas">' + regalos + h.map(function (r, k) {
       var mes = fechaMasMeses(FECHA_REFERENCIA, estado.mesAhorro - (n - k));
       var nombre = MESES[Number(mes.split('-')[1]) - 1];
       var texto = r === 'pago' ? 'Cuota de ' + nombre : (r === 'protector' ? nombre + ': usaste tu protector' : nombre + ': no pagaste');
@@ -4640,9 +4645,13 @@
         '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + !!estado.pasos.bajoLlave + '" id="btn-pie-llave">' +
           '<span>' + icono('i-candado') + 'Guardar bajo llave</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
         (listo ? '' : '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-pie-no-pude">Este mes no pude</button>')) +
+      '<button type="button" class="tarjeta fila fila-regalo" id="btn-pedir-regalo" aria-haspopup="dialog">' + icono('i-regalo', 'icono-grande') +
+        '<span><strong>Regalo para tu pie</strong><small>Comparte un enlace con tu familia</small></span>' +
+        '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
       selloProteccion(s) +
       plegable('pie-movimientos', 'Movimientos', '', movimientosPie());
     iniciarPlegables();
+    $('btn-pedir-regalo').addEventListener('click', function () { abrirPedirRegalo($('btn-pedir-regalo')); });
     var pagar = function (pago) {
       if (!estado.ahorroIniciado) { estado.ahorrado = Math.min(meta, estado.ahorroActual || 0); estado.ahorroIniciado = true; }
       var antes = hitosAlcanzados(estado.ahorrado, meta);
@@ -5469,19 +5478,67 @@
     if ($('btn-compartir')) $('btn-compartir').addEventListener('click', function () { toast('Enlace del proyecto copiado (simulado).'); });
   }
 
+
+  // ---------- S22-F3: regalo de pie por enlace ----------
+  function codigoRegalo() {
+    if (!estado.listaRegalos.codigo) {
+      estado.listaRegalos.codigo = Math.random().toString(36).slice(2, 10);
+      guardarEstado();
+    }
+    return estado.listaRegalos.codigo;
+  }
+  function textoMensajeRegalo() {
+    var s = fotoPasos();
+    var pct = s.meta > 0 ? s.ahorrado / s.meta * 100 : 0;
+    var faltan = estado.ahorroMensual > 0 && s.meta > s.ahorrado ? Math.ceil((s.meta - s.ahorrado) / estado.ahorroMensual) : 0;
+    return mensajeRegalo({ ocasion: estado.listaRegalos.ocasion, pct: pct, mesesFaltan: faltan, enlace: enlaceRegalo(codigoRegalo()) });
+  }
+  function abrirPedirRegalo(boton) {
+    if (!estado.listaRegalos) { estado.listaRegalos = { ocasion: OCASIONES[0], mostrarMontos: false }; guardarEstado(); }
+    var dibujar = function () {
+      return '<fieldset class="escala"><legend>¿Para qué ocasión?</legend><div class="escala-opciones escala-envuelve">' +
+          OCASIONES.map(function (o, k) {
+            return '<input type="radio" name="ocasion-regalo" id="ocasion-regalo-' + k + '" value="' + o + '"' + (o === estado.listaRegalos.ocasion ? ' checked' : '') + '>' +
+              '<label for="ocasion-regalo-' + k + '">' + o + '</label>';
+          }).join('') + '</div></fieldset>' +
+        '<p class="etiqueta">Tu mensaje</p><blockquote class="mensaje-regalo" id="mensaje-regalo">' + esc(textoMensajeRegalo()) + '</blockquote>' +
+        '<p class="texto-apoyo"><small>Sin montos ni datos tuyos: solo cuánto llevas en % y los meses que faltan.</small></p>' +
+        '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-compartir-regalo">Compartir enlace</button>' +
+        '<a class="btn btn-terciario btn-bloque" href="#regalo">Ver como familia</a></div>';
+    };
+    abrirHojaContenido('Regalo para tu pie', dibujar(), boton, function (hoja) {
+      hoja.querySelectorAll('input[name="ocasion-regalo"]').forEach(function (r) {
+        r.addEventListener('change', function () {
+          estado.listaRegalos.ocasion = r.value; guardarEstado();
+          $('mensaje-regalo').textContent = textoMensajeRegalo();
+        });
+      });
+      $('btn-compartir-regalo').addEventListener('click', function () {
+        var texto = textoMensajeRegalo();
+        if (navigator.share) { navigator.share({ text: texto }).catch(function () {}); return; }
+        try { navigator.clipboard.writeText(texto); } catch (e) { /* sin portapapeles */ }
+        toast('Mensaje copiado (simulado).');
+      });
+    });
+  }
+
   // Lo que ve la familia al abrir el enlace: una sola pantalla, sin cuenta ni app.
   function renderRegaloFamilia() {
     var cont = $('regalo-contenido');
     var c = estado.compra;
+    // S22-F3: también sin compra, desde Tu pie. Con compra en el paso del pie, vuelve a esa pantalla.
+    var conCompra = !!(c && pasoEfectivo() === 2);
+    var volverA = conCompra ? '#mis-proyectos/compra' : '#pie';
     var volver = '<p class="vista-familia">' + icono('i-persona') + 'Así lo ve tu familia · simulado ' +
-      '<a class="enlace" href="#mis-proyectos/compra">Volver</a></p>';
-    if (!c || !estado.listaRegalos || pasoEfectivo() !== 2 || !estado.ahorroIniciado) {
-      cont.innerHTML = volver + '<div class="vacio">' + icono('i-regalo', 'icono-grande') + '<h1 class="h3" id="titulo-regalo">Primero crea tu lista en Tu pie</h1></div>';
+      '<a class="enlace" href="' + volverA + '">Volver</a></p>';
+    var sp = fotoPasos();
+    if (!estado.listaRegalos || !sp.cuentaVivienda || !(sp.meta > 0) || (c && !conCompra)) {
+      cont.innerHTML = volver + '<div class="vacio">' + icono('i-regalo', 'icono-grande') + '<h1 class="h3" id="titulo-regalo">Primero abre tu cuenta y crea tu enlace en Tu pie</h1></div>';
       return;
     }
-    var p = buscarProyecto(c.proyectoId);
-    var d = departamentoDeMiCompra(p);
-    var meta = metaCompra(p);
+    if (!estado.ahorroIniciado) { estado.ahorrado = sp.ahorrado; estado.ahorroIniciado = true; guardarEstado(); }
+    var p = proyectoCompra();
+    var meta = sp.meta;
     var lista = estado.listaRegalos;
     var pct = porcentajeEntero(avance(estado.ahorrado, meta));
     var monto = MONTOS_REGALO[2];
@@ -5489,7 +5546,7 @@
     cont.innerHTML = volver +
       '<header class="encabezado familia-cabeza">' + FIGURAS + icono('i-casa', 'icono-grande') +
         '<h1 class="h2" id="titulo-regalo">Un aporte para su primer departamento</h1>' +
-        '<p class="texto-apoyo">' + esc(lista.ocasion) + ' · ' + p.comuna + '</p></header>' +
+        '<p class="texto-apoyo">' + esc(lista.ocasion) + (p ? ' · ' + p.comuna : '') + '</p></header>' +
       '<section class="tarjeta bloque" aria-label="Su avance">' +
         '<p class="etiqueta">Lleva de su pie</p>' +
         '<strong class="numero display-3">' + (lista.mostrarMontos ? formatoPesos(estado.ahorrado) : pct + NBSP + '%') + '</strong>' +
@@ -5512,6 +5569,7 @@
         '<div class="campo"><label for="regalo-mensaje">Mensaje (opcional)</label>' +
           '<textarea id="regalo-mensaje" class="campo-texto" maxlength="140" rows="2"></textarea></div>' +
         '<p class="sello">' + icono('i-escudo') + 'Va directo a su cuenta Bci para el pie</p>' +
+        '<p class="texto-apoyo"><small>Si eres su mamá, papá, abuela o abuelo y lo haces por escritura, hasta noviembre de 2027 la donación paga la mitad del impuesto ' + ayuda('donacion') + '</small></p>' +
       '</section>' +
       '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-aportar">Aportar</button></div>';
 
@@ -5540,14 +5598,17 @@
     });
 
     $('btn-aportar').addEventListener('click', function () {
+      // El regalo suma una vez: el botón se apaga al tocarlo.
+      if ($('btn-aportar').disabled) return;
+      $('btn-aportar').disabled = true;
       var regalo = { relacion: $('regalo-relacion').value, monto: monto, mensaje: $('regalo-mensaje').value.trim().slice(0, 140), avatar: avatarActual() };
       estado.regalos = estado.regalos.concat([regalo]);
       // Quien aporta queda en Tu equipo.
       if (!miembrosCon([regalo.relacion]).length) estado.equipo = agregarMiembro(estado.equipo, regalo.relacion, regalo.avatar);
       estado.ahorrado = Math.min(meta, estado.ahorrado + monto);
       guardarEstado();
-      if (estado.ahorrado >= meta && !entregaPendiente(p)) guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
-      location.hash = '#mis-proyectos/compra';
+      if (conCompra && estado.ahorrado >= meta && !entregaPendiente(p)) guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
+      location.hash = volverA;
       toast('Tu ' + regalo.relacion + ' aportó ' + formatoPesos(monto) + '.');
     });
   }
