@@ -4764,6 +4764,7 @@
         '<p class="etiqueta" id="titulo-saldo">Llevas</p>' +
         '<strong class="numero display-2">' + formatoPesos(s.ahorrado) + '</strong>' +
         '<p class="texto-apoyo">' + (s.grupo ? 'Cuenta bloqueada' + SEP + 'tu grupo' : 'Cuenta de vivienda Bci') + '</p>' +
+        (meta > s.ahorrado ? '<p class="pie-faltan">Te faltan <strong>' + formatoPesos(meta - s.ahorrado) + '</strong></p>' : '') +
         barraHitos(s.ahorrado, meta) +
         (estado.ahorroIniciado ? puntosRacha() : '') +
       '</section>' +

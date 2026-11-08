@@ -2050,3 +2050,18 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .color-2 .camino-boton-ir { background: var(--gray-dark); }
 .color-2 .camino-boton-ir svg { stroke: var(--yellow-normal); }
 .camino-boton:focus-visible { outline-offset: 3px; }
+
+/* Tu pie: el saldo en un hero azul y el chanchito mirando a la izquierda */
+.saldo-pie { color: var(--white); background: linear-gradient(160deg, var(--blue-dark) 0%, var(--blue-normal) 100%); border-radius: 24px; box-shadow: var(--sombra-flota); }
+.saldo-pie .etiqueta, .saldo-pie .texto-apoyo, .saldo-pie .numero, .saldo-pie .avance-texto, .saldo-pie .racha-texto { color: var(--white); }
+.saldo-pie .texto-apoyo { opacity: .9; }
+.pie-faltan { display: inline-block; margin: 4px 0 0; padding: 4px 12px; border-radius: 999px; background: rgba(255, 255, 255, .18); font-size: 15px; }
+.saldo-pie .alcancia-avance { background: var(--white); color: var(--gray-dark); border-radius: 16px; padding: 12px; margin-top: 14px; }
+.saldo-pie .alcancia-avance .avance-texto { color: var(--gray-dark); }
+.saldo-pie .chanchito { scale: -1 1; }
+.saldo-pie .punto-mes { border-color: rgba(255, 255, 255, .5); }
+.saldo-pie .punto-mes.pagado { background: var(--white); border-color: var(--white); color: var(--green-normal); }
+.saldo-pie .punto-mes.protegido { background: var(--white); border-color: var(--white); }
+.saldo-pie .punto-mes.perdido { background: rgba(255, 255, 255, .2); }
+.saldo-pie .racha { background: rgba(255, 255, 255, .18); color: var(--white); }
+.fila-regalo .icono-grande { color: var(--red-normal); }
