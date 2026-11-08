@@ -1478,7 +1478,7 @@
 
   // S17-F9: Llega antes. Cada pieza es una fila: nombre, efecto, "?" e interruptor. La recomendada lleva ★.
   var piezaAbierta = null, mesesLlegaAntes = null;
-  function renderLlegaAntes() {
+  function renderLlegaAntes(volverA) {
     var cont = $('caminos-contenido');
     var x = plazoVivir();
     var on = x.on;
@@ -1522,6 +1522,7 @@
     var cambio = !justo && mesesLlegaAntes !== null && x.hasta.meses !== null && mesesLlegaAntes !== x.hasta.meses ? mesesLlegaAntes - x.hasta.meses : 0;
     mesesLlegaAntes = justo ? null : x.hasta.meses;
     cont.innerHTML =
+      (volverA ? '<a href="#explorar/' + volverA + '" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>' + CAMINOS[volverA].corto + '</a>' : '') +
       '<header class="encabezado"><h1 id="titulo-caminos" class="h2">Llega antes</h1>' +
         '<p class="texto-apoyo">' + (rango ? textoRango(rango) + SEP : '') + '<button type="button" class="enlace" id="btn-caminos-rango" aria-haspopup="dialog">Cambiar</button></p></header>' +
       (justo
@@ -4679,6 +4680,144 @@
       });
   }
 
+
+  // ---------- S21-B4: Explorar, caminos primero ----------
+  var LINEA_CAMINO = {
+    'grupo-vivir': 'Compras con otros y pagas menos. Edificios en obra.',
+    'individual-vivir': 'Bci te presta hasta el 90' + NBSP + '% con la garantía del Estado.',
+    'grupo-pie-compartido': 'Compras en grupo y unos inversionistas ponen parte del pie.',
+    'pie-compartido': 'Pones el 5' + NBSP + '% y unos inversionistas ponen el 15' + NBSP + '%.',
+    'grupo-invertir': 'Compras con otros, en obra, y pagas menos.',
+    'individual-invertir': 'El crédito de siempre: Bci presta el 80' + NBSP + '%.'
+  };
+  // Meses hasta las llaves por un camino. Para vivir, con las piezas que sumaste (igual que Inicio).
+  function mesesDeCamino(id, perfil) {
+    var mensual = estado.ahorroMensual || 300000;
+    if (estado.modo === 'vivir') return plazoVivir(mensual, Object.assign({}, piezasOn(), { grupo: !!CAMINOS[id].grupo })).hasta.meses;
+    return mesesCarrera([id], perfil, mensual)[0].techo;
+  }
+  function textoLlegada(meses) { return meses === null || meses === undefined ? 'Todavía no' : fechaLlaves(meses, hoyDemo()); }
+  function etiquetaCamino(id, r) {
+    if (id === estado.caminoElegido) return '<span class="chip chip-recomendado">Tu camino</span>';
+    if (!CAMINOS[id].existeHoy) return '<span class="chip chip-propuesta">Propuesta</span>';
+    if (r && r.id === id) return '<span class="chip chip-existe">Recomendado</span>';
+    return '<span class="chip chip-existe">Existe hoy</span>';
+  }
+  function caminosExplorar(perfil, r) {
+    var sel = caminosParaMostrar(perfil, r);
+    var ids = sel.mostrados.filter(function (id) { return !CAMINOS[id].ficha; });
+    var tuyo = estado.caminoElegido;
+    if (tuyo && CAMINOS[tuyo] && !CAMINOS[tuyo].ficha && (CAMINOS[tuyo].modo === estado.modo)) {
+      ids = [tuyo].concat(ids.filter(function (id) { return id !== tuyo; }));
+    }
+    return { ids: ids, sel: sel };
+  }
+  function renderExplorar() {
+    var cont = $('caminos-contenido');
+    if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return sinSueldos(cont, '¿Qué quieres explorar?', 'titulo-caminos');
+    var perfil = perfilActual();
+    var r = recomendarCamino(perfil);
+    var x = caminosExplorar(perfil, r);
+    var fichas = estado.modo === 'vivir' ? ['arriendo-opcion', 'respaldo-familiar'] : ['respaldo-familiar'];
+    cont.innerHTML =
+      '<header class="encabezado"><h1 id="titulo-caminos" class="h2">¿Qué quieres explorar?</h1>' +
+        '<p class="texto-apoyo">Tienes ' + plural(x.ids.length, 'camino', 'caminos') + ' para llegar</p></header>' +
+      '<ul class="caminos-botones">' + x.ids.map(function (id) {
+        var m = mesesDeCamino(id, perfil);
+        return '<li><a class="camino-boton' + (id === estado.caminoElegido ? ' tuyo' : '') + '" href="#explorar/' + id + '">' +
+          '<span class="camino-boton-cabeza">' + etiquetaCamino(id, r) + '</span>' +
+          '<strong class="h4">' + CAMINOS[id].nombre + '</strong>' +
+          '<span class="camino-boton-fecha">' + icono('i-llave') + (m === null ? 'Todavía no' : 'Llaves en ' + textoLlegada(m)) + '</span>' +
+          '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>';
+      }).join('') + '</ul>' +
+      (estado.modo === 'arrendar' && r.todaviaNo ? '<p class="texto-centro"><a class="enlace" href="#explorar/cambia">Ver qué lo cambia</a></p>' : '') +
+      '<section class="bloque" aria-labelledby="titulo-otras-formas"><h2 class="h4" id="titulo-otras-formas">Otras formas</h2>' +
+        '<ul class="filas tarjeta">' + fichas.map(function (id) {
+          return '<li><a class="fila" href="#camino/ficha/' + id + '"><span><strong>' + CAMINOS[id].nombre + '</strong>' +
+            '<small>' + (CAMINOS[id].existeHoy ? 'Existe hoy' : 'Propuesta') + '</small></span>' +
+            '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>';
+        }).join('') + '</ul></section>' +
+      VER_TODOS +
+      plegable('no-mostrados', 'Por qué no te mostramos otros', plural(x.sel.noMostrados.length, 'camino', 'caminos'),
+        '<ul class="lista-razones">' + x.sel.noMostrados.map(function (n) {
+          return '<li><strong>' + CAMINOS[n.id].corto + ':</strong> ' + RAZON_NO_MOSTRADO[n.razon] + '</li>';
+        }).join('') + '</ul>');
+    iniciarPlegables();
+  }
+
+  // Los departamentos de un camino, sin cambiar el camino elegido (mirar no cambia el plan).
+  function proyectosDeCamino(id) {
+    var guardado = { c: estado.caminoElegido, f: estado.filtroRango, p: estado.piezas };
+    estado.caminoElegido = id;
+    estado.filtroRango = !!rangoActual();
+    if (estado.modo === 'vivir') estado.piezas = Object.assign({}, estado.piezas, { grupo: !!CAMINOS[id].grupo });
+    var lista = proyectosVisibles('camino');
+    estado.caminoElegido = guardado.c; estado.filtroRango = guardado.f; estado.piezas = guardado.p;
+    return lista;
+  }
+  function chipsPiezas() {
+    if (estado.modo !== 'vivir') return '';
+    var on = piezasValidas(piezasOn());
+    var n = ORDEN_PIEZAS.filter(function (id) { return on[id] && id !== 'grupo'; });
+    return n.length ? '<p class="chip-fila">' + n.map(function (id) { return '<span class="chip chip-existe">' + PIEZAS_VIVIR[id].nombre + '</span>'; }).join(' ') + '</p>' : '';
+  }
+  function renderUnCamino(id) {
+    var cont = $('caminos-contenido');
+    if (!CAMINOS[id] || CAMINOS[id].ficha) { location.replace('#explorar'); return; }
+    if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return sinSueldos(cont, CAMINOS[id].nombre, 'titulo-caminos');
+    var perfil = perfilActual();
+    var r = recomendarCamino(perfil);
+    var lista = proyectosDeCamino(id);
+    var m = mesesDeCamino(id, perfil);
+    var esTuyo = id === estado.caminoElegido;
+    var vivir = estado.modo === 'vivir';
+    cont.innerHTML =
+      '<a href="#explorar" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Explorar</a>' +
+      '<header class="encabezado"><p class="camino-boton-cabeza">' + etiquetaCamino(id, r) + '</p>' +
+        '<h1 id="titulo-caminos" class="h2">' + CAMINOS[id].nombre + '</h1>' +
+        '<p class="texto-apoyo">' + (LINEA_CAMINO[id] || '') + '</p>' +
+        '<p class="camino-boton-fecha">' + icono('i-llave') + (m === null ? 'Todavía no' : 'Llaves en ' + textoLlegada(m)) + '</p>' +
+      '</header>' +
+      (vivir ? '<a class="tarjeta fila como-funciona" href="#explorar/' + id + '/como">' + icono('i-ayuda', 'icono-grande') +
+          '<span><strong>¿Cómo funciona?</strong><small>Las piezas que suman y cuánto adelantan</small></span>' +
+          '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>'
+        : '<button type="button" class="tarjeta fila como-funciona" data-simular="' + id + '" aria-haspopup="dialog">' + icono('i-ayuda', 'icono-grande') +
+          '<span><strong>¿Cómo funciona?</strong><small>Tasa, dividendo y costo total</small></span>' +
+          '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button>') +
+      chipsPiezas() +
+      '<section class="bloque" aria-labelledby="titulo-deptos-camino"><h2 class="h4" id="titulo-deptos-camino">' + plural(lista.length, 'departamento', 'departamentos') + '</h2>' +
+        (lista.length ? '<ul class="lista-proyectos">' + lista.map(function (p) { return tarjetaProyecto(p, '#camino/proyecto/'); }).join('') + '</ul>'
+          : '<p class="texto-apoyo">Hoy no hay departamentos de este camino en tu rango.</p>') +
+      '</section>' +
+      (esTuyo ? '' : '<div class="acciones"><button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-mi-camino" aria-haspopup="dialog">Hacerlo mi camino</button></div>');
+    var b = cont.querySelector('[data-simular]');
+    if (b) b.addEventListener('click', function () { abrirSimulacion(id, b); });
+    if ($('btn-mi-camino')) $('btn-mi-camino').addEventListener('click', function () { confirmarMiCamino(id, $('btn-mi-camino')); });
+  }
+  // Hacerlo mi camino: muestra qué cambia y pide confirmar. Lo hecho (cuenta, ahorro, misiones) se conserva.
+  function confirmarMiCamino(id, boton) {
+    var perfil = perfilActual();
+    var antes = estado.caminoElegido && CAMINOS[estado.caminoElegido] && !CAMINOS[estado.caminoElegido].ficha ? mesesDeCamino(estado.caminoElegido, perfil) : null;
+    var despues = mesesDeCamino(id, perfil);
+    var hitosAntes = estado.caminoElegido ? (CAMINOS[estado.caminoElegido].grupo ? 'grupo' : 'individual') : null;
+    var cambio = (antes !== null ? 'Tu fecha pasa de ' + textoLlegada(antes) + ' a ' + textoLlegada(despues) + '.' : 'Llegas en ' + textoLlegada(despues) + '.') +
+      (hitosAntes && hitosAntes !== (CAMINOS[id].grupo ? 'grupo' : 'individual') ? ' Cambia el orden de tus hitos.' : '');
+    abrirHojaContenido('¿Hacerlo tu camino?',
+      '<p class="texto-apoyo">' + cambio + '</p><p class="texto-apoyo">Tu cuenta, tu ahorro y tus misiones se mantienen.</p>' +
+      '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-confirmar-camino">Sí, hacerlo mi camino</button></div>', boton,
+      function () {
+        $('btn-confirmar-camino').addEventListener('click', function () {
+          estado.caminoElegido = id;
+          if (estado.modo === 'vivir') estado.piezas = Object.assign({}, estado.piezas, { grupo: !!CAMINOS[id].grupo });
+          guardarEstado();
+          registro.camino = id; guardarRegistro();
+          cerrarHoja(false);
+          toast('Tu camino: ' + primeraMinuscula(CAMINOS[id].corto) + '.');
+          mostrar();
+        });
+      });
+  }
+
   function renderCaminos() {
     var cont = $('caminos-contenido');
     if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return sinSueldos(cont, 'Tus caminos', 'titulo-caminos');
@@ -5407,7 +5546,12 @@
     if (p[0] === 'pasos') return r('pasos', 'pasos', renderTusPasos);
     // S21-B5: Tu pie. Si la compra está en su paso del pie, se usa esa pantalla.
     if (p[0] === 'pie') return r('pie', 'inicio', function () { if (estado.compra && pasoEfectivo() === 2) location.replace('#camino/pie'); else renderTuPie(); });
-    if (p[0] === 'explorar') return r('caminos', 'explorar', function () { cambiosActivos = {}; renderCaminos(); });
+    if (p[0] === 'explorar') {
+      if (p[1] === 'cambia') return r('caminos', 'explorar', function () { cambiosActivos = {}; renderCaminos(); });
+      if (p[1] && p[2] === 'como') return r('caminos', 'explorar', function () { renderLlegaAntes(p[1]); });
+      if (p[1]) return r('caminos', 'explorar', function () { renderUnCamino(p[1]); });
+      return r('caminos', 'explorar', renderExplorar);
+    }
     if (p[0] === 'departamentos') {
       if (p[1]) return r('proyecto', 'explorar', function () { renderDetalle(p[1], 'departamentos'); });
       return r('proyectos', 'explorar', function () { renderLista('explorar'); });

@@ -1864,3 +1864,25 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .pie-compacto .chip .icono { margin: 0; width: 14px; height: 14px; color: var(--green-dark); }
 .pie-compacto small { color: var(--gray-semidark); }
 .pie-compacto .linea-ver { justify-self: end; }
+
+/* ===== S21-B4: Explorar, caminos primero ===== */
+.caminos-botones { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; }
+.camino-boton {
+  position: relative; display: grid; gap: 6px; padding: 16px 48px 16px 16px; min-height: 96px;
+  border-radius: var(--radio); background: var(--white); border: 1.5px solid var(--gray-semilight);
+  color: var(--gray-dark); text-decoration: none;
+}
+.camino-boton:hover { border-color: var(--green-normal); }
+.camino-boton:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.camino-boton.tuyo { border: 2px solid var(--green-dark); }
+.camino-boton strong { margin: 0; color: var(--blue-dark); }
+.camino-boton .flecha-derecha { position: absolute; right: 16px; top: calc(50% - 10px); width: 20px; height: 20px; color: var(--blue-dark); }
+.camino-boton-cabeza { margin: 0; display: flex; gap: 6px; }
+.camino-boton-cabeza .chip { margin: 0; }
+.camino-boton-fecha { margin: 0; display: flex; align-items: center; font-weight: 700; color: var(--gray-dark); }
+.camino-boton-fecha .icono { color: var(--green-dark); }
+.como-funciona { margin: 16px 0 8px; border: 1px solid var(--gray-semilight); }
+@media (prefers-reduced-motion: no-preference) {
+  .camino-boton { transition: border-color var(--dur-micro) var(--ease-salida), transform var(--dur-micro) var(--ease-salida); }
+  .camino-boton:active { transform: scale(0.98); }
+}
