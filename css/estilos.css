@@ -1995,3 +1995,31 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .siguiente-paso .enlace { color: var(--white); }
 .siguiente-paso .icono { color: var(--white); }
 .siguiente-paso .btn-primario:focus-visible, .siguiente-paso .enlace:focus-visible { outline-color: var(--white); }
+
+/* Tus pasos: tu escalera con colores Bci y misiones en tarjetas */
+.escalera { padding: 18px 16px 8px; }
+.escalera-cabeza { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.escalera-cabeza h2 { margin: 0; }
+.escalera-cabeza .chip { margin: 0; background: var(--green-20); color: var(--green-dark); border-color: transparent; font-weight: 700; }
+.escalera-barra { display: flex; gap: 4px; margin: 12px 0 4px; }
+.escalera-barra i { flex: 1; height: 8px; border-radius: 4px; background: var(--gray-semilight); }
+.escalera-barra i.hecho { background: var(--green-normal); }
+.escalera-barra i.actual { background: linear-gradient(90deg, var(--green-normal) 50%, var(--gray-semilight) 50%); }
+.escalera .hitos { padding: 0; }
+.hito-marca, .fila > .hito-marca { border-radius: 10px; border: 0; }
+.hito.pendiente.color-azul .hito-marca { background: var(--blue-20); color: var(--blue-dark); }
+.hito.pendiente.color-verde .hito-marca { background: var(--green-20); color: var(--green-dark); }
+.hito.pendiente.color-amarillo .hito-marca { background: var(--yellow-20); color: var(--gray-dark); }
+.hito.pendiente.color-rojo .hito-marca { background: var(--red-20); color: var(--red-dark); }
+.hito.actual.color-azul .hito-marca { background: var(--blue-dark); box-shadow: 0 0 0 4px var(--blue-20); }
+.hito.actual.color-verde .hito-marca { background: var(--green-dark); box-shadow: 0 0 0 4px var(--green-20); }
+.hito.actual.color-amarillo .hito-marca { background: var(--yellow-normal); color: var(--gray-dark); box-shadow: 0 0 0 4px var(--yellow-20); }
+.hito.actual.color-rojo .hito-marca { background: var(--red-dark); box-shadow: 0 0 0 4px var(--red-20); }
+.hito.actual .hito-fila { background: var(--gray-light); border-radius: 14px; }
+.misiones-tarjetas { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.misiones-tarjetas .mision-fila { background: var(--white); border-radius: 16px; box-shadow: var(--sombra-tarjeta); padding: 14px 16px; }
+.mision-fila small.vence { color: var(--red-dark); font-weight: 700; }
+@media (prefers-reduced-motion: no-preference) {
+  .misiones-tarjetas .mision-fila { transition: transform var(--dur-micro) var(--ease-salida); }
+  .misiones-tarjetas .mision-fila:active { transform: scale(0.97); }
+}

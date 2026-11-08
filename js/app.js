@@ -4545,21 +4545,29 @@
     if (p) return p.tipo === 'conjunto' ? CAMINOS['grupo-' + (estado.modo === 'vivir' ? 'vivir' : 'invertir')].corto : CAMINOS[estado.modo === 'vivir' ? 'individual-vivir' : 'individual-invertir'].corto;
     return estado.caminoElegido && CAMINOS[estado.caminoElegido] ? CAMINOS[estado.caminoElegido].corto : null;
   }
+  function listosDe(h) { return h.hitos.filter(function (x) { return x.estado === 'hecho'; }).length; }
+  // S24-B1: cada hito con su color Bci, como en el canvas.
+  var COLORES_HITO = ['azul', 'verde', 'amarillo', 'rojo'];
   function filaHito(h, i) {
     var marca = h.estado === 'hecho' ? icono('i-check') : String(i + 1);
     var sub = h.estado === 'hecho' ? 'Listo' : (h.estado === 'actual' ? 'Ahora' + SEP + h.cuesta : '');
-    return '<li class="hito ' + h.estado + '"' + (h.estado === 'actual' ? ' aria-current="step"' : '') + '>' +
+    return '<li class="hito ' + h.estado + ' color-' + COLORES_HITO[i % 4] + '"' + (h.estado === 'actual' ? ' aria-current="step"' : '') + '>' +
       '<button type="button" class="fila hito-fila" data-hito="' + h.id + '" aria-haspopup="dialog">' +
         '<span class="hito-marca" aria-hidden="true">' + marca + '</span>' +
         '<span><strong>' + h.nombre + '</strong>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' +
         '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg>' +
       '</button></li>';
   }
+  function textoVence(f) {
+    var d = diasEntre(hoyDemo(), f);
+    if (d >= 0 && d <= 30) return d === 0 ? 'Vence hoy' : 'Vence en ' + d + (d === 1 ? ' día' : ' días');
+    return 'Hasta el ' + formatoFecha(f).replace(/ de \d{4}$/, '');
+  }
   function filaMision(x) {
     return '<li><button type="button" class="fila mision-fila' + (x.hecho ? ' hecha' : '') + '" data-mision="' + x.id + '" aria-haspopup="dialog">' +
       (x.hecho ? icono('i-check', 'icono-grande mision-check') : '') +
       '<span><strong>' + x.titulo + '</strong>' +
-        (x.fecha && !x.hecho ? '<small>Hasta el ' + formatoFecha(x.fecha).replace(/ de \d{4}$/, '') + '</small>' : '') + '</span>' +
+        (x.fecha && !x.hecho ? '<small' + (diasEntre(hoyDemo(), x.fecha) <= 30 ? ' class="vence"' : '') + '>' + textoVence(x.fecha) + '</small>' : '') + '</span>' +
       '<span class="chip">' + x.etiqueta + '</span></button></li>';
   }
 
@@ -4618,13 +4626,17 @@
         '<a class="enlace" href="#explorar">Ver qué lo cambia</a></span></p>' + (estado.modo === 'vivir' ? metaMesHtml() : '') : '') +
       departamentoEnConstruccion(h) +
       '<section aria-labelledby="titulo-hitos" class="bloque">' +
-        '<h2 class="h4" id="titulo-hitos">Hitos' + SEP + '<span class="texto-apoyo">' + (h.terminado ? 'Todos listos' : h.indice + ' de ' + h.total) + '</span></h2>' +
-        '<ol class="hitos tarjeta">' + h.hitos.map(filaHito).join('') + '</ol>' +
+        '<div class="tarjeta escalera">' +
+          '<div class="escalera-cabeza"><h2 class="h4" id="titulo-hitos">Tu escalera</h2>' +
+            '<span class="chip">' + (h.terminado ? 'Todos listos' : listosDe(h) + ' de ' + h.total + ' listos') + '</span></div>' +
+          '<p class="escalera-barra" aria-hidden="true">' + h.hitos.map(function (x) { return '<i class="' + x.estado + '"></i>'; }).join('') + '</p>' +
+          '<ol class="hitos">' + h.hitos.map(filaHito).join('') + '</ol>' +
+        '</div>' +
       '</section>' +
       '<section aria-labelledby="titulo-misiones" class="bloque">' +
         '<h2 class="h4" id="titulo-misiones">Misiones</h2>' +
         '<p class="texto-apoyo">En cualquier orden.</p>' +
-        (pendientes.length ? '<ul class="filas tarjeta">' + pendientes.slice(0, 3).map(filaMision).join('') + '</ul>'
+        (pendientes.length ? '<ul class="misiones-tarjetas">' + pendientes.slice(0, 3).map(filaMision).join('') + '</ul>'
           : '<p class="tarjeta compacta">Hiciste todas tus misiones.</p>') +
         '<button type="button" class="btn btn-terciario btn-bloque bloque-chico" id="btn-todas-misiones" aria-haspopup="dialog">Ver todas y las fechas que importan</button>' +
       '</section>';
