@@ -61,3 +61,15 @@ No hace falta tenerlas todas: donde falte una foto, la app sigue mostrando el ed
 - **Tarjetas** de Elegir y de Departamentos: la fachada.
 - **Detalle** del departamento: una galería que se desliza, con la fachada y los interiores de su tipo, y el sello "Fotos referenciales".
 - **Mi departamento**, después de firmar: la misma galería.
+
+## Obra (`fotos/obra/`) · Sprint 22
+Una foto por etapa, para mostrar cómo avanza el edificio en la compra en grupo. Mientras no estén, la app muestra un dibujo de línea de cada etapa.
+
+| Nombre del archivo | Etapa | Cómo buscar |
+|---|---|---|
+| `excavacion.jpg` | Excavación | construction site excavation crane |
+| `obra-gruesa.jpg` | Obra gruesa | concrete building structure under construction |
+| `terminaciones.jpg` | Terminaciones | apartment building facade scaffolding finishing |
+| `recepcion.jpg` | Recepción | new apartment building finished exterior |
+
+Después de bajarlas, anota cada enlace en `fotos/CREDITOS.md` y corre `node scripts/fotos.js` (o avísame y lo hago yo).

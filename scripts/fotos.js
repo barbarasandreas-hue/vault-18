@@ -12,13 +12,14 @@ const lista = (carpeta) => {
     .forEach((f) => { r[f.replace(/\.(jpe?g|webp|png)$/i, '').toLowerCase()] = f; });
   return r;
 };
-const fotos = { edificios: lista('edificios'), interiores: lista('interiores') };
+const fotos = { edificios: lista('edificios'), interiores: lista('interiores'), obra: lista('obra') };
 const texto = `// Fotos de la app (referenciales). Este archivo lo arma \`node scripts/fotos.js\` a partir de la carpeta fotos/:
 //   fotos/edificios/<id del proyecto>.jpg (también .jpeg, .png o .webp)         la fachada de cada edificio (tarjetas y galería)
 //   fotos/interiores/<tipología>-<espacio>.jpg    living, cocina y dormitorio (o baño) por tipología
+//   fotos/obra/<etapa>.jpg    una foto referencial por etapa: excavacion, obra-gruesa, terminaciones, recepcion (S22-F1)
 // Tipologías: estudio, 1d, 2d y 2d2b. Si una foto no está, la app muestra el edificio dibujado.
 var FOTOS = ${JSON.stringify(fotos)};
 if (typeof module !== 'undefined') module.exports = { FOTOS: FOTOS };
 `;
 fs.writeFileSync(path.join(raiz, 'js', 'fotos.js'), texto);
-console.log(`Listo: ${Object.keys(fotos.edificios).length} edificios y ${Object.keys(fotos.interiores).length} interiores.`);
+console.log(`Listo: ${Object.keys(fotos.edificios).length} edificios, ${Object.keys(fotos.interiores).length} interiores y ${Object.keys(fotos.obra).length} etapas de obra.`);

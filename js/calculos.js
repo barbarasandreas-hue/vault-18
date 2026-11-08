@@ -1004,6 +1004,8 @@ function cuposParaMasDescuento(tomados, cupos) {
 
 // S13-F4: etapas de la obra (la última es la escritura).
 var ETAPAS_OBRA = ['Excavación', 'Obra gruesa', 'Terminaciones', 'Recepción', 'Escritura'];
+// S22-F1: nombre del archivo de la foto referencial de cada etapa (fotos/obra/<nombre>.jpg).
+var FOTOS_ETAPA = ['excavacion', 'obra-gruesa', 'terminaciones', 'recepcion', 'recepcion'];
 
 // S13-F5: lo tuyo en el departamento, sin plusvalía: precio − lo que se debe a Bci − la parte de los inversionistas.
 function patrimonioUF(precioUF, saldoBciUF, saldoParticipacionUF) {
@@ -1495,7 +1497,10 @@ function misiones(s, hoy) {
     lista.push(Object.assign({ id: id, titulo: titulo, etiqueta: etiqueta, ayudaA: ayudaA, hecho: !!hecho, fecha: null, requiere: [] }, extra));
   };
   if (s.ds1) {
-    m('ds1', 'Postula al DS1', '+UF ' + Math.round(s.ds1.montoUF), 'pie', s.ds1Postulado, { fecha: FECHAS_IMPORTAN[0].fecha, requiere: ['cuenta', 'rsh'] });
+    // Pasado el cierre del llamado, la misión queda para el próximo (sin fecha).
+    var abierto = !hoy || diasHastaFecha(FECHAS_IMPORTAN[0].fecha, hoy) >= 0;
+    m('ds1', abierto ? 'Postula al DS1' : 'Postula al próximo llamado del DS1', '+UF ' + Math.round(s.ds1.montoUF), 'pie', s.ds1Postulado,
+      { fecha: abierto ? FECHAS_IMPORTAN[0].fecha : null, requiere: ['cuenta', 'rsh'] });
     m('rsh', 'Inscríbete en el Registro Social de Hogares', 'DS1', 'pie', s.rsh || s.ds1Postulado);
   }
   m('documentos', 'Completa tus datos y documentos', 'Preaprobación', 'preaprobacion', s.documentos || s.preaprobado);
@@ -1655,6 +1660,7 @@ if (typeof module !== 'undefined') module.exports = {
   ventaHoy: ventaHoy,
   cuposParaMasDescuento: cuposParaMasDescuento,
   ETAPAS_OBRA: ETAPAS_OBRA,
+  FOTOS_ETAPA: FOTOS_ETAPA,
   patrimonioUF: patrimonioUF,
   crecimientoMesUF: crecimientoMesUF,
   TIPOS_AVISO: TIPOS_AVISO,

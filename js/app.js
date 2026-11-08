@@ -895,6 +895,7 @@
       '<ul class="lista-check">' + estado.novedades.map(function (c) {
         return '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>' + textoNovedad(c) + '</span></li>';
       }).join('') + '</ul>' +
+      (estado.novedades.some(function (c) { return c.tipo === 'etapa'; }) && x.p && x.p.tipo === 'conjunto' ? obraVisual(x.p) : '') +
       '<button type="button" class="enlace" id="btn-novedades-ok">Entendido</button>' +
     '</section>';
   }
@@ -4494,6 +4495,8 @@
       accion = hecho ? '' : botonEnHoja('btn-hito-accion', 'Abrir mi cuenta');
     } else if (id === 'pie') {
       texto = s.grupo ? 'Pagas tu pie en cuotas durante la obra, en una cuenta bloqueada a tu nombre.' : 'Lo juntas cada mes en tu cuenta de vivienda.';
+      var pc = proyectoCompra();
+      if (pc && pc.tipo === 'conjunto') texto += '</p>' + obraVisual(pc) + '<p class="texto-apoyo">';
       accion = enlaceHoja(rutaTuPie(), 'Ver tu pie');
     } else if (id === 'preaprobacion') {
       var pr = preaprobacion(estado.sueldoPropio, estado.sueldoPareja, estado.otrasCuotas);
@@ -5246,6 +5249,32 @@
     return Math.min(2, e0 + Math.floor((estado.mesAhorro || 0) / total * (3 - e0)));
   }
 
+
+  // ---------- S22-F1: avance de obra con foto ----------
+  // Si está la foto de la etapa (fotos/obra/), se usa; si no, un dibujo de línea de esa etapa.
+  var DIBUJO_ETAPA = [
+    // Excavación: terreno abierto y una grúa
+    '<path d="M8 70h104" /><path d="M24 70l8-14h56l8 14" /><path d="M86 70V18h4v52M60 18h44M90 18l-6 10" /><path d="M66 18v18" /><rect x="62" y="36" width="8" height="6" />',
+    // Obra gruesa: estructura sin ventanas
+    '<path d="M8 70h104" /><path d="M34 70V22h52v48" /><path d="M34 34h52M34 46h52M34 58h52M52 22v48M68 22v48" /><path d="M96 70V12h3v58M80 12h32" />',
+    // Terminaciones: fachada con algunas ventanas
+    '<path d="M8 70h104" /><rect x="34" y="20" width="52" height="50" /><rect x="40" y="27" width="10" height="8" /><rect x="55" y="27" width="10" height="8" /><rect x="70" y="27" width="10" height="8" /><rect x="40" y="42" width="10" height="8" /><rect x="55" y="42" width="10" height="8" /><path d="M70 42h10M70 50h10M40 57h10" />',
+    // Recepción: edificio terminado con puerta y árbol
+    '<path d="M8 70h104" /><rect x="34" y="20" width="52" height="50" /><rect x="40" y="27" width="10" height="8" /><rect x="55" y="27" width="10" height="8" /><rect x="70" y="27" width="10" height="8" /><rect x="40" y="42" width="10" height="8" /><rect x="55" y="42" width="10" height="8" /><rect x="70" y="42" width="10" height="8" /><path d="M55 70V58h10v12" /><circle cx="100" cy="54" r="7" /><path d="M100 61v9" />'
+  ];
+  function obraVisual(p) {
+    var etapa = etapaObraHoy(p);
+    var slug = FOTOS_ETAPA[etapa];
+    var foto = hayFotos() && FOTOS.obra && FOTOS.obra[slug] ? 'fotos/obra/' + encodeURI(FOTOS.obra[slug]) : null;
+    var mEntrega = mesesParaEntrega(p);
+    var imagen = foto
+      ? '<img class="obra-foto" src="' + foto + '" alt="Edificio en ' + ETAPAS_OBRA[etapa].toLowerCase() + ' (foto referencial)" loading="lazy">'
+      : '<svg class="obra-dibujo" viewBox="0 0 120 76" role="img" aria-label="Edificio en ' + ETAPAS_OBRA[etapa].toLowerCase() + '">' + DIBUJO_ETAPA[Math.min(3, etapa)] + '</svg>';
+    return '<figure class="obra-visual">' + imagen +
+      '<figcaption><strong>' + ETAPAS_OBRA[etapa] + '</strong>' +
+        (p.entregaEstimada ? SEP + (mEntrega > 0 ? 'Entrega en ' + fechaLlaves(0, p.entregaEstimada) : 'Entregado') : '') +
+        '<small>' + (foto ? 'Foto referencial' : 'Dibujo referencial') + '</small></figcaption></figure>';
+  }
   function tuGrupoYObra(p) {
     var r = resumen(p);
     var g = cuposParaMasDescuento(r.cuposTomados, r.cupos);
@@ -5273,7 +5302,7 @@
         (r.cuposLibres > 0 ? '<button type="button" class="btn btn-terciario btn-bloque" id="btn-se-une">Simular que alguien se une</button>' : '')) +
         // S18-F2: la obra dice la entrega del edificio, con el mismo reloj que Tus llaves.
         '<h3 class="h5 bloque">Tu obra</h3>' +
-        '<p class="texto-apoyo">' + entrega + SEP + fechaLlaves(0, p.entregaEstimada) + '</p>' +
+        obraVisual(p) +
         obra);
   }
 

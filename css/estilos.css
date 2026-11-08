@@ -1895,3 +1895,10 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .usado p { margin: 0 0 4px; }
 .usado-fila { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .usado-precio { display: flex; align-items: baseline; gap: 8px; }
+
+/* ===== S22-F1: avance de obra con foto ===== */
+.obra-visual { margin: 12px 0; display: grid; gap: 6px; }
+.obra-foto { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radio); background: var(--gray-light); }
+.obra-dibujo { width: 100%; height: 120px; border-radius: var(--radio); background: var(--blue-20); fill: none; stroke: var(--blue-dark); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.obra-visual figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 4px; font-size: 15px; }
+.obra-visual figcaption small { flex-basis: 100%; color: var(--gray-semidark); font-size: 13px; }

@@ -41,3 +41,16 @@ test('S22-F4: al menos 3 usados de ejemplo en las comunas de los ejemplos', () =
     assert.ok(u.listaUF > 0 && u.m2 > 0);
   });
 });
+
+test('S22-F1: una foto o dibujo por etapa de obra', () => {
+  assert.strictEqual(c.FOTOS_ETAPA.length, c.ETAPAS_OBRA.length);
+  assert.deepStrictEqual(c.FOTOS_ETAPA.slice(0, 4), ['excavacion', 'obra-gruesa', 'terminaciones', 'recepcion']);
+});
+
+test('S22: pasado el cierre del DS1, la misión no muestra una fecha vencida', () => {
+  const s = { grupo: false, numeros: true, cuentaVivienda: true, ahorrado: 0, meta: 1e7, ds1: { montoUF: 410 } };
+  const m = c.misiones(s, new Date('2027-07-03T12:00:00')).find((x) => x.id === 'ds1');
+  assert.strictEqual(m.fecha, null);
+  assert.match(m.titulo, /próximo llamado/);
+  assert.notStrictEqual(c.siguientePaso(s, new Date('2027-07-03T12:00:00')).plazo, '2026-11-27');
+});
