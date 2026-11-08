@@ -1413,6 +1413,19 @@
     return 'Entre ' + (a[1] === b[1] ? a[0] : x.desde.llaves) + ' y ' + x.hasta.llaves;
   }
   var FRENO = { ahorro: 'Te frena: juntar tu pie', entrega: 'Te frena: la entrega', 'cuenta-vivienda': 'Te frena: tu cuenta de vivienda', ninguno: 'Nada te frena' };
+  // S24-B1: lo que cambia al mover el slider, comparado con lo que juntas hoy.
+  function textoDelta(base, ahora) {
+    if (base === null || ahora === null) return '';
+    var d = base - ahora;
+    if (d > 0) return '<span class="delta-chip sube">↑ ' + textoMeses(d) + ' antes</span> que con lo que juntas hoy';
+    if (d < 0) return '<span class="delta-chip baja">↓ ' + textoMeses(-d) + ' después</span> que con lo que juntas hoy';
+    return 'Con lo que juntas hoy';
+  }
+  // S24-B1: el dividendo se muestra en UF y debajo cuánto es hoy en pesos.
+  function rangoUF(desde, hasta) {
+    var a = formatoUF(Math.min(desde, hasta) / SUPUESTOS.uf), b = formatoUF(Math.max(desde, hasta) / SUPUESTOS.uf);
+    return a === b ? b : a + ' a ' + b.replace('UF\u00a0', '');
+  }
   function vsArriendo(div) {
     if (!(estado.arriendoActual > 0)) return '';
     var max = Math.max(estado.arriendoActual, div);
@@ -1462,10 +1475,12 @@
       '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
         '<p class="si-juntas-fila"><label for="rango-mensual" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-mensual">' + formatoRedondeado(mensual) + '</strong></p>' +
         '<input type="range" id="rango-mensual" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '" aria-valuetext="' + formatoRedondeado(mensual) + ' al mes: ' + textoMesesRango(x.desde.meses, x.hasta.meses) + '">' +
+        '<p class="delta-plazo" id="delta-plazo" aria-live="polite">' + textoDelta(x.hasta.meses, x.hasta.meses) + '</p>' +
       '</section>' +
       '<section class="tarjeta bloque despues" aria-labelledby="titulo-despues">' +
         '<p class="etiqueta" id="titulo-despues">Después, pagas al mes</p>' +
-        '<strong class="numero h3">' + formatoRango(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
+        '<strong class="numero h3">' + rangoUF(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
+        '<p class="hoy-pesos">Hoy son ' + formatoRango(x.desde.dividendo, x.hasta.dividendo).replace(/^entre /, '') + '</p>' +
         vsArriendo(x.hasta.dividendo) +
       '</section>' +
       (siempre !== null ? '<p class="texto-apoyo linea-siempre">Sin garantía: ' + textoMeses(siempre) + ' ' + ayuda('garantia') + '</p>' : '') +
@@ -1486,6 +1501,7 @@
         $('freno-llaves').textContent = FRENO[y.hasta.freno];
         var ventana = $('mi-ventana'); ventana.classList.remove('brilla'); void ventana.offsetWidth; ventana.classList.add('brilla');
       }
+      $('delta-plazo').innerHTML = textoDelta(x.hasta.meses, y.hasta.meses);
       rm.setAttribute('aria-valuetext', formatoRedondeado(v) + ' al mes: ' + textoMesesRango(y.desde.meses, y.hasta.meses));
     });
     rm.addEventListener('change', function () { estado.ahorroMensual = Number(rm.value); guardarEstado(); });

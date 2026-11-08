@@ -1965,3 +1965,33 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .novedad-guardado { margin: 0 0 6px; display: flex; align-items: center; font-size: 14px; font-weight: 600; color: var(--gray-dark); }
 .fila-guardados { margin-top: 12px; border: 1px solid var(--gray-semilight); }
 .fila-guardados .icono-grande { color: var(--red-dark); }
+
+/* ===== S24-B1: estilo del canvas (Claude Design) ===== */
+:root {
+  --radio-tarjeta: 20px;
+  --sombra-tarjeta: 0 1px 2px rgba(55, 71, 79, .06), 0 8px 24px rgba(55, 71, 79, .08);
+  --sombra-flota: 0 2px 4px rgba(55, 71, 79, .08), 0 14px 32px rgba(29, 86, 153, .18);
+}
+.tarjeta { border: 0; border-radius: var(--radio-tarjeta); box-shadow: var(--sombra-tarjeta); }
+@media (prefers-reduced-motion: no-preference) {
+  .tarjeta.fila, a.tarjeta, button.tarjeta, .btn { transition: transform var(--dur-micro) var(--ease-salida), box-shadow var(--dur-micro) var(--ease-salida); }
+  .tarjeta.fila:active, a.tarjeta:active, button.tarjeta:active, .btn:active { transform: scale(0.97); }
+}
+
+/* Inicio: el hero azul y la tarjeta del slider flotando encima */
+.noche { border-radius: 24px; padding-bottom: 84px; }
+.noche-plazo { font-size: 44px; }
+.noche + .si-juntas { position: relative; z-index: 1; margin: -72px 8px 0; box-shadow: var(--sombra-flota); }
+.delta-plazo { margin: 10px 0 0; font-size: 14px; color: var(--gray-semidark); min-height: 22px; }
+.delta-chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-weight: 700; }
+.delta-chip.sube { background: var(--green-20); color: var(--green-dark); }
+.delta-chip.baja { background: var(--gray-light); color: var(--gray-dark); }
+.despues .numero { color: var(--blue-dark); margin-bottom: 0; }
+.hoy-pesos { margin: 0 0 8px; font-size: 14px; color: var(--gray-semidark); }
+.siguiente-paso { border-left: 0; background: var(--green-dark); color: var(--white); }
+.siguiente-paso h2, .siguiente-paso .etiqueta, .siguiente-paso p { color: var(--white); }
+.siguiente-paso .chip { background: rgba(255, 255, 255, .18); color: var(--white); border-color: transparent; }
+.siguiente-paso .btn-primario { background: var(--white); color: var(--green-dark); border-color: var(--white); }
+.siguiente-paso .enlace { color: var(--white); }
+.siguiente-paso .icono { color: var(--white); }
+.siguiente-paso .btn-primario:focus-visible, .siguiente-paso .enlace:focus-visible { outline-color: var(--white); }
