@@ -2832,7 +2832,7 @@
       var est = j < i ? 'hecha' : (j === i ? 'actual' : 'pendiente');
       return '<li class="' + est + ' ' + COLOR_PARTE[j] + '"' + (j === i ? ' aria-current="step"' : '') + '>' +
         '<span class="paso-postula-marca" aria-hidden="true">' + (j < i ? '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : (j + 1)) + '</span>' +
-        '<span class="paso-postula-nombre">' + nombre.replace('Tus ', '') + '</span></li>';
+        '<span class="paso-postula-nombre">' + ['Datos', 'Documentos', 'Resultado'][j] + '</span></li>';
     }).join('') + '</ol>';
   }
 
@@ -3631,8 +3631,8 @@
         '<p>Solo falta firmar. Revisa con calma lo que firmas.</p>' +
       '</section>' +
       '<section class="tarjeta bloque firma-doc" aria-labelledby="titulo-firma">' +
-        '<p class="firma-doc-cabeza"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4M9 11h6M9 14.5h6M9 18h4"/></svg></span>' +
-          '<span><h2 class="h4" id="titulo-firma">Lo que firmas</h2><small>Contrato de crédito hipotecario Bci</small></span></p>' +
+        '<div class="firma-doc-cabeza"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4M9 11h6M9 14.5h6M9 18h4"/></svg></span>' +
+          '<span><h2 class="h4" id="titulo-firma">Lo que firmas</h2><small>Contrato de crédito hipotecario Bci</small></span></div>' +
         (arrendar ? '' : '<p class="firma-monto"><small>Pagas al mes</small><strong class="numero">' + formatoUF(e.dividendo / SUPUESTOS.uf) + '</strong><small>hoy son ' + formatoPesos(e.dividendo) + '</small></p>') +
         filasVivir +
         '<ul class="lista-check">' + credito + segunda + '</ul>' +
