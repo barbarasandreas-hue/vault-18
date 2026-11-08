@@ -4889,6 +4889,14 @@
     return mesesCarrera([id], perfil, mensual)[0].techo;
   }
   function textoLlegada(meses) { return meses === null || meses === undefined ? 'Todavía no' : fechaLlaves(meses, hoyDemo()); }
+  // S24-B1: el ícono grande de cada camino en Explorar (como en el canvas).
+  function iconoCamino(id) {
+    var d = id.indexOf('grupo') === 0
+      ? 'M9 7.5a3 3 0 1 0 6 0 3 3 0 0 0-6 0M6.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6M2.7 9.5a2.3 2.3 0 1 0 4.6 0 2.3 2.3 0 0 0-4.6 0M16.7 9.5a2.3 2.3 0 1 0 4.6 0 2.3 2.3 0 0 0-4.6 0M1.5 18.5c0-2.4 1.5-4.3 3.5-4.3M22.5 18.5c0-2.4-1.5-4.3-3.5-4.3'
+      : (id === 'individual-vivir' ? 'M3 9.5L12 4l9 5.5zM5 10v7.5M9.7 10v7.5M14.3 10v7.5M19 10v7.5M3 20.5h18'
+        : 'M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6zM8.5 12.2l2.4 2.4 4.6-4.8');
+    return '<svg class="camino-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
+  }
   function etiquetaCamino(id, r) {
     if (id === estado.caminoElegido) return '<span class="chip chip-recomendado">Tu camino</span>';
     if (!CAMINOS[id].existeHoy) return '<span class="chip chip-propuesta">Propuesta</span>';
@@ -4914,13 +4922,15 @@
     cont.innerHTML =
       '<header class="encabezado"><h1 id="titulo-caminos" class="h2">¿Qué quieres explorar?</h1>' +
         '<p class="texto-apoyo">Tienes ' + plural(x.ids.length, 'camino', 'caminos') + ' para llegar</p></header>' +
-      '<ul class="caminos-botones">' + x.ids.map(function (id) {
+      '<ul class="caminos-botones">' + x.ids.map(function (id, i) {
         var m = mesesDeCamino(id, perfil);
-        return '<li><a class="camino-boton' + (id === estado.caminoElegido ? ' tuyo' : '') + '" href="#explorar/' + id + '">' +
-          '<span class="camino-boton-cabeza">' + etiquetaCamino(id, r) + '</span>' +
+        return '<li><a class="camino-boton color-' + (i % 3) + (id === estado.caminoElegido ? ' tuyo' : '') + '" href="#explorar/' + id + '">' +
+          '<span class="camino-figura" aria-hidden="true"><i></i></span>' +
+          '<span class="camino-boton-cabeza">' + etiquetaCamino(id, r) + iconoCamino(id) + '</span>' +
           '<strong class="h4">' + CAMINOS[id].nombre + '</strong>' +
+          (LINEA_CAMINO[id] ? '<span class="camino-boton-texto">' + LINEA_CAMINO[id] + '</span>' : '') +
           '<span class="camino-boton-fecha">' + icono('i-llave') + (m === null ? 'Todavía no' : 'Llaves en ' + textoLlegada(m)) + '</span>' +
-          '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>';
+          '<span class="camino-boton-ir" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></a></li>';
       }).join('') + '</ul>' +
       (estado.modo === 'arrendar' && r.todaviaNo ? '<p class="texto-centro"><a class="enlace" href="#explorar/cambia">Ver qué lo cambia</a></p>' : '') +
       (estado.favoritos.length ? '<a class="tarjeta fila fila-guardados" href="#explorar/guardados">' + icono('i-corazon', 'icono-grande') +

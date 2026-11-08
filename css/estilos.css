@@ -2023,3 +2023,30 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
   .misiones-tarjetas .mision-fila { transition: transform var(--dur-micro) var(--ease-salida); }
   .misiones-tarjetas .mision-fila:active { transform: scale(0.97); }
 }
+
+/* Explorar: cada camino es una tarjeta de color pleno */
+.camino-boton { overflow: hidden; border: 0; border-radius: var(--radio-tarjeta); padding: 16px 64px 18px 16px; min-height: 176px; gap: 8px; box-shadow: 0 8px 24px rgba(55, 71, 79, .18); color: var(--white); }
+.camino-boton.color-0 { background: var(--green-dark); }
+.camino-boton.color-1 { background: var(--blue-dark); }
+.camino-boton.color-2 { background: var(--yellow-normal); color: var(--gray-dark); }
+.camino-boton.tuyo { border: 0; box-shadow: 0 0 0 3px var(--white), 0 0 0 6px var(--green-normal), 0 8px 24px rgba(55, 71, 79, .18); }
+.camino-boton:hover { border: 0; }
+.camino-boton > * { position: relative; }
+.camino-figura { position: absolute !important; inset: 0; overflow: hidden; pointer-events: none; }
+.camino-figura i { position: absolute; right: -50px; bottom: -70px; width: 180px; height: 180px; border-radius: 50%; background: var(--white); opacity: .1; }
+.color-1 .camino-figura i { right: -30px; bottom: -20px; width: 190px; height: 80px; border-radius: 0; }
+.color-2 .camino-figura i { width: 0; height: 0; right: -30px; bottom: -10px; border-radius: 0; background: none; opacity: .35; border-left: 100px solid transparent; border-right: 100px solid transparent; border-bottom: 130px solid var(--white); }
+.camino-boton strong, .camino-boton-fecha, .camino-boton-fecha .icono { color: inherit; }
+.camino-boton strong { font-size: 22px; line-height: 1.2; font-weight: 600; }
+.camino-boton-texto { font-size: 15px; line-height: 1.45; opacity: .92; }
+.camino-boton-cabeza { justify-content: space-between; align-items: flex-start; margin-right: -48px; }
+.camino-boton .chip { background: rgba(255, 255, 255, .18); color: var(--white); border-color: transparent; font-weight: 700; }
+.camino-boton.color-2 .chip { background: rgba(55, 71, 79, .1); color: var(--gray-dark); }
+.camino-icono { width: 36px; height: 36px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.camino-boton-ir { position: absolute !important; right: 16px; bottom: 18px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--white); }
+.camino-boton-ir svg { width: 18px; height: 18px; fill: none; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+.color-0 .camino-boton-ir svg { stroke: var(--green-dark); }
+.color-1 .camino-boton-ir svg { stroke: var(--blue-dark); }
+.color-2 .camino-boton-ir { background: var(--gray-dark); }
+.color-2 .camino-boton-ir svg { stroke: var(--yellow-normal); }
+.camino-boton:focus-visible { outline-offset: 3px; }
