@@ -58,6 +58,8 @@
     quiereInvertir: false,   // S17-F11: en modo vivir, Inversiones aparece solo si lo pide
     ultimaVisita: null,      // S19-B4: foto de Inicio la última vez { proyecto, mes, cupos, etapa, llegada }
     novedades: [],           // S19-B4: lo que cambió desde la última visita (cambiosDesdeVisita), hasta que se ve
+    animosDados: null,       // S22-F2: hitos y misiones que ya recibieron su "¡Bien!" (null = todavía no se mira)
+    animos: [],              // S22-F2: "¡Bien!" de Tu equipo que falta ver [{ clave, motivo, relacion, id }]
     pasos: {}                // S21-B3: hitos y misiones hechos { cuentaVivienda, rsh, ds1Postulado, documentos, bajoLlave, preaprobado }
   };
 
@@ -65,13 +67,13 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
-    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {} };
+    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [] };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -325,6 +327,8 @@
       if (g.piezas && typeof g.piezas === 'object') ORDEN_PIEZAS.forEach(function (id) { if (g.piezas[id] === true) estado.piezas[id] = true; });
       estado.modoElegido = g.modoElegido === true || g.preguntasListas === true;
       estado.quiereInvertir = g.quiereInvertir === true;
+      estado.animosDados = Array.isArray(g.animosDados) ? g.animosDados.filter(function (k) { return typeof k === 'string'; }) : null;
+      estado.animos = Array.isArray(g.animos) ? g.animos.filter(function (x) { return x && MOTIVO_ANIMO[x.clave] && RELACIONES_EQUIPO.indexOf(x.relacion) !== -1; }).slice(0, 2) : [];
       estado.pasos = {};
       if (g.pasos && typeof g.pasos === 'object') CLAVES_PASOS.forEach(function (k) { if (g.pasos[k] === true) estado.pasos[k] = true; });
       if (['solo', 'pareja', 'familia'].indexOf(g.conQuien) !== -1) estado.conQuien = g.conQuien;
@@ -943,7 +947,7 @@
         '<p class="texto-apoyo">' + esc(x.p.nombre) + SEP + esc(x.p.comuna) + '</p>' +
       '</header>' +
       novedadesInicio(x) +
-      (x.paso < 4 ? cuandoLlegasCompra(x.p) + tarjetaSiguientePaso() + tuPieCompacto() :
+      (x.paso < 4 ? cuandoLlegasCompra(x.p) + animosInicio() + tarjetaSiguientePaso() + tuPieCompacto() :
       '<section class="tarjeta proximo" aria-label="Dónde vas">' +
         '<p class="chip">' + x.etapa + '</p>' +
         '<p class="etiqueta">' + x.etiqueta + '</p>' +
@@ -1448,6 +1452,7 @@
             '<span class="freno-llaves" id="freno-llaves">' + FRENO[x.hasta.freno] + '</span>' +
             (techoJusto ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(x.deptos.hasta.listaUF) + ' te dejan poco para vivir.</p>' : '') +
           '</section>') +
+      animosInicio() +
       tarjetaSiguientePaso() +
       tuPieCompacto();
 
@@ -1648,6 +1653,7 @@
           '<button type="button" class="enlace" id="btn-cambiar-departamento" aria-haspopup="dialog">Cambiar</button></p>' +
       '</header>' +
       protagonista +
+      animosInicio() +
       tarjetaSiguientePaso() +
       tuPieCompacto();
     iniciarSiguientePaso();
@@ -1661,6 +1667,48 @@
     $('btn-cambiar-departamento').addEventListener('click', function () { abrirCambiarRango($('btn-cambiar-departamento')); });
   }
 
+
+
+  // ---------- S22-F2: Tu equipo anima ----------
+  // Al volver a Inicio, lo que se hizo desde la última vez recibe un "¡Bien!" de alguien de Tu equipo (simulado).
+  function hechosAhora() {
+    var s = fotoPasos();
+    var h = hitoActual(s).hitos.filter(function (x) { return x.estado === 'hecho'; }).map(function (x) { return x.id; });
+    var m = misiones(s, hoyDemo()).filter(function (x) { return x.hecho; }).map(function (x) { return x.id; });
+    return h.concat(m);
+  }
+  function animosInicio() {
+    var hechos = hechosAhora();
+    if (estado.animosDados === null) {
+      // Primera vez: lo que ya estaba hecho no se celebra de nuevo.
+      estado.animosDados = hechos.filter(function (k) { return MOTIVO_ANIMO[k]; });
+      guardarEstado();
+    } else {
+      var r = animosNuevos(hechos, estado.animosDados, estado.equipo);
+      if (r.dados.length !== estado.animosDados.length) {
+        estado.animosDados = r.dados;
+        estado.animos = estado.animos.concat(r.nuevos).slice(-2);
+        guardarEstado();
+      }
+    }
+    if (!estado.animos.length) return '';
+    return '<section class="tarjeta animos" aria-labelledby="titulo-animos">' +
+      '<h2 class="h6" id="titulo-animos">Tu equipo te anima</h2>' +
+      '<ul class="animos-lista">' + estado.animos.map(function (x) {
+        var m = estado.equipo.filter(function (e) { return e.id === x.id; })[0];
+        return '<li>' + avatarSVG(m ? m.avatar : null, 36, 'animo-av') +
+          '<span><strong>¡Bien!</strong> Tu ' + esc(x.relacion) + ', por ' + x.motivo + '.</span></li>';
+      }).join('') + '</ul>' +
+      '<button type="button" class="enlace" id="btn-animos-ok">Gracias</button></section>';
+  }
+  function iniciarAnimos() {
+    if (!$('btn-animos-ok')) return;
+    $('btn-animos-ok').addEventListener('click', function () {
+      estado.animos = []; guardarEstado();
+      var s = document.querySelector('.animos'); if (s) s.remove();
+      toast('Le contamos a tu equipo (simulado).');
+    });
+  }
 
   // ---------- S21-B2: Inicio en tres bloques: cuándo llegas · qué haces ahora · cuánto llevas ----------
   var pasoInicio = null;
@@ -1703,6 +1751,7 @@
     return estado.caminoElegido ? '#camino/elegir' : '#explorar';
   }
   function iniciarSiguientePaso() {
+    iniciarAnimos();
     var b = $('btn-siguiente');
     if (b) b.addEventListener('click', function () {
       if (pasoInicio.tipo === 'mision') abrirMision(pasoInicio.id, b); else abrirHito(pasoInicio.id, b);

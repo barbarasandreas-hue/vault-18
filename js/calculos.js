@@ -1611,7 +1611,36 @@ function chipsDelModo(modo) {
   return Object.keys(CHIPS_EXPLORAR).filter(function (k) { return CHIPS_EXPLORAR[k].modos.indexOf(modo) !== -1; });
 }
 
+
+// ---------- S22-F2: Tu equipo anima ----------
+// Por qué se manda el "¡Bien!" (hitos y misiones hechos). Sin nombres de personas: se dice la relación.
+var MOTIVO_ANIMO = {
+  cuenta: 'abrir tu cuenta de vivienda', pie: 'juntar tu pie', preaprobacion: 'tu preaprobación',
+  asegurar: 'asegurar tu departamento', aprobacion: 'tu aprobación final', 'es-tuyo': 'tu departamento',
+  ds1: 'postular al DS1', rsh: 'inscribirte en el Registro Social', documentos: 'completar tus documentos',
+  'bajo-llave': 'guardar tu pie bajo llave', 'ahorro-auto': 'activar el ahorro automático', elegir: 'elegir tu departamento'
+};
+var MAXIMO_ANIMOS = 2;
+// hechos: claves de hitos y misiones hechos hoy; dados: las que ya recibieron su "¡Bien!"; equipo: Tu equipo.
+// Un "¡Bien!" por hito o misión, de alguien del equipo (las mascotas no escriben). Sin equipo, se anotan sin ánimo.
+// Devuelve { nuevos: [{ clave, motivo, relacion, id }], dados }.
+function animosNuevos(hechos, dados, equipo) {
+  var ya = Array.isArray(dados) ? dados.slice() : [];
+  var personas = (Array.isArray(equipo) ? equipo : []).filter(function (m) { return m.relacion !== 'mascota'; });
+  var nuevos = [];
+  (hechos || []).forEach(function (clave) {
+    if (!MOTIVO_ANIMO[clave] || ya.indexOf(clave) !== -1) return;
+    ya.push(clave);
+    if (!personas.length) return;
+    var m = personas[(ya.length - 1) % personas.length];
+    nuevos.push({ clave: clave, motivo: MOTIVO_ANIMO[clave], relacion: m.relacion, id: m.id });
+  });
+  return { nuevos: nuevos.slice(-MAXIMO_ANIMOS), dados: ya };
+}
+
 if (typeof module !== 'undefined') module.exports = {
+  animosNuevos: animosNuevos,
+  MOTIVO_ANIMO: MOTIVO_ANIMO,
   CORTE_IVA_CERO: CORTE_IVA_CERO,
   CHIPS_EXPLORAR: CHIPS_EXPLORAR,
   cumpleChip: cumpleChip,

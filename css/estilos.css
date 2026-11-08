@@ -1902,3 +1902,15 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .obra-dibujo { width: 100%; height: 120px; border-radius: var(--radio); background: var(--blue-20); fill: none; stroke: var(--blue-dark); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .obra-visual figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 4px; font-size: 15px; }
 .obra-visual figcaption small { flex-basis: 100%; color: var(--gray-semidark); font-size: 13px; }
+
+/* ===== S22-F2: Tu equipo anima ===== */
+.animos { margin-top: 16px; display: grid; gap: 8px; background: var(--yellow-20); }
+.animos h2 { margin: 0; }
+.animos-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.animos-lista li { display: flex; align-items: center; gap: 10px; }
+.animo-av { flex: none; border-radius: 50%; background: var(--white); }
+.animos .enlace { justify-self: start; }
+@media (prefers-reduced-motion: no-preference) {
+  .animos { animation: animo-entra var(--dur-media) var(--ease-resorte); }
+  @keyframes animo-entra { from { transform: scale(0.96); opacity: 0; } to { transform: none; opacity: 1; } }
+}

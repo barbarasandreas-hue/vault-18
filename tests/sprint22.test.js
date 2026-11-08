@@ -54,3 +54,19 @@ test('S22: pasado el cierre del DS1, la misión no muestra una fecha vencida', (
   assert.match(m.titulo, /próximo llamado/);
   assert.notStrictEqual(c.siguientePaso(s, new Date('2027-07-03T12:00:00')).plazo, '2026-11-27');
 });
+
+test('S22-F2: un ¡Bien! por hito o misión, de alguien del equipo y sin nombres', () => {
+  const equipo = [{ id: 'm1', relacion: 'mamá' }, { id: 'm2', relacion: 'mascota' }, { id: 'm3', relacion: 'amiga' }];
+  let r = c.animosNuevos(['numeros', 'cuenta'], [], equipo);
+  assert.deepStrictEqual(r.nuevos.map((x) => [x.clave, x.relacion]), [['cuenta', 'mamá']]);
+  assert.deepStrictEqual(r.dados, ['cuenta']);
+  // El mismo hito no se celebra dos veces.
+  r = c.animosNuevos(['cuenta', 'ahorro-auto'], r.dados, equipo);
+  assert.deepStrictEqual(r.nuevos.map((x) => x.clave), ['ahorro-auto']);
+  assert.notStrictEqual(r.nuevos[0].relacion, 'mascota');
+  // Sin equipo: se anota, pero nadie manda ánimo.
+  const sin = c.animosNuevos(['cuenta'], [], []);
+  assert.deepStrictEqual([sin.nuevos.length, sin.dados.length], [0, 1]);
+  // A lo más 2 a la vez.
+  assert.ok(c.animosNuevos(['cuenta', 'pie', 'documentos', 'rsh'], [], equipo).nuevos.length <= 2);
+});
