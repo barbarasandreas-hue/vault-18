@@ -2285,10 +2285,19 @@
     iniciarSimInversion();
     renderMisInversiones();
     $('estado-inversiones').textContent = estado.inversiones.length ? '' : 'Aún no tienes inversiones';
-    var lista = PROYECTOS.filter(function (p) { return resumen(p).faltaUF > 0 && !esMiProyecto(p); });
-    $('lista-oportunidades').innerHTML = lista.length ? lista.map(tarjetaOportunidad).join('')
+    // S24-B4: primero las que más han reunido; se ven 3 y el resto con "Ver todas" (como en el canvas).
+    var lista = PROYECTOS.filter(function (p) { return resumen(p).faltaUF > 0 && !esMiProyecto(p); })
+      .sort(function (a, b) { return resumen(b).avanceFinanciamiento - resumen(a).avanceFinanciamiento; });
+    var visibles = verTodasOportunidades ? lista : lista.slice(0, 3);
+    $('lista-oportunidades').innerHTML = lista.length ? visibles.map(tarjetaOportunidad).join('') +
+        (lista.length > visibles.length ? '<li><button type="button" class="btn btn-terciario btn-bloque" id="btn-todas-oportunidades">Ver todas (' + lista.length + ')</button></li>' : '')
       : '<li class="vacio"><h3 class="h4">Sin oportunidades abiertas</h3></li>';
+    if ($('btn-todas-oportunidades')) $('btn-todas-oportunidades').addEventListener('click', function () {
+      verTodasOportunidades = true; renderInversiones();
+      var t = document.querySelectorAll('#lista-oportunidades .oportunidad')[3]; if (t) t.focus();
+    });
   }
+  var verTodasOportunidades = false;
 
   // S24-B4: la explicación a fondo, como en el canvas (brief del Proyecto B).
   var mesRecompraDemo = 0;
@@ -4958,27 +4967,32 @@
       return;
     }
     var listo = meta > 0 && s.ahorrado >= meta;
+    var pctPie = porcentajeEntero(avance(s.ahorrado, meta));
     cont.innerHTML = cabeza +
-      '<section class="tarjeta bloque saldo-pie" aria-labelledby="titulo-saldo">' +
-        '<p class="etiqueta" id="titulo-saldo">Llevas</p>' +
-        '<strong class="numero display-2">' + formatoPesos(s.ahorrado) + '</strong>' +
-        '<p class="texto-apoyo">' + (s.grupo ? 'Cuenta bloqueada' + SEP + 'tu grupo' : 'Cuenta de vivienda Bci') + '</p>' +
-        (meta > s.ahorrado ? '<p class="pie-faltan">Te faltan <strong>' + formatoPesos(meta - s.ahorrado) + '</strong></p>' : '') +
-        barraHitos(s.ahorrado, meta) +
+      // S24-B4: como el canvas: héroe azul con el chanchito y la barra, y la cuota del mes flotando encima.
+      '<section class="saldo-pie pie-heroe" aria-labelledby="titulo-saldo">' +
+        '<p class="etiqueta" id="titulo-saldo">Llevas' + SEP + (s.grupo ? 'cuenta bloqueada de tu grupo' : 'Cuenta Vivienda Bci') + '</p>' +
+        '<div class="pie-heroe-fila"><div><strong class="numero">' + formatoPesos(s.ahorrado) + '</strong>' +
+          (meta > s.ahorrado ? '<p>Te faltan ' + formatoPesos(meta - s.ahorrado) + ' para tu pie</p>' : '<p>¡Juntaste tu pie!</p>') + '</div>' +
+          barraHitos(s.ahorrado, meta) + '</div>' +
+        '<div class="pie-barra" aria-hidden="true"><span style="width:' + Math.max(1, pctPie) + '%"></span><i style="left:25%"></i><i style="left:50%"></i><i style="left:75%"></i></div>' +
+        '<p class="pie-barra-texto"><span>' + pctPie + NBSP + '% de ' + formatoRedondeado(meta) + '</span><span>100' + NBSP + '%</span></p>' +
         (estado.ahorroIniciado ? puntosRacha() : '') +
       '</section>' +
-      '<div class="accion-fija">' + (listo
-        ? '<a class="btn btn-primario btn-lg btn-bloque" href="#pasos">Ver tu siguiente hito</a>'
-        : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-pagar-cuota">Pagar mi cuota</button>') + '</div>' +
+      '<section class="tarjeta pie-cuota-mes" aria-labelledby="titulo-cuota-mes">' +
+        '<p class="pie-cuota-fila"><span id="titulo-cuota-mes">Cuota de ' + MESES[Number(hoyDemo().split('-')[1]) - 1] + '</span><strong class="numero">' + formatoRedondeado(estado.ahorroMensual || 0) + '</strong></p>' +
+        (listo
+          ? '<a class="btn btn-primario btn-lg btn-bloque" href="#pasos">Ver tu siguiente hito</a>'
+          : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-pagar-cuota">Pagar mi cuota</button>') +
+      '</section>' +
       plegable('pie-cuota', 'Tu cuota', formatoRedondeado(estado.ahorroMensual || 0) + ' al mes',
         '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + !!estado.cuotaAutomatica + '" id="btn-pie-auto">' +
           '<span>' + icono('i-calendario') + 'Ahorro automático el día de pago</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
         '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + !!estado.pasos.bajoLlave + '" id="btn-pie-llave">' +
           '<span>' + icono('i-candado') + 'Guardar bajo llave</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
         (listo ? '' : '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-pie-no-pude">Este mes no pude</button>')) +
-      '<button type="button" class="tarjeta fila fila-regalo" id="btn-pedir-regalo" aria-haspopup="dialog">' + icono('i-regalo', 'icono-grande') +
-        '<span><strong>Regalo para tu pie</strong><small>Comparte un enlace con tu familia</small></span>' +
-        '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
+      '<button type="button" class="tarjeta fila fila-regalo" id="btn-pedir-regalo" aria-haspopup="dialog"><span class="regalo-circulo" aria-hidden="true">' + REGALO_SVG + '</span>' +
+        '<span><strong>Regalo para tu pie</strong><small>Comparte un enlace con tu familia</small><span class="regalo-compartir">Compartir ›</span></span></button>' +
       selloProteccion(s) +
       plegable('pie-movimientos', 'Movimientos', '', movimientosPie());
     iniciarPlegables();

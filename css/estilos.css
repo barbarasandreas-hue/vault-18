@@ -2381,3 +2381,41 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .faq-invertir .flecha-abajo { flex: none; width: 20px; height: 20px; fill: none; stroke: var(--blue-dark); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform var(--dur-corta) var(--ease-salida); }
 .faq-invertir details[open] .flecha-abajo { transform: rotate(180deg); }
 .faq-invertir details p { margin: 0; padding: 0 16px 16px; line-height: 1.5; color: var(--gray-semidark); }
+
+/* Las figuras Bci junto a "‹ volver", como en el canvas (solo decoración) */
+.pantalla { position: relative; }
+.volver::after {
+  content: ''; position: absolute; right: max(20px, env(safe-area-inset-right)); width: 59px; height: 10px; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 59 10'%3E%3Crect x='0' y='0.5' width='9' height='9' fill='%23ED0C19'/%3E%3Ccircle cx='19' cy='5' r='5' fill='%2328892B'/%3E%3Cpath d='M34.5 0L40 10H29z' fill='%23FFE300'/%3E%3Crect x='45' y='1' width='14' height='8' fill='%232772CC'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+/* Tu pie, más cerca del canvas */
+.pie-heroe { position: relative; overflow: hidden; display: grid; gap: 4px; margin-top: 8px; padding: 20px 18px 96px; border-radius: 24px; color: var(--white); background: linear-gradient(180deg, var(--blue-dark) 0%, var(--blue-normal) 100%); box-shadow: none; }
+.pie-heroe::before { content: ''; position: absolute; right: -40px; bottom: -50px; width: 170px; height: 170px; border-radius: 50%; background: rgba(255, 255, 255, .08); }
+.pie-heroe > * { position: relative; }
+.pie-heroe .etiqueta { margin: 0; font-size: 15px; font-weight: 600; color: var(--white); }
+.pie-heroe-fila { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pie-heroe-fila > div:first-child { min-width: 0; display: grid; gap: 4px; }
+.pie-heroe-fila .numero { font-size: 40px; line-height: 1.1; color: var(--white); }
+.pie-heroe-fila p { margin: 0; font-size: 15px; line-height: 1.4; }
+.pie-heroe .alcancia-avance { flex: none; margin: 0; padding: 0; background: none; border-radius: 0; }
+.pie-heroe .alcancia.chanchito { width: 96px; }
+.pie-heroe .alcancia-datos { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.pie-heroe .chancho-sombra { fill: rgba(255, 255, 255, .2); }
+.pie-barra { position: relative; height: 12px; margin-top: 14px; border-radius: 999px; background: var(--white); }
+.pie-barra span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--green-normal); }
+.pie-barra i { position: absolute; top: 2px; bottom: 2px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--gray-neutral); }
+.pie-barra-texto { display: flex; justify-content: space-between; margin: 4px 0 0; font-size: 14px; }
+.pie-barra-texto span:last-child { opacity: .85; }
+.pie-heroe .racha-meses { margin-top: 10px; }
+.pie-cuota-mes { position: relative; z-index: 1; display: grid; gap: 12px; margin: -84px 8px 16px; padding: 18px; box-shadow: var(--sombra-flota); }
+.pie-cuota-fila { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 0; }
+.pie-cuota-fila span { font-size: 16px; font-weight: 600; }
+.pie-cuota-fila .numero { font-size: 26px; color: var(--green-dark); }
+.fila-regalo { min-height: 88px; gap: 14px; align-items: center; }
+.regalo-circulo { flex: none; width: 52px; height: 52px; border-radius: 50%; background: var(--yellow-20); display: grid; place-items: center; }
+.regalo-circulo svg { width: 30px; height: 30px; }
+.fila-regalo strong { font-size: 17px; }
+.regalo-compartir { padding-top: 4px; color: var(--blue-dark); font-size: 15px; font-weight: 700; }
+.fila > .regalo-circulo { flex: 0 0 52px; }
+.pie-heroe { grid-template-columns: minmax(0, 1fr); }
