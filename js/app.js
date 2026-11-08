@@ -5931,78 +5931,100 @@
     var p = proyectoCompra();
     var meta = sp.meta;
     var lista = estado.listaRegalos;
-    var pct = porcentajeEntero(avance(estado.ahorrado, meta));
-    var monto = MONTOS_REGALO[2];
 
+    var esPadre = function (r) { return ['mamá', 'papá', 'abuela', 'abuelo'].indexOf(r) !== -1; };
+    var sel = { monto: 1, avatar: 0, relacion: RELACIONES[0], mensaje: '' };
+    var cumple = /umple/.test(lista.ocasion);
+    // S24-B4: igual que el canvas: tarjeta de regalo, montos con nombre, avatar y cómo le llega el aviso.
     cont.innerHTML = volver +
-      '<header class="encabezado familia-cabeza">' + FIGURAS + icono('i-casa', 'icono-grande') +
-        '<h1 class="h2" id="titulo-regalo">Un aporte para su primer departamento</h1>' +
-        '<p class="texto-apoyo">' + esc(lista.ocasion) + (p ? ' · ' + p.comuna : '') + '</p></header>' +
-      '<section class="tarjeta bloque" aria-label="Su avance">' +
-        '<p class="etiqueta">Lleva de su pie</p>' +
-        '<strong class="numero display-3">' + (lista.mostrarMontos ? formatoPesos(estado.ahorrado) : pct + NBSP + '%') + '</strong>' +
-        (lista.mostrarMontos ? '<p class="texto-apoyo">de ' + formatoPesos(meta) + '</p>' : '') +
-        '<div class="avance-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="Avance del pie">' +
-          '<span style="width:' + Math.max(pct, 1) + '%"></span></div>' +
+      '<section class="regalo-tarjeta" aria-labelledby="titulo-regalo">' +
+        '<span class="regalo-papel r1" aria-hidden="true"></span><span class="regalo-papel r2" aria-hidden="true"></span><span class="regalo-papel r3" aria-hidden="true"></span><span class="regalo-papel r4" aria-hidden="true"></span>' +
+        '<div class="regalo-tarjeta-cabeza"><img src="logo_bci_negro.svg" alt="Bci" width="52" height="24">' +
+          '<span class="regalo-ocasion">' + icono('i-regalo') + esc(lista.ocasion) + '</span></div>' +
+        '<div class="regalo-tarjeta-titulo"><span class="regalo-caja" aria-hidden="true">' + REGALO_SVG + '</span>' +
+          '<h1 class="h3" id="titulo-regalo">Un aporte para su primer departamento</h1></div>' +
+        '<p>Está juntando su pie en una Cuenta Vivienda Bci. Tu regalo la acerca a sus llaves.</p>' +
       '</section>' +
-      '<section class="tarjeta bloque" aria-labelledby="titulo-tu-aporte">' +
-        '<h2 class="h4" id="titulo-tu-aporte">Tu aporte</h2>' +
-        '<fieldset class="escala"><legend class="oculto-visual">Monto</legend><div class="escala-opciones">' +
-          MONTOS_REGALO.map(function (m, k) {
-            return '<input type="radio" name="monto-regalo" id="monto-regalo-' + k + '" value="' + m + '"' + (m === monto ? ' checked' : '') + '>' +
-              '<label for="monto-regalo-' + k + '">' + formatoPesos(m) + '</label>';
-          }).join('') + '</div></fieldset>' +
-        '<p class="adelanta" id="adelanta" aria-live="polite"></p>' +
-        '<div class="campo"><label for="regalo-relacion">Eres su</label>' +
-          '<select id="regalo-relacion" class="campo-select">' + RELACIONES.map(function (r) { return '<option>' + r + '</option>'; }).join('') + '</select></div>' +
-        '<div class="avatar-familia"><span id="avatar-familia" aria-hidden="true"></span>' +
-          '<button type="button" class="btn btn-terciario btn-sm" id="btn-avatar-familia" aria-haspopup="dialog">Tu avatar</button></div>' +
-        '<div class="campo"><label for="regalo-mensaje">Mensaje (opcional)</label>' +
-          '<textarea id="regalo-mensaje" class="campo-texto" maxlength="140" rows="2"></textarea></div>' +
-        '<p class="sello">' + icono('i-escudo') + 'Va directo a su cuenta Bci para el pie</p>' +
-        '<p class="texto-apoyo"><small>Si eres su mamá, papá, abuela o abuelo y lo haces por escritura, hasta noviembre de 2027 la donación paga la mitad del impuesto ' + ayuda('donacion') + '</small></p>' +
-      '</section>' +
-      '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-aportar">Aportar</button></div>';
+      '<div id="regalo-cuerpo"></div>';
 
-    function adelanta() {
-      monto = Number(document.querySelector('input[name="monto-regalo"]:checked').value);
-      var n = mesesQueAdelanta(meta, estado.ahorrado, estado.ahorroMensual, monto);
-      $('adelanta').innerHTML = icono('i-calendario') + (n > 0 ? 'Adelanta su departamento ' + plural(n, 'mes', 'meses')
-        : 'Equivale a ' + plural(diasDeAhorro(monto, estado.ahorroMensual), 'día', 'días') + ' de su ahorro');
+    function pintar() {
+      var monto = MONTOS_REGALO[sel.monto];
+      $('regalo-cuerpo').innerHTML =
+        '<section class="tarjeta bloque regalo-aporte" aria-labelledby="titulo-tu-aporte">' +
+          '<h2 class="h4" id="titulo-tu-aporte">Elige tu aporte</h2>' +
+          '<div class="regalo-montos" role="radiogroup" aria-label="Monto">' + MONTOS_REGALO.map(function (m, k) {
+            return '<button type="button" role="radio" aria-checked="' + (k === sel.monto) + '" data-monto="' + k + '"><strong>' + formatoPesos(m) + '</strong><small>' + NOMBRE_MONTO[k] + '</small></button>';
+          }).join('') + '</div>' +
+          '<p class="regalo-cerca" aria-live="polite">' + icono('i-corazon') + '<span>Cada aporte le deja más cerca de sus llaves.</span></p>' +
+          '<div class="campo"><label for="regalo-relacion">Eres su</label>' +
+            '<select id="regalo-relacion" class="campo-select">' + RELACIONES.map(function (r) { return '<option' + (r === sel.relacion ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select></div>' +
+          '<div class="campo"><label for="regalo-mensaje">Escríbele algo (opcional)</label>' +
+            '<textarea id="regalo-mensaje" class="campo-texto regalo-texto" maxlength="140" rows="3" placeholder="' + (cumple ? '¡Feliz cumpleaños! ' : '') + 'Para tu departamento…">' + esc(sel.mensaje) + '</textarea></div>' +
+          '<div class="regalo-avatares-campo"><span class="etiqueta-campo" id="titulo-avatar">Elige tu avatar</span>' +
+            '<div class="regalo-avatares" role="radiogroup" aria-labelledby="titulo-avatar">' + AVATARES_REGALO.map(function (a, k) {
+              return '<button type="button" role="radio" aria-checked="' + (k === sel.avatar) + '" data-avatar="' + k + '" aria-label="Avatar ' + (k + 1) + '" style="--fondo:' + a.fondo + '">' + avatarSVG(a.av, 40) + '</button>';
+            }).join('') + '</div></div>' +
+          '<div class="regalo-aviso-campo"><span class="etiqueta-campo">Así le llegará el aviso</span>' +
+            '<div class="regalo-aviso"><span class="regalo-aviso-av" style="--fondo:' + AVATARES_REGALO[sel.avatar].fondo + '">' + avatarSVG(AVATARES_REGALO[sel.avatar].av, 40) + '</span>' +
+              '<span><span class="regalo-aviso-app"><span>Primer Peldaño · Bci</span><span>ahora</span></span>' +
+              '<strong>Tu ' + sel.relacion + ' te regaló ' + formatoPesos(monto) + ' para tu pie</strong>' +
+              '<small id="regalo-aviso-texto">' + (sel.mensaje ? '“' + esc(sel.mensaje) + '”' : 'Toca para verlo y darle las gracias.') + '</small></span></div></div>' +
+          '<div class="regalo-seguro"><p>' + icono('i-candado') + 'Va directo a su cuenta Bci para el pie</p>' +
+            (esPadre(sel.relacion) ? '<p class="texto-apoyo"><small>Como eres su ' + sel.relacion + ', si lo haces por escritura hasta noviembre de 2027, la donación paga la mitad del impuesto ' + ayuda('donacion') + '</small></p>' : '') + '</div>' +
+          '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-aportar">Aportar ' + formatoPesos(monto) + '</button>' +
+        '</section>';
+      document.querySelectorAll('[data-monto]').forEach(function (b) {
+        b.addEventListener('click', function () { sel.monto = Number(b.dataset.monto); pintar(); document.querySelector('[data-monto="' + sel.monto + '"]').focus(); });
+      });
+      document.querySelectorAll('[data-avatar]').forEach(function (b) {
+        b.addEventListener('click', function () { sel.avatar = Number(b.dataset.avatar); pintar(); document.querySelector('[data-avatar="' + sel.avatar + '"]').focus(); });
+      });
+      $('regalo-relacion').addEventListener('change', function () { sel.relacion = $('regalo-relacion').value; pintar(); $('regalo-relacion').focus(); });
+      $('regalo-mensaje').addEventListener('input', function () {
+        sel.mensaje = $('regalo-mensaje').value.slice(0, 140);
+        $('regalo-aviso-texto').textContent = sel.mensaje ? '“' + sel.mensaje + '”' : 'Toca para verlo y darle las gracias.';
+      });
+      $('btn-aportar').addEventListener('click', aportar);
     }
-    document.querySelectorAll('input[name="monto-regalo"]').forEach(function (r) { r.addEventListener('change', adelanta); });
-    adelanta();
 
-    // S16-F4: quien aporta puede retocar su propio avatar antes de aportar (simulado).
-    var avatarFamilia = null;
-    var avatarActual = function () {
-      if (avatarFamilia) return avatarFamilia;
-      var m = miembrosCon([$('regalo-relacion').value])[0];
-      return m ? m.avatar : null;
-    };
-    var pintarAvatar = function () { $('avatar-familia').innerHTML = avatarSVG(avatarActual(), 56); };
-    pintarAvatar();
-    $('regalo-relacion').addEventListener('change', function () { avatarFamilia = null; pintarAvatar(); });
-    $('btn-avatar-familia').addEventListener('click', function () {
-      abrirCreador({ titulo: 'Tu avatar', avatar: avatarActual(), boton: $('btn-avatar-familia'), relacion: $('regalo-relacion').value,
-        alGuardar: function (av) { avatarFamilia = av; pintarAvatar(); } });
-    });
-
-    $('btn-aportar').addEventListener('click', function () {
+    function aportar() {
       // El regalo suma una vez: el botón se apaga al tocarlo.
       if ($('btn-aportar').disabled) return;
       $('btn-aportar').disabled = true;
-      var regalo = { relacion: $('regalo-relacion').value, monto: monto, mensaje: $('regalo-mensaje').value.trim().slice(0, 140), avatar: avatarActual() };
+      var monto = MONTOS_REGALO[sel.monto];
+      var regalo = { relacion: sel.relacion, monto: monto, mensaje: sel.mensaje.trim(), avatar: AVATARES_REGALO[sel.avatar].av };
       estado.regalos = estado.regalos.concat([regalo]);
       // Quien aporta queda en Tu equipo.
       if (!miembrosCon([regalo.relacion]).length) estado.equipo = agregarMiembro(estado.equipo, regalo.relacion, regalo.avatar);
       estado.ahorrado = Math.min(meta, estado.ahorrado + monto);
       guardarEstado();
       if (conCompra && estado.ahorrado >= meta && !entregaPendiente(p)) guardarCompra(Object.assign({}, estado.compra, { paso: 3 }));
-      location.hash = volverA;
-      toast('Tu ' + regalo.relacion + ' aportó ' + formatoPesos(monto) + '.');
-    });
+      var nuevo = porcentajeEntero(avance(estado.ahorrado, meta));
+      $('regalo-cuerpo').innerHTML =
+        '<section class="regalo-gracias" role="status">' +
+          '<span class="regalo-cae c1" aria-hidden="true"></span><span class="regalo-cae c2" aria-hidden="true"></span><span class="regalo-cae c3" aria-hidden="true"></span><span class="regalo-cae c4" aria-hidden="true"></span>' +
+          '<span class="regalo-corazon" aria-hidden="true">' + icono('i-corazon') + '</span>' +
+          '<strong>¡Gracias por tu aporte!</strong>' +
+          '<p>Tu aporte de ' + formatoPesos(monto) + ' ya está en su pie.</p>' +
+          '<span class="regalo-lleva">Ahora lleva ' + nuevo + NBSP + '% de su pie</span>' +
+          '<a class="regalo-volver" href="' + volverA + '">Volver</a>' +
+        '</section>';
+      window.scrollTo(0, 0);
+    }
+    pintar();
   }
+  var NOMBRE_MONTO = ['Un empujón', 'Un gran paso', 'Un salto a su meta'];
+  var AVATARES_REGALO = [
+    { fondo: '#D4E3F5', av: { piel: 1, pelo: 'largo', colorPelo: 0, ropa: 0 } },
+    { fondo: '#D4E7D5', av: { piel: 2, pelo: 'corto', colorPelo: 1, ropa: 2 } },
+    { fondo: '#FFF9CC', av: { piel: 0, pelo: 'moño', colorPelo: 5, ropa: 3 } },
+    { fondo: '#FBCED1', av: { piel: 3, pelo: 'corto', colorPelo: 5, ropa: 1 } },
+    { fondo: '#E2E8EA', av: { piel: 1, pelo: 'ondulado', colorPelo: 2, ropa: 4 } },
+    { fondo: '#D4E3F5', av: { piel: 4, pelo: 'rizado', colorPelo: 0, ropa: 2 } }
+  ];
+  var REGALO_SVG = '<svg width="44" height="44" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="1" fill="#FBCED1" stroke="#B20913" stroke-width="1.8"/>' +
+    '<path d="M3 7h18v3H3z" fill="#ED0C19" stroke="#B20913" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 7v13" stroke="#B20913" stroke-width="1.8"/>' +
+    '<path d="M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0" fill="none" stroke="#B20913" stroke-width="1.8" stroke-linecap="round"/></svg>';
 
   // S13-F5: lo tuyo en el departamento hoy y cuánto creció este mes (sin plusvalía).
   var loTuyoMostrado = null;
