@@ -107,16 +107,17 @@
       <!-- ===== Inversiones (S15-F5): lo cobrado y las oportunidades de pie compartido ===== -->
       <section id="pantalla-inversiones" class="pantalla" aria-labelledby="titulo-inversiones" hidden>
         <a href="#perfil" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Perfil</a>
-        <header class="encabezado">
-          <img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24">
-          <h1 id="titulo-inversiones" class="h2">Invertir en el pie de otros</h1>
-          <p class="texto-apoyo">Pones parte del pie de otros y recibes 6&nbsp;% al año en UF.</p>
-        </header>
+        <div id="inversiones-cabeza"></div>
         <div id="panel-inversiones"></div>
         <section class="bloque" aria-labelledby="titulo-oportunidades">
-          <h2 class="h3" id="titulo-oportunidades">Oportunidades</h2>
+          <div class="oportunidades-cabeza"><h2 class="h3" id="titulo-oportunidades">Oportunidades</h2><span id="estado-inversiones"></span></div>
           <ul class="lista-proyectos" id="lista-oportunidades"></ul>
         </section>
+        <p class="tarjeta compacta nota-inversion"><svg class="icono" aria-hidden="true"><use href="#i-info"/></svg><span><strong>Es una inversión</strong>El pago depende de que el departamento se arriende. Esta opción aún no existe en Bci.</span></p>
+      </section>
+      <!-- ===== S24-B4: cómo funciona invertir en el pie de otros (se dibuja desde app.js) ===== -->
+      <section id="pantalla-invertir-como" class="pantalla" aria-labelledby="titulo-invertir-como" hidden>
+        <div id="invertir-como-contenido"></div>
       </section>
       <!-- ===== S21-B1: Tus pasos (se dibuja desde app.js) ===== -->
       <section id="pantalla-pasos" class="pantalla" aria-labelledby="titulo-pasos" hidden>

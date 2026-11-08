@@ -2302,3 +2302,82 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
   @keyframes regaloCae { 0% { transform: translateY(-30px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(0) rotate(var(--g)); opacity: 1; } }
   @keyframes regaloAparece { from { opacity: 0; transform: translateY(6px); } }
 }
+.invertir-heroe { position: relative; overflow: hidden; display: grid; gap: 8px; margin: 8px 0 16px; padding: 20px 18px 0; border-radius: 24px; color: var(--white); background: linear-gradient(160deg, var(--green-dark) 0%, var(--green-normal) 100%); }
+.invertir-heroe::before { content: ''; position: absolute; right: -40px; top: -40px; width: 150px; height: 150px; border-radius: 50%; background: rgba(255, 255, 255, .08); }
+.invertir-heroe > * { position: relative; }
+.invertir-heroe h1 { margin: 0; color: var(--white); }
+.invertir-heroe p { margin: 0; line-height: 1.5; }
+.invertir-chip { justify-self: start; padding: 4px 12px; border-radius: 999px; background: rgba(255, 255, 255, .18); font-size: 13px; font-weight: 700; }
+.invertir-como-btn { justify-self: start; display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin-top: 4px; padding: 0 16px; border-radius: 48px; background: var(--white); color: var(--green-dark); font-size: 15px; font-weight: 700; text-decoration: none; }
+.invertir-como-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.invertir-como-btn:focus-visible { outline: 3px solid var(--white); outline-offset: 2px; }
+.invertir-barras { display: block; width: 100%; height: 90px; margin-top: 6px; }
+.invertir-sim { display: grid; gap: 12px; }
+.invertir-sim .numero { color: var(--green-dark); font-size: 26px; }
+.invertir-sim-datos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.invertir-sim-datos p { margin: 0; display: grid; gap: 2px; padding: 12px; border-radius: 14px; background: var(--gray-light); }
+.invertir-sim-datos small { font-size: 13px; color: var(--gray-semidark); }
+.invertir-sim-datos strong { font-size: 20px; }
+.invertir-sim-datos .ganas { background: var(--green-20); }
+.invertir-sim-datos .ganas small, .invertir-sim-datos .ganas strong { color: var(--green-dark); font-weight: 700; }
+.invertir-sim-datos .comprador { background: var(--yellow-20); }
+.invertir-anios { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; align-items: end; height: 80px; }
+.invertir-anios span { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; height: 100%; }
+.invertir-anios i { display: block; width: 100%; border-radius: 8px 8px 3px 3px; transition: height 400ms var(--ease-salida); }
+.invertir-anios .a0 { background: var(--gray-neutral); } .invertir-anios .a1 { background: var(--blue-normal); } .invertir-anios .a2 { background: var(--yellow-normal); }
+.invertir-anios .a3 { background: var(--red-normal); } .invertir-anios .a4 { background: var(--green-normal); }
+.invertir-anios small { font-size: 12px; color: var(--gray-semidark); }
+.invertir-tres { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+.invertir-tres li { display: grid; justify-items: center; gap: 6px; font-size: 14px; line-height: 1.3; }
+.circulo-icono.amarillo { background: var(--yellow-20); color: var(--gray-dark); }
+.oportunidades-cabeza { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.oportunidades-cabeza h2 { margin: 0; }
+#estado-inversiones { font-size: 14px; color: var(--gray-semidark); }
+.oportunidad { display: grid; padding: 0; overflow: hidden; color: var(--gray-dark); text-decoration: none; }
+.oportunidad-foto { position: relative; display: block; height: 130px; background: var(--gray-light); }
+.oportunidad-foto img, .oportunidad-foto .fachada { display: block; width: 100%; height: 130px; object-fit: cover; }
+.oportunidad-renta { position: absolute; left: 12px; top: 12px; padding: 4px 10px; border-radius: 999px; background: var(--green-dark); color: var(--white); font-size: 13px; font-weight: 700; }
+.oportunidad-cuerpo { display: grid; gap: 8px; padding: 14px 16px 16px; }
+.oportunidad-nombre { display: grid; gap: 2px; }
+.oportunidad-nombre strong { font-size: 18px; font-weight: 600; }
+.oportunidad-nombre small, .oportunidad-datos small, .oportunidad-pie small { font-size: 13px; color: var(--gray-semidark); }
+.oportunidad-datos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.oportunidad-datos > span { display: grid; }
+.oportunidad-datos strong { font-size: 18px; }
+.oportunidad-barra { display: block; height: 10px; border-radius: 999px; background: var(--gray-semilight); overflow: hidden; }
+.oportunidad-barra i { display: block; height: 100%; border-radius: 999px; background: var(--green-normal); }
+.oportunidad-pie { display: flex; justify-content: space-between; align-items: center; }
+.oportunidad-pie small { font-size: 14px; }
+.oportunidad .ver { display: inline-flex; align-items: center; gap: 2px; color: var(--blue-dark); font-weight: 700; font-size: 15px; }
+.nota-inversion { display: flex; gap: 12px; align-items: flex-start; margin: 16px 0; padding: 14px 16px; background: var(--yellow-20); box-shadow: none; }
+.nota-inversion .icono { flex: none; margin: 2px 0 0; width: 22px; height: 22px; color: var(--gray-dark); }
+.nota-inversion strong { display: block; }
+.quien-barra { display: flex; height: 36px; margin: 12px 0; border-radius: 12px; overflow: hidden; }
+.quien-barra span { display: grid; place-items: center; color: var(--white); font-weight: 700; }
+.quien-barra .bci { flex: 80; background: var(--blue-normal); }
+.quien-barra .inv { flex: 15; background: var(--green-normal); font-size: 13px; }
+.quien-barra .comp { flex: 5; background: var(--yellow-normal); }
+.quien-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.quien-lista li { display: flex; gap: 10px; align-items: flex-start; }
+.quien-lista i { flex: none; margin-top: 5px; width: 14px; height: 10px; }
+.quien-lista i.bci { background: var(--blue-normal); } .quien-lista i.inv { background: var(--green-normal); } .quien-lista i.comp { background: var(--yellow-normal); }
+.quien-lista span span { color: var(--gray-semidark); }
+.respaldo-num.rojo { background: var(--red-dark); }
+.respaldo-num.verde-oscuro { background: var(--green-dark); }
+.recompra-barra { display: flex; height: 28px; margin: 4px 0; border-radius: 10px; overflow: hidden; }
+.recompra-barra i { flex-basis: 0; transition: flex-grow 400ms var(--ease-salida); }
+.recompra-barra .comp { background: var(--yellow-normal); }
+.recompra-barra .inv { background: var(--green-normal); }
+.respaldo-comprador { position: relative; overflow: hidden; display: grid; gap: 8px; margin: 16px 0 0; padding: 18px; border-radius: 20px; color: var(--white); background: linear-gradient(160deg, var(--blue-dark) 0%, var(--blue-normal) 100%); }
+.respaldo-comprador::after { content: ''; position: absolute; right: -30px; bottom: -40px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255, 255, 255, .08); }
+.respaldo-comprador p { position: relative; margin: 0; line-height: 1.45; }
+.respaldo-comprador-titulo { display: flex; align-items: center; gap: 10px; }
+.respaldo-comprador .circulo-icono { width: 40px; height: 40px; background: var(--white); color: var(--blue-dark); }
+.faq-invertir { display: grid; gap: 10px; }
+.faq-invertir details { padding: 0; }
+.faq-invertir summary { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 56px; padding: 0 16px; cursor: pointer; list-style: none; }
+.faq-invertir summary::-webkit-details-marker { display: none; }
+.faq-invertir summary:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; border-radius: var(--radio-tarjeta); }
+.faq-invertir .flecha-abajo { flex: none; width: 20px; height: 20px; fill: none; stroke: var(--blue-dark); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform var(--dur-corta) var(--ease-salida); }
+.faq-invertir details[open] .flecha-abajo { transform: rotate(180deg); }
+.faq-invertir details p { margin: 0; padding: 0 16px 16px; line-height: 1.5; color: var(--gray-semidark); }

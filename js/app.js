@@ -2214,23 +2214,152 @@
   }
 
   // S15-F5: Inversiones. Arriba lo cobrado y tus inversiones; abajo, las oportunidades de pie compartido.
+  // S24-B4: como en el canvas: foto, renta, lo que falta, el plazo y cuánto se ha reunido.
   function tarjetaOportunidad(p) {
     var r = resumen(p);
     var d = departamentosDe(p.id)[0];
-    return '<li><a class="tarjeta tarjeta-proyecto" href="#inversiones/' + esc(p.id) + '">' +
-      '<h2 class="h4">' + esc(p.nombre) + '</h2>' +
-      '<p class="texto-apoyo ficha">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
-      '<p class="etiqueta">Falta por financiar</p><strong class="numero display-4">' + formatoPesos(ufAPesos(r.faltaUF)) + '</strong>' +
-      '<p class="texto-apoyo">6' + NBSP + '% al año en UF' + SEP + textoPlazo(plazoRecompra(r.porFinanciarUF, r.netoMensualUF, 1)) + '</p>' +
-      casaParticipacion(r) +
-      '<span class="ver">Ver oportunidad <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span>' +
-    '</a></li>';
+    var foto = fotoEdificio(p);
+    var pl = plazoRecompra(r.porFinanciarUF, r.netoMensualUF, 1);
+    var reunido = porcentajeEntero(r.avanceFinanciamiento);
+    return '<li><a class="tarjeta oportunidad" href="#inversiones/' + esc(p.id) + '">' +
+      '<span class="oportunidad-foto">' + (foto ? '<img src="' + foto + '" alt="" loading="lazy" width="800" height="600">' : fachada(p)) +
+        '<span class="oportunidad-renta">6' + NBSP + '% al año en UF</span></span>' +
+      '<span class="oportunidad-cuerpo">' +
+        '<span class="oportunidad-nombre"><strong>' + esc(p.nombre) + '</strong><small>' + esc(p.comuna) + SEP + ficha(d) + '</small></span>' +
+        '<span class="oportunidad-datos"><span><small>Falta por financiar</small><strong>' + formatoRedondeado(ufAPesos(r.faltaUF)) + '</strong></span>' +
+          '<span><small>Plazo</small><strong>' + textoPlazo(pl) + '</strong></span></span>' +
+        '<span class="oportunidad-barra" aria-hidden="true"><i style="width:' + reunido + '%"></i></span>' +
+        '<span class="oportunidad-pie"><small>' + reunido + NBSP + '% reunido</small><span class="ver">Ver oportunidad <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span></span>' +
+      '</span></a></li>';
+  }
+  var montoSimInversion = 2000000;
+  function cabezaInversiones() {
+    return '<section class="invertir-heroe" aria-labelledby="titulo-inversiones">' +
+        '<span class="invertir-chip">Propuesta</span>' +
+        '<h1 id="titulo-inversiones" class="h2">Invertir en el pie de otros</h1>' +
+        '<p>Pones parte del pie de alguien que compra para arrendar. Recibes <strong>6' + NBSP + '% al año en UF</strong> y el arriendo te lo devuelve.</p>' +
+        '<a class="invertir-como-btn" href="#inversiones/como">¿Cómo funciona? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>' +
+        '<svg class="invertir-barras" viewBox="0 0 320 90" aria-hidden="true">' +
+          '<rect x="18" y="58" width="40" height="32" rx="6" fill="rgba(255,255,255,0.25)"/><rect x="76" y="44" width="40" height="46" rx="6" fill="#2772CC"/>' +
+          '<rect x="134" y="30" width="40" height="60" rx="6" fill="#FFE300"/><rect x="192" y="16" width="40" height="74" rx="6" fill="#ED0C19"/>' +
+          '<rect x="250" y="4" width="40" height="86" rx="6" fill="#FFFFFF"/>' +
+          '<path d="M38 50L96 36l58-14 58-14 58-6" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 7"/></svg>' +
+      '</section>' +
+      '<section class="tarjeta bloque si-juntas invertir-sim" aria-labelledby="inv-sim">' +
+        '<p class="si-juntas-fila"><label id="inv-sim" for="inv-rango">Si inviertes</label><strong class="numero" id="inv-monto"></strong></p>' +
+        '<input type="range" id="inv-rango" min="500000" max="5000000" step="250000" value="' + montoSimInversion + '">' +
+        '<div class="invertir-sim-datos"><p><small>En 4 años recibes</small><strong id="inv-final"></strong></p><p class="ganas"><small>Ganas</small><strong id="inv-gana"></strong></p></div>' +
+        '<div class="invertir-anios" aria-hidden="true">' + [0, 1, 2, 3, 4].map(function (a) {
+          return '<span><i class="a' + a + '" id="inv-anio-' + a + '"></i><small>' + (a ? 'Año ' + a : 'Hoy') + '</small></span>';
+        }).join('') + '</div>' +
+        '<p class="texto-apoyo"><small>Calculado en UF, con 6' + NBSP + '% al año. Simulado.</small></p>' +
+      '</section>' +
+      '<section class="tarjeta bloque" aria-labelledby="inv-como">' +
+        '<h2 class="h4" id="inv-como">Cómo funciona</h2>' +
+        '<ol class="invertir-tres">' +
+          '<li><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 21V5h10v16M14 9h6v12M2.5 21h19M7 9h1.5M9.5 9H11M7 13h1.5M9.5 13H11"/></svg></span>Eliges un departamento</li>' +
+          '<li><span class="circulo-icono amarillo" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10a2.5 2 0 0 1 5 0c0 2.5-5 1.5-5 4a2.5 2 0 0 0 5 0"/></svg></span>Pones parte de su pie</li>' +
+          '<li><span class="circulo-icono verde" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 17l6-6 4 4 6-7M15 8h5v5"/></svg></span>El arriendo te paga</li>' +
+        '</ol>' +
+      '</section>';
+  }
+  function iniciarSimInversion() {
+    var rango = $('inv-rango');
+    var tasa = SUPUESTOS.rentaParticipacion;
+    var tope = 5000000 * Math.pow(1 + tasa, 4);
+    var pintar = function () {
+      var m = Number(rango.value), fin = m * Math.pow(1 + tasa, 4);
+      montoSimInversion = m;
+      $('inv-monto').textContent = formatoPesos(m);
+      $('inv-final').textContent = formatoPesos(Math.round(fin));
+      $('inv-gana').textContent = '+' + formatoPesos(Math.round(fin - m));
+      for (var a = 0; a <= 4; a++) $('inv-anio-' + a).style.height = Math.max(6, Math.round(m * Math.pow(1 + tasa, a) / tope * 56)) + 'px';
+      rango.style.setProperty('--lleno', ((m - 500000) / 4500000 * 100).toFixed(1) + '%');
+      rango.setAttribute('aria-valuetext', formatoPesos(m) + ': recibes ' + formatoPesos(Math.round(fin)) + ' en 4 años');
+    };
+    rango.addEventListener('input', pintar);
+    pintar();
   }
   function renderInversiones() {
+    $('inversiones-cabeza').innerHTML = cabezaInversiones();
+    iniciarSimInversion();
     renderMisInversiones();
+    $('estado-inversiones').textContent = estado.inversiones.length ? '' : 'Aún no tienes inversiones';
     var lista = PROYECTOS.filter(function (p) { return resumen(p).faltaUF > 0 && !esMiProyecto(p); });
     $('lista-oportunidades').innerHTML = lista.length ? lista.map(tarjetaOportunidad).join('')
       : '<li class="vacio"><h3 class="h4">Sin oportunidades abiertas</h3></li>';
+  }
+
+  // S24-B4: la explicación a fondo, como en el canvas (brief del Proyecto B).
+  var mesRecompraDemo = 0;
+  function renderInvertirComo() {
+    var c = $('invertir-como-contenido');
+    var pasos = [
+      ['Eliges un departamento', 'Solo ves departamentos nuevos donde el arriendo alcanza para recomprar en 7 años o menos, incluso en el peor caso.', 'azul'],
+      ['Pones desde UF 10', 'Junto a otros inversionistas, juntan el 15' + NBSP + '% del valor. Pasas a ser dueño de esa parte.', 'verde'],
+      ['Bci da el crédito', 'Bci presta el 80' + NBSP + '% y autoriza tu participación con una hipoteca de segundo grado.', 'azul-oscuro'],
+      ['El arriendo te paga', 'Entra a una cuenta custodia de Bci. De ahí sale tu renta de 6' + NBSP + '% al año en UF.', 'rojo'],
+      ['Recuperas tu inversión', 'Con el resto del arriendo, el comprador te recompra tu parte en unos 4 años.', 'verde-oscuro']
+    ];
+    var faq = [
+      ['¿Y si el comprador se baja?', 'Uno de los inversionistas que marcó "comprador de respaldo" puede quedarse con el departamento. Si nadie lo hace, se hace una venta asistida del departamento.'],
+      ['¿Y si el arriendo baja?', 'La app solo muestra departamentos donde, incluso con un arriendo 10' + NBSP + '% más bajo y sin plusvalía, la recompra termina en 7 años o menos.'],
+      ['¿Es seguro y legal?', 'Lo operaría Bci o un aliado inscrito en la CMF como plataforma de financiamiento colectivo (Ley Fintec). Firmas un contrato de participación en el valor, respaldado por una hipoteca de segundo grado.'],
+      ['¿Por qué 6' + NBSP + '% en UF?', 'Es una renta en UF, así no la come la inflación. Queda bajo la tasa máxima convencional en UF.']
+    ];
+    c.innerHTML =
+      '<a href="#inversiones" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Invertir</a>' +
+      '<header class="encabezado"><span class="chip chip-propuesta">Propuesta</span>' +
+        '<h1 id="titulo-invertir-como" class="h2">¿Cómo funciona invertir en el pie de otros?</h1>' +
+        '<p class="texto-apoyo">Ayudas a una persona joven a comprar su primer departamento con solo el 5' + NBSP + '% de pie. A cambio, eres dueño de una parte del departamento y el arriendo te paga.</p></header>' +
+      '<section class="tarjeta bloque" aria-labelledby="ic-quien">' +
+        '<h2 class="h4" id="ic-quien">Quién pone qué en un departamento</h2>' +
+        '<p class="quien-barra" aria-hidden="true"><span class="bci">80' + NBSP + '%</span><span class="inv">15' + NBSP + '%</span><span class="comp"></span></p>' +
+        '<ul class="quien-lista">' +
+          '<li><i class="bci"></i><span><strong>Bci presta el 80' + NBSP + '%</strong> <span>con crédito hipotecario y subsidio a la tasa.</span></span></li>' +
+          '<li><i class="inv"></i><span><strong>Inversionistas ponen el 15' + NBSP + '%</strong> <span>y pasan a ser dueños de esa parte del valor. Aquí entras tú.</span></span></li>' +
+          '<li><i class="comp"></i><span><strong>El comprador pone el 5' + NBSP + '%</strong> <span>después de ahorrarlo 12 meses, como prueba de que puede pagar.</span></span></li>' +
+        '</ul>' +
+      '</section>' +
+      '<section class="tarjeta bloque" aria-labelledby="ic-pasos">' +
+        '<h2 class="h4" id="ic-pasos">Paso a paso</h2>' +
+        '<ol class="respaldo-pasos">' + pasos.map(function (x, i) {
+          return '<li><span class="respaldo-num ' + x[2] + '" aria-hidden="true">' + (i + 1) + '</span><span><strong>' + x[0] + '</strong><small>' + x[1] + '</small></span></li>';
+        }).join('') + '</ol>' +
+      '</section>' +
+      '<section class="tarjeta bloque si-juntas" aria-labelledby="ic-recompra">' +
+        '<h2 class="h4" id="ic-recompra">Cómo se devuelve tu parte</h2>' +
+        '<p class="si-juntas-fila"><label for="ic-mes">Mueve el tiempo</label><strong class="numero" id="ic-mes-texto"></strong></p>' +
+        '<input type="range" id="ic-mes" min="0" max="48" step="6" value="' + mesRecompraDemo + '">' +
+        '<p class="recompra-barra" aria-hidden="true"><i class="comp" id="ic-b-comp"></i><i class="inv" id="ic-b-inv"></i></p>' +
+        '<div class="invertir-sim-datos"><p class="comprador"><small>Del comprador</small><strong id="ic-comp"></strong></p><p class="ganas"><small>De los inversionistas</small><strong id="ic-inv"></strong></p></div>' +
+        '<p class="texto-apoyo"><small>Cada mes el arriendo te paga tu renta de 6' + NBSP + '% al año en UF y, con lo que sobra, el comprador te recompra un poco de tu parte. En unos 4 años es dueño del todo. Sin contar el crédito de Bci.</small></p>' +
+      '</section>' +
+      '<section class="respaldo-comprador"><p class="respaldo-comprador-titulo"><span class="circulo-icono" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/></svg></span><strong>Puedes ser comprador de respaldo</strong></p>' +
+        '<p>Si el comprador se baja, uno de los inversionistas puede quedarse con el departamento. Para marcar esta opción necesitas una preevaluación de Bci.</p></section>' +
+      '<h2 class="h4 bloque">Preguntas frecuentes</h2>' +
+      '<div class="faq-invertir">' + faq.map(function (f) {
+        return '<details class="tarjeta"><summary><strong>' + f[0] + '</strong><svg class="flecha-abajo" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p>' + f[1] + '</p></details>';
+      }).join('') + '</div>' +
+      '<p class="tarjeta compacta nota-inversion"><svg class="icono" aria-hidden="true"><use href="#i-info"/></svg><span><strong>Es una propuesta.</strong> Esta forma de invertir aún no existe en Bci. Los números son simulados.</span></p>' +
+      '<div class="acciones"><a class="btn btn-primario btn-lg btn-bloque" href="#inversiones">Ver oportunidades</a></div>';
+    var rango = $('ic-mes');
+    var pintar = function () {
+      var mes = Number(rango.value);
+      mesRecompraDemo = mes;
+      var inv = Math.round(15 * (1 - mes / 48) * 10) / 10, comp = Math.round((100 - inv) * 10) / 10;
+      var txt = function (x) { return String(x).replace('.', ',') + NBSP + '%'; };
+      $('ic-mes-texto').textContent = mes === 0 ? 'El día de la compra' : (mes === 48 ? 'A los 4 años' : 'Mes ' + mes);
+      $('ic-comp').textContent = txt(comp);
+      $('ic-inv').textContent = txt(inv);
+      $('ic-b-comp').style.flexGrow = comp;
+      $('ic-b-inv').style.flexGrow = inv;
+      $('ic-b-inv').hidden = inv === 0;
+      rango.style.setProperty('--lleno', (mes / 48 * 100).toFixed(1) + '%');
+      rango.setAttribute('aria-valuetext', $('ic-mes-texto').textContent + ': inversionistas ' + txt(inv));
+    };
+    rango.addEventListener('input', pintar);
+    pintar();
   }
 
   // ---------- Detalle de un proyecto ----------
@@ -2579,12 +2708,8 @@
   function renderMisInversiones() {
     var lista = estado.inversiones;
     if (!lista.length) {
-      $('panel-inversiones').innerHTML =
-        '<div class="vacio">' +
-          '<svg aria-hidden="true"><use href="#i-pronto"/></svg>' +
-          '<h2 class="h3">Aún no tienes inversiones</h2>' +
-          '<p class="texto-apoyo">Elige una oportunidad más abajo.</p>' +
-        '</div>';
+      // S24-B4: sin inversiones, solo una línea junto a Oportunidades (como en el canvas).
+      $('panel-inversiones').innerHTML = '';
       return;
     }
     var tarjetas = lista.map(function (x) {
@@ -6164,6 +6289,7 @@
       return r('proyectos', 'explorar', function () { renderLista('explorar'); });
     }
     if (p[0] === 'inversiones') {
+      if (p[1] === 'como') return r('invertir-como', 'perfil', renderInvertirComo);
       if (p[1] && p[2] === 'invertir') return r('invertir', 'perfil', function () { renderInvertir(p[1]); });
       if (p[1]) return r('proyecto', 'perfil', function () { renderDetalle(p[1], 'inversiones'); });
       return r('inversiones', 'perfil', renderInversiones);
