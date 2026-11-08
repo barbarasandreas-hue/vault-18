@@ -1533,6 +1533,14 @@
 
   // S17-F9: Llega antes. Cada pieza es una fila: nombre, efecto, "?" e interruptor. La recomendada lleva ★.
   var piezaAbierta = null, mesesLlegaAntes = null;
+  // S24-B2: una línea por ayuda, para que se entienda sin abrir el "?".
+  var DESC_PIEZA = {
+    grupo: 'Compras con otros y la inmobiliaria baja el precio.',
+    subsidio: 'El Estado pone UF que se suman a tu pie.',
+    iva: 'Algunos departamentos nuevos no cobran IVA.',
+    regalo: 'Tu familia aporta a tu pie con un enlace.',
+    respaldo: 'Un familiar deja una garantía y pones menos pie.'
+  };
   function renderLlegaAntes(volverA) {
     var cont = $('caminos-contenido');
     var x = plazoVivir();
@@ -1550,6 +1558,9 @@
         ['subsidio', 'iva', 'grupo'].filter(function (id) { return cambia[id] && !bloqueoApp(id, on); })[0] || null;
     }
     var siempre = plazoCreditoSiempre(x.perfil, x.deptos.hasta.listaUF);
+    // S24-B2: contra qué se compara: el plazo sin ninguna ayuda.
+    var sinAyudas = plazoVivir(null, {});
+    var adelanto = sinAyudas.hasta.meses !== null && x.hasta.meses !== null ? sinAyudas.hasta.meses - x.hasta.meses : 0;
     // Si todas las piezas de un grupo son propuesta, el chip va una sola vez, en su título.
     var grupoPropuesta = {};
     ['menos', 'ayuda'].forEach(function (g) {
@@ -1563,7 +1574,8 @@
       var ef = b ? b.razon : justo && activo ? 'Sumado' : justo && !activo ? (cambia[id] === 'sola' ? 'Así cabe' : cambia[id] ? 'Con otra, cabe' : 'Aún no') : efectoPieza(id, x.perfil, on, x.deptos.hasta, hoyDemo()).texto;
       return '<li class="pieza-fila' + (activo ? ' on' : '') + (b ? ' bloq' : '') + (justo && !b && !activo ? (cambia[id] ? ' cabe' : ' aun') : '') + '">' +
         '<span class="pieza-nombre">' + (mejor === id ? '<span class="pieza-estrella" aria-label="Recomendado">★</span>' : '') + pz.nombre +
-          (pz.existeHoy || grupoPropuesta[pz.grupo] ? '' : '<span class="chip-propuesta-mini">Propuesta</span>') + '</span>' +
+          (pz.existeHoy || grupoPropuesta[pz.grupo] ? '' : '<span class="chip-propuesta-mini">Propuesta</span>') +
+          (DESC_PIEZA[id] ? '<small class="pieza-desc">' + DESC_PIEZA[id] + '</small>' : '') + '</span>' +
         '<span class="pieza-efecto">' + ef + '</span>' +
         '<button type="button" class="pieza-q" data-q="' + id + '" aria-expanded="' + (piezaAbierta === id) + '" aria-controls="cond-' + id + '" aria-label="Condiciones: ' + pz.nombre + '">?</button>' +
         '<button type="button" class="pieza-sw" role="switch" data-pieza="' + id + '" aria-checked="' + activo + '" aria-label="' + pz.nombre + '"' + (b ? ' aria-disabled="true"' : '') + '></button>' +
@@ -1578,17 +1590,20 @@
     mesesLlegaAntes = justo ? null : x.hasta.meses;
     cont.innerHTML =
       (volverA ? '<a href="#explorar/' + volverA + '" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>' + CAMINOS[volverA].corto + '</a>' : '') +
-      '<header class="encabezado"><h1 id="titulo-caminos" class="h2">Llega antes</h1>' +
+      '<header class="encabezado"><h1 id="titulo-caminos" class="h2">¿Cómo puedes llegar antes?</h1>' +
+        '<p class="texto-apoyo">Hay ayudas que te acercan a tus llaves. Activa las que podrías usar y mira cuántos meses te ahorras.</p>' +
         '<p class="texto-apoyo">' + (rango ? textoRango(rango) + SEP : '') + '<button type="button" class="enlace" id="btn-caminos-rango" aria-haspopup="dialog">Cambiar</button></p></header>' +
       (justo
         ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-llaves"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
             '<h2 class="h3" id="titulo-llaves" aria-live="polite">' + razon + ' ' + ayuda('tu-limite') + '</h2></section>'
         // S19-B2: el plazo ya está en Tu camino; aquí, una línea que cambia con cada pieza.
-        : '<section class="llaves-linea" aria-labelledby="titulo-llaves">' +
-        '<p><span class="etiqueta" id="titulo-llaves">Tus llaves</span>' +
+        : '<section class="llaves-linea llaves-azul" aria-labelledby="titulo-llaves">' +
+        '<p><span class="etiqueta" id="titulo-llaves">Tienes tus llaves en</span>' +
           '<strong class="numero" aria-live="polite">' + textoMesesRango(x.desde.meses, x.hasta.meses) + '</strong>' +
           (cambio ? '<span class="cambio-llaves" aria-hidden="true">' + (cambio > 0 ? '−' : '+') + plural(Math.abs(cambio), 'mes', 'meses') + '</span>' : '') + '</p>' +
-        '<p class="texto-apoyo">' + (x.hasta.ivaTarde ? 'Sin IVA vence antes' + SEP : '') + FRENO[x.hasta.freno] + '</p>' +
+        (sinAyudas.hasta.meses !== null ? '<p class="llaves-sin">Sin ayudas: ' + textoMesesRango(sinAyudas.desde.meses, sinAyudas.hasta.meses) + '</p>' : '') +
+        '<p class="llaves-adelanto' + (adelanto > 0 ? ' sube' : '') + '">' + (adelanto > 0 ? '↑ Llegas ' + textoMeses(adelanto) + ' antes' : 'Activa una ayuda para ver cuánto adelantas') + '</p>' +
+        '<p class="llaves-freno">' + (x.hasta.ivaTarde ? 'Sin IVA vence antes' + SEP : '') + FRENO[x.hasta.freno] + '</p>' +
       '</section>') +
       grupo('menos', 'Paga menos') + grupo('ayuda', 'Recibe ayuda') +
       (siempre !== null ? '<p class="texto-apoyo linea-siempre">Sin garantía: ' + textoMeses(siempre) + ' ' + ayuda('garantia') + '</p>' : '') +
