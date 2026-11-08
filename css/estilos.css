@@ -1886,3 +1886,12 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
   .camino-boton { transition: border-color var(--dur-micro) var(--ease-salida), transform var(--dur-micro) var(--ease-salida); }
   .camino-boton:active { transform: scale(0.98); }
 }
+
+/* ===== S22-F4: chips con regla y usados ===== */
+.chips-explorar { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.chip-filtro.bloqueado { background: var(--gray-light); border-color: var(--gray-semilight); color: var(--gray-semidark); }
+.chip-filtro small { font-weight: 600; font-size: 12px; }
+.lista-usados { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; }
+.usado p { margin: 0 0 4px; }
+.usado-fila { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.usado-precio { display: flex; align-items: baseline; gap: 8px; }

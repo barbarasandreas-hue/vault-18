@@ -17,6 +17,8 @@ var FECHA_REFERENCIA = '2026-11-03';
 // entregaEstimada: fecha estimada de entrega del edificio.
 // clienteBci (simulado): si la inmobiliaria es deudora o cliente de Bci; se informa en el detalle (conflicto de interés).
 // fachada (S16-F7): color del Bci Kit (nombre del token) y pisos del edificio dibujado en la tarjeta.
+// recepcionDefinitiva (S22-F4, terminados): fecha de la recepción municipal. IVA cero solo si es antes del 17-oct-2026.
+// ds19 (S22-F4): proyecto de integración social del DS19 (simulado).
 // grupo (simulado): cuota promedio y meses que lleva ahorrando el grupo, hace cuántos días se unió alguien y cuántos pagaron este mes.
 var PROYECTOS = [
   { id: 'mirador-independencia', fachada: { color: 'blue-normal', pisos: 6 }, clienteBci: true, grupo: { cuotaPromedio: 650000, mesesAhorrando: 4, unidoHaceDias: 2, pagaronMes: 5 }, etapaObra: 1, entregaEstimada: '2027-12-15', nombre: 'Edificio Mirador Independencia', comuna: 'Independencia', tipo: 'conjunto',
@@ -30,20 +32,20 @@ var PROYECTOS = [
   // S18-F6: más ejemplos para vivir, al menos 3 por rango. En obra (compra en grupo):
   { id: 'nodo-estacion', fachada: { color: 'blue-80', pisos: 6 }, clienteBci: true, grupo: { cuotaPromedio: 520000, mesesAhorrando: 3, unidoHaceDias: 3, pagaronMes: 4 }, etapaObra: 1, entregaEstimada: '2028-01-31', nombre: 'Edificio Nodo Estación', comuna: 'Estación Central', tipo: 'conjunto',
     cupos: 10, cuposTomados: 5, ufFinanciadas: 0, cierre: '2027-01-15' },
-  { id: 'vista-independencia', fachada: { color: 'green-normal', pisos: 5 }, clienteBci: false, grupo: { cuotaPromedio: 480000, mesesAhorrando: 1, unidoHaceDias: 4, pagaronMes: 3 }, etapaObra: 0, entregaEstimada: '2028-05-31', nombre: 'Edificio Vista Independencia', comuna: 'Independencia', tipo: 'conjunto',
+  { id: 'vista-independencia', ds19: true, fachada: { color: 'green-normal', pisos: 5 }, clienteBci: false, grupo: { cuotaPromedio: 480000, mesesAhorrando: 1, unidoHaceDias: 4, pagaronMes: 3 }, etapaObra: 0, entregaEstimada: '2028-05-31', nombre: 'Edificio Vista Independencia', comuna: 'Independencia', tipo: 'conjunto',
     cupos: 8, cuposTomados: 4, ufFinanciadas: 0, cierre: '2027-02-15' },
-  { id: 'pasaje-recoleta', fachada: { color: 'gray-semidark', pisos: 4 }, clienteBci: true, grupo: { cuotaPromedio: 380000, mesesAhorrando: 2, unidoHaceDias: 6, pagaronMes: 2 }, etapaObra: 1, entregaEstimada: '2027-11-30', nombre: 'Edificio Pasaje Recoleta', comuna: 'Recoleta', tipo: 'conjunto',
+  { id: 'pasaje-recoleta', ds19: true, fachada: { color: 'gray-semidark', pisos: 4 }, clienteBci: true, grupo: { cuotaPromedio: 380000, mesesAhorrando: 2, unidoHaceDias: 6, pagaronMes: 2 }, etapaObra: 1, entregaEstimada: '2027-11-30', nombre: 'Edificio Pasaje Recoleta', comuna: 'Recoleta', tipo: 'conjunto',
     cupos: 6, cuposTomados: 2, ufFinanciadas: 0, cierre: '2027-01-31' },
   { id: 'terrazas-quinta', fachada: { color: 'blue-normal', pisos: 7 }, clienteBci: false, grupo: { cuotaPromedio: 760000, mesesAhorrando: 5, unidoHaceDias: 1, pagaronMes: 6 }, etapaObra: 2, entregaEstimada: '2027-09-30', nombre: 'Edificio Terrazas Quinta Normal', comuna: 'Quinta Normal', tipo: 'conjunto',
     cupos: 10, cuposTomados: 7, ufFinanciadas: 0, cierre: '2026-12-20' },
   // Terminados (se compran solos, se entregan al firmar):
-  { id: 'acacias-quinta', fachada: { color: 'green-dark', pisos: 5 }, clienteBci: true, etapaObra: 4, nombre: 'Edificio Las Acacias', comuna: 'Quinta Normal', tipo: 'venta',
+  { id: 'acacias-quinta', recepcionDefinitiva: '2026-08-20', fachada: { color: 'green-dark', pisos: 5 }, clienteBci: true, etapaObra: 4, nombre: 'Edificio Las Acacias', comuna: 'Quinta Normal', tipo: 'venta',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
-  { id: 'aromos-estacion', fachada: { color: 'blue-dark', pisos: 4 }, clienteBci: false, etapaObra: 4, nombre: 'Edificio Los Aromos', comuna: 'Estación Central', tipo: 'venta',
+  { id: 'aromos-estacion', recepcionDefinitiva: '2026-09-30', fachada: { color: 'blue-dark', pisos: 4 }, clienteBci: false, etapaObra: 4, nombre: 'Edificio Los Aromos', comuna: 'Estación Central', tipo: 'venta',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
-  { id: 'cerezos-recoleta', fachada: { color: 'gray-dark', pisos: 4 }, clienteBci: true, etapaObra: 4, nombre: 'Edificio Los Cerezos', comuna: 'Recoleta', tipo: 'venta',
+  { id: 'cerezos-recoleta', recepcionDefinitiva: '2026-11-05', fachada: { color: 'gray-dark', pisos: 4 }, clienteBci: true, etapaObra: 4, nombre: 'Edificio Los Cerezos', comuna: 'Recoleta', tipo: 'venta',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
-  { id: 'robles-independencia', fachada: { color: 'blue-80', pisos: 6 }, clienteBci: false, etapaObra: 4, nombre: 'Edificio Los Robles', comuna: 'Independencia', tipo: 'venta',
+  { id: 'robles-independencia', recepcionDefinitiva: '2026-06-15', fachada: { color: 'blue-80', pisos: 6 }, clienteBci: false, etapaObra: 4, nombre: 'Edificio Los Robles', comuna: 'Independencia', tipo: 'venta',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
   { id: 'plaza-estacion', fachada: { color: 'green-dark', pisos: 4 }, clienteBci: false, nombre: 'Edificio Plaza Estación', comuna: 'Estación Central', tipo: 'financiamiento',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 108, cierre: '2027-02-10' },
@@ -89,6 +91,15 @@ var DEPARTAMENTOS = [
   { id: 'br-1004', proyectoId: 'barrio-recoleta', comuna: 'Recoleta', piso: 10, m2: 40, dormitorios: 1, banos: 1, listaUF: 1950, arriendoEstimadoIA: 275000, origenArriendo: ORIGEN_ARRIENDO }
 ];
 
+// S22-F4: departamentos usados de ejemplo para el crédito de siempre (Bci presta el 80 %, sin subsidio a la tasa,
+// sin garantía ni IVA cero; sirve el DS1 si cumple el tope). dfl2: si el departamento tiene el beneficio DFL-2.
+var USADOS = [
+  { id: 'us-indep-1', comuna: 'Independencia', anio: 2012, m2: 52, dormitorios: 2, banos: 1, listaUF: 2300, dfl2: true },
+  { id: 'us-quinta-1', comuna: 'Quinta Normal', anio: 2008, m2: 45, dormitorios: 2, banos: 1, listaUF: 1900, dfl2: true },
+  { id: 'us-recoleta-1', comuna: 'Recoleta', anio: 2015, m2: 36, dormitorios: 1, banos: 1, listaUF: 1600, dfl2: false },
+  { id: 'us-estacion-1', comuna: 'Estación Central', anio: 2017, m2: 30, dormitorios: 1, banos: 1, listaUF: 1450, dfl2: true }
+];
+
 function departamentosDe(proyectoId) {
   return DEPARTAMENTOS.filter(function (d) { return d.proyectoId === proyectoId; });
 }
@@ -103,6 +114,7 @@ if (typeof module !== 'undefined') module.exports = {
   ORIGEN_ARRIENDO: ORIGEN_ARRIENDO,
   PROYECTOS: PROYECTOS,
   DEPARTAMENTOS: DEPARTAMENTOS,
+  USADOS: USADOS,
   departamentosDe: departamentosDe,
   buscarProyecto: buscarProyecto
 };

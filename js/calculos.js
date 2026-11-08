@@ -1575,7 +1575,43 @@ function capasProteccion(s) {
   return capas;
 }
 
+
+// ---------- S22-F4: chips de Explorar con su regla ----------
+// IVA cero (Ley 21.850): solo terminados con recepción definitiva antes del 17-oct-2026.
+var CORTE_IVA_CERO = '2026-10-17';
+var DFL2_MAX_M2 = 140;
+var CHIPS_EXPLORAR = {
+  'sin-iva': { nombre: 'Sin IVA', modos: ['vivir', 'arrendar'] },
+  ds1: { nombre: 'Con DS1', modos: ['vivir'] },
+  ds19: { nombre: 'Proyecto DS19', modos: ['vivir'] },
+  dfl2: { nombre: 'DFL-2', modos: ['arrendar'] }
+};
+// ¿Cumple el departamento d del proyecto p la regla del chip?
+function cumpleChip(chip, p, d) {
+  switch (chip) {
+    case 'sin-iva': return p.tipo === 'venta' && !!p.recepcionDefinitiva && p.recepcionDefinitiva < CORTE_IVA_CERO;
+    case 'ds1': return d.listaUF <= DS1.tramo4.hastaUF + 1e-9;
+    case 'ds19': return !!p.ds19;
+    case 'dfl2': return d.m2 <= DFL2_MAX_M2;
+  }
+  return true;
+}
+// Lo que no se combina con el camino se bloquea con su razón en dos palabras (o null si se puede).
+function bloqueoChip(chip, camino) {
+  if (chip === 'sin-iva' && camino && camino.grupo) return 'Es en obra';
+  if (chip === 'sin-iva' && camino && camino.inversionistas > 0) return 'Es en obra';
+  return null;
+}
+function chipsDelModo(modo) {
+  return Object.keys(CHIPS_EXPLORAR).filter(function (k) { return CHIPS_EXPLORAR[k].modos.indexOf(modo) !== -1; });
+}
+
 if (typeof module !== 'undefined') module.exports = {
+  CORTE_IVA_CERO: CORTE_IVA_CERO,
+  CHIPS_EXPLORAR: CHIPS_EXPLORAR,
+  cumpleChip: cumpleChip,
+  bloqueoChip: bloqueoChip,
+  chipsDelModo: chipsDelModo,
   capasProteccion: capasProteccion,
   HITOS_CAMINO: HITOS_CAMINO,
   HITOS: HITOS,

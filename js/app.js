@@ -4732,7 +4732,9 @@
       }).join('') + '</ul>' +
       (estado.modo === 'arrendar' && r.todaviaNo ? '<p class="texto-centro"><a class="enlace" href="#explorar/cambia">Ver qué lo cambia</a></p>' : '') +
       '<section class="bloque" aria-labelledby="titulo-otras-formas"><h2 class="h4" id="titulo-otras-formas">Otras formas</h2>' +
-        '<ul class="filas tarjeta">' + fichas.map(function (id) {
+        '<ul class="filas tarjeta"><li><a class="fila" href="#explorar/usados"><span><strong>Crédito de siempre: usados</strong>' +
+          '<small>Existe hoy' + SEP + 'Bci presta el 80' + NBSP + '%</small></span>' +
+          '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>' + fichas.map(function (id) {
           return '<li><a class="fila" href="#camino/ficha/' + id + '"><span><strong>' + CAMINOS[id].nombre + '</strong>' +
             '<small>' + (CAMINOS[id].existeHoy ? 'Existe hoy' : 'Propuesta') + '</small></span>' +
             '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>';
@@ -4767,7 +4769,8 @@
     if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return sinSueldos(cont, CAMINOS[id].nombre, 'titulo-caminos');
     var perfil = perfilActual();
     var r = recomendarCamino(perfil);
-    var lista = proyectosDeCamino(id);
+    var todos = proyectosDeCamino(id);
+    var lista = filtrarChips(todos, id);
     var m = mesesDeCamino(id, perfil);
     var esTuyo = id === estado.caminoElegido;
     var vivir = estado.modo === 'vivir';
@@ -4785,14 +4788,64 @@
           '<span><strong>¿Cómo funciona?</strong><small>Tasa, dividendo y costo total</small></span>' +
           '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button>') +
       chipsPiezas() +
+      chipsExplorar(id) +
       '<section class="bloque" aria-labelledby="titulo-deptos-camino"><h2 class="h4" id="titulo-deptos-camino">' + plural(lista.length, 'departamento', 'departamentos') + '</h2>' +
         (lista.length ? '<ul class="lista-proyectos">' + lista.map(function (p) { return tarjetaProyecto(p, '#camino/proyecto/'); }).join('') + '</ul>'
-          : '<p class="texto-apoyo">Hoy no hay departamentos de este camino en tu rango.</p>') +
+          : '<p class="texto-apoyo">' + (todos.length ? 'Ninguno con estos filtros.' : 'Hoy no hay departamentos de este camino en tu rango.') + '</p>') +
       '</section>' +
       (esTuyo ? '' : '<div class="acciones"><button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-mi-camino" aria-haspopup="dialog">Hacerlo mi camino</button></div>');
     var b = cont.querySelector('[data-simular]');
     if (b) b.addEventListener('click', function () { abrirSimulacion(id, b); });
     if ($('btn-mi-camino')) $('btn-mi-camino').addEventListener('click', function () { confirmarMiCamino(id, $('btn-mi-camino')); });
+    cont.querySelectorAll('[data-chip]').forEach(function (c) {
+      c.addEventListener('click', function () {
+        var k = c.dataset.chip;
+        if (c.dataset.razon) { toast(CHIPS_EXPLORAR[k].nombre + ': ' + RAZON_CHIP[k]); return; }
+        chipsActivos[k] = !chipsActivos[k];
+        renderUnCamino(id);
+        var nuevo = document.querySelector('[data-chip="' + k + '"]');
+        if (nuevo) nuevo.focus();
+      });
+    });
+  }
+
+  // ---------- S22-F4: chips con su regla (cumpleChip y bloqueoChip en calculos.js) ----------
+  var chipsActivos = {};
+  var RAZON_CHIP = { 'sin-iva': 'solo terminados; este camino es en obra.' };
+  function filtrarChips(lista, idCamino) {
+    var on = Object.keys(chipsActivos).filter(function (k) {
+      return chipsActivos[k] && chipsDelModo(estado.modo).indexOf(k) !== -1 && !bloqueoChip(k, CAMINOS[idCamino]);
+    });
+    return lista.filter(function (p) { return on.every(function (k) { return cumpleChip(k, p, departamentosDe(p.id)[0]); }); });
+  }
+  function chipsExplorar(idCamino) {
+    return '<div class="chips-explorar" role="group" aria-label="Filtrar">' + chipsDelModo(estado.modo).map(function (k) {
+      var b = bloqueoChip(k, CAMINOS[idCamino]);
+      return '<button type="button" class="chip chip-filtro' + (b ? ' bloqueado' : '') + '" data-chip="' + k + '" aria-pressed="' + (!b && !!chipsActivos[k]) + '"' +
+        (b ? ' aria-disabled="true" data-razon="1"' : '') + '>' + CHIPS_EXPLORAR[k].nombre + (b ? '<small>' + SEP + b + '</small>' : '') + '</button>';
+    }).join('') + '</div>';
+  }
+
+  // S22-F4: usados de ejemplo para el crédito de siempre. Solo para mirar (la compra de usados no está en la demo).
+  function renderUsados() {
+    var cont = $('caminos-contenido');
+    var vivir = estado.modo === 'vivir';
+    cont.innerHTML =
+      '<a href="#explorar" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Explorar</a>' +
+      '<header class="encabezado"><p class="camino-boton-cabeza"><span class="chip chip-existe">Existe hoy</span></p>' +
+        '<h1 id="titulo-caminos" class="h2">Crédito de siempre: usados</h1>' +
+        '<p class="texto-apoyo">Bci presta el 80' + NBSP + '%. Sin subsidio a la tasa, sin garantía y sin IVA cero.</p></header>' +
+      '<ul class="lista-usados">' + USADOS.map(function (u) {
+        var calza = ['Crédito de siempre'].concat(vivir && u.listaUF <= DS1.tramo4.hastaUF ? ['DS1'] : []);
+        return '<li class="tarjeta usado">' +
+          '<p class="usado-fila"><strong class="h4">' + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + SEP + u.m2 + NBSP + 'm²</strong>' +
+            (!vivir && u.dfl2 ? '<span class="chip chip-existe">DFL-2</span>' : '') + '</p>' +
+          '<p class="texto-apoyo">' + esc(u.comuna) + SEP + 'de ' + u.anio + '</p>' +
+          '<p class="usado-precio"><strong class="numero h3">' + formatoUF(u.listaUF) + '</strong> <span class="texto-apoyo">' + formatoRedondeado(ufAPesos(u.listaUF)) + '</span></p>' +
+          '<p class="texto-apoyo"><small>Calza con: ' + calza.join(', ') + '</small></p>' +
+        '</li>';
+      }).join('') + '</ul>' +
+      '<p class="texto-apoyo texto-centro"><small>Ejemplos simulados</small></p>';
   }
   // Hacerlo mi camino: muestra qué cambia y pide confirmar. Lo hecho (cuenta, ahorro, misiones) se conserva.
   function confirmarMiCamino(id, boton) {
@@ -5549,6 +5602,7 @@
     if (p[0] === 'explorar') {
       if (p[1] === 'cambia') return r('caminos', 'explorar', function () { cambiosActivos = {}; renderCaminos(); });
       if (p[1] && p[2] === 'como') return r('caminos', 'explorar', function () { renderLlegaAntes(p[1]); });
+      if (p[1] === 'usados') return r('caminos', 'explorar', renderUsados);
       if (p[1]) return r('caminos', 'explorar', function () { renderUnCamino(p[1]); });
       return r('caminos', 'explorar', renderExplorar);
     }
