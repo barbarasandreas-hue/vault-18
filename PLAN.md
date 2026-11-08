@@ -890,6 +890,11 @@ Bloques (cada uno se puede ver y probar solo; un commit por bloque):
 - **S21-B4 · Explorar: caminos primero.** Pantalla 1 "¿Qué quieres explorar?" con un botón grande por camino (fecha de llegada, etiqueta) + "Ver todos los departamentos" + "Por qué no te mostramos otros". Pantalla 2 Un camino: una línea, "¿Cómo funciona?" (aquí vive Llega antes), chips de piezas y comuna, lista, "Hacerlo mi camino" con confirmación que muestra qué cambia. Pantalla 3 Un departamento con "Calza con". Aceptación: máximo 1 toque de Explorar a la lista de un camino; mirar otro camino no cambia el plan.
 - **S21-B5 · Tu pie y su protección.** Pantalla Tu pie: saldo, "Pagar mi cuota", filas de cuota, ahorro automático, "Guardar bajo llave", sello "Tu pie está protegido" con sus capas según camino y etapa, movimientos. En grupo, "Cuenta bloqueada · tu grupo". Todo simulado. Aceptación: una sola acción; el sello lista solo capas reales para ese camino.
 
+**Hecho (7-nov-2026):** B1 4def2de · B3 c978ae7 · B5 b5673e1 · B2 6b38871 · B4 0a4f384. 187 pruebas pasan.
+- Orden de los hitos: el del plan (decidido el 7-nov). Se puede abrir la cuenta y ahorrar en Tu pie (`#pie`) sin haber elegido departamento. Con una compra, la preaprobación y "Asegurar" se toman del flujo de compra que ya existía (postular → pie → firmar → Mi departamento).
+- "Fechas que importan": cierre DS1 (27-nov-2026), fin del IVA cero para la promesa (nov-2027) y fin de la garantía (31-may-2028). Falta la fecha de término del subsidio a la tasa: validarla antes de mostrarla.
+- Quedó para después: "Calza con" en el detalle del departamento; chips de comuna en Un camino; la vieja escalera (`recorridoCamino`) ya no se usa; los avisos de cierre del grupo ya no salen en Inicio con compra (podrían volver como plazo de la tarjeta).
+
 Fuera de este sprint: campos nuevos de `js/datos.js` para filtros (usado, recepción definitiva, ds19, dfl2) y la fila de usados; la regla de arrepentirse en el grupo (pendiente de decidir).
 
 ## Sprint 22 · Volver cada mes y datos para explorar
