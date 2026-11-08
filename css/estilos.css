@@ -2125,7 +2125,7 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .respaldo-compara small { font-size: 13px; color: var(--gray-semidark); }
 .respaldo-dividendo { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--gray-semilight); }
 .respaldo-deposito { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; margin: 0; padding: 12px; border-radius: 14px; background: var(--blue-20); }
-.respaldo-deposito span { display: grid; }
+.respaldo-deposito > span { display: grid; }
 .respaldo-deposito strong { font-size: 22px; color: var(--blue-dark); }
 .respaldo-deposito small { font-size: 13px; color: var(--gray-dark); }
 .respaldo-pasos { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 14px; }
