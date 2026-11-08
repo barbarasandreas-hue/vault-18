@@ -1925,10 +1925,12 @@
       '<div class="galeria-pista" tabindex="0" aria-label="Fotos referenciales">' +
         fotos.map(function (x, i) {
           return '<figure class="galeria-foto"><img src="' + x.src + '" alt="' + esc(x.alt) + '" loading="' + (i ? 'lazy' : 'eager') + '" width="800" height="600">' +
-            '<figcaption>' + x.nombre + '</figcaption></figure>';
+            '<figcaption>' + x.nombre + (fotos.length > 1 ? SEP + (i + 1) + ' de ' + fotos.length : '') + '</figcaption></figure>';
         }).join('') +
       '</div>' +
       '<p class="galeria-sello">Fotos referenciales</p>' +
+      (fotos.length > 1 ? '<button type="button" class="galeria-flecha anterior" data-paso="-1" aria-label="Foto anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>' +
+        '<button type="button" class="galeria-flecha siguiente" data-paso="1" aria-label="Foto siguiente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>' : '') +
       (fotos.length > 1 ? '<div class="galeria-puntos">' + fotos.map(function (x, i) {
         return '<button type="button" class="galeria-punto" data-ir="' + i + '" aria-label="Ver ' + x.nombre.toLowerCase() + '"' + (i ? '' : ' aria-current="true"') + '></button>';
       }).join('') + '</div>' : '') +
@@ -1941,6 +1943,14 @@
       var reducir = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       puntos.forEach(function (b) {
         b.addEventListener('click', function () { pista.scrollTo({ left: Number(b.dataset.ir) * pista.clientWidth, behavior: reducir ? 'auto' : 'smooth' }); });
+      });
+      // S24-B2: flechas para pasar de foto sin deslizar.
+      g.querySelectorAll('.galeria-flecha').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var n = puntos.length, i = Math.round(pista.scrollLeft / Math.max(1, pista.clientWidth));
+          var j = (i + Number(b.dataset.paso) + n) % n;
+          pista.scrollTo({ left: j * pista.clientWidth, behavior: reducir ? 'auto' : 'smooth' });
+        });
       });
       pista.addEventListener('scroll', function () {
         var i = Math.round(pista.scrollLeft / Math.max(1, pista.clientWidth));
@@ -2353,8 +2363,8 @@
             '<p class="texto-apoyo">' + pd.llaves + SEP + FRENO[pd.freno] + '</p>' +
             '<ul class="datos-inversion">' +
               '<li><span>Juntas antes de firmar</span><strong>' + formatoRedondeado(pd.meta) + '</strong></li>' +
-              '<li><span>Después pagas al mes</span><strong>' + formatoRedondeado(pd.dividendo) + '</strong></li>' +
-              '<li><span>Sin subsidio ' + ayuda('dividendo') + '</span><strong>' + formatoRedondeado(pd.dividendoSinSubsidio) + '</strong></li>' +
+              '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + formatoUF(pd.dividendo / SUPUESTOS.uf) + '</strong><small>hoy son ' + formatoRedondeado(pd.dividendo) + '</small></span></li>' +
+              '<li><span>Sin subsidio ' + ayuda('dividendo') + '</span><span class="en-uf"><strong>' + formatoUF(pd.dividendoSinSubsidio / SUPUESTOS.uf) + '</strong><small>hoy ' + formatoRedondeado(pd.dividendoSinSubsidio) + '</small></span></li>' +
               '<li><span>Precio' + (conjunto ? ' con descuento' : p.tipo === 'venta' && piezasValidas(piezasOn()).iva ? ' sin IVA' : '') + '</span><strong>' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong></li>' +
               (conjunto ? '<li><span>Ahorras en grupo hoy</span><strong>' + formatoRedondeado(r.ahorro) + '</strong></li>' : '') +
             '</ul>' +
