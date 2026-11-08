@@ -906,6 +906,11 @@ Origen: ideas acordadas en el Sprint 19 (B4, "siguiente ola") y filtros por cami
 - **S22-F3 · Regalo de pie por enlace.** Desde la pieza Regalo, "Compartir enlace" genera un mensaje para la familia con la meta y lo que falta, sin montos exactos. El aporte entra a Tu pie (simulado), con el aviso de la rebaja a las donaciones. Aceptación: el enlace no expone datos personales; el regalo suma una vez y queda en movimientos.
 - **S22-F4 · Datos para los filtros de Explorar.** Campos nuevos en `js/datos.js`: `usado`, `recepcionDefinitiva` (fecha), `ds19`, `dfl2` (o m²). Departamentos usados de ejemplo (al menos 3, en las comunas de los ejemplos) para la fila "Crédito de siempre". Chips "Sin IVA", "Con DS1", "Proyecto DS19" y "DFL-2" (este último solo en el modo invertir), con bloqueo automático de lo que no se combina. Aceptación: cada chip filtra con su regla y lo bloqueado dice su razón en dos palabras.
 
+**Hecho (7-nov-2026):** F4 c2587a0 · F1 06e5333 · F2 e6fbec8 · F3 87ba025. 195 pruebas pasan.
+- F1: faltan las 4 fotos de obra (`fotos/obra/`, lista en `fotos/LISTA-DE-FOTOS.md`); mientras, la app muestra un dibujo de línea por etapa.
+- F4: los usados son solo para mirar (la compra de un usado no está en la demo). La regla del IVA cero con la fecha de recepción se usa en el chip "Sin IVA"; la pieza IVA de Llega antes todavía trata a todos los terminados como elegibles.
+- F3: el regalo ahora funciona desde Tu pie, sin compra. El enlace es de ejemplo (primerpeldano.cl/regalo/código).
+
 Pendiente de decidir (no entra hasta que se decida): qué pasa si alguien del grupo se arrepiente antes de escriturar.
 
 ## Estado
