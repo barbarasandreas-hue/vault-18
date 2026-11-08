@@ -4963,6 +4963,12 @@
     estado.caminoElegido = guardado.c; estado.filtroRango = guardado.f; estado.piezas = guardado.p;
     return lista;
   }
+  // S24-B2: la descripción larga de cada camino (Un camino), como en el canvas.
+  var soloFavoritos = false;
+  var DESCRIPCION_CAMINO = {
+    'grupo-vivir': 'Te unes con otras personas para comprar departamentos en un mismo edificio en obra. Como compran varios, la inmobiliaria les baja el precio: más descuento mientras más se unan.',
+    'individual-vivir': 'Bci te presta hasta el 90' + NBSP + '% con la garantía del Estado. Tú juntas solo el 10' + NBSP + '% de pie y eliges un departamento nuevo.'
+  };
   function chipsPiezas() {
     if (estado.modo !== 'vivir') return '';
     var on = piezasValidas(piezasOn());
@@ -4976,7 +4982,7 @@
     var perfil = perfilActual();
     var r = recomendarCamino(perfil);
     var todos = proyectosDeCamino(id);
-    var lista = filtrarChips(todos, id);
+    var lista = filtrarChips(todos, id).filter(function (p) { return !soloFavoritos || esFavorito(p.id); });
     var m = mesesDeCamino(id, perfil);
     var esTuyo = id === estado.caminoElegido;
     var vivir = estado.modo === 'vivir';
@@ -4984,25 +4990,26 @@
       '<a href="#explorar" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Explorar</a>' +
       '<header class="encabezado"><p class="camino-boton-cabeza">' + etiquetaCamino(id, r) + '</p>' +
         '<h1 id="titulo-caminos" class="h2">' + CAMINOS[id].nombre + '</h1>' +
-        '<p class="texto-apoyo">' + (LINEA_CAMINO[id] || '') + '</p>' +
+        '<p class="texto-apoyo">' + (DESCRIPCION_CAMINO[id] || LINEA_CAMINO[id] || '') + '</p>' +
         '<p class="camino-boton-fecha">' + icono('i-llave') + (m === null ? 'Todavía no' : 'Llaves en ' + textoLlegada(m)) + '</p>' +
       '</header>' +
-      (vivir ? '<a class="tarjeta fila como-funciona" href="#explorar/' + id + '/como">' + icono('i-ayuda', 'icono-grande') +
-          '<span><strong>¿Cómo funciona?</strong><small>Las piezas que suman y cuánto adelantan</small></span>' +
+      (esTuyo ? '' : '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-mi-camino" aria-haspopup="dialog">Hacerlo mi camino</button>') +
+      (vivir ? '<a class="tarjeta fila como-funciona" href="#explorar/' + id + '/como"><span class="circulo-icono verde" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg></span>' +
+          '<span><strong>¿Cómo puedes llegar antes?</strong><small>Mira qué ayudas te acercan a tus llaves</small></span>' +
           '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>'
         : '<button type="button" class="tarjeta fila como-funciona" data-simular="' + id + '" aria-haspopup="dialog">' + icono('i-ayuda', 'icono-grande') +
           '<span><strong>¿Cómo funciona?</strong><small>Tasa, dividendo y costo total</small></span>' +
           '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button>') +
       chipsPiezas() +
-      chipsExplorar(id) +
+      chipsExplorar(id).replace('</div>', '<button type="button" class="chip chip-filtro chip-favoritos" id="chip-favoritos" aria-pressed="' + soloFavoritos + '">' + icono('i-corazon') + 'Favoritos</button></div>') +
       '<section class="bloque" aria-labelledby="titulo-deptos-camino"><h2 class="h4" id="titulo-deptos-camino">' + plural(lista.length, 'departamento', 'departamentos') + '</h2>' +
         (lista.length ? '<ul class="lista-proyectos">' + lista.map(function (p) { return tarjetaProyecto(p, '#camino/proyecto/'); }).join('') + '</ul>'
-          : '<p class="texto-apoyo">' + (todos.length ? 'Ninguno con estos filtros.' : 'Hoy no hay departamentos de este camino en tu rango.') + '</p>') +
-      '</section>' +
-      (esTuyo ? '' : '<div class="acciones"><button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-mi-camino" aria-haspopup="dialog">Hacerlo mi camino</button></div>');
+          : '<p class="texto-apoyo">' + (soloFavoritos && todos.length ? 'Todavía no guardas ninguno de este camino.' : todos.length ? 'Ninguno con estos filtros.' : 'Hoy no hay departamentos de este camino en tu rango.') + '</p>') +
+      '</section>';
     var b = cont.querySelector('[data-simular]');
     if (b) b.addEventListener('click', function () { abrirSimulacion(id, b); });
     if ($('btn-mi-camino')) $('btn-mi-camino').addEventListener('click', function () { confirmarMiCamino(id, $('btn-mi-camino')); });
+    $('chip-favoritos').addEventListener('click', function () { soloFavoritos = !soloFavoritos; renderUnCamino(id); $('chip-favoritos').focus(); });
     cont.querySelectorAll('[data-chip]').forEach(function (c) {
       c.addEventListener('click', function () {
         var k = c.dataset.chip;

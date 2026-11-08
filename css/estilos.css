@@ -2065,3 +2065,15 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .saldo-pie .punto-mes.perdido { background: rgba(255, 255, 255, .2); }
 .saldo-pie .racha { background: rgba(255, 255, 255, .18); color: var(--white); }
 .fila-regalo .icono-grande { color: var(--red-normal); }
+
+/* ===== S24-B2: Un camino, Llega antes, Detalle, Usados y Respaldo familiar ===== */
+.circulo-icono { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; }
+.circulo-icono svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.circulo-icono.verde { background: var(--green-20); color: var(--green-dark); }
+.circulo-icono.azul { background: var(--blue-20); color: var(--blue-dark); }
+.como-funciona { border: 0; margin: 12px 0 8px; align-items: center; }
+#btn-mi-camino { margin-top: 4px; }
+.chip-favoritos { display: inline-flex; align-items: center; gap: 6px; }
+.chip-favoritos .icono { margin: 0; width: 18px; height: 18px; color: var(--red-dark); }
+.chip-favoritos[aria-pressed="true"] { background: var(--red-dark); border-color: var(--red-dark); color: var(--white); }
+.chip-favoritos[aria-pressed="true"] .icono { color: var(--white); --relleno: var(--white); }
