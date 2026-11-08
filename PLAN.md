@@ -913,6 +913,15 @@ Origen: ideas acordadas en el Sprint 19 (B4, "siguiente ola") y filtros por cami
 
 Pendiente de decidir (no entra hasta que se decida): qué pasa si alguien del grupo se arrepiente antes de escriturar.
 
+## Sprint 23 · Ganas de volver: tu departamento se construye
+Origen: pedido de Bárbara del 7-nov-2026 después de revisar dinámicas para las pantallas nuevas.
+
+- **S23-A · Inicio como antes.** Vuelven la ventana de Tus llaves, el slider "Si juntas al mes" y "Después, pagas al mes" con el dividendo (y "Sin garantía"). Debajo quedan la tarjeta del siguiente paso y Tu pie en chico.
+- **S23-B · Tu departamento se construye.** Arriba de Tus pasos, un edificio dibujado suma una etapa por cada hito hecho: terreno → cimientos → estructura → muros → ventanas → techo y puerta → es tuyo (tu ventana se enciende). Lo nuevo cae con animación y confeti; con movimiento reducido aparece quieto. Referente: la casa de 12 ladrillos del prototipo en Base44. Fórmula `etapaConstruccion` con pruebas.
+- **S23-C · Guardar departamentos.** Corazón en cada tarjeta y en el detalle; "Tus guardados" en Explorar, con lo que importa hoy de cada uno (cupos y cierre, sin IVA o lo financiado). Fórmula `alternarFavorito` con pruebas. Los avisos de cambios son simulados.
+
+**Hecho (7-nov-2026)** en un commit. 197 pruebas pasan.
+
 ## Estado
 
 | Sprint | Feature | Estado |

@@ -1650,7 +1650,23 @@ function mensajeRegalo(o) {
 }
 // El enlace lleva un código al azar, nunca el nombre, el RUT, el sueldo ni el saldo.
 function enlaceRegalo(codigo) { return 'https://primerpeldano.cl/regalo/' + String(codigo).replace(/[^a-z0-9]/gi, '').slice(0, 12); }
+
+// ---------- S23: el departamento se construye con tus hitos y favoritos ----------
+// Cada hito hecho suma una etapa al dibujo. 0 = terreno; 6 = es tuyo.
+var ETAPAS_CONSTRUCCION = ['Terreno', 'Cimientos', 'Estructura', 'Muros', 'Ventanas', 'Techo y puerta', 'Es tuyo'];
+function etapaConstruccion(h) {
+  return h.terminado ? ETAPAS_CONSTRUCCION.length - 1 : h.hitos.filter(function (x) { return x.estado === 'hecho'; }).length;
+}
+// Guardar o sacar un departamento de favoritos. Devuelve una lista nueva, sin repetidos.
+function alternarFavorito(lista, id) {
+  var l = Array.isArray(lista) ? lista.filter(function (x, i, a) { return a.indexOf(x) === i; }) : [];
+  return l.indexOf(id) === -1 ? l.concat([id]) : l.filter(function (x) { return x !== id; });
+}
+
 if (typeof module !== 'undefined') module.exports = {
+  ETAPAS_CONSTRUCCION: ETAPAS_CONSTRUCCION,
+  etapaConstruccion: etapaConstruccion,
+  alternarFavorito: alternarFavorito,
   mensajeRegalo: mensajeRegalo,
   enlaceRegalo: enlaceRegalo,
   animosNuevos: animosNuevos,
