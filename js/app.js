@@ -942,6 +942,7 @@
         '<p class="texto-apoyo">' + esc(x.p.nombre) + SEP + esc(x.p.comuna) + '</p>' +
       '</header>' +
       novedadesInicio(x) +
+      (x.paso < 4 ? cuandoLlegasCompra(x.p) + tarjetaSiguientePaso() + tuPieCompacto() :
       '<section class="tarjeta proximo" aria-label="Dónde vas">' +
         '<p class="chip">' + x.etapa + '</p>' +
         '<p class="etiqueta">' + x.etiqueta + '</p>' +
@@ -951,7 +952,6 @@
       '<div class="accion">' +
         '<a href="#camino/' + rutaPasoActual() + '" class="btn btn-primario btn-lg btn-bloque">' + x.accion + '</a>' +
       '</div>' +
-      recorridoCamino(x.paso) +
       (avisos.length
         ? '<section class="tarjeta bloque avisos" aria-labelledby="titulo-avisos">' +
             '<h2 class="h5" id="titulo-avisos">Avisos</h2>' +
@@ -959,8 +959,8 @@
               return '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>' + a + '</span></li>';
             }).join('') + '</ul>' +
           '</section>'
-        : '');
-    $('inicio-principal').insertAdjacentHTML('beforeend', lineaInversiones());
+        : ''));
+    iniciarSiguientePaso();
     if ($('btn-novedades-ok')) $('btn-novedades-ok').addEventListener('click', function () {
       estado.novedades = [];
       guardarEstado();
@@ -1435,7 +1435,7 @@
       '</header>' +
       (justo
         ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
-            '<h2 class="h3" id="titulo-plazo">' + razon + ' ' + ayuda('tu-limite') + '</h2></section>' + metaMesHtml()
+            '<h2 class="h3" id="titulo-plazo">' + razon + ' ' + ayuda('tu-limite') + '</h2></section>'
         : '<section class="noche" aria-labelledby="titulo-plazo">' +
             '<span class="noche-luna" aria-hidden="true"></span>' +
             '<p class="noche-etiqueta" id="titulo-plazo">Tus llaves</p>' +
@@ -1447,40 +1447,10 @@
             '<span class="freno-llaves" id="freno-llaves">' + FRENO[x.hasta.freno] + '</span>' +
             (techoJusto ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(x.deptos.hasta.listaUF) + ' te dejan poco para vivir.</p>' : '') +
           '</section>') +
-      '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
-        '<p class="si-juntas-fila"><label for="rango-mensual" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-mensual">' + formatoRedondeado(mensual) + '</strong></p>' +
-        '<input type="range" id="rango-mensual" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '" aria-valuetext="' + formatoRedondeado(mensual) + ' al mes: ' + textoMesesRango(x.desde.meses, x.hasta.meses) + '">' +
-      '</section>' +
-      '<section class="tarjeta bloque despues" aria-labelledby="titulo-despues">' +
-        '<p class="etiqueta" id="titulo-despues">Después, pagas al mes</p>' +
-        '<strong class="numero h3">' + formatoRango(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
-        vsArriendo(x.hasta.dividendo) +
-      '</section>' +
-      (siempre !== null ? '<p class="texto-apoyo linea-siempre">Sin garantía: ' + textoMeses(siempre) + ' ' + ayuda('garantia') + '</p>' : '') +
-      '<div class="accion-fija">' + (eligio
-        ? '<a href="#camino/elegir" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-departamentos">Elegir departamento</a>'
-        : '<a href="#explorar" class="btn btn-primario btn-lg btn-bloque">' + (justo ? 'Ver qué lo cambia' : 'Ver cómo llegar antes') + '</a>') +
-      '</div>' +
-      (eligio ? '<p class="texto-centro"><a href="#explorar" class="enlace">Ver cómo llegar antes</a></p>' : '') +
-      recorridoCamino(0) +
-      lineaInversiones();
+      tarjetaSiguientePaso() +
+      tuPieCompacto();
 
-    var rm = $('rango-mensual');
-    var pintar = function () { var v = Number(rm.value); rm.style.setProperty('--lleno', ((v - minimo) / (maximo - minimo) * 100).toFixed(1) + '%'); return v; };
-    pintar();
-    rm.addEventListener('input', function () {
-      var v = pintar();
-      var y = plazoVivir(v);
-      $('valor-mensual').textContent = formatoRedondeado(v);
-      if ($('numero-plazo')) {
-        $('numero-plazo').textContent = textoMesesRango(y.desde.meses, y.hasta.meses);
-        $('llaves-fecha').textContent = textoLlavesRango(y);
-        $('freno-llaves').textContent = FRENO[y.hasta.freno];
-        var ventana = $('mi-ventana'); ventana.classList.remove('brilla'); void ventana.offsetWidth; ventana.classList.add('brilla');
-      }
-      rm.setAttribute('aria-valuetext', formatoRedondeado(v) + ' al mes: ' + textoMesesRango(y.desde.meses, y.hasta.meses));
-    });
-    rm.addEventListener('change', function () { estado.ahorroMensual = Number(rm.value); guardarEstado(); });
+    iniciarSiguientePaso();
     if ($('btn-ver-departamentos')) $('btn-ver-departamentos').addEventListener('click', function () { prepararProyectos(estado.caminoElegido); });
     $('btn-cambiar-departamento').addEventListener('click', function () { abrirCambiarRango($('btn-cambiar-departamento')); });
     if ($('btn-meta-rango')) $('btn-meta-rango').addEventListener('click', function () { abrirCambiarRango($('btn-meta-rango')); });
@@ -1660,13 +1630,7 @@
             }).join('') +
           '</div></div>' +
         '</section>' +
-        '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
-          '<p class="si-juntas-fila"><label for="rango-mensual" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-mensual">' + formatoPesos(mensual) + '</strong></p>' +
-          '<input type="range" id="rango-mensual" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '"' +
-            ' aria-valuetext="' + formatoPesos(mensual) + ' al mes: ' + textoPlazos(plazo) + '">' +
-          '<p class="si-juntas-extremos"><span><strong>' + formatoPesos(minimo) + '</strong>' + textoPlazos(plazosCon(perfil, minimo)) + '</span>' +
-            '<span><strong>' + formatoPesos(maximo) + '</strong>' + textoPlazos(plazosCon(perfil, maximo)) + '</span></p>' +
-        '</section>';
+        '';
 
     var datos = '<div class="mini-datos">' +
         '<div><small>Dividendo después</small><strong class="numero">' + formatoPesos(numCamino.dividendo) + '</strong></div>' +
@@ -1682,46 +1646,84 @@
           '<button type="button" class="enlace" id="btn-cambiar-departamento" aria-haspopup="dialog">Cambiar</button></p>' +
       '</header>' +
       protagonista +
-      (justo ? '' : datos) +
-      '<div class="accion-fija">' + (eligio
-        ? '<a href="#camino/elegir" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-departamentos">Elegir departamento</a>'
-        : '<a href="#explorar" class="btn btn-primario btn-lg btn-bloque">' + (r.todaviaNo ? 'Ver qué lo cambia' : 'Elegir mi camino') + '</a>') +
-      '</div>' +
-      (eligio ? '<p class="texto-centro"><a href="#explorar" class="enlace">Ver mis caminos</a></p>' : '') +
-      recorridoCamino(0) +
-      lineaInversiones();
+      tarjetaSiguientePaso() +
+      tuPieCompacto();
+    iniciarSiguientePaso();
 
     if ($('numero-plazo')) {
       if (plazo.desde !== null && plazo.techo !== null && plazo.desde !== plazo.techo) $('numero-plazo').textContent = textoPlazos(plazo);
       else contarHasta($('numero-plazo'), plazoMostrado, plazo.techo, function (v) { return v === null ? '—' : textoPlazoMeses(v); });
       plazoMostrado = plazo.techo;
     }
-    var rangoMensual = $('rango-mensual');
-    if (rangoMensual) {
-      var pintar = function () {
-        var v = Number(rangoMensual.value);
-        rangoMensual.style.setProperty('--lleno', ((v - minimo) / (maximo - minimo) * 100).toFixed(1) + '%');
-        return v;
-      };
-      pintar();
-      rangoMensual.addEventListener('input', function () {
-        var v = pintar();
-        var x = plazosCon(perfil, v);
-        $('valor-mensual').textContent = formatoPesos(v);
-        $('numero-plazo').textContent = textoPlazos(x);
-        rangoMensual.setAttribute('aria-valuetext', formatoPesos(v) + ' al mes: ' + textoPlazos(x));
-        // La ventana brilla un instante cuando el plazo cambia.
-        var ventana = $('mi-ventana');
-        ventana.classList.remove('brilla'); void ventana.offsetWidth; ventana.classList.add('brilla');
-      });
-      rangoMensual.addEventListener('change', function () {
-        estado.ahorroMensual = Number(rangoMensual.value);
-        guardarEstado();
-        plazoMostrado = plazosCon(perfil, estado.ahorroMensual).techo;
-      });
-    }
     if ($('btn-ver-departamentos')) $('btn-ver-departamentos').addEventListener('click', function () { prepararProyectos(estado.caminoElegido); });
     $('btn-cambiar-departamento').addEventListener('click', function () { abrirCambiarRango($('btn-cambiar-departamento')); });
+  }
+
+
+  // ---------- S21-B2: Inicio en tres bloques: cuándo llegas · qué haces ahora · cuánto llevas ----------
+  var pasoInicio = null;
+  function fechaCorta(iso) { return formatoFecha(iso).replace(/ de \d{4}$/, ''); }
+  // Con compra: cuándo llegas según lo que falta del pie y la entrega del edificio.
+  function cuandoLlegasCompra(p) {
+    var pl = plazoTuPie(p, metaCompra(p));
+    return '<section class="tarjeta proximo" aria-labelledby="titulo-cuando">' +
+      '<p class="etiqueta" id="titulo-cuando">Tus llaves en</p>' +
+      '<strong class="numero display-2">' + textoMeses(pl.meses) + '</strong>' +
+      '<p class="texto-apoyo">' + fechaLlaves(pl.meses, hoyDemo()) + '</p></section>';
+  }
+  function tarjetaSiguientePaso() {
+    var s = fotoPasos();
+    var sp = siguientePaso(s, hoyDemo());
+    pasoInicio = sp;
+    if (sp.tipo === 'listo') return '';
+    var gana = sp.tipo === 'mision' ? (sp.gana.charAt(0) === '+' ? 'Ganas ' + sp.gana : 'Sirve para: ' + sp.gana) : sp.gana;
+    var href = destinoSiguiente(sp);
+    return '<section class="tarjeta siguiente-paso" aria-labelledby="titulo-siguiente">' +
+      '<p class="etiqueta">Hito ' + sp.hito.indice + ' de ' + sp.hito.total + (sp.cuesta ? SEP + sp.cuesta : '') + '</p>' +
+      '<h2 class="h3" id="titulo-siguiente">' + sp.titulo + '</h2>' +
+      (gana ? '<p class="siguiente-gana">' + icono('i-sube') + gana + '</p>' : '') +
+      (sp.plazo ? '<p class="chip chip-plazo">' + icono('i-calendario') + 'Hasta el ' + fechaCorta(sp.plazo) + '</p>' : '') +
+      '<div class="acciones">' + (href
+        ? '<a class="btn btn-primario btn-bloque" href="' + href + '">' + textoBoton(sp) + '</a>'
+        : '<button type="button" class="btn btn-primario btn-bloque" id="btn-siguiente" aria-haspopup="dialog">' + textoBoton(sp) + '</button>') +
+      '<button type="button" class="enlace" id="btn-recuerdame">Recuérdamelo el viernes</button></div>' +
+    '</section>';
+  }
+  function textoBoton(sp) { return sp.tipo === 'cuota' ? 'Pagar mi cuota' : (sp.tipo === 'mision' ? 'Hacerlo ahora' : 'Empezar'); }
+  // Adónde lleva la tarjeta: una dirección, o null si se abre la hoja del hito o la misión.
+  function destinoSiguiente(sp) {
+    if (sp.tipo === 'cuota') return '#pie';
+    if (sp.tipo === 'mision') return sp.id === 'equipo' ? '#perfil' : (sp.id === 'elegir' ? (estado.caminoElegido ? '#camino/elegir' : '#explorar') : null);
+    if (sp.id === 'numeros') return '#camino';
+    if (sp.id === 'pie') return '#pie';
+    if (sp.id === 'cuenta' || (sp.id === 'preaprobacion' && !(estado.compra && !estado.compra.carga))) return null;
+    if (estado.compra) return '#camino/' + rutaPasoActual();
+    return estado.caminoElegido ? '#camino/elegir' : '#explorar';
+  }
+  function iniciarSiguientePaso() {
+    var b = $('btn-siguiente');
+    if (b) b.addEventListener('click', function () {
+      if (pasoInicio.tipo === 'mision') abrirMision(pasoInicio.id, b); else abrirHito(pasoInicio.id, b);
+    });
+    if ($('btn-recuerdame')) $('btn-recuerdame').addEventListener('click', function () {
+      $('btn-recuerdame').remove();
+      toast('Te lo recordamos el viernes (simulado).');
+    });
+  }
+  // Tu pie, compacto: saldo, barra hacia la meta y "Bajo llave". Abre la pantalla Tu pie.
+  function tuPieCompacto() {
+    var s = fotoPasos();
+    if (!s.numeros) return '';
+    var pct = s.meta > 0 ? Math.min(100, Math.round(s.ahorrado / s.meta * 100)) : 0;
+    return '<a class="tarjeta pie-compacto" href="#pie">' +
+      '<span class="pie-compacto-fila"><span class="etiqueta">Tu pie</span>' +
+        (s.bajoLlave ? '<span class="chip chip-existe">' + icono('i-candado') + 'Bajo llave</span>' : '') + '</span>' +
+      (s.cuentaVivienda
+        ? '<strong class="numero h3">' + formatoPesos(s.ahorrado) + '</strong>' +
+          '<span class="avance-barra" aria-hidden="true"><span style="width:' + pct + '%"></span></span>' +
+          '<small>' + pct + ' % de ' + formatoRedondeado(s.meta) + '</small>'
+        : '<strong>Todavía sin cuenta de vivienda</strong>') +
+      '<span class="linea-ver">Ver <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span></a>';
   }
 
   function lineaInversiones() {
@@ -4443,7 +4445,7 @@
         '<h1 id="titulo-pasos" class="h2">Tus pasos</h1>' +
         '<p class="texto-apoyo">' + (camino ? 'Tu camino: ' + primeraMinuscula(camino) : 'Todavía no eliges camino') + '</p></header>' +
       (todaviaNo ? '<p class="tarjeta compacta aviso-todavia">' + icono('i-pronto') + '<span><strong>Todavía no</strong> ' +
-        '<a class="enlace" href="#explorar">Ver qué lo cambia</a></span></p>' : '') +
+        '<a class="enlace" href="#explorar">Ver qué lo cambia</a></span></p>' + (estado.modo === 'vivir' ? metaMesHtml() : '') : '') +
       '<section aria-labelledby="titulo-hitos" class="bloque">' +
         '<h2 class="h4" id="titulo-hitos">Hitos' + SEP + '<span class="texto-apoyo">' + (h.terminado ? 'Todos listos' : h.indice + ' de ' + h.total) + '</span></h2>' +
         '<ol class="hitos tarjeta">' + h.hitos.map(filaHito).join('') + '</ol>' +
@@ -4462,6 +4464,7 @@
       b.addEventListener('click', function () { abrirMision(b.dataset.mision, b); });
     });
     $('btn-todas-misiones').addEventListener('click', function () { abrirTodasMisiones($('btn-todas-misiones')); });
+    if ($('btn-meta-rango')) $('btn-meta-rango').addEventListener('click', function () { abrirCambiarRango($('btn-meta-rango')); });
   }
 
   // Marca un hito o misión como hecho (simulado), avisa y vuelve a dibujar donde esté.
