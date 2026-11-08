@@ -2206,3 +2206,30 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .falta-linea li { position: relative; padding: 0 0 14px 36px; counter-increment: falta; font-weight: 600; }
 .falta-linea li::before { content: counter(falta); position: absolute; left: 0; top: -2px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--blue-20); color: var(--blue-dark); font-size: 13px; font-weight: 800; }
 .falta-linea li:not(:last-child)::after { content: ''; position: absolute; left: 12px; top: 26px; bottom: 2px; width: 2px; background: var(--gray-semilight); }
+.btn-mantener.presionando .mantener-relleno { transition-duration: 2000ms; }
+.btn-mantener[aria-disabled="true"] { background: var(--gray-neutral); border-color: var(--gray-neutral); color: var(--white); }
+.firma-heroe { position: relative; overflow: hidden; display: grid; gap: 6px; margin-top: 16px; padding: 20px 18px; border-radius: 24px; color: var(--white); background: linear-gradient(160deg, var(--blue-dark) 0%, var(--blue-normal) 100%); box-shadow: var(--sombra-flota); }
+.firma-heroe h2 { margin: 0; color: var(--white); }
+.firma-heroe p { margin: 0; }
+.firma-chip { justify-self: start; padding: 4px 12px; border-radius: 999px; background: rgba(255, 255, 255, .2); font-size: 13px; font-weight: 700; }
+.firma-llave { position: absolute; right: 16px; top: 16px; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--yellow-normal); color: var(--gray-dark); transform: rotate(-20deg); }
+.firma-llave svg { width: 36px; height: 36px; }
+.firma-doc { border-top: 6px solid var(--blue-dark); }
+.firma-doc-cabeza { display: flex; gap: 12px; align-items: center; margin: 0 0 12px; }
+.firma-doc-cabeza > span:last-child { display: grid; }
+.firma-doc-cabeza h2 { margin: 0; }
+.firma-doc-cabeza small { color: var(--gray-semidark); font-size: 14px; }
+.firma-monto { display: grid; justify-items: center; gap: 2px; margin: 0 0 12px; padding: 14px; border-radius: 16px; background: var(--blue-20); text-align: center; }
+.firma-monto small { font-size: 14px; color: var(--gray-dark); }
+.firma-monto strong { font-size: 32px; line-height: 1.1; color: var(--blue-dark); }
+.tramites { list-style: none; margin: 8px 0 0; padding: 0; display: grid; }
+.tramites li { position: relative; padding: 0 0 16px 36px; color: var(--gray-semidark); }
+.tramites li::before { content: ''; position: absolute; left: 0; top: -1px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--gray-neutral); background: var(--white); box-sizing: border-box; }
+.tramites li:not(:last-child)::after { content: ''; position: absolute; left: 10px; top: 22px; bottom: 0; width: 2px; background: var(--gray-semilight); }
+.tramites li.hecho { color: var(--gray-dark); }
+.tramites li.hecho::before { border: 0; background: var(--green-normal) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-8.5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 16px no-repeat; }
+.tramites li.hecho::after { background: var(--green-normal); }
+.tramites li.actual { color: var(--blue-dark); font-weight: 700; }
+.tramites li.actual::before { border-color: var(--blue-dark); box-shadow: 0 0 0 4px var(--blue-20); }
+.firma-reviso { display: flex; gap: 12px; align-items: flex-start; margin: 16px 0 0; padding: 14px 16px; border-radius: 16px; background: var(--white); box-shadow: var(--sombra-tarjeta); font-weight: 600; cursor: pointer; }
+.firma-reviso input { flex: none; width: 24px; height: 24px; margin: 0; accent-color: var(--green-dark); }

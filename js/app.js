@@ -3225,7 +3225,6 @@
       '</section>';
 
     iniciarPlegables();
-    if (puedeSeguir) confeti();
     var seguir = $('btn-seguir-pie');
     if (seguir) {
       seguir.addEventListener('click', function () {
@@ -3624,20 +3623,31 @@
 
     $('panel-compra').innerHTML =
       tarjetaCompacta(p, 'Ya tienes', metaCompra(p)) + listaPasos(3) +
-      '<div class="logro bloque"' + (recienLlegado ? ' role="status"' : '') + '>' +
-        '<svg aria-hidden="true"><use href="#i-ok"/></svg>' +
-        '<p><strong>¡Juntaste tu pie!</strong></p>' +
-      '</div>' +
-      '<section class="tarjeta bloque" aria-labelledby="titulo-firma">' +
-        '<h2 class="h3" id="titulo-firma">Lo que firmas</h2>' +
+      // S24-B3: la alegría de llegar (héroe) y la seriedad del contrato (tarjeta tipo documento).
+      '<section class="firma-heroe"' + (recienLlegado ? ' role="status"' : '') + '>' +
+        '<span class="firma-llave" aria-hidden="true"><svg><use href="#i-llave"/></svg></span>' +
+        '<p class="firma-chip">Último paso</p>' +
+        '<h2 class="h3">¡Juntaste tu pie!</h2>' +
+        '<p>Solo falta firmar. Revisa con calma lo que firmas.</p>' +
+      '</section>' +
+      '<section class="tarjeta bloque firma-doc" aria-labelledby="titulo-firma">' +
+        '<p class="firma-doc-cabeza"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4M9 11h6M9 14.5h6M9 18h4"/></svg></span>' +
+          '<span><h2 class="h4" id="titulo-firma">Lo que firmas</h2><small>Contrato de crédito hipotecario Bci</small></span></p>' +
+        (arrendar ? '' : '<p class="firma-monto"><small>Pagas al mes</small><strong class="numero">' + formatoUF(e.dividendo / SUPUESTOS.uf) + '</strong><small>hoy son ' + formatoPesos(e.dividendo) + '</small></p>') +
         filasVivir +
         '<ul class="lista-check">' + credito + segunda + '</ul>' +
         '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
       '</section>' +
-      '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque btn-mantener" id="btn-firmar">' +
+      '<section class="tarjeta bloque" aria-labelledby="titulo-tramites">' +
+        '<h2 class="h4" id="titulo-tramites">Tus trámites</h2>' +
+        '<ol class="tramites"><li class="hecho">Preaprobación</li><li class="hecho">Tu pie</li><li class="hecho">Tasación y estudio de títulos</li>' +
+          '<li class="actual">Firma de la escritura</li><li>Inscripción y entrega de llaves</li></ol>' +
+      '</section>' +
+      '<label class="firma-reviso"><input type="checkbox" id="firma-reviso"><span>Revisé los montos y entiendo lo que firmo.</span></label>' +
+      '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque btn-mantener" id="btn-firmar" aria-disabled="true" aria-describedby="firma-explica">' +
         '<span class="mantener-relleno" aria-hidden="true"></span><span class="mantener-texto">Mantén para firmar</span></button></div>' +
         '<div class="acciones">' +
-        '<p class="texto-apoyo">Firma simulada.</p>' +
+        '<p class="texto-apoyo" id="firma-explica">Marca la casilla para firmar' + SEP + 'firma simulada.</p>' +
       '</div>';
 
     // S14-F5: mantener presionado 1,5 s para firmar. Con teclado (o con movimiento reducido), un toque firma.
@@ -3645,13 +3655,19 @@
     var espera = null;
     var presiono = false; // los clics de lectores de pantalla (VoiceOver, TalkBack) llegan sin pointerdown
     var reducir = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var reviso = $('firma-reviso');
+    reviso.addEventListener('change', function () {
+      boton.setAttribute('aria-disabled', String(!reviso.checked));
+      $('firma-explica').textContent = reviso.checked ? 'Mantén el botón 2 segundos' + SEP + 'firma simulada.' : 'Marca la casilla para firmar' + SEP + 'firma simulada.';
+    });
     function cancelar() { clearTimeout(espera); espera = null; boton.classList.remove('presionando'); }
     boton.addEventListener('pointerdown', function (ev) {
       presiono = true;
+      if (!reviso.checked) { temblar(reviso.parentNode); return; }
       if (reducir || ev.button > 0) return;
       clearTimeout(espera);
       boton.classList.add('presionando');
-      espera = setTimeout(function () { espera = null; boton.classList.remove('presionando'); firmar(); }, 1500);
+      espera = setTimeout(function () { espera = null; boton.classList.remove('presionando'); firmar(); }, 2000);
     });
     ['pointerup', 'pointerleave', 'pointercancel', 'lostpointercapture'].forEach(function (t) { boton.addEventListener(t, function () { if (espera) cancelar(); }); });
     boton.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
@@ -3664,6 +3680,7 @@
     function firmar() {
       // Solo firma si el botón sigue en pantalla (por ejemplo, si no se cambió de paso mientras se mantenía).
       if (!document.body.contains(boton)) return;
+      if (!reviso.checked) { temblar(reviso.parentNode); reviso.focus(); return; }
       conCarga(boton, function () {
         // El ahorro se usó para escriturar: queda en cero.
         estado.ahorrado = 0;
