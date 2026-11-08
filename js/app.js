@@ -4959,8 +4959,8 @@
           '<span class="camino-boton-ir" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></a></li>';
       }).join('') + '</ul>' +
       (estado.modo === 'arrendar' && r.todaviaNo ? '<p class="texto-centro"><a class="enlace" href="#explorar/cambia">Ver qué lo cambia</a></p>' : '') +
-      (estado.favoritos.length ? '<a class="tarjeta fila fila-guardados" href="#explorar/guardados">' + icono('i-corazon', 'icono-grande') +
-        '<span><strong>Tus guardados</strong><small>' + plural(estado.favoritos.length, 'departamento', 'departamentos') + '</small></span>' +
+      (guardadosProyectos().length ? '<a class="tarjeta fila fila-guardados" href="#explorar/guardados">' + icono('i-corazon', 'icono-grande') +
+        '<span><strong>Tus guardados</strong><small>' + plural(guardadosProyectos().length, 'departamento', 'departamentos') + '</small></span>' +
         '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' : '') +
       '<section class="bloque" aria-labelledby="titulo-otras-formas"><h2 class="h4" id="titulo-otras-formas">Otras formas</h2>' +
         '<ul class="filas tarjeta"><li><a class="fila" href="#explorar/usados"><span><strong>Crédito de siempre: usados</strong>' +
@@ -5049,6 +5049,8 @@
 
 
   // ---------- S23-C: guardar departamentos ----------
+  // Los usados también se pueden guardar, pero Tus guardados muestra solo proyectos.
+  function guardadosProyectos() { return estado.favoritos.map(buscarProyecto).filter(Boolean); }
   function esFavorito(id) { return estado.favoritos.indexOf(id) !== -1; }
   function botonFavorito(p) {
     var on = esFavorito(p.id);
@@ -5112,23 +5114,47 @@
   function renderUsados() {
     var cont = $('caminos-contenido');
     var vivir = estado.modo === 'vivir';
+    // S24-B2: como Un camino: descripción, filtros y tarjetas con foto.
+    var lista = USADOS.filter(function (u) {
+      return (!filtroUsados.dos || u.dormitorios === 2) && (!filtroUsados.barato || u.listaUF <= 2000) && (!filtroUsados.fav || esFavorito(u.id));
+    });
+    var chip = function (k, texto) {
+      return '<button type="button" class="chip chip-filtro' + (k === 'fav' ? ' chip-favoritos' : '') + '" data-usado-filtro="' + k + '" aria-pressed="' + !!filtroUsados[k] + '">' +
+        (k === 'fav' ? icono('i-corazon') : '') + texto + '</button>';
+    };
     cont.innerHTML =
       '<a href="#explorar" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Explorar</a>' +
       '<header class="encabezado"><p class="camino-boton-cabeza"><span class="chip chip-existe">Existe hoy</span></p>' +
-        '<h1 id="titulo-caminos" class="h2">Crédito de siempre: usados</h1>' +
-        '<p class="texto-apoyo">Bci presta el 80' + NBSP + '%. Sin subsidio a la tasa, sin garantía y sin IVA cero.</p></header>' +
-      '<ul class="lista-usados">' + USADOS.map(function (u) {
-        var calza = ['Crédito de siempre'].concat(vivir && u.listaUF <= DS1.tramo4.hastaUF ? ['DS1'] : []);
+        '<h1 id="titulo-caminos" class="h2">Crédito de siempre</h1>' +
+        '<p class="texto-apoyo">Bci te presta hasta el 80' + NBSP + '% del valor y tú juntas el 20' + NBSP + '% de pie. Sirve para departamentos nuevos y usados.</p></header>' +
+      '<div class="chips-explorar" role="group" aria-label="Filtrar">' + chip('dos', '2 dormitorios') + chip('barato', 'Hasta ' + formatoUF(2000)) + chip('fav', 'Favoritos') + '</div>' +
+      '<h2 class="h4">' + plural(lista.length, 'departamento', 'departamentos') + '</h2>' +
+      (lista.length ? '<ul class="lista-usados">' + lista.map(function (u) {
+        var calza = vivir && u.listaUF <= DS1.tramo4.hastaUF;
+        var tipo = (u.dormitorios === 2 ? '2d' : u.dormitorios === 1 ? '1d' : 'estudio') + '-living';
+        var foto = FOTOS.interiores[tipo];
+        var titulo = (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + ' en ' + esc(u.comuna);
         return '<li class="tarjeta usado">' +
-          '<p class="usado-fila"><strong class="h4">' + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + SEP + u.m2 + NBSP + 'm²</strong>' +
-            (!vivir && u.dfl2 ? '<span class="chip chip-existe">DFL-2</span>' : '') + '</p>' +
-          '<p class="texto-apoyo">' + esc(u.comuna) + SEP + 'de ' + u.anio + '</p>' +
+          (foto ? '<img class="usado-foto" src="fotos/interiores/' + encodeURI(foto) + '" alt="Living de un departamento de ' + (u.dormitorios || 1) + ' dormitorio' + (u.dormitorios > 1 ? 's' : '') + ' (foto referencial)" loading="lazy" width="800" height="600">' : '') +
+          botonFavorito({ id: u.id, nombre: titulo }) +
+          '<p class="usado-etiqueta">Usado' + SEP + 'de ' + u.anio + (!vivir && u.dfl2 ? SEP + 'DFL-2' : '') + '</p>' +
+          '<h3 class="h4">' + titulo + '</h3>' +
+          '<p class="texto-apoyo">' + u.m2 + NBSP + 'm²' + SEP + plural(u.banos || 1, 'baño', 'baños') + '</p>' +
           '<p class="usado-precio"><strong class="numero h3">' + formatoUF(u.listaUF) + '</strong> <span class="texto-apoyo">' + formatoRedondeado(ufAPesos(u.listaUF)) + '</span></p>' +
-          '<p class="texto-apoyo"><small>Calza con: ' + calza.join(', ') + '</small></p>' +
+          '<p class="texto-apoyo"><small>Pie de ' + formatoRedondeado(ufAPesos(u.listaUF * 0.2)) + (calza ? SEP + 'calza con DS1' : '') + '</small></p>' +
         '</li>';
-      }).join('') + '</ul>' +
-      '<p class="texto-apoyo texto-centro"><small>Ejemplos simulados</small></p>';
+      }).join('') + '</ul>' : '<p class="texto-apoyo">' + (filtroUsados.fav ? 'Todavía no guardas ninguno.' : 'Ninguno con estos filtros.') + '</p>') +
+      '<p class="texto-apoyo texto-centro"><small>Ejemplos simulados' + SEP + 'fotos referenciales</small></p>';
+    cont.querySelectorAll('[data-usado-filtro]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var k = b.dataset.usadoFiltro;
+        filtroUsados[k] = !filtroUsados[k];
+        renderUsados();
+        cont.querySelector('[data-usado-filtro="' + k + '"]').focus();
+      });
+    });
   }
+  var filtroUsados = {};
   // Hacerlo mi camino: muestra qué cambia y pide confirmar. Lo hecho (cuenta, ahorro, misiones) se conserva.
   function confirmarMiCamino(id, boton) {
     var perfil = perfilActual();
