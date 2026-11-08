@@ -1997,7 +1997,7 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .siguiente-paso .btn-primario:focus-visible, .siguiente-paso .enlace:focus-visible { outline-color: var(--white); }
 
 /* Tus pasos: tu escalera con colores Bci y misiones en tarjetas */
-.escalera { padding: 18px 16px 8px; }
+.tu-escalera { padding: 18px 16px 8px; }
 .escalera-cabeza { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .escalera-cabeza h2 { margin: 0; }
 .escalera-cabeza .chip { margin: 0; background: var(--green-20); color: var(--green-dark); border-color: transparent; font-weight: 700; }
@@ -2005,7 +2005,7 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .escalera-barra i { flex: 1; height: 8px; border-radius: 4px; background: var(--gray-semilight); }
 .escalera-barra i.hecho { background: var(--green-normal); }
 .escalera-barra i.actual { background: linear-gradient(90deg, var(--green-normal) 50%, var(--gray-semilight) 50%); }
-.escalera .hitos { padding: 0; }
+.tu-escalera .hitos { padding: 0; }
 .hito-marca, .fila > .hito-marca { border-radius: 10px; border: 0; }
 .hito.pendiente.color-azul .hito-marca { background: var(--blue-20); color: var(--blue-dark); }
 .hito.pendiente.color-verde .hito-marca { background: var(--green-20); color: var(--green-dark); }
@@ -2042,7 +2042,7 @@ body.en-preguntas .accion-fija { bottom: calc(env(safe-area-inset-bottom) + 8px)
 .camino-boton-cabeza { justify-content: space-between; align-items: flex-start; margin-right: -48px; }
 .camino-boton .chip { background: rgba(255, 255, 255, .18); color: var(--white); border-color: transparent; font-weight: 700; }
 .camino-boton.color-2 .chip { background: rgba(55, 71, 79, .1); color: var(--gray-dark); }
-.camino-icono { width: 36px; height: 36px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.camino-dibujo { width: 36px; height: 36px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .camino-boton-ir { position: absolute !important; right: 16px; bottom: 18px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--white); }
 .camino-boton-ir svg { width: 18px; height: 18px; fill: none; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
 .color-0 .camino-boton-ir svg { stroke: var(--green-dark); }

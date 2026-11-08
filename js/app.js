@@ -4626,7 +4626,7 @@
         '<a class="enlace" href="#explorar">Ver qué lo cambia</a></span></p>' + (estado.modo === 'vivir' ? metaMesHtml() : '') : '') +
       departamentoEnConstruccion(h) +
       '<section aria-labelledby="titulo-hitos" class="bloque">' +
-        '<div class="tarjeta escalera">' +
+        '<div class="tarjeta tu-escalera">' +
           '<div class="escalera-cabeza"><h2 class="h4" id="titulo-hitos">Tu escalera</h2>' +
             '<span class="chip">' + (h.terminado ? 'Todos listos' : listosDe(h) + ' de ' + h.total + ' listos') + '</span></div>' +
           '<p class="escalera-barra" aria-hidden="true">' + h.hitos.map(function (x) { return '<i class="' + x.estado + '"></i>'; }).join('') + '</p>' +
@@ -4896,7 +4896,7 @@
       ? 'M9 7.5a3 3 0 1 0 6 0 3 3 0 0 0-6 0M6.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6M2.7 9.5a2.3 2.3 0 1 0 4.6 0 2.3 2.3 0 0 0-4.6 0M16.7 9.5a2.3 2.3 0 1 0 4.6 0 2.3 2.3 0 0 0-4.6 0M1.5 18.5c0-2.4 1.5-4.3 3.5-4.3M22.5 18.5c0-2.4-1.5-4.3-3.5-4.3'
       : (id === 'individual-vivir' ? 'M3 9.5L12 4l9 5.5zM5 10v7.5M9.7 10v7.5M14.3 10v7.5M19 10v7.5M3 20.5h18'
         : 'M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6zM8.5 12.2l2.4 2.4 4.6-4.8');
-    return '<svg class="camino-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
+    return '<svg class="camino-dibujo" viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
   }
   function etiquetaCamino(id, r) {
     if (id === estado.caminoElegido) return '<span class="chip chip-recomendado">Tu camino</span>';
