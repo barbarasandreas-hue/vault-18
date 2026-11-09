@@ -25,13 +25,19 @@ test('S26: todas las comunas de los proyectos tienen su barrio', () => {
   d.PROYECTOS.forEach((p) => assert.ok(d.BARRIOS[p.comuna], p.comuna));
 });
 
-test('Tu departamento se construye con tu pie: terreno, cada 20 % una parte y pie listo', () => {
-  assert.strictEqual(c.etapaPie(0, 10000000, true), 0);
-  assert.strictEqual(c.etapaPie(3000000, 10000000, false), 0); // sin cuenta de vivienda: terreno
-  assert.strictEqual(c.etapaPie(100000, 10000000, true), 1);
-  assert.strictEqual(c.etapaPie(2800000, 10000000, true), 2);
-  assert.strictEqual(c.etapaPie(5000000, 10000000, true), 3);
-  assert.strictEqual(c.etapaPie(9990000, 10000000, true), 5);
-  assert.strictEqual(c.etapaPie(10000000, 10000000, true), 6);
-  assert.strictEqual(c.ETAPAS_PIE[6], 'Pie listo');
+test('Tu departamento se construye con tu pie: 37 partes, cada cuota se nota', () => {
+  assert.strictEqual(c.PIEZAS_OBRA.length, 37);
+  assert.strictEqual(c.avanceObra(3000000, 10000000, false).etapa, 'terreno'); // sin cuenta de vivienda
+  assert.strictEqual(c.avanceObra(0, 10000000, true).listas, 0);
+  const a = c.avanceObra(100000, 10000000, true);
+  assert.strictEqual(a.etapa, 'cimientos');
+  assert.ok(a.parcial > 0); // un aporte chico ya hace crecer la parte en obra
+  // Pie de $12,3 millones y $400 mil al mes: cada cuota termina al menos una parte.
+  for (let k = 1; k < 31; k++) {
+    const antes = c.avanceObra(400000 * (k - 1), 12300000, true).listas;
+    const ahora = c.avanceObra(400000 * k, 12300000, true).listas;
+    assert.ok(ahora > antes || ahora === 37, `cuota ${k}`);
+  }
+  assert.strictEqual(c.avanceObra(10000000, 10000000, true).etapa, 'listo');
+  assert.strictEqual(c.avanceObra(10000000 / 37 * 1.5, 10000000, true).etapa, 'estructura');
 });

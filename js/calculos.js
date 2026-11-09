@@ -1666,13 +1666,23 @@ function etapaConstruccion(h) {
   return h.terminado ? ETAPAS_CONSTRUCCION.length - 1 : h.hitos.filter(function (x) { return x.estado === 'hecho'; }).length;
 }
 // 9-nov: tu departamento se construye con tu pie, como la casa del prototipo en Base44.
-// 0 = terreno (sin cuenta o sin ahorro); 1 a 5 = cada 20 % del pie suma una parte; 6 = pie listo.
-var ETAPAS_PIE = ['Terreno', 'Cimientos', 'Estructura', 'Muros', 'Ventanas', 'Techo y puerta', 'Pie listo'];
-function etapaPie(ahorrado, meta, tieneCuenta) {
-  if (!tieneCuenta || !(ahorrado > 0) || !(meta > 0)) return 0;
-  var a = ahorrado / meta;
-  if (a >= 1) return ETAPAS_PIE.length - 1;
-  return Math.min(5, 1 + Math.floor(a * 5));
+// 37 partes, piso por piso (estructura, 3 muros y 3 ventanas; la puerta en el primero) y el techo.
+// Con un pie de unos $12 millones y $400 mil al mes, cada cuota termina una parte; la parte en obra
+// crece con lo que llevas, así que cualquier aporte se nota.
+var PISOS_OBRA = 5;
+var PIEZAS_OBRA = (function () {
+  var l = ['cimientos'];
+  for (var f = 0; f < PISOS_OBRA; f++) l.push('estructura', 'muros', 'muros', 'muros', 'ventanas', f === 0 ? 'puerta' : 'ventanas', 'ventanas');
+  l.push('techo');
+  return l;
+})();
+function avanceObra(ahorrado, meta, tieneCuenta) {
+  var total = PIEZAS_OBRA.length;
+  if (!tieneCuenta || !(ahorrado > 0) || !(meta > 0)) return { listas: 0, parcial: 0, total: total, etapa: 'terreno' };
+  var x = Math.min(1, ahorrado / meta) * total;
+  var listas = Math.floor(x + 1e-9);
+  if (listas >= total) return { listas: total, parcial: 0, total: total, etapa: 'listo' };
+  return { listas: listas, parcial: x - listas, total: total, etapa: PIEZAS_OBRA[listas] };
 }
 // Guardar o sacar un departamento de favoritos. Devuelve una lista nueva, sin repetidos.
 function alternarFavorito(lista, id) {
@@ -1702,8 +1712,9 @@ function mesDueno(x) {
 if (typeof module !== 'undefined') module.exports = {
   mesDueno: mesDueno,
   ETAPAS_CONSTRUCCION: ETAPAS_CONSTRUCCION,
-  ETAPAS_PIE: ETAPAS_PIE,
-  etapaPie: etapaPie,
+  PISOS_OBRA: PISOS_OBRA,
+  PIEZAS_OBRA: PIEZAS_OBRA,
+  avanceObra: avanceObra,
   etapaConstruccion: etapaConstruccion,
   alternarFavorito: alternarFavorito,
   mensajeRegalo: mensajeRegalo,

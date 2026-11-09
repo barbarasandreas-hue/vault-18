@@ -1523,34 +1523,30 @@
   }
   // S25: tu pie dentro del azul de Inicio, como en el canvas.
   var VENTANAS_CANVAS = [1, 0, 0, 1, 'tu', 1, 0, 1, 1, 1, 1, 0, 1];
-  function piePlegadoInicio() {
-    var s = fotoPasos();
-    if (!s.numeros) return '';
-    var pct = s.meta > 0 ? Math.min(100, Math.round(s.ahorrado / s.meta * 100)) : 0;
-    return '<a class="noche-pie" href="#pie">' +
-      '<span>Tu pie' + (s.cuentaVivienda ? ' - Cuenta Vivienda' : '') + '</span>' +
-      (s.cuentaVivienda
-        ? '<strong>' + formatoPesos(s.ahorrado) + '</strong><span class="noche-pie-barra" aria-hidden="true"><i style="width:' + pct + '%"></i></span>' +
-          '<small>' + pct + NBSP + '% de ' + formatoRedondeado(s.meta) + '</small>'
-        : '<strong>Todavía sin cuenta de vivienda</strong>') +
-      '<span class="noche-pie-ver">Ver ›</span></a>';
-  }
   // 9-nov: abajo en Inicio, tu departamento en construcción a la izquierda y qué hacer a la derecha.
   // Sin cuenta: la invitación a empezar. Con cuenta: lo que va y seguir sumando.
   function tarjetaObra() {
     var s = fotoPasos();
     if (!s.numeros) return '';
-    var e = etapaPieActual(s);
+    var o = avanceObraDe(s);
+    if (!s.cuentaVivienda)
+      return '<section class="tarjeta tarjeta-obra" aria-labelledby="titulo-obra">' +
+        '<div class="obra-izq">' + obraSvg(o) + '</div><div class="obra-der">' +
+          '<h2 class="h5" id="titulo-obra">Comienza a construir tu pie para tu departamento</h2>' +
+          '<a class="btn btn-primario btn-sm" href="#pie">Abrir mi cuenta</a></div></section>';
+    // Comentario 9-nov: Tu pie (Cuenta Vivienda) y su avance van en la misma tarjeta que tu departamento en obra.
     var pct = s.meta > 0 ? Math.min(100, Math.round(s.ahorrado / s.meta * 100)) : 0;
-    var derecha = !s.cuentaVivienda
-      ? '<h2 class="h5" id="titulo-obra">Comienza a construir tu pie para tu departamento</h2>' +
-        '<a class="btn btn-primario btn-sm" href="#pie">Abrir mi cuenta</a>'
-      : '<p class="etiqueta">' + textoEtapaPie(e) + '</p>' +
-        '<h2 class="h5" id="titulo-obra">' + (e === 6 ? 'Listo para el siguiente paso' : 'Cada cuota suma una parte') + '</h2>' +
-        '<p class="obra-pct">' + pct + NBSP + '% de tu pie</p>' +
-        '<a class="btn btn-primario btn-sm" href="#pie">' + (e === 6 ? 'Ver tu pie' : 'Sumar a mi pie') + '</a>';
-    return '<section class="tarjeta tarjeta-obra" aria-labelledby="titulo-obra">' +
-      '<div class="obra-izq">' + obraSvg(e) + '</div><div class="obra-der">' + derecha + '</div></section>';
+    return '<a class="tarjeta tarjeta-obra con-pie" href="#pie" aria-label="Tu pie: ' + formatoPesos(s.ahorrado) + ', ' + pct + ' % de ' + formatoRedondeado(s.meta) + '. ' + textoEtapaPie(o) + '. Ver tu pie">' +
+      '<div class="obra-izq">' + obraSvg(o) + '</div>' +
+      '<div class="obra-der">' +
+        '<span class="obra-titulo">Tu pie' + SEP + 'Cuenta Vivienda</span>' +
+        '<strong class="numero">' + formatoPesos(s.ahorrado) + '</strong>' +
+        '<span class="obra-etapa-chica">' + textoEtapaPie(o) + '</span>' +
+      '</div>' +
+      '<span class="obra-barra" aria-hidden="true"><i style="width:' + pct + '%"></i></span>' +
+      '<span class="obra-pie-linea"><small>' + pct + NBSP + '% de ' + formatoRedondeado(s.meta) + '</small>' +
+        '<span class="linea-ver">Ver <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span></span>' +
+    '</a>';
   }
 
 
@@ -1590,7 +1586,6 @@
             '<div class="noche-edificio" aria-hidden="true"><div class="noche-fachada">' +
               VENTANAS_CANVAS.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
             '</div></div>' +
-            piePlegadoInicio() +
           '</section>') +
       // S23-A: vuelven el slider "Si juntas al mes" y lo que pagas después (pedido del 7-nov).
       '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
@@ -1816,7 +1811,6 @@
             }).join('') +
           '</div></div>' +
           // Comentario 9-nov: tu pie arriba, dentro del azul, como en el canvas.
-          piePlegadoInicio() +
         '</section>' +
         '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
           '<p class="si-juntas-fila"><label for="rango-mensual" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-mensual">' + formatoPesos(mensual) + '</strong></p>' +
@@ -1937,7 +1931,6 @@
       '<div class="noche-edificio" aria-hidden="true"><div class="noche-fachada">' +
         VENTANAS_CANVAS.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
       '</div></div>' +
-      piePlegadoInicio() +
     '</section>';
   }
   function tarjetaSiguientePaso() {
@@ -4914,41 +4907,48 @@
   }
 
 
-  // ---------- S23-B: tu departamento se construye con tus hitos ----------
-  // Como la casa de ladrillos del prototipo en Base44: cada hito hecho suma una etapa al edificio.
-  var PIEZAS_CONSTRUCCION = [
-    // 1 Cimientos
-    '<rect class="cn-gris" x="58" y="124" width="124" height="7" rx="1"/><path class="cn-linea-fina" d="M70 124v-4M90 124v-4M110 124v-4M130 124v-4M150 124v-4M170 124v-4"/>',
-    // 2 Estructura
-    '<path class="cn-linea" d="M64 124V44M98 124V44M142 124V44M176 124V44M60 44h120M60 72h120M60 100h120"/>',
-    // 3 Muros
-    '<rect class="cn-muro" x="62" y="44" width="116" height="80"/>',
-    // 4 Ventanas
-    '<g class="cn-ventanas"><rect x="72" y="52" width="18" height="13" rx="2"/><rect x="111" y="52" width="18" height="13" rx="2"/><rect x="150" y="52" width="18" height="13" rx="2"/>' +
-      '<rect x="72" y="80" width="18" height="13" rx="2"/><rect id="cn-tu-ventana" x="111" y="80" width="18" height="13" rx="2"/><rect x="150" y="80" width="18" height="13" rx="2"/>' +
-      '<rect x="72" y="106" width="18" height="12" rx="2"/><rect x="150" y="106" width="18" height="12" rx="2"/></g>',
-    // 5 Techo y puerta
-    '<path class="cn-techo" d="M56 44h128l-8-10H64z"/><rect class="cn-puerta" x="111" y="104" width="18" height="20" rx="2"/>',
-    // 6 Es tuyo: tu ventana se enciende, un árbol y la llave
-    '<rect class="cn-luz" x="111" y="80" width="18" height="13" rx="2"/><circle class="cn-arbol" cx="200" cy="108" r="12"/><path class="cn-linea" d="M200 120v10"/>' +
-      '<g class="cn-llave"><circle cx="34" cy="40" r="7"/><path d="M41 40h16M52 40v5M56 40v4"/></g>'
-  ];
-  // 9-nov: tu departamento se construye con tu pie (Inicio y Tu pie). Cada 20 % del pie suma una parte.
-  function etapaPieActual(s) { return etapaPie(s.ahorrado, s.meta, s.cuentaVivienda); }
-  function textoEtapaPie(e) { return e === 0 ? 'Terreno listo' : e === 6 ? '¡Tu pie está listo!' : 'Construyendo: ' + ETAPAS_PIE[e].toLowerCase(); }
-  function obraSvg(etapa) {
+  // ---------- 9-nov: tu departamento se construye con tu pie (Inicio y Tu pie) ----------
+  // Como la casa del prototipo en Base44. PIEZAS_OBRA (calculos.js): cimientos, piso por piso
+  // (estructura, 3 muros, 3 ventanas; la puerta en el primero) y el techo. La parte en obra crece con lo que llevas.
+  var ANCHO_BAHIA = 116 / 3, ALTO_PISO = 80 / PISOS_OBRA;
+  function piezaObra(i) {
+    if (i === 0) return '<rect class="cn-gris" x="58" y="124" width="124" height="7" rx="1"/><path class="cn-linea-fina" d="M70 124v-4M90 124v-4M110 124v-4M130 124v-4M150 124v-4M170 124v-4"/>';
+    if (i === PIEZAS_OBRA.length - 1) return '<path class="cn-techo" d="M56 44h128l-8-10H64z"/>';
+    var f = Math.floor((i - 1) / 7), r = (i - 1) % 7;
+    var abajo = 124 - f * ALTO_PISO, arriba = abajo - ALTO_PISO;
+    if (r === 0) {
+      var cols = [0, 1, 2, 3].map(function (k) { return 'M' + (62 + k * ANCHO_BAHIA).toFixed(1) + ' ' + abajo + 'V' + arriba; }).join('');
+      return '<path class="cn-linea" d="' + cols + 'M60 ' + arriba + 'h120"/>';
+    }
+    var k = (r - 1) % 3, x = 62 + k * ANCHO_BAHIA;
+    if (r <= 3) return '<rect class="cn-muro" x="' + x.toFixed(1) + '" y="' + arriba + '" width="' + ANCHO_BAHIA.toFixed(1) + '" height="' + ALTO_PISO + '"/>';
+    if (f === 0 && k === 1) return '<rect class="cn-puerta" x="' + (x + 10.3).toFixed(1) + '" y="' + (arriba + 3) + '" width="18" height="' + (ALTO_PISO - 3) + '" rx="2"/>';
+    return '<rect class="cn-ventana" x="' + (x + 11).toFixed(1) + '" y="' + (arriba + 4) + '" width="17" height="' + (ALTO_PISO - 8) + '" rx="2"/>';
+  }
+  function avanceObraDe(s) { return avanceObra(s.ahorrado, s.meta, s.cuentaVivienda); }
+  var NOMBRE_PIEZA = { cimientos: 'los cimientos', estructura: 'la estructura', muros: 'los muros', ventanas: 'las ventanas', puerta: 'la puerta', techo: 'el techo' };
+  function textoEtapaPie(o) { return o.etapa === 'terreno' ? 'Terreno listo' : o.etapa === 'listo' ? '¡Tu pie está listo!' : 'Construyendo ' + NOMBRE_PIEZA[o.etapa]; }
+  function obraSvg(o) {
     var antes = estado.construido;
-    var nuevaDesde = antes === null || antes > etapa ? etapa : antes;
-    if (antes !== etapa) { estado.construido = etapa; guardarEstado(); }
-    var grua = etapa >= 1 && etapa < 6
+    var nuevaDesde = antes === null || antes > o.listas ? o.listas : antes;
+    if (antes !== o.listas) { estado.construido = o.listas; guardarEstado(); }
+    var terminado = o.etapa === 'listo';
+    var grua = o.etapa !== 'terreno' && !terminado
       ? '<g class="cn-grua"><path d="M206 130V20M190 20h34M206 20l-10 8M196 20v14"/><rect x="192" y="34" width="8" height="6"/></g>' : '';
-    var piezas = PIEZAS_CONSTRUCCION.slice(0, etapa).map(function (svg, i) {
-      return '<g class="cn-pieza' + (i >= nuevaDesde ? ' cn-nueva' : '') + '" style="--i:' + (i - nuevaDesde) + '">' + svg + '</g>';
-    }).join('');
-    // Sin empezar: el terreno con su letrero y el contorno punteado de lo que vas a construir.
+    var piezas = '';
+    for (var i = 0; i < o.listas; i++)
+      piezas += '<g class="cn-pieza' + (i >= nuevaDesde ? ' cn-nueva' : '') + '" style="--i:' + (i - nuevaDesde) + '">' + piezaObra(i) + '</g>';
+    // La parte en obra: crece desde abajo con lo que llevas de ella (al menos un poco, para que se vea).
+    if (o.parcial > 0 && o.listas < o.total)
+      piezas += '<g class="cn-parcial" style="--f:' + Math.max(0.2, o.parcial).toFixed(2) + '">' + piezaObra(o.listas) + '</g>';
+    // Pie listo: tu ventana se enciende, un árbol y la llave.
+    var tuVentana = 1 + 2 * 7 + 5;
+    var fin = terminado ? '<g class="cn-pieza">' + piezaObra(tuVentana).replace('cn-ventana', 'cn-luz') +
+      '<circle class="cn-arbol" cx="200" cy="108" r="12"/><path class="cn-linea" d="M200 120v10"/>' +
+      '<g class="cn-llave"><circle cx="34" cy="40" r="7"/><path d="M41 40h16M52 40v5M56 40v4"/></g></g>' : '';
     var terreno = '<path class="cn-suelo" d="M10 130h220"/>' +
-      (etapa === 0 ? '<path class="cn-contorno" d="M62 124V44h116v80M56 44h128l-8-10H64z"/><g class="cn-letrero"><path d="M200 130v-26"/><rect x="174" y="88" width="52" height="18" rx="3"/></g>' : '');
-    return '<svg class="obra-svg" viewBox="0 0 240 140" aria-hidden="true">' + terreno + grua + piezas + '</svg>';
+      (o.etapa === 'terreno' ? '<path class="cn-contorno" d="M62 124V44h116v80M56 44h128l-8-10H64z"/><g class="cn-letrero"><path d="M200 130v-26"/><rect x="174" y="88" width="52" height="18" rx="3"/></g>' : '');
+    return '<svg class="obra-svg" viewBox="22 12 202 122" aria-hidden="true">' + terreno + grua + piezas + fin + '</svg>';
   }
 
   function renderTusPasos() {
@@ -5146,7 +5146,7 @@
     }
     if (!s.cuentaVivienda) {
       cont.innerHTML = cabeza +
-        '<section class="tarjeta bloque obra-invita"><div class="obra-claro">' + obraSvg(0) + '</div>' +
+        '<section class="tarjeta bloque obra-invita"><div class="obra-claro">' + obraSvg(avanceObra(0, 0, false)) + '</div>' +
           '<h2 class="h4">Comienza a construir tu pie para tu departamento</h2>' +
           '<p class="texto-apoyo">Tu pie vive en una cuenta de vivienda Bci, en UF. Cada cuota suma una parte.</p></section>' +
         selloProteccion(s) +
@@ -5173,7 +5173,7 @@
         '<div class="pie-barra" aria-hidden="true"><span style="width:' + Math.max(1, pctPie) + '%"></span>' + [25, 50, 75].map(function (m) {
           return '<i style="left:' + m + '%"' + (pctPie >= m ? ' class="pasada"' : '') + '></i>'; }).join('') + '</div>' +
         '<p class="pie-barra-texto"><span>' + pctPie + NBSP + '% de ' + formatoRedondeado(meta) + '</span><span>100' + NBSP + '%</span></p>' +
-        '<div class="obra-pie">' + obraSvg(etapaPieActual(s)) + '<p class="obra-etapa">' + textoEtapaPie(etapaPieActual(s)) + '</p></div>' +
+        '<div class="obra-pie"><div class="obra-claro">' + obraSvg(avanceObraDe(s)) + '</div><p class="obra-etapa">' + textoEtapaPie(avanceObraDe(s)) + '</p></div>' +
         (estado.ahorroIniciado ? '<span class="pie-racha"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>' +
           (racha > 0 ? plural(racha, 'mes seguido', 'meses seguidos') : 'Tu racha empieza este mes') + '</span>' : '') +
       '</section>' +

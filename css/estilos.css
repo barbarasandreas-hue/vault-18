@@ -3095,12 +3095,8 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .obra-svg { display: block; width: 100%; height: auto; overflow: visible; }
 .obra-etapa { margin: 4px 0 0; font-size: 14px; font-weight: 600; }
 /* En Tu pie: la obra a la derecha del saldo, en el azul. */
-.obra-pie { align-self: center; width: 210px; margin: 8px auto 4px; text-align: center; }
-.obra-pie .cn-muro { fill: var(--blue-20); }
-.obra-pie .cn-ventanas rect { fill: var(--blue-60); stroke: var(--blue-dark); }
-.obra-pie .cn-techo, .obra-pie .cn-puerta { fill: var(--yellow-normal); stroke: none; }
-.obra-pie .cn-linea, .obra-pie .cn-linea-fina { stroke: var(--blue-20); }
-.obra-pie .cn-gris { fill: var(--blue-40); }
+.obra-pie { margin: 12px 0 4px; text-align: center; }
+.obra-pie .obra-claro { padding: 10px 24px 4px; }
 .saldo-pie .obra-etapa { color: var(--white); }
 /* Sin cuenta: el terreno sobre fondo claro. */
 .obra-invita { display: grid; gap: 8px; }
@@ -3114,3 +3110,18 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .obra-der h2 { margin: 0; font-weight: 400; line-height: 1.25; }
 .obra-pct { margin: 0; font-size: 14px; color: var(--gray-semidark); }
 .obra-der .btn { margin-top: 4px; padding-inline: 16px; white-space: nowrap; }
+/* 9-nov: 37 partes; la parte en obra crece desde abajo. Mismo celeste en Inicio y en Tu pie. */
+.cn-muro { stroke: var(--white); stroke-width: 1; }
+.cn-ventana { fill: var(--blue-dark); stroke: var(--white); stroke-width: 1.5; }
+.cn-parcial { opacity: .75; transform: scaleY(var(--f)); transform-origin: bottom; transform-box: fill-box; transition: transform var(--dur-media) var(--ease-salida); }
+.cn-parcial .cn-muro { fill: var(--blue-60); }
+/* Comentario 9-nov: Tu pie y su avance dentro de la tarjeta de tu departamento en obra. */
+.tarjeta-obra.con-pie { color: inherit; text-decoration: none; row-gap: 10px; }
+.tarjeta-obra.con-pie:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.obra-titulo { font-size: 14px; color: var(--gray-semidark); }
+.tarjeta-obra.con-pie .numero { font-size: 26px; line-height: 1.15; color: var(--gray-dark); }
+.obra-etapa-chica { font-size: 13px; font-weight: 600; color: var(--blue-dark); }
+.obra-barra { grid-column: 1 / -1; display: block; height: 10px; border-radius: 999px; overflow: hidden; background: var(--gray-light); }
+.obra-barra i { display: block; height: 100%; background: var(--green-normal); border-radius: inherit; }
+.obra-pie-linea { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-top: -4px; font-size: 14px; color: var(--gray-semidark); }
+.noche > .noche-edificio:last-child { margin-bottom: 20px; }
