@@ -1417,23 +1417,43 @@
   function textoDelta(base, ahora) {
     if (base === null || ahora === null) return '';
     var d = base - ahora;
-    if (d > 0) return '<span class="delta-chip sube">↑ ' + textoMeses(d) + ' antes</span> que con lo que juntas hoy';
-    if (d < 0) return '<span class="delta-chip baja">↓ ' + textoMeses(-d) + ' después</span> que con lo que juntas hoy';
-    return 'Con lo que juntas hoy';
+    if (d > 0) return '↑ Llegas ' + textoMeses(d) + ' antes que con lo que juntas hoy';
+    if (d < 0) return '↓ Te demoras ' + textoMeses(-d) + ' más que con lo que juntas hoy';
+    return 'Mueve para ver qué cambia.';
   }
   // S24-B1: el dividendo se muestra en UF y debajo cuánto es hoy en pesos.
   function rangoUF(desde, hasta) {
-    var a = formatoUF(Math.min(desde, hasta) / SUPUESTOS.uf), b = formatoUF(Math.max(desde, hasta) / SUPUESTOS.uf);
+    var a = ufDecimales(Math.min(desde, hasta) / SUPUESTOS.uf, 1), b = ufDecimales(Math.max(desde, hasta) / SUPUESTOS.uf, 1);
     return a === b ? b : a + ' a ' + b.replace('UF\u00a0', '');
   }
+  // S25: UF con decimales fijos, como en el canvas (UF 8,5 a 11,0; UF 10,76).
+  function ufDecimales(uf, d) { return 'UF\u00a0' + uf.toFixed(d).replace('.', ','); }
+  // S25: como el canvas: tu arriendo (amarillo) y tu dividendo (azul), cada uno con su barra.
   function vsArriendo(div) {
     if (!(estado.arriendoActual > 0)) return '';
     var max = Math.max(estado.arriendoActual, div);
     return '<div class="vs-arriendo" aria-hidden="true">' +
-      '<span>Arriendo hoy</span><span class="b gris" style="transform:scaleX(' + (estado.arriendoActual / max).toFixed(3) + ')"></span><b>' + formatoRedondeado(estado.arriendoActual) + '</b>' +
-      '<span>Tu departamento</span><span class="b azul" style="transform:scaleX(' + (div / max).toFixed(3) + ')"></span><b>' + formatoRedondeado(div) + '</b>' +
+      '<p><span>Tu arriendo hoy</span><strong>' + formatoRedondeado(estado.arriendoActual) + '</strong></p>' +
+      '<span class="b amarillo"><i style="width:' + (estado.arriendoActual / max * 100).toFixed(1) + '%"></i></span>' +
+      '<p><span>Tu dividendo</span><span><strong>' + ufDecimales(div / SUPUESTOS.uf, 2) + '</strong> <span class="hoy">' + SEP + 'hoy ' + formatoRedondeado(div) + '</span></span></p>' +
+      '<span class="b azul"><i style="width:' + (div / max * 100).toFixed(1) + '%"></i></span>' +
     '</div>';
   }
+  // S25: tu pie dentro del azul de Inicio, como en el canvas.
+  var VENTANAS_CANVAS = [1, 0, 0, 1, 'tu', 1, 0, 1, 1, 1, 1, 0, 1];
+  function piePlegadoInicio() {
+    var s = fotoPasos();
+    if (!s.numeros) return '';
+    var pct = s.meta > 0 ? Math.min(100, Math.round(s.ahorrado / s.meta * 100)) : 0;
+    return '<a class="noche-pie" href="#pie">' +
+      '<span>Tu pie' + (s.cuentaVivienda ? ' - Cuenta Vivienda' : '') + '</span>' +
+      (s.cuentaVivienda
+        ? '<strong>' + formatoPesos(s.ahorrado) + '</strong><span class="noche-pie-barra" aria-hidden="true"><i style="width:' + pct + '%"></i></span>' +
+          '<small>' + pct + NBSP + '% de ' + formatoRedondeado(s.meta) + '</small>'
+        : '<strong>Todavía sin cuenta de vivienda</strong>') +
+      '<span class="noche-pie-ver">Ver ›</span></a>';
+  }
+
 
   // S17-F8: Tu camino en modo vivir: ahora (tus llaves) y después (lo que pagas al mes, junto a tu arriendo).
   function renderTuCaminoVivir() {
@@ -1464,12 +1484,14 @@
             '<span class="noche-luna" aria-hidden="true"></span>' +
             '<p class="noche-etiqueta" id="titulo-plazo">Tus llaves</p>' +
             '<strong class="numero noche-plazo" id="numero-plazo" aria-live="polite">' + textoMesesRango(x.desde.meses, x.hasta.meses) + '</strong>' +
-            '<p class="noche-sub" id="llaves-fecha">' + textoLlavesRango(x) + '</p>' +
-            '<div class="noche-edificio" aria-hidden="true"><span class="noche-techo"></span><div class="noche-fachada">' +
-              VENTANAS_NOCHE.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
-            '</div></div>' +
+            '<span class="oculto-visual" id="llaves-fecha">' + textoLlavesRango(x) + '</span>' +
             '<span class="freno-llaves" id="freno-llaves">' + FRENO[x.hasta.freno] + '</span>' +
             (techoJusto ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(x.deptos.hasta.listaUF) + ' te dejan poco para vivir.</p>' : '') +
+            // S25: el edificio del canvas: 4 columnas y tu ventana de 2 × 2.
+            '<div class="noche-edificio" aria-hidden="true"><div class="noche-fachada">' +
+              VENTANAS_CANVAS.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
+            '</div></div>' +
+            piePlegadoInicio() +
           '</section>') +
       // S23-A: vuelven el slider "Si juntas al mes" y lo que pagas después (pedido del 7-nov).
       '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
@@ -1479,14 +1501,12 @@
       '</section>' +
       '<section class="tarjeta bloque despues" aria-labelledby="titulo-despues">' +
         '<p class="etiqueta" id="titulo-despues">Después, pagas al mes</p>' +
-        '<strong class="numero h3">' + rangoUF(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
-        '<p class="hoy-pesos">Hoy son ' + formatoRango(x.desde.dividendo, x.hasta.dividendo).replace(/^entre /, '') + '</p>' +
+        '<strong class="numero">' + rangoUF(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
+        '<p class="hoy-pesos">hoy son ' + formatoRango(x.desde.dividendo, x.hasta.dividendo).replace(/^entre /, '') + '</p>' +
         vsArriendo(x.hasta.dividendo) +
       '</section>' +
-      (siempre !== null ? '<p class="texto-apoyo linea-siempre">Sin garantía: ' + textoMeses(siempre) + ' ' + ayuda('garantia') + '</p>' : '') +
       animosInicio() +
-      tarjetaSiguientePaso() +
-      tuPieCompacto();
+      tarjetaSiguientePaso();
 
     var rm = $('rango-mensual');
     var pintar = function () { var v = Number(rm.value); rm.style.setProperty('--lleno', ((v - minimo) / (maximo - minimo) * 100).toFixed(1) + '%'); return v; };
@@ -1501,7 +1521,8 @@
         $('freno-llaves').textContent = FRENO[y.hasta.freno];
         var ventana = $('mi-ventana'); ventana.classList.remove('brilla'); void ventana.offsetWidth; ventana.classList.add('brilla');
       }
-      $('delta-plazo').innerHTML = textoDelta(x.hasta.meses, y.hasta.meses);
+      var dp = $('delta-plazo'); dp.innerHTML = textoDelta(x.hasta.meses, y.hasta.meses);
+      dp.className = 'delta-plazo' + (y.hasta.meses < x.hasta.meses ? ' sube' : y.hasta.meses > x.hasta.meses ? ' baja' : '');
       rm.setAttribute('aria-valuetext', formatoRedondeado(v) + ' al mes: ' + textoMesesRango(y.desde.meses, y.hasta.meses));
     });
     rm.addEventListener('change', function () { estado.ahorroMensual = Number(rm.value); guardarEstado(); });
@@ -1823,15 +1844,12 @@
     if (sp.tipo === 'listo') return '';
     var gana = sp.tipo === 'mision' ? (sp.gana.charAt(0) === '+' ? 'Ganas ' + sp.gana : 'Sirve para: ' + sp.gana) : sp.gana;
     var href = destinoSiguiente(sp);
+    // S25: como el canvas: "Avanza pasos", el paso, para qué sirve y un botón a Tus pasos.
     return '<section class="tarjeta siguiente-paso" aria-labelledby="titulo-siguiente">' +
-      '<p class="etiqueta">Hito ' + sp.hito.indice + ' de ' + sp.hito.total + (sp.cuesta ? SEP + sp.cuesta : '') + '</p>' +
+      '<p class="etiqueta">Avanza pasos</p>' +
       '<h2 class="h3" id="titulo-siguiente">' + sp.titulo + '</h2>' +
-      (gana ? '<p class="siguiente-gana">' + icono('i-sube') + gana + '</p>' : '') +
-      (sp.plazo ? '<p class="chip chip-plazo">' + icono('i-calendario') + 'Hasta el ' + fechaCorta(sp.plazo) + '</p>' : '') +
-      '<div class="acciones">' + (href
-        ? '<a class="btn btn-primario btn-bloque" href="' + href + '">' + textoBoton(sp) + '</a>'
-        : '<button type="button" class="btn btn-primario btn-bloque" id="btn-siguiente" aria-haspopup="dialog">' + textoBoton(sp) + '</button>') +
-      '<button type="button" class="enlace" id="btn-recuerdame">Recuérdamelo el viernes</button></div>' +
+      (gana ? '<p class="siguiente-gana">' + gana + '</p>' : '') +
+      '<a class="btn btn-primario btn-bloque" href="#pasos">Ir a pasos</a>' +
     '</section>';
   }
   function textoBoton(sp) { return sp.tipo === 'cuota' ? 'Pagar mi cuota' : (sp.tipo === 'mision' ? 'Hacerlo ahora' : 'Empezar'); }
@@ -4826,28 +4844,52 @@
     var pendientes = ms.filter(function (x) { return !x.hecho; });
     var camino = nombreCaminoActual();
     var todaviaNo = estado.preguntasListas && rangoActual() && !estado.compra && (estado.modo === 'vivir' ? evaluarCabe().razon : recomendarCamino(perfilActual()).todaviaNo);
+    // S25: como el canvas: la escalera en escalones de colores, el paso elegido y las misiones en tarjetas.
+    var listos = listosDe(h);
+    var celebra = listosVistos !== null && listos > listosVistos;
+    listosVistos = listos;
+    var actualI = h.terminado ? h.total - 1 : h.indice - 1;
+    if (pasoElegido === null || pasoElegido >= h.total || celebra) pasoElegido = actualI;
+    var sel = h.hitos[pasoElegido];
+    var colorDe = function (x, i) { return x.estado === 'pendiente' ? 'claro-' + i : 'solido-' + i; };
     cont.innerHTML =
       '<header class="encabezado"><img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24">' +
         '<h1 id="titulo-pasos" class="h2">Tus pasos</h1>' +
-        '<p class="texto-apoyo">' + (camino ? 'Tu camino: ' + primeraMinuscula(camino) : 'Todavía no eliges camino') + '</p></header>' +
+        '<p class="texto-apoyo">' + (h.terminado ? 'Llegaste: es tuyo' : 'Vas en el paso ' + h.indice + ' de ' + h.total + SEP + h.nombre) + '</p></header>' +
       (todaviaNo ? '<p class="tarjeta compacta aviso-todavia">' + icono('i-pronto') + '<span><strong>Todavía no</strong> ' +
         '<a class="enlace" href="#explorar">Ver qué lo cambia</a></span></p>' + (estado.modo === 'vivir' ? metaMesHtml() : '') : '') +
-      departamentoEnConstruccion(h) +
-      '<section aria-labelledby="titulo-hitos" class="bloque">' +
-        '<div class="tarjeta tu-escalera">' +
-          '<div class="escalera-cabeza"><h2 class="h4" id="titulo-hitos">Tu escalera</h2>' +
-            '<span class="chip">' + (h.terminado ? 'Todos listos' : listosDe(h) + ' de ' + h.total + ' listos') + '</span></div>' +
-          '<p class="escalera-barra" aria-hidden="true">' + h.hitos.map(function (x) { return '<i class="' + x.estado + '"></i>'; }).join('') + '</p>' +
-          '<ol class="hitos">' + h.hitos.map(filaHito).join('') + '</ol>' +
-        '</div>' +
+      '<section aria-labelledby="titulo-hitos" class="tarjeta escalones-tarjeta">' +
+        '<div class="escalones-cabeza"><h2 id="titulo-hitos">Tu escalera</h2><span>' + listos + ' de ' + h.total + ' listos</span></div>' +
+        '<ol class="escalones" aria-label="Tus pasos">' + h.hitos.map(function (x, i) {
+          return '<li class="' + x.estado + '">' +
+            (x.estado === 'actual' ? '<svg class="escalon-av' + (celebra ? ' sube' : '') + '" width="30" height="40" viewBox="0 0 30 40" aria-hidden="true"><circle cx="15" cy="9" r="7" fill="#E8BFA0"/><path d="M8 6a7 7 0 0 1 14 0c-3-2-9-2-14 0z" fill="#37474F"/><path d="M4 40c0-10 5-17 11-17s11 7 11 17z" fill="#28892B"/></svg>' : '') +
+            (i === h.total - 1 && x.estado !== 'actual' ? '<svg width="26" height="36" viewBox="0 0 26 36" aria-hidden="true"><rect x="3" y="2" width="20" height="34" rx="2" fill="#2772CC"/><rect x="6" y="5" width="14" height="13" rx="1" fill="#D4E3F5"/><circle cx="18" cy="24" r="1.6" fill="#FFE300"/></svg>' : '') +
+            '<button type="button" class="escalon ' + colorDe(x, i) + '" data-paso="' + i + '" aria-pressed="' + (i === pasoElegido) + '" style="height:' + (44 + i * 16) + 'px" aria-label="Paso ' + (i + 1) + ': ' + x.nombre + ', ' + (x.estado === 'hecho' ? 'listo' : x.estado === 'actual' ? 'ahora, ' + x.cuesta : 'después') + '">' + (x.estado === 'hecho' ? '✓' : i + 1) + '</button>' +
+            '<span class="escalon-nombre">' + (CORTO_HITO[x.id] || x.nombre) + '</span></li>';
+        }).join('') + '</ol>' +
+        '<div class="escalones-barra" aria-hidden="true">' + h.hitos.map(function (x) { return '<i class="' + x.estado + '"></i>'; }).join('') + '</div>' +
       '</section>' +
-      '<section aria-labelledby="titulo-misiones" class="bloque">' +
-        '<h2 class="h4" id="titulo-misiones">Misiones</h2>' +
-        '<p class="texto-apoyo">En cualquier orden.</p>' +
-        (pendientes.length ? '<ul class="misiones-tarjetas">' + pendientes.slice(0, 3).map(filaMision).join('') + '</ul>'
+      (celebra ? '<div class="escalon-celebra" role="status"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#FFFFFF"/><path d="M6.5 12.5l3.6 3.6L17.5 8.8" fill="none" stroke="#28652B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '<span>¡Subiste un escalón!<small>Sigue así, ya vas en el paso ' + h.indice + '.</small></span></div>' : '') +
+      '<article class="tarjeta paso-elegido" aria-live="polite">' +
+        '<div class="paso-elegido-cabeza"><span class="paso-elegido-num ' + colorDe(sel, pasoElegido) + '" aria-hidden="true">' + (pasoElegido + 1) + '</span>' +
+          '<span><span class="paso-elegido-ceja' + (sel.estado === 'pendiente' ? ' despues' : '') + '">Paso ' + (pasoElegido + 1) + ' de ' + h.total + SEP + (sel.estado === 'hecho' ? 'Listo' : sel.estado === 'actual' ? 'Ahora' : 'Después') + '</span>' +
+          '<h3>' + sel.nombre + '</h3></span></div>' +
+        '<div class="paso-elegido-cuerpo"><span class="paso-elegido-tiempo"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#546E7A" stroke-width="2.4"/><path d="M12 7v5l3 2" fill="none" stroke="#546E7A" stroke-width="2.4" stroke-linecap="round"/></svg>' + sel.cuesta + '</span>' +
+          '<p>' + textoHito(sel.id, s.grupo) + '</p>' +
+          (sel.estado === 'actual' ? '<button type="button" class="btn btn-primario btn-bloque" data-hito="' + sel.id + '" aria-haspopup="dialog">Empezar</button>'
+            : sel.estado === 'hecho' ? '<p class="paso-elegido-hecho"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#28892B"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Ya lo hiciste</p>'
+            : '<p class="paso-elegido-despues">Se abre cuando termines el paso ' + h.indice + '.</p>') +
+        '</div></article>' +
+      '<section aria-labelledby="titulo-misiones" class="misiones-canvas">' +
+        '<div class="misiones-cabeza"><h2 class="h3" id="titulo-misiones">Misiones</h2><button type="button" class="enlace" id="btn-todas-misiones" aria-haspopup="dialog">Ver todas ›</button></div>' +
+        (pendientes.length ? '<ul class="misiones-tarjetas">' + pendientes.slice(0, 3).map(function (x, k) { return tarjetaMision(x, k); }).join('') + '</ul>'
           : '<p class="tarjeta compacta">Hiciste todas tus misiones.</p>') +
-        '<button type="button" class="btn btn-terciario btn-bloque bloque-chico" id="btn-todas-misiones" aria-haspopup="dialog">Ver todas y las fechas que importan</button>' +
+        '<p class="misiones-nota">En "Ver todas" están las fechas que importan.</p>' +
       '</section>';
+    cont.querySelectorAll('[data-paso]').forEach(function (b) {
+      b.addEventListener('click', function () { pasoElegido = Number(b.dataset.paso); renderTusPasos(); cont.querySelector('[data-paso="' + pasoElegido + '"]').focus(); });
+    });
     cont.querySelectorAll('[data-hito]').forEach(function (b) {
       b.addEventListener('click', function () { abrirHito(b.dataset.hito, b); });
     });
@@ -4855,8 +4897,37 @@
       b.addEventListener('click', function () { abrirMision(b.dataset.mision, b); });
     });
     $('btn-todas-misiones').addEventListener('click', function () { abrirTodasMisiones($('btn-todas-misiones')); });
-    if ($('cn-subio')) { confeti(); toast('Tu departamento sumó: ' + ETAPAS_CONSTRUCCION[estado.construido].toLowerCase() + '.'); }
+    if (celebra) confeti();
     if ($('btn-meta-rango')) $('btn-meta-rango').addEventListener('click', function () { abrirCambiarRango($('btn-meta-rango')); });
+  }
+  var pasoElegido = null, listosVistos = null;
+  var CORTO_HITO = { numeros: 'Números', cuenta: 'Cuenta', pie: 'Pie', preaprobacion: 'Crédito', asegurar: 'Reserva', aprobacion: 'Final', 'es-tuyo': 'Es tuyo' };
+  var TEXTO_HITO = {
+    numeros: 'Con tus sueldos y tu ahorro calculamos cuándo llegas.',
+    cuenta: 'Una cuenta de ahorro para la vivienda en Bci, en UF. Todo tu pie pasa por ella.',
+    pie: 'Lo juntas cada mes en tu cuenta de vivienda.',
+    preaprobacion: 'Bci revisa tus sueldos y te dice cuánto te presta.',
+    asegurar: 'Eliges tu departamento, lo reservas y firmas la promesa.',
+    aprobacion: 'Bci revisa todo y confirma tu crédito.',
+    'es-tuyo': 'Tasación, seguros, escritura y llaves, en un solo momento.'
+  };
+  var TEXTO_HITO_GRUPO = {
+    preaprobacion: 'Bci revisa tus sueldos y aseguras tu cupo en el grupo.',
+    pie: 'Lo pagas en cuotas mientras se construye el edificio.'
+  };
+  function textoHito(id, grupo) { return (grupo && TEXTO_HITO_GRUPO[id]) || TEXTO_HITO[id] || ''; }
+  // Las misiones como en el canvas: círculo de color con ícono, título, fecha en rojo y chip azul.
+  var ICONOS_MISION = [
+    ['rojo', 'M4 6h16v14H4zM4 10h16M8 3.5v4M16 3.5v4'],
+    ['azul', 'M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5'],
+    ['verde', 'M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4']
+  ];
+  function tarjetaMision(x, k) {
+    var ic = x.fecha ? ICONOS_MISION[0] : ICONOS_MISION[1 + (k % 2)];
+    return '<li><button type="button" class="mision-tarjeta" data-mision="' + x.id + '" aria-haspopup="dialog">' +
+      '<span class="mision-circulo ' + ic[0] + '" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="' + ic[1] + '"/></svg></span>' +
+      '<span class="mision-texto"><strong>' + x.titulo + '</strong>' + (x.fecha ? '<small>' + textoVence(x.fecha) + (/^Vence/.test(textoVence(x.fecha)) ? SEP + fechaCorta(x.fecha) : '') + '</small>' : '') + '</span>' +
+      '<span class="mision-chip">' + x.etiqueta + '</span></button></li>';
   }
 
   // Marca un hito o misión como hecho (simulado), avisa y vuelve a dibujar donde esté.
@@ -4968,35 +5039,47 @@
     }
     var listo = meta > 0 && s.ahorrado >= meta;
     var pctPie = porcentajeEntero(avance(s.ahorrado, meta));
-    cont.innerHTML = cabeza +
-      // S24-B4: como el canvas: héroe azul con el chanchito y la barra, y la cuota del mes flotando encima.
+    var faltaM = '$' + (Math.max(0, meta - s.ahorrado) / 1e6).toFixed(1).replace('.', ',') + ' millones';
+    var racha = estado.racha || 0;
+    // S25: igual al canvas: el lápiz abre Tu cuota, Movimientos va en el azul y la cuota del mes flota.
+    cont.innerHTML =
+      '<a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Inicio</a>' +
+      '<header class="encabezado pie-cabeza"><h1 id="titulo-tu-pie" class="h2">Tu pie</h1>' +
+        '<button type="button" class="pie-lapiz" id="btn-pie-cuota" aria-haspopup="dialog" aria-label="Tu cuota y cómo ahorras"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></svg></button>' +
+        '<p class="texto-apoyo">' + (s.grupo ? 'Cuenta bloqueada de tu grupo' : 'Cuenta Vivienda Bci') + SEP + 'en UF</p></header>' +
       '<section class="saldo-pie pie-heroe" aria-labelledby="titulo-saldo">' +
-        '<p class="etiqueta" id="titulo-saldo">Llevas' + SEP + (s.grupo ? 'cuenta bloqueada de tu grupo' : 'Cuenta Vivienda Bci') + '</p>' +
+        '<div class="pie-heroe-arriba"><p class="etiqueta" id="titulo-saldo">Llevas</p>' +
+          '<button type="button" class="pie-movimientos" id="btn-movimientos" aria-haspopup="dialog">Movimientos</button></div>' +
         '<div class="pie-heroe-fila"><div><strong class="numero">' + formatoPesos(s.ahorrado) + '</strong>' +
-          (meta > s.ahorrado ? '<p>Te faltan ' + formatoPesos(meta - s.ahorrado) + ' para tu pie</p>' : '<p>¡Juntaste tu pie!</p>') + '</div>' +
+          (meta > s.ahorrado ? '<p>Te faltan ' + faltaM + ' para tu pie</p>' : '<p>¡Juntaste tu pie!</p>') + '</div>' +
           barraHitos(s.ahorrado, meta) + '</div>' +
-        '<div class="pie-barra" aria-hidden="true"><span style="width:' + Math.max(1, pctPie) + '%"></span><i style="left:25%"></i><i style="left:50%"></i><i style="left:75%"></i></div>' +
+        '<div class="pie-barra" aria-hidden="true"><span style="width:' + Math.max(1, pctPie) + '%"></span>' + [25, 50, 75].map(function (m) {
+          return '<i style="left:' + m + '%"' + (pctPie >= m ? ' class="pasada"' : '') + '></i>'; }).join('') + '</div>' +
         '<p class="pie-barra-texto"><span>' + pctPie + NBSP + '% de ' + formatoRedondeado(meta) + '</span><span>100' + NBSP + '%</span></p>' +
-        (estado.ahorroIniciado ? puntosRacha() : '') +
+        (estado.ahorroIniciado ? '<span class="pie-racha"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>' +
+          (racha > 0 ? plural(racha, 'mes seguido', 'meses seguidos') : 'Tu racha empieza este mes') + '</span>' : '') +
       '</section>' +
       '<section class="tarjeta pie-cuota-mes" aria-labelledby="titulo-cuota-mes">' +
         '<p class="pie-cuota-fila"><span id="titulo-cuota-mes">Cuota de ' + MESES[Number(hoyDemo().split('-')[1]) - 1] + '</span><strong class="numero">' + formatoRedondeado(estado.ahorroMensual || 0) + '</strong></p>' +
         (listo
           ? '<a class="btn btn-primario btn-lg btn-bloque" href="#pasos">Ver tu siguiente hito</a>'
-          : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-pagar-cuota">Pagar mi cuota</button>') +
+          : pieLogro
+            ? '<div class="pie-listo" role="status"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#28892B"/><path d="M6.5 12.5l3.6 3.6L17.5 8.8" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+                '<span><strong>¡Listo! Sumaste ' + formatoRedondeado(estado.ahorroMensual || 0) + '</strong><small>' + pieLogro + '</small></span></div>' +
+              '<button type="button" class="enlace pie-otro-mes" id="btn-otro-mes">Simular el mes siguiente</button>'
+            : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-pagar-cuota">Pagar mi cuota</button>') +
       '</section>' +
-      plegable('pie-cuota', 'Tu cuota', formatoRedondeado(estado.ahorroMensual || 0) + ' al mes',
-        '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + !!estado.cuotaAutomatica + '" id="btn-pie-auto">' +
-          '<span>' + icono('i-calendario') + 'Ahorro automático el día de pago</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
-        '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + !!estado.pasos.bajoLlave + '" id="btn-pie-llave">' +
-          '<span>' + icono('i-candado') + 'Guardar bajo llave</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
-        (listo ? '' : '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-pie-no-pude">Este mes no pude</button>')) +
-      '<button type="button" class="tarjeta fila fila-regalo" id="btn-pedir-regalo" aria-haspopup="dialog"><span class="regalo-circulo" aria-hidden="true">' + REGALO_SVG + '</span>' +
+      '<button type="button" class="tarjeta fila fila-regalo" id="btn-pedir-regalo" aria-haspopup="dialog"><span class="regalo-circulo" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="1" fill="none" stroke="#B20913" stroke-width="2"/><path d="M3 7h18v3H3zM12 7v13M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0" fill="none" stroke="#B20913" stroke-width="2" stroke-linejoin="round"/></svg></span>' +
         '<span><strong>Regalo para tu pie</strong><small>Comparte un enlace con tu familia</small><span class="regalo-compartir">Compartir ›</span></span></button>' +
-      selloProteccion(s) +
-      plegable('pie-movimientos', 'Movimientos', '', movimientosPie());
-    iniciarPlegables();
+      '<section class="tarjeta pie-protegido" aria-labelledby="titulo-protegido"><h2 id="titulo-protegido">Tu pie está protegido</h2>' +
+        '<div><i class="f-rojo" aria-hidden="true"></i><span><strong>Separado y bajo llave</strong><small>Avisas 30 días antes de sacar</small></span></div>' +
+        '<div><i class="f-verde" aria-hidden="true"></i><span><strong>En UF</strong><small>No lo come la inflación</small></span></div>' +
+        '<div><i class="f-azul" aria-hidden="true"></i><span><strong>Un mes malo</strong><small>Lo ahorrado no se pierde</small></span></div>' +
+      '</section>';
     $('btn-pedir-regalo').addEventListener('click', function () { abrirPedirRegalo($('btn-pedir-regalo')); });
+    $('btn-movimientos').addEventListener('click', function () {
+      abrirHojaContenido('Movimientos', movimientosPie(), $('btn-movimientos'));
+    });
     var pagar = function (pago) {
       if (!estado.ahorroIniciado) { estado.ahorrado = Math.min(meta, estado.ahorroActual || 0); estado.ahorroIniciado = true; }
       var antes = hitosAlcanzados(estado.ahorrado, meta);
@@ -5006,28 +5089,45 @@
       estado.historialMeses = (estado.historialMeses || []).concat([r.resultado]).slice(-6);
       guardarEstado();
       var nuevos = hitosAlcanzados(estado.ahorrado, meta).filter(function (h) { return antes.indexOf(h) === -1; });
+      if (pago) pieLogro = nuevos.length ? '¡Pasaste el ' + porcentajeEntero(nuevos[nuevos.length - 1]) + NBSP + '% de tu pie!' : 'Llevas ' + plural(estado.racha, 'mes seguido', 'meses seguidos');
+      cerrarHoja(false);
       renderTuPie();
       if (!pago) toast(r.resultado === 'protector' ? 'Usaste tu protector: tu racha sigue.' : 'Tu racha vuelve a empezar. Lo ahorrado sigue ahí.');
-      else if (nuevos.length) { confeti(); toast(textoHito(nuevos[nuevos.length - 1])); if (navigator.vibrate) navigator.vibrate(40); }
-      else anunciar('Cuota pagada (simulado).');
+      else if (nuevos.length) { confeti(); if (navigator.vibrate) navigator.vibrate(40); }
+      if ($('btn-otro-mes')) $('btn-otro-mes').focus();
     };
     if ($('btn-pagar-cuota')) $('btn-pagar-cuota').addEventListener('click', function () {
       if (!(estado.ahorroMensual > 0)) { abrirMisDatos($('btn-pagar-cuota')); return; }
       pagar(true);
-      if ($('btn-pagar-cuota')) $('btn-pagar-cuota').focus();
     });
-    if ($('btn-pie-no-pude')) $('btn-pie-no-pude').addEventListener('click', function () { pagar(false); });
-    $('btn-pie-auto').addEventListener('click', function () {
-      estado.cuotaAutomatica = !estado.cuotaAutomatica; guardarEstado();
-      plegablesAbiertos['pie-cuota'] = true; renderTuPie(); $('btn-pie-auto').focus();
-      toast(estado.cuotaAutomatica ? 'Ahorro automático activo (simulado).' : 'Pagas tu cuota a mano.');
+    if ($('btn-otro-mes')) $('btn-otro-mes').addEventListener('click', function () {
+      pieLogro = null; renderTuPie(); if ($('btn-pagar-cuota')) $('btn-pagar-cuota').focus();
     });
-    $('btn-pie-llave').addEventListener('click', function () {
-      estado.pasos.bajoLlave = !estado.pasos.bajoLlave; guardarEstado();
-      plegablesAbiertos['pie-cuota'] = true; renderTuPie(); $('btn-pie-llave').focus();
-      toast(estado.pasos.bajoLlave ? 'Tu pie quedó bajo llave (simulado).' : 'Tu pie ya no está bajo llave.');
-    });
+    var hojaCuota = function () {
+      abrirHojaContenido('Tu cuota', '<p class="texto-apoyo">' + formatoRedondeado(estado.ahorroMensual || 0) + ' al mes</p>' +
+        '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + !!estado.cuotaAutomatica + '" id="btn-pie-auto">' +
+          '<span>' + icono('i-calendario') + 'Ahorro automático el día de pago</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
+        '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + !!estado.pasos.bajoLlave + '" id="btn-pie-llave">' +
+          '<span>' + icono('i-candado') + 'Guardar bajo llave</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
+        (listo ? '' : '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-pie-no-pude">' + (estado.cuotaAutomatica ? 'Pausar este mes' : 'Este mes no pude') + '</button>'),
+        $('btn-pie-cuota'), function () {
+          $('btn-pie-auto').addEventListener('click', function () {
+            estado.cuotaAutomatica = !estado.cuotaAutomatica; guardarEstado();
+            $('btn-pie-auto').setAttribute('aria-checked', String(!!estado.cuotaAutomatica));
+            if ($('btn-pie-no-pude')) $('btn-pie-no-pude').textContent = estado.cuotaAutomatica ? 'Pausar este mes' : 'Este mes no pude';
+            toast(estado.cuotaAutomatica ? 'Ahorro automático activo (simulado).' : 'Pagas tu cuota a mano.');
+          });
+          $('btn-pie-llave').addEventListener('click', function () {
+            estado.pasos.bajoLlave = !estado.pasos.bajoLlave; guardarEstado();
+            $('btn-pie-llave').setAttribute('aria-checked', String(!!estado.pasos.bajoLlave));
+            toast(estado.pasos.bajoLlave ? 'Tu pie quedó bajo llave (simulado).' : 'Tu pie ya no está bajo llave.');
+          });
+          if ($('btn-pie-no-pude')) $('btn-pie-no-pude').addEventListener('click', function () { pagar(false); });
+        });
+    };
+    $('btn-pie-cuota').addEventListener('click', hojaCuota);
   }
+  var pieLogro = null;
 
   var MISIONES_TEXTO = {
     ds1: ['Subsidio del Estado para tu primera vivienda. Se postula en línea en el Minvu.', 'Ya postulé'],
@@ -5133,38 +5233,54 @@
     var r = recomendarCamino(perfil);
     var x = caminosExplorar(perfil, r);
     var fichas = estado.modo === 'vivir' ? ['arriendo-opcion', 'respaldo-familiar'] : ['respaldo-familiar'];
+    // S25: como el canvas: tres tarjetas de color (con el crédito de siempre como tercera), favoritos y todos, y otras formas.
+    var ids = x.ids.slice().sort(function (a, b) { return (ORDEN_EXPLORAR[a] || 9) - (ORDEN_EXPLORAR[b] || 9); }).concat(['usados']);
+    var nGuardados = guardadosProyectos().length;
     cont.innerHTML =
-      '<header class="encabezado"><h1 id="titulo-caminos" class="h2">¿Qué quieres explorar?</h1>' +
-        '<p class="texto-apoyo">Tienes ' + plural(x.ids.length, 'camino', 'caminos') + ' para llegar</p></header>' +
-      '<ul class="caminos-botones">' + x.ids.map(function (id, i) {
-        var m = mesesDeCamino(id, perfil);
-        return '<li><a class="camino-boton color-' + (i % 3) + (id === estado.caminoElegido ? ' tuyo' : '') + '" href="#explorar/' + id + '">' +
+      '<header class="encabezado"><img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24"><h1 id="titulo-caminos" class="h2">¿Qué quieres explorar?</h1>' +
+        '<p class="texto-apoyo">Tienes ' + plural(ids.length, 'camino', 'caminos') + ' para llegar a tu departamento</p></header>' +
+      '<ul class="caminos-botones">' + ids.map(function (id, i) {
+        var usados = id === 'usados';
+        var color = COLOR_EXPLORAR[id] !== undefined ? COLOR_EXPLORAR[id] : i % 3;
+        return '<li><a class="camino-boton color-' + color + '" href="#explorar/' + id + '">' +
           '<span class="camino-figura" aria-hidden="true"><i></i></span>' +
-          '<span class="camino-boton-cabeza">' + etiquetaCamino(id, r) + iconoCamino(id) + '</span>' +
-          '<strong class="h4">' + CAMINOS[id].nombre + '</strong>' +
-          (LINEA_CAMINO[id] ? '<span class="camino-boton-texto">' + LINEA_CAMINO[id] + '</span>' : '') +
-          '<span class="camino-boton-fecha">' + icono('i-llave') + (m === null ? 'Todavía no' : 'Llaves en ' + textoLlegada(m)) + '</span>' +
+          '<span class="camino-boton-cabeza"><span class="camino-datos">' + (DATOS_CAMINO[id] || []).map(function (d) { return '<span class="chip">' + d + '</span>'; }).join('') + '</span>' + iconoCamino(usados ? 'individual-invertir' : id) + '</span>' +
+          '<span class="camino-boton-cuerpo"><strong class="h4">' + (usados ? 'Crédito de siempre' : CAMINOS[id].nombre) + '</strong>' +
+          '<span class="camino-boton-texto">' + (TEXTO_EXPLORAR[id] || LINEA_CAMINO[id] || '') + '</span></span>' +
           '<span class="camino-boton-ir" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></a></li>';
       }).join('') + '</ul>' +
       (estado.modo === 'arrendar' && r.todaviaNo ? '<p class="texto-centro"><a class="enlace" href="#explorar/cambia">Ver qué lo cambia</a></p>' : '') +
-      (guardadosProyectos().length ? '<a class="tarjeta fila fila-guardados" href="#explorar/guardados">' + icono('i-corazon', 'icono-grande') +
-        '<span><strong>Tus guardados</strong><small>' + plural(guardadosProyectos().length, 'departamento', 'departamentos') + '</small></span>' +
-        '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' : '') +
-      '<section class="bloque" aria-labelledby="titulo-otras-formas"><h2 class="h4" id="titulo-otras-formas">Otras formas</h2>' +
-        '<ul class="filas tarjeta"><li><a class="fila" href="#explorar/usados"><span><strong>Crédito de siempre: usados</strong>' +
-          '<small>Existe hoy' + SEP + 'Bci presta el 80' + NBSP + '%</small></span>' +
-          '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>' + fichas.map(function (id) {
-          return '<li><a class="fila" href="#camino/ficha/' + id + '"><span><strong>' + CAMINOS[id].nombre + '</strong>' +
-            '<small>' + (CAMINOS[id].existeHoy ? 'Existe hoy' : 'Propuesta') + '</small></span>' +
-            '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>';
-        }).join('') + '</ul></section>' +
-      VER_TODOS +
-      plegable('no-mostrados', 'Por qué no te mostramos otros', plural(x.sel.noMostrados.length, 'camino', 'caminos'),
-        '<ul class="lista-razones">' + x.sel.noMostrados.map(function (n) {
-          return '<li><strong>' + CAMINOS[n.id].corto + ':</strong> ' + RAZON_NO_MOSTRADO[n.razon] + '</li>';
-        }).join('') + '</ul>');
-    iniciarPlegables();
+      '<div class="explorar-dos">' +
+        '<a class="tarjeta explorar-mini" href="#explorar/guardados"><span class="explorar-mini-icono rojo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15.3 3.5 9.2A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.5 2.6c0 6.1-8.5 11.3-8.5 11.3z"/></svg></span>' +
+          '<strong>Favoritos</strong><small>' + (nGuardados ? plural(nGuardados, 'departamento', 'departamentos') : 'Todavía ninguno') + '</small></a>' +
+        '<a class="tarjeta explorar-mini" href="#departamentos"><span class="explorar-mini-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 21V5h10v16M14 9h6v12M2.5 21h19M7 8.5h1.5M9.5 8.5H11M7 12h1.5M9.5 12H11M7 15.5h1.5M9.5 15.5H11M16.5 13h1.5M16.5 16.5h1.5"/></svg></span>' +
+          '<strong>Todos los departamentos</strong><small>Nuevos y usados</small></a>' +
+      '</div>' +
+      (x.sel.noMostrados.length ? '<details class="tarjeta explorar-porque"><summary><span class="explorar-mini-icono gris" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.6v.6M12 17h.01M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19z"/></svg></span>' +
+          '<span><strong>Por qué no te mostramos otros</strong><small>' + plural(x.sel.noMostrados.length, 'camino', 'caminos') + '</small></span>' +
+          '<svg class="flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>' +
+          x.sel.noMostrados.map(function (n) { return '<p><strong>' + CAMINOS[n.id].corto + ':</strong> ' + RAZON_NO_MOSTRADO[n.razon] + '</p>'; }).join('') + '</details>' : '') +
+      '<section class="explorar-otras" aria-labelledby="titulo-otras-formas"><h2 class="h3" id="titulo-otras-formas">Otras formas</h2>' +
+        fichas.map(function (id) {
+          return '<a class="tarjeta explorar-otra" href="#camino/ficha/' + id + '"><span class="explorar-mini-icono verde" aria-hidden="true">' + (id === 'arriendo-opcion'
+              ? '<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v3M21 12v2"/></svg>'
+              : '<svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15.3 3.5 9.2A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.5 2.6c0 6.1-8.5 11.3-8.5 11.3z"/></svg>') + '</span>' +
+            '<span><strong>' + CAMINOS[id].nombre + '</strong><small>' + (CAMINOS[id].existeHoy ? 'Existe hoy' : 'Propuesta') + '</small></span></a>';
+        }).join('') +
+      '</section>';
   }
+  var ORDEN_EXPLORAR = { 'individual-vivir': 1, 'grupo-vivir': 2 };
+  var COLOR_EXPLORAR = { 'individual-vivir': 0, 'grupo-vivir': 1, usados: 2 };
+  var DATOS_CAMINO = {
+    'individual-vivir': ['Pie 10' + NBSP + '%', 'Nuevos'], 'grupo-vivir': ['Pagan menos', 'En obra'], usados: ['Pie 20' + NBSP + '%', 'Usados'],
+    'pie-compartido': ['Pie 5' + NBSP + '%', 'Para arrendar'], 'grupo-pie-compartido': ['Pie 5' + NBSP + '%', 'En grupo'],
+    'grupo-invertir': ['Pagan menos', 'En obra'], 'individual-invertir': ['Pie 20' + NBSP + '%', 'Para arrendar']
+  };
+  var TEXTO_EXPLORAR = {
+    'individual-vivir': 'Bci te presta hasta el 90' + NBSP + '%. Tú juntas solo el 10' + NBSP + '% de pie.',
+    'grupo-vivir': 'Compras con otras personas un edificio en obra y pagan menos.',
+    usados: 'Bci te presta el 80' + NBSP + '%. Sirve para departamentos usados.'
+  };
 
   // Los departamentos de un camino, sin cambiar el camino elegido (mirar no cambia el plan).
   function proyectosDeCamino(id) {
