@@ -891,6 +891,42 @@ function arriendoConOpcion(listaUF) {
   };
 }
 
+// ---------- 9-nov: Arriendo con opción de compra, como camino completo (propuesta Bci) ----------
+// Hoy lo ofrecen empresas en Chile (referente en la investigación). La versión Bci es una propuesta:
+// un socio compra un departamento terminado y te lo arrienda con el precio de compra fijo en UF desde el día uno.
+// Cada mes pagas el arriendo más un aporte que va a TU cuenta de vivienda Bci: si te vas, ese dinero es tuyo.
+// Cuando juntas el 10 % y los gastos, Bci te presta el 90 % (garantía del Estado) y firmas la escritura.
+// Supuestos: aporte con la proporción de referencia (UF 11,7 al mes en UF 3.500, DF 2023); plazo máximo 5 años;
+// 2 meses desde que juntas tu pie hasta la escritura (preaprobación, tasación y firma).
+var ARRIENDO_OPCION = { aportePorUF: 11.7 / 3500, plazoMaximoMeses: 60, mesesEscritura: 2 };
+function arriendoOpcion(listaUF, arriendoBruto, perfil) {
+  var A = ARRIENDO_OPCION;
+  var aporte = ufAPesos(listaUF * A.aportePorUF);
+  var mensualidad = arriendoBruto + aporte;
+  var meta = ufAPesos(listaUF * MODOS.vivir.usuario + gastosUF(listaUF));
+  var tienes = Math.min(meta, (perfil && perfil.ahorroActual) || 0);
+  var mesesPie = mesesParaMeta(meta - tienes, aporte);
+  var mesesTuyo = mesesPie + A.mesesEscritura;
+  var dividendo = ufAPesos(dividendoUF(listaUF, 'vivir'));
+  var dividendoSinSubsidio = ufAPesos(dividendoUF(listaUF, 'vivir', SUPUESTOS.tasaPeorCaso));
+  var ingreso = perfil ? ingresoTotal(perfil.sueldoPropio, perfil.sueldoPareja) : null;
+  // Mientras arriendas (ya no pagas tu arriendo de hoy): te queda al menos el 40 % para vivir.
+  var queda = ingreso ? ingreso - ((perfil && perfil.otrasCuotas) || 0) - mensualidad : null;
+  var alcanzaArriendo = !ingreso || queda / ingreso >= MINIMO_PARA_VIVIR - TOLERANCIA;
+  // Al comprar: el mismo límite de carga y "Tu mes real" que el crédito de siempre.
+  var s = ingreso ? sostenible(Object.assign({}, perfil, { modo: 'vivir' }), dividendo) : null;
+  var alcanzaCredito = !s || s.cumple;
+  var dentroDelPlazo = mesesTuyo <= A.plazoMaximoMeses;
+  return {
+    precioUF: listaUF, arriendo: arriendoBruto, aporte: aporte, mensualidad: mensualidad,
+    pctIngreso: ingreso ? mensualidad / ingreso : null, meta: meta, tienes: tienes,
+    mesesPie: mesesPie, mesesTuyo: mesesTuyo, dividendo: dividendo, dividendoSinSubsidio: dividendoSinSubsidio,
+    alcanzaArriendo: alcanzaArriendo, alcanzaCredito: alcanzaCredito, dentroDelPlazo: dentroDelPlazo,
+    cumple: alcanzaArriendo && alcanzaCredito && dentroDelPlazo,
+    razon: !alcanzaArriendo ? 'Te quedaría poco para vivir' : !dentroDelPlazo ? 'No juntas tu pie en 5 años' : !alcanzaCredito ? 'Al comprar, la cuota pasa tu límite' : null
+  };
+}
+
 // Respaldo familiar (referente: Barclays Family Springboard). El comprador pone 5 %, Bci presta 95 %
 // y un familiar deja 10 % del precio en una cuenta bloqueada de Bci, que se libera cuando la deuda
 // baja al 80 % del precio (sin plusvalía).
@@ -1753,6 +1789,8 @@ if (typeof module !== 'undefined') module.exports = {
   plazoRango: plazoRango,
   mesesRecordar: mesesRecordar,
   arriendoConOpcion: arriendoConOpcion,
+  ARRIENDO_OPCION: ARRIENDO_OPCION,
+  arriendoOpcion: arriendoOpcion,
   RESPALDO: RESPALDO,
   respaldoFamiliar: respaldoFamiliar,
   MAS_BARATO: MAS_BARATO,

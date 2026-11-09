@@ -3130,3 +3130,17 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .tarjeta-obra h2, .tarjeta-obra .obra-titulo, .tarjeta-obra.con-pie .numero, .tarjeta-obra .obra-etapa-chica, .tarjeta-obra .obra-pie-linea, .tarjeta-obra .linea-ver { color: var(--white); }
 .tarjeta-obra .obra-barra { background: var(--white); }
 .tarjeta-obra.con-pie:focus-visible { outline-color: var(--white); }
+/* 9-nov: Arriendo con opción de compra, camino completo */
+.camino-boton.color-3 { background: var(--red-dark); }
+.color-3 .camino-figura i { right: -40px; bottom: -40px; width: 150px; height: 150px; border-radius: 24px; transform: rotate(18deg); }
+.color-3 .camino-boton-ir svg { stroke: var(--red-dark); }
+.arriendo-pasos { margin: 0; padding-left: 22px; display: grid; gap: 12px; }
+.arriendo-pasos li { padding-left: 4px; }
+.arriendo-pasos strong { display: block; font-weight: 600; }
+.arriendo-pasos small { display: block; color: var(--gray-semidark); font-size: 14px; line-height: 1.4; }
+.arriendo-linea { list-style: none; margin: 8px 0 12px; padding: 0 0 0 18px; border-left: 3px solid var(--blue-20); display: grid; gap: 12px; }
+.arriendo-linea li { position: relative; display: grid; gap: 2px; }
+.arriendo-linea li::before { content: ''; position: absolute; left: -26px; top: 4px; width: 13px; height: 13px; border-radius: 50%; background: var(--white); border: 3px solid var(--blue-normal); }
+.arriendo-linea li.final::before { background: var(--green-normal); border-color: var(--green-normal); }
+.arriendo-cuando { font-size: 13px; font-weight: 700; color: var(--blue-dark); }
+.arriendo-linea li.final .arriendo-cuando { color: var(--green-dark); }

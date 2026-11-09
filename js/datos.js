@@ -101,6 +101,16 @@ var USADOS = [
   { id: 'us-estacion-1', comuna: 'Estación Central', anio: 2017, m2: 30, dormitorios: 1, banos: 1, listaUF: 1450, dfl2: true }
 ];
 
+// 9-nov: arriendo con opción de compra (propuesta Bci). Departamentos terminados: te mudas al firmar el contrato.
+// Un socio de Bci es dueño mientras arriendas; el precio de compra queda fijo en UF. Nombres de edificio, nunca de personas.
+// arriendoEstimadoIA: arriendo de mercado, igual que en el resto de los departamentos.
+var ARRIENDOS_OPCION = [
+  { id: 'ao-maitenes', nombre: 'Edificio Los Maitenes', comuna: 'Independencia', anio: 2025, piso: 7, m2: 44, dormitorios: 2, banos: 1, listaUF: 2200, arriendoEstimadoIA: 360000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ao-brisas', nombre: 'Edificio Brisas de Recoleta', comuna: 'Recoleta', anio: 2026, piso: 4, m2: 36, dormitorios: 1, banos: 1, listaUF: 1650, arriendoEstimadoIA: 270000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ao-alameda', nombre: 'Edificio Alameda Poniente', comuna: 'Estación Central', anio: 2025, piso: 12, m2: 28, dormitorios: 0, banos: 1, listaUF: 1350, arriendoEstimadoIA: 230000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ao-lilas', nombre: 'Edificio Las Lilas', comuna: 'Quinta Normal', anio: 2026, piso: 3, m2: 50, dormitorios: 2, banos: 2, listaUF: 2450, arriendoEstimadoIA: 390000, origenArriendo: ORIGEN_ARRIENDO }
+];
+
 function departamentosDe(proyectoId) {
   return DEPARTAMENTOS.filter(function (d) { return d.proyectoId === proyectoId; });
 }
@@ -124,6 +134,7 @@ if (typeof module !== 'undefined') module.exports = {
   PROYECTOS: PROYECTOS,
   DEPARTAMENTOS: DEPARTAMENTOS,
   USADOS: USADOS,
+  ARRIENDOS_OPCION: ARRIENDOS_OPCION,
   BARRIOS: BARRIOS,
   departamentosDe: departamentosDe,
   buscarProyecto: buscarProyecto

@@ -5334,6 +5334,7 @@
   function iconoCamino(id) {
     var d = id.indexOf('grupo') === 0
       ? 'M9 7.5a3 3 0 1 0 6 0 3 3 0 0 0-6 0M6.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6M2.7 9.5a2.3 2.3 0 1 0 4.6 0 2.3 2.3 0 0 0-4.6 0M16.7 9.5a2.3 2.3 0 1 0 4.6 0 2.3 2.3 0 0 0-4.6 0M1.5 18.5c0-2.4 1.5-4.3 3.5-4.3M22.5 18.5c0-2.4-1.5-4.3-3.5-4.3'
+      : id === 'arriendo-opcion' ? 'M7.5 15a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM11 11.5h10M18 11.5v3M21 11.5v2.5'
       : (id === 'individual-vivir' ? 'M3 9.5L12 4l9 5.5zM5 10v7.5M9.7 10v7.5M14.3 10v7.5M19 10v7.5M3 20.5h18'
         : 'M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6zM8.5 12.2l2.4 2.4 4.6-4.8');
     return '<svg class="camino-dibujo" viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
@@ -5359,9 +5360,11 @@
     var perfil = perfilActual();
     var r = recomendarCamino(perfil);
     var x = caminosExplorar(perfil, r);
-    var fichas = estado.modo === 'vivir' ? ['arriendo-opcion', 'respaldo-familiar'] : ['respaldo-familiar'];
+    // 9-nov: el arriendo con opción de compra pasó de ficha a camino completo (un botón más, solo para vivir).
+    var fichas = ['respaldo-familiar'];
     // S25: como el canvas: tres tarjetas de color (con el crédito de siempre como tercera), favoritos y todos, y otras formas.
-    var ids = x.ids.slice().sort(function (a, b) { return (ORDEN_EXPLORAR[a] || 9) - (ORDEN_EXPLORAR[b] || 9); }).concat(['usados']);
+    var ids = x.ids.slice().sort(function (a, b) { return (ORDEN_EXPLORAR[a] || 9) - (ORDEN_EXPLORAR[b] || 9); }).concat(['usados'])
+      .concat(estado.modo === 'vivir' ? ['arriendo-opcion'] : []);
     var nGuardados = guardadosProyectos().length;
     cont.innerHTML =
       '<header class="encabezado"><img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24"><h1 id="titulo-caminos" class="h2">¿Qué quieres explorar?</h1>' +
@@ -5397,16 +5400,18 @@
       '</section>';
   }
   var ORDEN_EXPLORAR = { 'individual-vivir': 1, 'grupo-vivir': 2 };
-  var COLOR_EXPLORAR = { 'individual-vivir': 0, 'grupo-vivir': 1, usados: 2 };
+  var COLOR_EXPLORAR = { 'individual-vivir': 0, 'grupo-vivir': 1, usados: 2, 'arriendo-opcion': 3 };
   var DATOS_CAMINO = {
     'individual-vivir': ['Pie 10' + NBSP + '%', 'Nuevos'], 'grupo-vivir': ['Pagan menos', 'En obra'], usados: ['Pie 20' + NBSP + '%', 'Usados'],
+    'arriendo-opcion': ['Te mudas ya', 'Propuesta'],
     'pie-compartido': ['Pie 5' + NBSP + '%', 'Para arrendar'], 'grupo-pie-compartido': ['Pie 5' + NBSP + '%', 'En grupo'],
     'grupo-invertir': ['Pagan menos', 'En obra'], 'individual-invertir': ['Pie 20' + NBSP + '%', 'Para arrendar']
   };
   var TEXTO_EXPLORAR = {
     'individual-vivir': 'Bci te presta hasta el 90' + NBSP + '%. Tú juntas solo el 10' + NBSP + '% de pie.',
     'grupo-vivir': 'Compras con otras personas un edificio en obra y pagan menos.',
-    usados: 'Bci te presta el 80' + NBSP + '%. Sirve para departamentos usados.'
+    usados: 'Bci te presta el 80' + NBSP + '%. Sirve para departamentos usados.',
+    'arriendo-opcion': 'Te mudas ahora y parte de tu arriendo va a tu pie.'
   };
 
   // Los departamentos de un camino, sin cambiar el camino elegido (mirar no cambia el plan).
@@ -5759,6 +5764,116 @@
     if (vivir) iniciarVisita(u);
     $('btn-usado-camino').addEventListener('click', function () { toast('En la demo, los usados son para mirar (simulado).'); });
   }
+  // ---------- 9-nov: Arriendo con opción de compra, camino completo (propuesta Bci) ----------
+  // arriendoOpcion (calculos.js): mensualidad = arriendo + aporte a tu pie; cuándo es tuyo; si se sostiene.
+  function fotosArriendo(u) { return fotosUsado(u); }
+  function fichaArriendo(u) { return esc(u.comuna) + SEP + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + SEP + plural(u.banos || 1, 'baño', 'baños') + SEP + u.m2 + NBSP + 'm²'; }
+  function comoFuncionaArriendo() {
+    return '<ol class="arriendo-pasos">' +
+      '<li><strong>Eliges un departamento terminado</strong><small>Un socio de Bci lo compra y firma contigo el contrato. El precio de compra queda fijo en UF.</small></li>' +
+      '<li><strong>Te mudas al mes siguiente</strong><small>Vives ahí desde el comienzo, como en un arriendo.</small></li>' +
+      '<li><strong>Cada mes, arriendo y aporte</strong><small>El aporte va a tu cuenta de vivienda Bci, a tu nombre.</small></li>' +
+      '<li><strong>Con el 10' + NBSP + '% juntado, pides tu crédito</strong><small>Bci te presta el 90' + NBSP + '% con la garantía del Estado.</small></li>' +
+      '<li><strong>Firmas la escritura: es tuyo</strong><small>Desde ahí pagas el dividendo en vez del arriendo.</small></li>' +
+    '</ol>';
+  }
+  function siMeArrepientoArriendo() {
+    return '<ul class="lista-check">' +
+      '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Lo que aportaste a tu pie es tuyo: está en tu cuenta de vivienda Bci.</span></li>' +
+      '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Lo que pagaste de arriendo no se devuelve, como en cualquier arriendo.</span></li>' +
+      '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Tienes hasta 5 años para comprar. Si Bci no te aprueba el crédito, te vas con tu pie.</span></li>' +
+    '</ul>';
+  }
+  function renderArriendoCamino() {
+    var cont = $('caminos-contenido');
+    if (estado.modo !== 'vivir') { location.replace('#explorar'); return; }
+    var perfil = perfilActual();
+    var lista = ARRIENDOS_OPCION.map(function (u) { return { u: u, a: arriendoOpcion(u.listaUF, u.arriendoEstimadoIA, perfil) }; })
+      .sort(function (x, y) { return (y.a.cumple - x.a.cumple) || (x.a.mesesTuyo - y.a.mesesTuyo); });
+    cont.innerHTML =
+      '<a href="#explorar" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Explorar</a>' +
+      '<header class="encabezado">' +
+        '<div class="camino-cabeza"><span class="chip chip-propuesta">Propuesta</span></div>' +
+        '<h1 id="titulo-caminos" class="h2">Arriendo con opción de compra</h1>' +
+        '<p class="texto-apoyo camino-descripcion">Te mudas ahora a un departamento terminado y lo arriendas. Parte de lo que pagas cada mes va a tu pie. Cuando juntas el 10' + NBSP + '%, Bci te presta el resto y es tuyo.</p>' +
+      '</header>' +
+      '<p class="texto-apoyo"><small>Hoy existe en Chile con otras empresas; con Bci es una propuesta.</small></p>' +
+      plegable('arriendo-como', '¿Cómo funciona?', 'En 5 pasos', comoFuncionaArriendo()) +
+      plegable('arriendo-arrepiento', '¿Y si me arrepiento?', 'Tu pie no se pierde', siMeArrepientoArriendo()) +
+      '<button type="button" class="btn btn-mi-camino" id="btn-arriendo-camino">Hacerlo mi camino</button>' +
+      '<h2 class="h3 camino-explorar-titulo">Departamentos</h2>' +
+      '<ul class="lista-usados">' + lista.map(function (x, i) {
+        var u = x.u, a = x.a;
+        var t = u.dormitorios === 2 ? '2d' : u.dormitorios === 1 ? '1d' : 'estudio';
+        var foto = hayFotos() && FOTOS.interiores[t + (i % 2 ? '-cocina' : '-living')];
+        return '<li class="tarjeta usado">' +
+          (foto ? '<img class="usado-foto" src="fotos/interiores/' + encodeURI(foto) + '" alt="' + (i % 2 ? 'Cocina' : 'Living') + ' de un departamento de ' + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'un ambiente') + ' (foto referencial)" loading="lazy" width="800" height="600">' : '') +
+          '<span class="usado-etiqueta">Terminado' + SEP + 'te mudas ya</span>' +
+          '<h3 class="tp-nombre"><a class="usado-enlace" href="#explorar/arriendo-opcion/' + esc(u.id) + '">' + esc(u.nombre) + '</a></h3>' +
+          '<p class="tp-ficha">' + fichaArriendo(u) + '</p>' +
+          '<p class="tp-etiqueta">Pagas al mes</p>' +
+          '<p class="usado-precio"><strong class="tp-cifra">' + formatoRedondeado(a.mensualidad) + '</strong> <span>' + formatoRedondeado(a.aporte) + ' va a tu pie</span></p>' +
+          '<p class="tp-linea">' + (a.cumple ? 'Es tuyo en ' + textoMeses(a.mesesTuyo) : 'Todavía no' + SEP + primeraMinuscula(a.razon)) + '</p>' +
+          '<p class="usado-ver" aria-hidden="true">Ver departamento ›</p>' +
+        '</li>';
+      }).join('') + '</ul>' +
+      '<p class="llega-sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
+      '<p class="texto-apoyo texto-centro"><small>Ejemplos simulados' + SEP + 'fotos referenciales</small></p>';
+    iniciarPlegables();
+    $('btn-arriendo-camino').addEventListener('click', function () { toast('En la demo, este camino es para mirar (simulado).'); });
+  }
+  function renderArriendoDepto(id) {
+    var cont = $('caminos-contenido');
+    var u = ARRIENDOS_OPCION.filter(function (x) { return x.id === id; })[0];
+    if (!u || estado.modo !== 'vivir') { location.replace('#explorar/arriendo-opcion'); return; }
+    var perfil = perfilActual();
+    var a = arriendoOpcion(u.listaUF, u.arriendoEstimadoIA, perfil);
+    var hoy = hoyDemo();
+    var linea = [
+      ['Hoy', 'Firmas el contrato con el precio fijo'],
+      ['Mes 1', 'Te mudas'],
+      ['Cada mes', 'Sumas ' + formatoRedondeado(a.aporte) + ' a tu pie'],
+      [a.mesesPie ? 'Mes ' + a.mesesPie : 'Ya', 'Juntaste tu pie: pides tu crédito Bci'],
+      ['Mes ' + a.mesesTuyo, 'Firmas la escritura: es tuyo']
+    ];
+    cont.innerHTML =
+      '<a href="#explorar/arriendo-opcion" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Arriendo con opción</a>' +
+      '<header class="detalle-cabecera">' +
+        '<h1 id="titulo-caminos" class="h2">' + esc(u.nombre) + '</h1>' +
+        '<span class="tp-tipo verde">Arriendo con opción de compra</span>' +
+        '<p class="texto-apoyo">' + fichaArriendo(u) + '</p>' +
+      '</header>' +
+      galeria(fotosArriendo(u)) +
+      '<section class="detalle-llaves" aria-labelledby="ao-tuyo"><p id="ao-tuyo">' + (a.cumple ? 'Es tuyo en' : 'Todavía no') + '</p>' +
+        '<strong>' + (a.cumple ? textoMeses(a.mesesTuyo) : a.razon) + '</strong>' +
+        '<p>' + (a.cumple ? fechaLlaves(a.mesesTuyo, hoy) + SEP + 'te mudas el próximo mes' : 'Puedes mirar otro departamento o cambiar tus números') + '</p></section>' +
+      '<ul class="detalle-filas">' +
+        '<li><span>Arriendo</span><strong>' + formatoRedondeado(a.arriendo) + '</strong></li>' +
+        '<li><span>Va a tu pie</span><strong>' + formatoRedondeado(a.aporte) + '</strong></li>' +
+        '<li><span>Pagas al mes</span><strong>' + formatoRedondeado(a.mensualidad) + '</strong></li>' +
+        (a.pctIngreso !== null ? '<li class="suave"><span>Es de tu ingreso</span><span>' + formatoPorcentaje(a.pctIngreso, 0) + '</span></li>' : '') +
+        '<li><span>Precio de compra, fijo</span><span class="en-uf"><strong>' + formatoUF(u.listaUF) + '</strong><small>hoy son ' + formatoRedondeado(ufAPesos(u.listaUF)) + '</small></span></li>' +
+        '<li><span>Juntas antes de firmar</span><strong>' + formatoRedondeado(a.meta) + '</strong></li>' +
+        '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + ufDecimales(a.dividendo / SUPUESTOS.uf, 2) + '</strong><small>hoy son ' + formatoRedondeado(a.dividendo) + '</small></span></li>' +
+        '<li class="suave"><span>Sin subsidio a la tasa</span><span>' + ufDecimales(a.dividendoSinSubsidio / SUPUESTOS.uf, 2) + SEP + 'hoy ' + formatoRedondeado(a.dividendoSinSubsidio) + '</span></li>' +
+      '</ul>' +
+      '<section class="tarjeta bloque" aria-labelledby="ao-cuando"><h2 class="h4" id="ao-cuando">Cuándo pasa a ser tuyo</h2>' +
+        '<ol class="arriendo-linea">' + linea.map(function (x, i) {
+          return '<li' + (i === linea.length - 1 ? ' class="final"' : '') + '><span class="arriendo-cuando">' + x[0] + '</span><span>' + x[1] + '</span></li>';
+        }).join('') + '</ol>' +
+        '<p class="texto-apoyo"><small>Mientras arriendas, el departamento es del socio. Es tuyo al firmar la escritura.</small></p></section>' +
+      plegable('arriendo-como', '¿Cómo funciona?', 'En 5 pasos', comoFuncionaArriendo()) +
+      plegable('arriendo-arrepiento', '¿Y si me arrepiento?', 'Tu pie no se pierde', siMeArrepientoArriendo()) +
+      barrioHtml(u) +
+      '<p class="llega-sello detalle-sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
+      '<button type="button" class="btn btn-primario btn-bloque usado-cta" id="btn-arriendo-depto">Quiero este departamento</button>' +
+      '<p class="texto-apoyo texto-centro"><small>Ejemplo simulado' + SEP + 'fotos referenciales' + SEP + 'arriendo: ' + u.origenArriendo + '</small></p>';
+    iniciarGalerias(cont);
+    iniciarPlegables();
+    iniciarVisita(u);
+    $('btn-arriendo-depto').addEventListener('click', function () { toast('En la demo, este camino es para mirar (simulado).'); });
+  }
+
   // Hacerlo mi camino: muestra qué cambia y pide confirmar. Lo hecho (cuenta, ahorro, misiones) se conserva.
   function confirmarMiCamino(id, boton) {
     var perfil = perfilActual();
@@ -6723,6 +6838,8 @@
     if (p[0] === 'pie') return r('pie', 'inicio', function () { if (estado.compra && pasoEfectivo() === 2) location.replace('#camino/pie'); else renderTuPie(); });
     if (p[0] === 'explorar') {
       if (p[1] === 'cambia') return r('caminos', 'explorar', function () { cambiosActivos = {}; renderCaminos(); });
+      // 9-nov: arriendo con opción de compra: el camino y cada departamento.
+      if (p[1] === 'arriendo-opcion') return r('caminos', 'explorar', function () { if (p[2]) renderArriendoDepto(p[2]); else renderArriendoCamino(); });
       if (p[1] && p[2] === 'como') return r('caminos', 'explorar', function () { renderLlegaAntes(p[1]); });
       if (p[1] === 'usados' && p[2]) return r('caminos', 'explorar', function () { renderUsado(p[2]); });
       if (p[1] === 'usados') return r('caminos', 'explorar', renderUsados);
@@ -6742,7 +6859,7 @@
     }
     // #camino/…: Explorar (fichas, elegir, departamento), Tus pasos (pasos de la compra) o Inicio.
     switch (p[1]) {
-      case 'ficha': return r('ficha', 'explorar', function () { renderFicha(p[2]); });
+      case 'ficha': return r('ficha', 'explorar', function () { if (p[2] === 'arriendo-opcion') location.replace('#explorar/arriendo-opcion'); else renderFicha(p[2]); });
       case 'dueno': return r('caminos', p[2] ? 'explorar' : 'inicio', function () { renderMesDueno(p[2]); });
       case 'elegir': return r('proyectos', 'explorar', function () { renderLista('camino'); });
       // 9-nov: #camino/proyecto/<departamento>/<camino>: el camino desde el que se mira (Explorar → Un camino).

@@ -41,3 +41,22 @@ test('Tu departamento se construye con tu pie: 37 partes, cada cuota se nota', (
   assert.strictEqual(c.avanceObra(10000000, 10000000, true).etapa, 'listo');
   assert.strictEqual(c.avanceObra(10000000 / 37 * 1.5, 10000000, true).etapa, 'estructura');
 });
+
+test('Arriendo con opción de compra: aporte, cuándo es tuyo y si se sostiene', () => {
+  const perfil = { modo: 'vivir', sueldoPropio: 1400000, sueldoPareja: 900000, otrasCuotas: 0, ahorroActual: 0 };
+  const a = c.arriendoOpcion(2200, 360000, perfil);
+  assert.strictEqual(a.aporte, c.ufAPesos(2200 * 11.7 / 3500));
+  assert.strictEqual(a.mensualidad, 360000 + a.aporte);
+  assert.strictEqual(a.meta, c.ufAPesos(2200 * 0.10 + c.gastosUF(2200)));
+  assert.strictEqual(a.mesesPie, Math.ceil(a.meta / a.aporte));
+  assert.strictEqual(a.mesesTuyo, a.mesesPie + 2);
+  assert.strictEqual(a.dividendo, c.ufAPesos(c.dividendoUF(2200, 'vivir')));
+  assert.ok(a.cumple, a.razon);
+  // Lo que ya tienes ahorrado acorta el plazo.
+  assert.ok(c.arriendoOpcion(2200, 360000, Object.assign({}, perfil, { ahorroActual: 5000000 })).mesesTuyo < a.mesesTuyo);
+  // Con un sueldo bajo, la mensualidad no deja el 40 % para vivir.
+  const bajo = c.arriendoOpcion(2200, 360000, { modo: 'vivir', sueldoPropio: 900000, sueldoPareja: 0, otrasCuotas: 0 });
+  assert.strictEqual(bajo.cumple, false);
+  assert.strictEqual(bajo.razon, 'Te quedaría poco para vivir');
+  assert.strictEqual(d.ARRIENDOS_OPCION.length, 4);
+});
