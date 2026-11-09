@@ -3089,3 +3089,35 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .vecino-inicial svg { width: 20px; height: 20px; }
 .vecinos-nota small { color: var(--gray-semidark); }
 .si-se-va:not([open]) > summary .plegable-flecha { transform: none; }
+
+/* ---------- 9-nov: tu departamento se construye con tu pie (Inicio y Tu pie) ---------- */
+.cn-contorno { fill: none; stroke: var(--gray-neutral); stroke-width: 2; stroke-dasharray: 5 5; }
+.obra-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.obra-etapa { margin: 4px 0 0; font-size: 14px; font-weight: 600; }
+/* En el azul de Inicio: muros claros, techo y puerta amarillos (como la casa de Base44). */
+.noche-obra { align-self: center; width: 210px; margin: 12px 0 0; text-align: center; color: var(--white); border-radius: 12px; }
+.noche-obra .cn-muro { fill: var(--blue-20); }
+.noche-obra .cn-ventanas rect { fill: var(--blue-60); stroke: var(--blue-dark); }
+.noche-obra .cn-techo, .noche-obra .cn-puerta { fill: var(--yellow-normal); stroke: none; }
+.noche-obra .cn-linea, .noche-obra .cn-linea-fina { stroke: var(--blue-20); }
+.noche-obra .cn-gris { fill: var(--blue-40); }
+.noche-obra .cn-contorno { stroke: var(--blue-40); }
+.noche-obra .cn-letrero path { stroke: var(--blue-20); }
+.noche-obra.brilla .obra-svg { animation: obra-brilla var(--dur-larga) var(--ease-salida); }
+@keyframes obra-brilla { 40% { transform: scale(1.06); filter: drop-shadow(0 0 10px rgba(255, 238, 102, .8)); } }
+.noche-invita { margin-top: 12px; padding: 14px 16px; border-radius: 16px; background: rgba(255, 255, 255, .12); }
+.noche-invita strong { font-size: 20px; font-weight: 400; line-height: 1.25; }
+.noche-invita .noche-pie-ver { margin-top: 8px; }
+/* En Tu pie: la obra a la derecha del saldo, en el azul. */
+.obra-pie { align-self: center; width: 210px; margin: 8px auto 4px; text-align: center; }
+.obra-pie .cn-muro { fill: var(--blue-20); }
+.obra-pie .cn-ventanas rect { fill: var(--blue-60); stroke: var(--blue-dark); }
+.obra-pie .cn-techo, .obra-pie .cn-puerta { fill: var(--yellow-normal); stroke: none; }
+.obra-pie .cn-linea, .obra-pie .cn-linea-fina { stroke: var(--blue-20); }
+.obra-pie .cn-gris { fill: var(--blue-40); }
+.saldo-pie .obra-etapa { color: var(--white); }
+/* Sin cuenta: el terreno sobre fondo claro. */
+.obra-invita { display: grid; gap: 8px; }
+.obra-claro { padding: 8px 12px 4px; border-radius: 12px; background: linear-gradient(180deg, var(--blue-20), var(--white)); }
+.obra-invita h2 { margin: 0; font-weight: 400; }
+@media (prefers-reduced-motion: reduce) { .noche-obra.brilla .obra-svg { animation: none; } }

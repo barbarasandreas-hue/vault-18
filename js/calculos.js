@@ -1665,6 +1665,15 @@ var ETAPAS_CONSTRUCCION = ['Terreno', 'Cimientos', 'Estructura', 'Muros', 'Venta
 function etapaConstruccion(h) {
   return h.terminado ? ETAPAS_CONSTRUCCION.length - 1 : h.hitos.filter(function (x) { return x.estado === 'hecho'; }).length;
 }
+// 9-nov: tu departamento se construye con tu pie, como la casa del prototipo en Base44.
+// 0 = terreno (sin cuenta o sin ahorro); 1 a 5 = cada 20 % del pie suma una parte; 6 = pie listo.
+var ETAPAS_PIE = ['Terreno', 'Cimientos', 'Estructura', 'Muros', 'Ventanas', 'Techo y puerta', 'Pie listo'];
+function etapaPie(ahorrado, meta, tieneCuenta) {
+  if (!tieneCuenta || !(ahorrado > 0) || !(meta > 0)) return 0;
+  var a = ahorrado / meta;
+  if (a >= 1) return ETAPAS_PIE.length - 1;
+  return Math.min(5, 1 + Math.floor(a * 5));
+}
 // Guardar o sacar un departamento de favoritos. Devuelve una lista nueva, sin repetidos.
 function alternarFavorito(lista, id) {
   var l = Array.isArray(lista) ? lista.filter(function (x, i, a) { return a.indexOf(x) === i; }) : [];
@@ -1693,6 +1702,8 @@ function mesDueno(x) {
 if (typeof module !== 'undefined') module.exports = {
   mesDueno: mesDueno,
   ETAPAS_CONSTRUCCION: ETAPAS_CONSTRUCCION,
+  ETAPAS_PIE: ETAPAS_PIE,
+  etapaPie: etapaPie,
   etapaConstruccion: etapaConstruccion,
   alternarFavorito: alternarFavorito,
   mensajeRegalo: mensajeRegalo,

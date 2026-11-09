@@ -24,3 +24,14 @@ test('S26: sin arriendo ni ingreso no se compara', () => {
 test('S26: todas las comunas de los proyectos tienen su barrio', () => {
   d.PROYECTOS.forEach((p) => assert.ok(d.BARRIOS[p.comuna], p.comuna));
 });
+
+test('Tu departamento se construye con tu pie: terreno, cada 20 % una parte y pie listo', () => {
+  assert.strictEqual(c.etapaPie(0, 10000000, true), 0);
+  assert.strictEqual(c.etapaPie(3000000, 10000000, false), 0); // sin cuenta de vivienda: terreno
+  assert.strictEqual(c.etapaPie(100000, 10000000, true), 1);
+  assert.strictEqual(c.etapaPie(2800000, 10000000, true), 2);
+  assert.strictEqual(c.etapaPie(5000000, 10000000, true), 3);
+  assert.strictEqual(c.etapaPie(9990000, 10000000, true), 5);
+  assert.strictEqual(c.etapaPie(10000000, 10000000, true), 6);
+  assert.strictEqual(c.ETAPAS_PIE[6], 'Pie listo');
+});
