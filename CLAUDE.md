@@ -37,7 +37,7 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 |---|---|---|
 | **A · Compra en grupo** | Vivir o invertir | Bci reúne compradores preaprobados. Descuento real de 3% (5 unidades) a 5% (10 unidades), en uno o varios proyectos de la misma inmobiliaria en una zona. El pie se paga en cuotas durante la construcción, en una **cuenta de ahorro bloqueada en Bci** (art. 138 bis de la LGUC); la inmobiliaria lo recibe solo al escriturar. Salida sin multa si Bci no aprueba el crédito final o si la tasación sale menor que el precio. |
 | **B · Pie compartido** | Invertir | Inversionistas ponen el 15% como **participación en el valor** (no es un préstamo). Reciben una renta de 6% anual en UF sobre su parte, y con el resto del arriendo el comprador les **recompra** su parte cada mes. Ganancias y pérdidas se reparten según la parte de cada uno; **sin recurso al sueldo** del comprador. El comprador pone el 5% con ahorro propio. Comprador de respaldo y venta asistida antes del remate. |
-| **A + B** | Invertir | Grupo + pie compartido: el comprador pone el 5% del precio con descuento. |
+| ~~A + B~~ | — | Quitado el 9-nov-2026: para invertir se elige grupo **o** pie compartido, no los dos juntos. |
 | **Arriendo con opción de compra** | Vivir | Ficha informativa: parte de la mensualidad va al pie (referente: Hogarízate). |
 | **Respaldo familiar** | Vivir o invertir | Ficha informativa: un familiar deja el 10% en una cuenta bloqueada en Bci ≈ 5 años y lo recupera con intereses (referente: Barclays Family Springboard). |
 | **Todavía no** | Los dos | Cuando ningún camino es sostenible, la app lo dice y muestra qué cambiar (ver "Tu mes real"). |
@@ -72,9 +72,9 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 - **Piezas de Llega antes (Sprint 17, modo vivir).** Cada pieza baja el precio, pone dinero en el pie o fija una fecha mínima. Plazo = el mayor entre (lo que falta ÷ lo que juntas al mes) y las fechas mínimas: la entrega del edificio y, en el DS1 tramo 3, los 12 meses de la cuenta de vivienda. Supuestos:
   - descuento en grupo según los cupos del lote;
   - subsidio DS1 en dos tramos (S20-T2; `DS1` y `ds1Para` en `js/calculos.js`): tramo 3 hasta UF 2.200, monto = 850 − 0,375 × precio entre UF 250 y 400, ahorro UF 80 y cuenta con 12 meses; tramo 4 de UF 2.200 a 4.000, UF 410 (promedio del llamado), ahorro UF 200 y sin 12 meses de cuenta. Tope de sueldo neto del núcleo para quien está sobre el 90 % del Registro Social (RM): tramo 3, $1.992.086 una persona y $2.788.921 dos; tramo 4, $2.673.511 una persona y $3.496.130 dos. Exige no tener vivienda: bloqueado para invertir. Se combina con la garantía y el subsidio a la tasa en departamentos nuevos: crédito = precio − ahorro − subsidio, con tope de 90 %;
-  - sin IVA = −10 %, solo departamentos terminados (recepción antes del 17-oct-2026) y con la promesa firmada hasta noviembre de 2027;
+  - sin IVA = −10 % (el mismo valor en Comprar más barato), solo departamentos terminados (recepción antes del 17-oct-2026) y con la promesa firmada hasta noviembre de 2027;
   - regalo de $300 mil; hasta nov-2027, una donación por escritura a hijos o nietos paga la mitad del impuesto, una vez por donante (Ley 21.850, art. 1.° transitorio);
-  - respaldo familiar = Bci presta el 100 % (propuesta).
+  - respaldo familiar = Bci presta el 95 %, pones el 5 % y un familiar deja el 10 % bloqueado hasta que la deuda baja al 80 % (propuesta; igual en la ficha y en la pieza).
 
   La app solo ofrece una pieza si hay un departamento de ejemplo que la cumpla. Las fórmulas están en `calcularPiezas` y `plazoConPisos`.
 - Departamento de referencia: UF 2.500 de lista. Comunas de los ejemplos: Independencia, Quinta Normal, Recoleta y Estación Central.
@@ -134,7 +134,7 @@ js/app.js           estado y render de las pantallas
 - En el computador: `python -m http.server 8000 --bind 0.0.0.0` en la carpeta del proyecto (en Windows es `python`, no `python3`) y abrir http://localhost:8000. Probar siempre con el navegador en ancho de celular.
 - En el teléfono, misma red wifi: con el servidor anterior corriendo, buscar la IP del computador con `ipconfig` ("Dirección IPv4", por ejemplo `192.168.1.20`) y abrir `http://192.168.1.20:8000` en el teléfono. Si no carga, permitir Python en el firewall de Windows para redes privadas.
 - En el teléfono, desde cualquier lugar: publicarla en GitHub Pages desde la rama `main` y abrir la dirección `https://<usuario>.github.io/<repositorio>/`. Desde el menú del navegador, "Agregar a pantalla de inicio" la deja como un ícono de app.
-- Pruebas de las fórmulas: `node --test tests/` (Node ya viene instalado; no hace falta `npm install`).
+- Pruebas de las fórmulas: `node --test tests/*.test.js` (Node ya viene instalado; no hace falta `npm install`).
 - Interacción y movimiento (Sprints 11 y 12): seguir la skill `interaccion-bci-vanilla` (tokens de movimiento, catálogo de patrones, íconos y accesibilidad). Si no está disponible, sus reglas están resumidas en `PLAN.md`, Sprint 11.
 - Revisión de UI/UX: la skill `ui-ux-pro-max` (instalada en `.agents/skills/` y `.claude/skills/`; buscador en `scripts/search.py`) se usa para revisar accesibilidad, interacción, animación, navegación y formularios. **Nunca reemplaza el Bci Kit**: no se cambian colores, tipografía, botones ni íconos por sus paletas o fuentes, y sus sugerencias no pasan por encima de "Textos mínimos, al estilo Bci".
 - Auditoría de interfaz: la skill `web-design-guidelines` (Vercel, en `.agents/skills/` y `.claude/skills/`) revisa los archivos contra las Web Interface Guidelines y entrega hallazgos `archivo:línea`. Sus hallazgos se aplican sin romper el Bci Kit ni "Textos mínimos, al estilo Bci".
