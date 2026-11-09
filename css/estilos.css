@@ -3152,3 +3152,6 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .barrio-ruta { margin: 0; font-size: 14px; color: var(--gray-semidark); }
 .barrio-ruta:empty { display: none; }
 .barrio #barrio-abrir { display: block; text-align: center; margin-top: 6px; }
+/* 9-nov (opción 2): el grupo como posibilidad en el detalle, desde el camino con garantía del Estado. */
+.grupo-posible { margin-top: 12px; border: 1.5px dashed var(--blue-40); background: var(--blue-20); color: var(--gray-dark); text-decoration: none; }
+.grupo-posible strong { color: var(--blue-dark); }

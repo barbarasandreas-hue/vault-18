@@ -514,11 +514,15 @@
   function paraVivir(p) { return p.tipo === 'conjunto' || p.tipo === 'venta'; }
 
   function cuposExtra(proyecto) {
-    var tuyo = estado.compra && estado.compra.proyectoId === proyecto.id ? 1 : 0;
+    var tuyo = estado.compra && estado.compra.proyectoId === proyecto.id && !estado.compra.sinGrupo ? 1 : 0;
     var unidos = estado.unidosGrupo[proyecto.id] || 0;
     return Math.min(tuyo + unidos, proyecto.cupos - proyecto.cuposTomados);
   }
   function esMiProyecto(proyecto) { return !!(estado.compra && estado.compra.proyectoId === proyecto.id); }
+  // 9-nov (opción 2): un edificio en obra con grupo también se puede comprar solo, con garantía del Estado,
+  // a precio de lista. La compra lo anota con sinGrupo; el grupo se muestra como posibilidad, nunca aplicado.
+  function compraSinGrupo(p) { return !!(estado.compra && estado.compra.proyectoId === p.id && estado.compra.sinGrupo); }
+  function enGrupoDe(p) { return p.tipo === 'conjunto' && !compraSinGrupo(p); }
 
   // S10: si para arrendar eligió un camino sin pie compartido (A solo o crédito al 80 %), en los proyectos
   // en grupo pone el 20 % y no hay inversionistas. El pie compartido siempre lleva inversionistas.
@@ -946,7 +950,7 @@
   // S19-B4: "Desde tu última visita". Se compara con la foto de la vez anterior; lo nuevo queda hasta que se ve.
   function fotoVisita(x) {
     var p = x.p;
-    var grupo = p.tipo === 'conjunto';
+    var grupo = enGrupoDe(p);
     var plazo = x.paso === 2 && estado.ahorroIniciado ? plazoTuPie(p, metaCompra(p)).meses : null;
     return { proyecto: p.id, mes: estado.mesAhorro || 0, cupos: grupo ? resumen(p).cuposTomados : 0, etapa: grupo ? etapaObraHoy(p) : 0,
       llegada: typeof plazo === 'number' ? (estado.mesAhorro || 0) + plazo : null };
@@ -983,7 +987,7 @@
     var dias = p.cierre ? diasEntre(hoyDemo(), p.cierre) : 0;
     var aviso = {
       cierre: dias > 0 ? 'El proyecto cierra en ' + plural(dias, 'día', 'días') + ', el ' + formatoFecha(p.cierre) + '.' : null,
-      cupos: p.tipo === 'conjunto'
+      cupos: enGrupoDe(p)
         ? (grupoCerrado(p) && r.cuposLibres > 0
           ? 'El grupo cerró con ' + r.cuposTomados + ' de ' + r.cupos + ': tu descuento es ' + formatoPorcentaje(r.descuento, 0) + '.'
           : r.cuposLibres > 0
@@ -1450,8 +1454,9 @@
     return otra ? 'con-otra' : false;
   }
   // El plazo de una compra o de un departamento elegido (un solo número).
-  function plazoDepartamento(p, mensual) {
-    var on = Object.assign({}, piezasOn(), { grupo: p.tipo === 'conjunto' });
+  // sinGrupo: el mismo departamento comprado solo (a precio de lista), por ejemplo desde el camino con garantía del Estado.
+  function plazoDepartamento(p, mensual, sinGrupo) {
+    var on = Object.assign({}, piezasOn(), { grupo: p.tipo === 'conjunto' && !sinGrupo && !compraSinGrupo(p) });
     var pf = perfilPiezas();
     if (mensual) pf.ahorroMensual = mensual;
     return calcularPiezas(pf, on, deptoDeProyecto(p), hoyDemo());
@@ -2096,12 +2101,19 @@
   // sufijo (9-nov): lo que va después del id en la dirección, por ejemplo el camino desde el que se mira.
   function tarjetaProyecto(p, base, compacta, sufijo) {
     var r = resumen(p);
+    // 9-nov (opción 2): en un camino sin grupo, el edificio en obra se muestra a precio de lista, sin el descuento del grupo.
+    var caminoT = sufijo && CAMINOS[sufijo.slice(1)];
+    var solo = p.tipo === 'conjunto' && estado.modo === 'vivir' && !!caminoT && !caminoT.grupo;
     var d = departamentosDe(p.id)[0];
     var completo = r.ahorroCompleto > r.ahorro ? formatoRedondeado(r.ahorroCompleto) + ' si se completa' : '';
     var conIva = p.tipo === 'venta' && estado.modo === 'vivir' && piezasValidas(piezasOn()).iva;
     var grupoTxt = p.tipo === 'conjunto' ? r.cuposTomados + ' de ' + p.cupos : '';
     var etiqueta, cifra, lineas = [];
-    if (p.tipo !== 'conjunto') {
+    if (solo) {
+      etiqueta = 'Precio del departamento';
+      cifra = formatoRedondeado(ufAPesos(plazoDepartamento(p, null, true).precioUF));
+      lineas.push('En obra' + SEP + (p.entregaEstimada ? 'entrega ' + formatoFecha(p.entregaEstimada) : 'en construcción'));
+    } else if (p.tipo !== 'conjunto') {
       etiqueta = 'Precio' + (conIva ? ' sin IVA' : ' del departamento');
       cifra = formatoRedondeado(p.tipo === 'venta' && estado.modo === 'vivir' ? ufAPesos(plazoDepartamento(p).precioUF) : r.escenario.precio);
       if (p.tipo === 'financiamiento') lineas.push(lineaPersonasPie(p));
@@ -2114,7 +2126,7 @@
       else { lineas.push((r.ahorro > 0 && completo ? completo + SEP : '') + grupoTxt); lineas.push('Cierra el ' + formatoFecha(p.cierre)); }
     }
     var foto = fotoEdificio(p);
-    var chipTipo = p.tipo === 'conjunto' ? ['azul', 'Compra en grupo'] : p.tipo === 'venta' ? ['verde', 'Terminado' + (conIva ? SEP + 'sin IVA' : '')] : ['amarillo', NOMBRE_TIPO[p.tipo]];
+    var chipTipo = solo ? ['azul', 'En obra'] : p.tipo === 'conjunto' ? ['azul', 'Compra en grupo'] : p.tipo === 'venta' ? ['verde', 'Terminado' + (conIva ? SEP + 'sin IVA' : '')] : ['amarillo', NOMBRE_TIPO[p.tipo]];
     return '<li><a class="tarjeta tarjeta-proyecto tarjeta-canvas" href="' + (base || '#departamentos/') + esc(p.id) + (sufijo || '') + '">' +
       (foto ? '<img class="tp-foto" src="' + foto + '" alt="' + esc(p.nombre) + ' (foto referencial)" loading="lazy" width="800" height="600">' : '<span class="tp-foto">' + fachada(p) + '</span>') +
       (compacta ? '' : '<span class="tp-tipo ' + chipTipo[0] + '">' + chipTipo[1] + '</span>') +
@@ -2123,7 +2135,7 @@
       '<p class="tp-etiqueta">' + etiqueta + '</p><strong class="tp-cifra">' + cifra + '</strong>' +
       lineas.map(function (l) { return '<p class="tp-linea">' + l + '</p>'; }).join('') +
       lineaMasBarato(p, r, d) +
-      (estado.modo === 'vivir' && estado.preguntasListas && paraVivir(p) && razonJusto(plazoDepartamento(p))
+      (estado.modo === 'vivir' && estado.preguntasListas && paraVivir(p) && razonJusto(plazoDepartamento(p, null, solo))
         ? '<p class="texto-apoyo aviso-justo">' + icono('i-alerta') + 'Te queda poco para vivir</p>' : '') +
       (compacta ? '' : '<span class="tp-ver">Ver proyecto ›</span>') +
       '</a>' + botonFavorito(p) + '</li>';
@@ -2525,6 +2537,7 @@
     var c = estado.caminoElegido && CAMINOS[estado.caminoElegido];
     if (p.tipo === 'venta') return 'individual-vivir';
     if (p.tipo === 'conjunto') {
+      if (compraSinGrupo(p)) return 'individual-vivir';
       if (c && c.grupo) return estado.caminoElegido;
       return estado.modo === 'vivir' ? 'grupo-vivir' : 'grupo-invertir';
     }
@@ -2553,13 +2566,17 @@
     var conjunto = p.tipo === 'conjunto';
     var esMiCompra = estado.compra && estado.compra.proyectoId === p.id;
     var vivirAqui = estado.modo === 'vivir' && paraVivir(p) && ctx !== 'inversiones' && estado.preguntasListas;
-    var pd = vivirAqui ? plazoDepartamento(p) : null;
+    // 9-nov (opción 2): desde un camino sin grupo (o si lo compraste solo), el edificio en obra va a precio de lista
+    // y el grupo es solo una posibilidad. Regla del CLAUDE.md: un atajo nunca se da por aplicado si no lo elegiste.
+    var solo = conjunto && estado.modo === 'vivir' && (caminoSinGrupo || compraSinGrupo(p));
+    var enGrupo = conjunto && !solo;
+    var pd = vivirAqui ? plazoDepartamento(p, null, solo) : null;
 
-    var precio = conjunto
+    var precio = enGrupo
       ? '<p class="precio-lista">Precio de lista <s>' + formatoPesos(e.precioLista) + '</s></p>' +
         '<strong class="numero display-3">' + formatoPesos(e.precio) + '</strong>' +
         '<p class="texto-apoyo">Ahorras ' + formatoPesos(r.ahorro) + ' (' + formatoPorcentaje(r.descuento, 0) + ')</p>'
-      : '<strong class="numero display-3">' + formatoPesos(e.precio) + '</strong>';
+      : '<strong class="numero display-3">' + formatoPesos(solo ? ufAPesos(d.listaUF) : e.precio) + '</strong>';
 
     var rinde = estado.modo === 'arrendar'
       ? '<p class="texto-apoyo bloque">Arriendo estimado por IA: <strong>' + formatoPesos(r.arriendoBruto) + '</strong> · rinde <strong>' +
@@ -2570,6 +2587,15 @@
       ? 'Si no se completa, sales sin costo.'
       : 'Si no se reúne el 15\u00a0%, sales sin costo.';
 
+    // La posibilidad: el mismo departamento uniéndote a su grupo (otro camino).
+    var grupoPosible = '';
+    if (solo && vivirAqui && !esMiCompra && !grupoCerrado(p) && r.cuposLibres > 0) {
+      var pdG = plazoDepartamento(p);
+      var menos = ufAPesos(pd.precioUF - pdG.precioUF), antes = (pd.meses || 0) - (pdG.meses || 0);
+      if (menos > 0) grupoPosible = '<a class="tarjeta fila grupo-posible" href="#camino/proyecto/' + esc(p.id) + '/grupo-vivir">' + icono('i-grupo', 'icono-grande') +
+        '<span><strong>Si te unes a su grupo</strong><small>Podrías pagar ' + formatoRedondeado(menos) + ' menos' + (antes > 0 ? ' y llegar ' + plural(antes, 'mes', 'meses') + ' antes' : '') + '</small></span>' +
+        '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>';
+    }
     var invertiste = invertidoEn(p.id) > 0;
     var comprar;
     if (p.tipo === 'financiamiento' && estado.modo === 'vivir' && !esMiCompra) {
@@ -2609,7 +2635,7 @@
     }
 
     // 9-nov: en compra en grupo, cuántos se unieron va arriba, bajo las fotos.
-    var bloqueGrupo = p.tipo === 'venta' || caminoSinGrupo || conjunto && ctx !== 'inversiones' && estado.caminoElegido && CAMINOS[estado.caminoElegido] && !CAMINOS[estado.caminoElegido].grupo ? '' : '<div class="tarjeta bloque">' +
+    var bloqueGrupo = p.tipo === 'venta' || caminoSinGrupo || solo || conjunto && ctx !== 'inversiones' && estado.caminoElegido && CAMINOS[estado.caminoElegido] && !CAMINOS[estado.caminoElegido].grupo ? '' : '<div class="tarjeta bloque">' +
         (p.tipo === 'conjunto' ? grupoConEdificio(p, r) : avanceDe(p, r)) +
         '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
         '<p class="frase-cierre">' + frase + '</p>' +
@@ -2620,7 +2646,7 @@
       // S25: como el canvas: título, el tipo en un chip y la ficha.
       '<header class="detalle-cabecera">' + (ctx !== 'inversiones' ? botonFavorito(p) : '') +
         '<h1 id="titulo-proyecto" class="h2">' + esc(p.nombre) + '</h1>' +
-        '<span class="tp-tipo ' + (conjunto ? 'azul' : p.tipo === 'venta' ? 'verde' : 'amarillo') + '">' + NOMBRE_TIPO[p.tipo] + '</span>' +
+        '<span class="tp-tipo ' + (conjunto ? 'azul' : p.tipo === 'venta' ? 'verde' : 'amarillo') + '">' + (solo ? 'En obra' : NOMBRE_TIPO[p.tipo]) + '</span>' +
         '<p class="texto-apoyo">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       '</header>' +
       galeria(fotosDe(p, d)) +
@@ -2634,12 +2660,13 @@
           // 9-nov: el grupo va justo debajo de tus llaves.
           (conjunto ? bloqueGrupo : '') +
           '<ul class="detalle-filas">' +
-            '<li><span>Precio' + (conjunto ? ' con descuento' : p.tipo === 'venta' && piezasValidas(piezasOn()).iva ? ' sin IVA' : '') + '</span><strong>' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong></li>' +
-            (conjunto ? '<li><span>Ahorras en grupo hoy</span><strong>' + formatoRedondeado(r.ahorro) + '</strong></li>' : '') +
+            '<li><span>Precio' + (enGrupo ? ' con descuento' : p.tipo === 'venta' && piezasValidas(piezasOn()).iva ? ' sin IVA' : '') + '</span><strong>' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong></li>' +
+            (enGrupo ? '<li><span>Ahorras en grupo hoy</span><strong>' + formatoRedondeado(r.ahorro) + '</strong></li>' : '') +
             '<li><span>Juntas antes de firmar</span><strong>' + formatoRedondeado(pd.meta) + '</strong></li>' +
             '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2) + '</strong><small>hoy son ' + formatoRedondeado(pd.dividendo) + '</small></span></li>' +
             '<li class="suave"><span>Sin subsidio a la tasa</span><span>' + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + SEP + 'hoy ' + formatoRedondeado(pd.dividendoSinSubsidio) + '</span></li>' +
           '</ul>' +
+          grupoPosible +
           '<a class="tarjeta dueno-card" href="#camino/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
             '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para vivir</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
           barrioHtml(p) +
@@ -2659,7 +2686,7 @@
         '<ul class="datos-inversion">' +
           '<li><span>Gastos al firmar</span><strong>' + (vivirAqui ? formatoRedondeado(pd.gastos) : formatoPesos(e.gastos)) + '</strong></li>' +
           (vivirAqui ? '' : '<li><span>Juntas antes de firmar</span><strong>' + formatoPesos(e.alEscriturar) + '</strong></li>') +
-          (vivirAqui && conjunto && r.ahorroCompleto > r.ahorro ? '<li><span>Si el grupo se completa, ahorras</span><strong>' + formatoRedondeado(r.ahorroCompleto) + '</strong></li>' : '') +
+          (vivirAqui && enGrupo && r.ahorroCompleto > r.ahorro ? '<li><span>Si el grupo se completa, ahorras</span><strong>' + formatoRedondeado(r.ahorroCompleto) + '</strong></li>' : '') +
         '</ul>')) +
 
       (p.tipo === 'venta'
@@ -2689,14 +2716,14 @@
     if ($('btn-detalle-credito')) $('btn-detalle-credito').addEventListener('click', function () {
       abrirHojaContenido('Detalle del crédito', repartoCasa(partesPiezas(pd), formatoRedondeado) +
         '<ul class="datos-inversion"><li><span>Gastos al firmar</span><strong>' + formatoRedondeado(pd.gastos) + '</strong></li>' +
-        (conjunto && r.ahorroCompleto > r.ahorro ? '<li><span>Si el grupo se completa, ahorras</span><strong>' + formatoRedondeado(r.ahorroCompleto) + '</strong></li>' : '') + '</ul>',
+        (enGrupo && r.ahorroCompleto > r.ahorro ? '<li><span>Si el grupo se completa, ahorras</span><strong>' + formatoRedondeado(r.ahorroCompleto) + '</strong></li>' : '') + '</ul>',
         $('btn-detalle-credito'));
     });
     var botonComprar = $('btn-comprar');
     if (botonComprar) {
       botonComprar.addEventListener('click', function () {
         conCarga(botonComprar, function () {
-          guardarCompra({ proyectoId: p.id, departamentoId: d.id, paso: 1 });
+          guardarCompra(solo ? { proyectoId: p.id, departamentoId: d.id, paso: 1, sinGrupo: true } : { proyectoId: p.id, departamentoId: d.id, paso: 1 });
           location.hash = '#camino/postular/datos';
         });
       });
@@ -2705,7 +2732,7 @@
     if (botonCambiar) {
       botonCambiar.addEventListener('click', function () {
         conCarga(botonCambiar, function () {
-          guardarCompra({ proyectoId: p.id, departamentoId: d.id, paso: 1 });
+          guardarCompra(solo ? { proyectoId: p.id, departamentoId: d.id, paso: 1, sinGrupo: true } : { proyectoId: p.id, departamentoId: d.id, paso: 1 });
           location.hash = '#camino/postular/datos';
         });
       });
@@ -2729,7 +2756,7 @@
             cerrarHoja(false);
             estado.caminoElegido = caminoParaProyecto(p);
             guardarEstado();
-            guardarCompra({ proyectoId: p.id, departamentoId: d.id, paso: 1 });
+            guardarCompra(solo ? { proyectoId: p.id, departamentoId: d.id, paso: 1, sinGrupo: true } : { proyectoId: p.id, departamentoId: d.id, paso: 1 });
             location.hash = '#camino/postular/datos';
           });
         });
@@ -3653,7 +3680,7 @@
   function renderTu5(p, d) {
     var meta = metaCompra(p);
     // Si ya se juntó todo (por ejemplo, al cambiar a un proyecto más barato), se pasa a la firma.
-    var enGrupo = p.tipo === 'conjunto';
+    var enGrupo = enGrupoDe(p);
     var cabecera = tarjetaCompacta(p, 'Pagas al mes', resumen(p).escenario.totalMes, formatoRedondeado) + listaPasos(2) +
       '<h2 class="h3 bloque" id="titulo-tu5">' + (enGrupo ? 'Tu pie en cuotas ' : 'Tu pie ') + ayuda('pie') + '</h2>';
     // S10-F3: en la compra en grupo, el pie va a una cuenta bloqueada de Bci y se puede salir sin multa.
@@ -3839,7 +3866,7 @@
         '</div>' +
         '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-saltar-entrega">' + (esp.freno === 'entrega' ? 'Ir a la entrega · demo' : 'Ir a tu firma · demo') + '</button></div>' +
         bloqueJuntos() +
-        (p.tipo === 'conjunto' ? tuGrupoYObra(p) : '') +
+        (enGrupoDe(p) ? tuGrupoYObra(p) : '') +
       '</section>';
     iniciarJuntos(p, d);
     iniciarPlegables();
@@ -4855,7 +4882,7 @@
   function proyectoCompra() { return estado.compra ? buscarProyecto(estado.compra.proyectoId) : null; }
   function esGrupo() {
     var p = proyectoCompra();
-    if (p) return p.tipo === 'conjunto';
+    if (p) return enGrupoDe(p);
     return !!(estado.caminoElegido && CAMINOS[estado.caminoElegido] && CAMINOS[estado.caminoElegido].grupo);
   }
   // Lo que hay que juntar: con compra, la de su departamento; sin compra, la del techo de su rango.
@@ -4892,7 +4919,7 @@
   }
   function nombreCaminoActual() {
     var p = proyectoCompra();
-    if (p) return p.tipo === 'conjunto' ? CAMINOS['grupo-' + (estado.modo === 'vivir' ? 'vivir' : 'invertir')].corto : CAMINOS[estado.modo === 'vivir' ? 'individual-vivir' : 'individual-invertir'].corto;
+    if (p) return enGrupoDe(p) ? CAMINOS['grupo-' + (estado.modo === 'vivir' ? 'vivir' : 'invertir')].corto : CAMINOS[estado.modo === 'vivir' ? 'individual-vivir' : 'individual-invertir'].corto;
     return estado.caminoElegido && CAMINOS[estado.caminoElegido] ? CAMINOS[estado.caminoElegido].corto : null;
   }
   function listosDe(h) { return h.hitos.filter(function (x) { return x.estado === 'hecho'; }).length; }
@@ -6308,7 +6335,7 @@
       var r = resumen(p);
       var paso = pasoEfectivo();
       c.lugar = 'en ' + p.comuna;
-      if (p.tipo === 'conjunto' && paso < 4) {
+      if (enGrupoDe(p) && paso < 4) {
         c.grupo = cuposParaMasDescuento(r.cuposTomados, r.cupos);
         c.obra = { etapa: p.etapaObra || 0 };
       }
