@@ -71,3 +71,14 @@ test('Arriendo con opción de compra: entras con 5 %, compras al 80 % sin subsid
   assert.strictEqual(c.devolucionArriendo(4500000, 10000000, 'credito'), 14500000);
   assert.strictEqual(d.ARRIENDOS_OPCION.length, 4);
 });
+
+test('Arriendo con opción como camino: sus 6 hitos en orden', () => {
+  assert.deepStrictEqual(c.HITOS_CAMINO.arriendo, ['numeros', 'entrada', 'contrato', 'pie', 'preaprobacion', 'es-tuyo']);
+  const base = { arriendo: true, numeros: true, cuentaVivienda: true, ahorrado: 1500000, entrada: 4500000, meta: 19900000, contratoArriendo: false };
+  assert.strictEqual(c.hitoActual(base).id, 'entrada');
+  assert.strictEqual(c.hitoActual(Object.assign({}, base, { ahorrado: 4500000 })).id, 'contrato');
+  assert.strictEqual(c.hitoActual(Object.assign({}, base, { ahorrado: 4500000, contratoArriendo: true })).id, 'pie');
+  assert.strictEqual(c.hitoActual(Object.assign({}, base, { ahorrado: 19900000, contratoArriendo: true })).id, 'preaprobacion');
+  assert.strictEqual(c.hitoActual(Object.assign({}, base, { ahorrado: 19900000, contratoArriendo: true, preaprobado: true })).nombre, 'Es tuyo');
+  assert.strictEqual(c.hitoActual(base).total, 6);
+});

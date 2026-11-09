@@ -1493,7 +1493,10 @@ function mejorPieza(perfil, on, depto, hoyISO) {
 //   ds1: null | { montoUF }, rsh, ds1Postulado, documentos, bajoLlave, ahorroAutomatico, equipo, eligio, cuotaPendiente }
 var HITOS_CAMINO = {
   individual: ['numeros', 'cuenta', 'pie', 'preaprobacion', 'asegurar', 'es-tuyo'],
-  grupo: ['numeros', 'cuenta', 'preaprobacion', 'pie', 'aprobacion', 'es-tuyo']
+  grupo: ['numeros', 'cuenta', 'preaprobacion', 'pie', 'aprobacion', 'es-tuyo'],
+  // 9-nov: arriendo con opción de compra. Entras con el 5 % (en tu cuenta de vivienda), firmas y te mudas,
+  // juntas tu pie con el aporte, pides tu crédito y firmas la escritura.
+  arriendo: ['numeros', 'entrada', 'contrato', 'pie', 'preaprobacion', 'es-tuyo']
 };
 var HITOS = {
   numeros: { nombre: 'Tus números', accion: 'Cuéntanos tus números', gana: 'Sabes cuándo llegas', cuesta: '2 minutos' },
@@ -1502,14 +1505,24 @@ var HITOS = {
   preaprobacion: { nombre: 'Preaprobación Bci', accion: 'Pide tu preaprobación', gana: 'Sabes cuánto te presta Bci', cuesta: '10 minutos' },
   asegurar: { nombre: 'Asegurar tu departamento', accion: 'Elige tu departamento', gana: 'Reservas tu departamento', cuesta: '15 minutos' },
   aprobacion: { nombre: 'Aprobación final', accion: 'Revisa tu aprobación', gana: 'Bci confirma tu crédito', cuesta: '15 minutos' },
-  'es-tuyo': { nombre: 'Es tuyo', accion: 'Prepara tu firma', gana: 'Recibes tus llaves', cuesta: '1 día' }
+  'es-tuyo': { nombre: 'Es tuyo', accion: 'Prepara tu firma', gana: 'Recibes tus llaves', cuesta: '1 día' },
+  entrada: { nombre: 'Juntar el 5 % para entrar', accion: 'Junta tu entrada', gana: 'Puedes firmar y mudarte', cuesta: 'Cada mes' },
+  contrato: { nombre: 'Firmar y mudarte', accion: 'Firma tu contrato', gana: 'Vives en tu departamento', cuesta: '1 día' }
+};
+// 9-nov: en el arriendo con opción, el pie se junta con el aporte de cada mes y el crédito es al 80 %.
+var HITOS_ARRIENDO = {
+  pie: { nombre: 'Juntar tu pie', accion: 'Mira tu pie', gana: 'Desde el tercer año, compras', cuesta: 'Cada mes' },
+  preaprobacion: { nombre: 'Preaprobación Bci', accion: 'Pide tu preaprobación', gana: 'Bci te presta el 80 %', cuesta: '10 minutos' },
+  'es-tuyo': { nombre: 'Es tuyo', accion: 'Firma la escritura', gana: 'El departamento pasa a tu nombre', cuesta: '1 día' }
 };
 // En grupo, el hito 3 también asegura tu cupo y el pie se paga en cuotas durante la obra.
 var HITOS_GRUPO = {
   preaprobacion: { nombre: 'Preaprobación y tu cupo', accion: 'Pide tu preaprobación', gana: 'Aseguras tu cupo en el grupo' },
   pie: { nombre: 'Juntar tu pie en cuotas', gana: 'Pagas tu pie durante la obra' }
 };
-function datosHito(id, grupo) { return Object.assign({ id: id }, HITOS[id], grupo ? HITOS_GRUPO[id] : null); }
+// tipo: true (grupo), 'arriendo' o falso (individual).
+function datosHito(id, tipo) { return Object.assign({ id: id }, HITOS[id], tipo === 'arriendo' ? HITOS_ARRIENDO[id] : tipo ? HITOS_GRUPO[id] : null); }
+function tipoHitos(s) { return s.arriendo ? 'arriendo' : s.grupo; }
 
 function hitoHecho(id, s) {
   switch (id) {
@@ -1519,22 +1532,24 @@ function hitoHecho(id, s) {
     case 'preaprobacion': return !!s.preaprobado;
     case 'asegurar': case 'aprobacion': return !!s.asegurado;
     case 'es-tuyo': return !!s.esTuyo;
+    case 'entrada': return !!s.contratoArriendo || (!!s.cuentaVivienda && s.entrada > 0 && s.ahorrado >= s.entrada);
+    case 'contrato': return !!s.contratoArriendo;
   }
   return false;
 }
 
 // El hito actual es el primero que falta. Devuelve { indice (1 a 6), id, nombre, total, terminado, hitos }.
 function hitoActual(s) {
-  var ids = HITOS_CAMINO[s.grupo ? 'grupo' : 'individual'];
+  var ids = HITOS_CAMINO[s.arriendo ? 'arriendo' : s.grupo ? 'grupo' : 'individual'];
   var todo = !!s.esTuyo;
   var hechos = ids.map(function (id) { return todo || hitoHecho(id, s); });
   var i = hechos.indexOf(false);
   var terminado = i === -1;
   if (terminado) i = ids.length - 1;
   return {
-    indice: i + 1, id: ids[i], nombre: datosHito(ids[i], s.grupo).nombre, total: ids.length, terminado: terminado,
+    indice: i + 1, id: ids[i], nombre: datosHito(ids[i], tipoHitos(s)).nombre, total: ids.length, terminado: terminado,
     hitos: ids.map(function (id, k) {
-      return Object.assign(datosHito(id, s.grupo), { estado: hechos[k] ? 'hecho' : (k === i && !terminado ? 'actual' : 'pendiente') });
+      return Object.assign(datosHito(id, tipoHitos(s)), { estado: hechos[k] ? 'hecho' : (k === i && !terminado ? 'actual' : 'pendiente') });
     })
   };
 }
@@ -1595,7 +1610,7 @@ function siguientePaso(s, hoy) {
   var porId = {}; ms.forEach(function (x) { porId[x.id] = x; });
   var base = { hito: { indice: h.indice, total: h.total } };
   var deHito = function (id, plazo) {
-    var d = datosHito(id, s.grupo);
+    var d = datosHito(id, tipoHitos(s));
     return Object.assign({ tipo: 'hito', id: id, titulo: d.accion, gana: d.gana, cuesta: d.cuesta, plazo: plazo || null }, base);
   };
   var deMision = function (x, plazo) {
@@ -1783,6 +1798,7 @@ if (typeof module !== 'undefined') module.exports = {
   capasProteccion: capasProteccion,
   HITOS_CAMINO: HITOS_CAMINO,
   HITOS: HITOS,
+  HITOS_ARRIENDO: HITOS_ARRIENDO,
   FECHAS_IMPORTAN: FECHAS_IMPORTAN,
   diasHastaFecha: diasHastaFecha,
   hitoActual: hitoActual,

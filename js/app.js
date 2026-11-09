@@ -10,7 +10,7 @@
   };
 
   // S21-B3: hitos y misiones que se marcan como hechos (simulado).
-  var CLAVES_PASOS = ['cuentaVivienda', 'rsh', 'ds1Postulado', 'documentos', 'bajoLlave', 'preaprobado'];
+  var CLAVES_PASOS = ['cuentaVivienda', 'rsh', 'ds1Postulado', 'documentos', 'bajoLlave', 'preaprobado', 'contratoArriendo', 'arriendoTuyo'];
   var CLAVE_COMPRA = 'primer-peldano-compra';
   var CLAVE_INVERSIONES = 'primer-peldano-inversiones';
 
@@ -61,6 +61,8 @@
     construido: null,        // S23-B: la última etapa del departamento que se vio construida (para animar solo lo nuevo)
     favoritos: [],           // S23-C: proyectos guardados con el corazón
     trabajo: '',             // 9-nov: dónde trabaja (para ver cómo llegar en el mapa, dentro de la app)
+    arriendoElegido: null,   // 9-nov: el departamento elegido en el arriendo con opción de compra (ARRIENDOS_OPCION)
+    mesContrato: null,       // 9-nov: el mes de la demo (mesAhorro) en que firmó el contrato de arriendo
     animosDados: null,       // S22-F2: hitos y misiones que ya recibieron su "¡Bien!" (null = todavía no se mira)
     animos: [],              // S22-F2: "¡Bien!" de Tu equipo que falta ver [{ clave, motivo, relacion, id }]
     pasos: {}                // S21-B3: hitos y misiones hechos { cuentaVivienda, rsh, ds1Postulado, documentos, bajoLlave, preaprobado }
@@ -70,13 +72,13 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
-    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {}, visitaVersion: 2, vecinos: {}, trabajo: '' };
+    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {}, visitaVersion: 2, vecinos: {}, trabajo: '', arriendoElegido: null, mesContrato: null };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -335,6 +337,8 @@
       estado.construido = Number.isInteger(g.construido) ? g.construido : null;
       // 9-nov: en qué grupos quiere conocer a sus vecinos (solo para vivir, por elección propia).
       estado.trabajo = typeof g.trabajo === 'string' ? g.trabajo.slice(0, 120) : '';
+      estado.mesContrato = Number.isInteger(g.mesContrato) ? g.mesContrato : null;
+      estado.arriendoElegido = ARRIENDOS_OPCION.some(function (u) { return u.id === g.arriendoElegido; }) ? g.arriendoElegido : null;
       estado.vecinos = {};
       if (g.vecinos && typeof g.vecinos === 'object') Object.keys(g.vecinos).forEach(function (id) { if (g.vecinos[id] === true && buscarProyecto(id)) estado.vecinos[id] = true; });
       estado.favoritos = Array.isArray(g.favoritos) ? g.favoritos.filter(function (id) { return typeof id === 'string' && buscarProyecto(id); }) : [];
@@ -358,7 +362,7 @@
         (g.preguntasListas === undefined && estado.sueldoPropio > 0 && estado.ahorroMensual > 0);
       // S26: el camino que juntaba grupo y pie compartido ya no se ofrece: pasa a pie compartido.
       if (g.caminoElegido === 'grupo-pie-compartido') g.caminoElegido = 'pie-compartido';
-      if (typeof CAMINOS !== 'undefined' && CAMINOS[g.caminoElegido] && !CAMINOS[g.caminoElegido].ficha) estado.caminoElegido = g.caminoElegido;
+      if (typeof CAMINOS !== 'undefined' && CAMINOS[g.caminoElegido] && (!CAMINOS[g.caminoElegido].ficha || g.caminoElegido === 'arriendo-opcion')) estado.caminoElegido = g.caminoElegido;
     } catch (e) { /* sin localStorage: valores por defecto */ }
   }
 
@@ -1960,9 +1964,10 @@
   // Adónde lleva la tarjeta: una dirección, o null si se abre la hoja del hito o la misión.
   function destinoSiguiente(sp) {
     if (sp.tipo === 'cuota') return '#pie';
-    if (sp.tipo === 'mision') return sp.id === 'equipo' ? '#perfil' : (sp.id === 'elegir' ? (estado.caminoElegido ? '#camino/elegir' : '#explorar') : null);
+    if (sp.tipo === 'mision') return sp.id === 'equipo' ? '#perfil' : (sp.id === 'elegir' ? (esArriendo() ? '#explorar/arriendo-opcion' : estado.caminoElegido ? '#camino/elegir' : '#explorar') : null);
     if (sp.id === 'numeros') return '#camino';
     if (sp.id === 'pie') return '#pie';
+    if (esArriendo()) return null;
     if (sp.id === 'cuenta' || (sp.id === 'preaprobacion' && !(estado.compra && !estado.compra.carga))) return null;
     if (estado.compra) return '#camino/' + rutaPasoActual();
     return estado.caminoElegido ? '#camino/elegir' : '#explorar';
@@ -2011,6 +2016,7 @@
     if (estado.inversiones.length && !estado.preguntasListas) return renderSoloInversiones();
     if (!estado.preguntasListas) return renderPreguntas();
     if (!rangoActual()) { estado.pregunta = 4; return renderPreguntas(); }
+    if (esArriendo()) return renderInicioArriendo();
     if (estado.modo === 'vivir') renderTuCaminoVivir(); else renderTuCamino();
   }
 
@@ -2708,7 +2714,8 @@
         '<p class="frase-cierre">Ganancias y pérdidas, según la parte de cada uno. ' + ayuda('cuenta-custodia') + '</p>' +
       '</section>') +
 
-      '<div class="acciones">' + comprar + '</div>';
+      // Evaluación heurística (punto 3): la acción principal queda fija abajo mientras se lee el detalle.
+      '<div class="acciones accion-fija detalle-accion">' + comprar + '</div>';
 
     iniciarGalerias(contenedor);
     iniciarPlegables();
@@ -4889,6 +4896,7 @@
   function metaPie() {
     var p = proyectoCompra();
     if (p) return metaCompra(p);
+    if (esArriendo()) return arriendoActual().a.meta;
     if (!estado.preguntasListas || !rangoActual()) return 0;
     if (estado.modo === 'vivir') return plazoVivir(estado.ahorroMensual || 300000).hasta.meta;
     var id = estado.caminoElegido || recomendarCamino(perfilActual()).id;
@@ -4908,13 +4916,16 @@
     var paso = c ? pasoEfectivo() : 0;
     var preaprobado = !!ps.preaprobado || !!(c && c.carga);
     return {
-      grupo: esGrupo(), numeros: !!(estado.preguntasListas && rangoActual()),
+      grupo: !esArriendo() && esGrupo(), numeros: !!(estado.preguntasListas && rangoActual()),
       cuentaVivienda: !!ps.cuentaVivienda || estado.ahorroIniciado,
       ahorrado: ahorradoTuPie(meta), meta: meta,
-      preaprobado: preaprobado, asegurado: !!(c && c.carga), esTuyo: paso === 4,
+      preaprobado: preaprobado, asegurado: !!(c && c.carga), esTuyo: paso === 4 || (esArriendo() && !!ps.arriendoTuyo),
       ds1: ds1Mision(), rsh: !!ps.rsh, ds1Postulado: !!ps.ds1Postulado, documentos: !!ps.documentos || preaprobado,
       bajoLlave: !!ps.bajoLlave, ahorroAutomatico: !!estado.cuotaAutomatica, equipo: estado.equipo.length > 0,
-      eligio: !!c, cuotaPendiente: false
+      eligio: !!c || (esArriendo() && !!estado.arriendoElegido), cuotaPendiente: false,
+      // 9-nov: arriendo con opción de compra.
+      arriendo: esArriendo(), entrada: esArriendo() ? arriendoActual().a.entrada : 0,
+      contratoArriendo: !!ps.contratoArriendo
     };
   }
   function nombreCaminoActual() {
@@ -5058,7 +5069,7 @@
     if ($('btn-meta-rango')) $('btn-meta-rango').addEventListener('click', function () { abrirCambiarRango($('btn-meta-rango')); });
   }
   var pasoElegido = null, listosVistos = null;
-  var CORTO_HITO = { numeros: 'Números', cuenta: 'Cuenta', pie: 'Pie', preaprobacion: 'Crédito', asegurar: 'Reserva', aprobacion: 'Final', 'es-tuyo': 'Es tuyo' };
+  var CORTO_HITO = { numeros: 'Números', cuenta: 'Cuenta', pie: 'Pie', preaprobacion: 'Crédito', asegurar: 'Reserva', aprobacion: 'Final', 'es-tuyo': 'Es tuyo', entrada: 'Entrada', contrato: 'Te mudas' };
   var TEXTO_HITO = {
     numeros: 'Con tus sueldos y tu ahorro calculamos cuándo llegas.',
     cuenta: 'Una cuenta de ahorro para la vivienda en Bci, en UF. Todo tu pie pasa por ella.',
@@ -5066,13 +5077,20 @@
     preaprobacion: 'Bci revisa tus sueldos y te dice cuánto te presta.',
     asegurar: 'Eliges tu departamento, lo reservas y firmas la promesa.',
     aprobacion: 'Bci revisa todo y confirma tu crédito.',
-    'es-tuyo': 'Tasación, seguros, escritura y llaves, en un solo momento.'
+    'es-tuyo': 'Tasación, seguros, escritura y llaves, en un solo momento.',
+    entrada: 'Juntas el 5' + NBSP + '% en tu cuenta de vivienda para entrar.',
+    contrato: 'Firmas el contrato con el precio fijo en UF y te mudas.'
+  };
+  var TEXTO_HITO_ARRIENDO = {
+    pie: 'Cada mes, el aporte de tu mensualidad va a tu pie.',
+    preaprobacion: 'Desde el tercer año, Bci revisa tus sueldos y te presta el 80' + NBSP + '%.',
+    'es-tuyo': 'Le compras el departamento al socio y pasa a tu nombre.'
   };
   var TEXTO_HITO_GRUPO = {
     preaprobacion: 'Bci revisa tus sueldos y aseguras tu cupo en el grupo.',
     pie: 'Lo pagas en cuotas mientras se construye el edificio.'
   };
-  function textoHito(id, grupo) { return (grupo && TEXTO_HITO_GRUPO[id]) || TEXTO_HITO[id] || ''; }
+  function textoHito(id, grupo) { return (esArriendo() && TEXTO_HITO_ARRIENDO[id]) || (grupo && TEXTO_HITO_GRUPO[id]) || TEXTO_HITO[id] || ''; }
   // Las misiones como en el canvas: círculo de color con ícono, título, fecha en rojo y chip azul.
   var ICONOS_MISION = [
     ['rojo', 'M4 6h16v14H4zM4 10h16M8 3.5v4M16 3.5v4'],
@@ -5105,7 +5123,24 @@
     var hecho = h.estado === 'hecho';
     var c = estado.compra;
     var texto = '', accion = '';
-    if (id === 'numeros') {
+    var ar = s.arriendo ? arriendoActual() : null;
+    if (ar && (id === 'entrada' || id === 'contrato' || id === 'preaprobacion' || id === 'es-tuyo')) {
+      // 9-nov: los hitos del arriendo con opción de compra.
+      var aa = ar.a, uu = ar.u;
+      if (id === 'entrada') {
+        texto = 'Para entrar necesitas ' + formatoRedondeado(aa.entrada) + ' (el 5' + NBSP + '%) en tu cuenta de vivienda.';
+        accion = hecho ? '' : (!s.cuentaVivienda ? botonEnHoja('btn-hito-accion', 'Abrir mi cuenta') : enlaceHoja('#pie', 'Ver tu pie'));
+      } else if (id === 'contrato') {
+        texto = 'Firmas con el socio un contrato de hasta 5 años, con el precio fijo en ' + formatoUF(uu.listaUF) + ', y te mudas a ' + esc(uu.nombre) + '.';
+        accion = hecho ? '' : (!ar.elegido ? enlaceHoja('#explorar/arriendo-opcion', 'Elegir departamento') : botonEnHoja('btn-hito-accion', 'Firmar y mudarme'));
+      } else if (id === 'preaprobacion') {
+        texto = 'Desde el tercer año y con tu pie listo, Bci revisa tus sueldos y te presta el 80' + NBSP + '% (sin subsidio a la tasa).';
+        accion = hecho ? '' : botonEnHoja('btn-hito-accion', 'Pedir mi preaprobación');
+      } else {
+        texto = 'Le compras el departamento al socio al precio fijo. Firmas la escritura y pasa a tu nombre.';
+        accion = hecho ? '' : botonEnHoja('btn-hito-accion', 'Firmar la escritura');
+      }
+    } else if (id === 'numeros') {
       texto = 'Con tus sueldos y tu ahorro calculamos cuándo llegas.';
       accion = hecho ? botonEnHoja('btn-hito-accion', 'Cambiar mis números') : enlaceHoja('#camino', 'Contar mis números');
     } else if (id === 'cuenta') {
@@ -5137,9 +5172,19 @@
         if (!b) return;
         b.addEventListener('click', function () {
           if (id === 'numeros') { cerrarHoja(false); abrirMisDatos(boton); }
-          else if (id === 'cuenta') marcarPaso('cuentaVivienda', 'Abriste tu cuenta de vivienda (simulado).');
+          else if (id === 'cuenta' || id === 'entrada') marcarPaso('cuentaVivienda', 'Abriste tu cuenta de vivienda (simulado).');
+          else if (id === 'contrato') {
+            if (!hitoHecho('entrada', s)) { toast('Primero: junta el 5 % para entrar.'); return; }
+            estado.mesContrato = estado.mesAhorro || 0;
+            marcarPaso('contratoArriendo', 'Firmaste y te mudaste (simulado).');
+          } else if (id === 'es-tuyo' && s.arriendo) {
+            if (!s.preaprobado) { toast('Primero: tu preaprobación.'); return; }
+            marcarPaso('arriendoTuyo', '¡Es tuyo! (simulado)');
+          }
           else if (id === 'preaprobacion') {
             if (!s.documentos) { toast('Primero: completa tus datos y documentos.'); return; }
+            if (s.arriendo && !hitoHecho('pie', s)) { toast('Primero: junta tu pie.'); return; }
+            if (s.arriendo && (estado.mesAhorro || 0) - (estado.mesContrato || 0) < ARRIENDO_OPCION.compraDesdeMes) { toast('Puedes comprar desde el tercer año de contrato.'); return; }
             marcarPaso('preaprobado', 'Bci te preaprobó (simulado).');
           }
         });
@@ -5175,6 +5220,8 @@
         (r === 'pago' ? '<strong class="numero">+' + formatoPesos(estado.ahorroMensual) + '</strong>' : '') + '</div></li>';
     }).reverse().join('') + '</ul>';
   }
+  // 9-nov: con el arriendo con opción firmado, la cuota de Tu pie es el aporte de la mensualidad.
+  function cuotaMes() { return esArriendo() && estado.pasos.contratoArriendo ? arriendoActual().a.aporte : estado.ahorroMensual; }
   function renderTuPie() {
     var cont = $('pie-contenido');
     var s = fotoPasos();
@@ -5220,12 +5267,12 @@
           (racha > 0 ? plural(racha, 'mes seguido', 'meses seguidos') : 'Tu racha empieza este mes') + '</span>' : '') +
       '</section>' +
       '<section class="tarjeta pie-cuota-mes" aria-labelledby="titulo-cuota-mes">' +
-        '<p class="pie-cuota-fila"><span id="titulo-cuota-mes">Cuota de ' + MESES[Number(hoyDemo().split('-')[1]) - 1] + '</span><strong class="numero">' + formatoRedondeado(estado.ahorroMensual || 0) + '</strong></p>' +
+        '<p class="pie-cuota-fila"><span id="titulo-cuota-mes">Cuota de ' + MESES[Number(hoyDemo().split('-')[1]) - 1] + '</span><strong class="numero">' + formatoRedondeado(cuotaMes() || 0) + '</strong></p>' +
         (listo
           ? '<a class="btn btn-primario btn-lg btn-bloque" href="#pasos">Ver tu siguiente hito</a>'
           : pieLogro
             ? '<div class="pie-listo" role="status"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#28892B"/><path d="M6.5 12.5l3.6 3.6L17.5 8.8" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
-                '<span><strong>¡Listo! Sumaste ' + formatoRedondeado(estado.ahorroMensual || 0) + '</strong><small>' + pieLogro + '</small></span></div>' +
+                '<span><strong>¡Listo! Sumaste ' + formatoRedondeado(cuotaMes() || 0) + '</strong><small>' + pieLogro + '</small></span></div>' +
               '<button type="button" class="enlace pie-otro-mes" id="btn-otro-mes">Simular el mes siguiente</button>'
             : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-pagar-cuota">Pagar mi cuota</button>') +
       '</section>' +
@@ -5243,7 +5290,7 @@
     var pagar = function (pago) {
       if (!estado.ahorroIniciado) { estado.ahorrado = Math.min(meta, estado.ahorroActual || 0); estado.ahorroIniciado = true; }
       var antes = hitosAlcanzados(estado.ahorrado, meta);
-      if (pago) estado.ahorrado = sumarMes(estado.ahorrado, estado.ahorroMensual, meta);
+      if (pago) estado.ahorrado = sumarMes(estado.ahorrado, cuotaMes(), meta);
       var r = registrarMes({ mes: estado.mesAhorro, racha: estado.racha, ultimoProtector: estado.ultimoProtector }, pago);
       estado.mesAhorro = r.mes; estado.racha = r.racha; estado.ultimoProtector = r.ultimoProtector;
       estado.historialMeses = (estado.historialMeses || []).concat([r.resultado]).slice(-6);
@@ -5260,7 +5307,7 @@
       if ($('btn-otro-mes')) $('btn-otro-mes').focus({ preventScroll: true });
     };
     if ($('btn-pagar-cuota')) $('btn-pagar-cuota').addEventListener('click', function () {
-      if (!(estado.ahorroMensual > 0)) { abrirMisDatos($('btn-pagar-cuota')); return; }
+      if (!(cuotaMes() > 0)) { abrirMisDatos($('btn-pagar-cuota')); return; }
       pagar(true);
     });
     if ($('btn-otro-mes')) $('btn-otro-mes').addEventListener('click', function () {
@@ -5269,7 +5316,7 @@
       if ($('btn-pagar-cuota')) $('btn-pagar-cuota').focus({ preventScroll: true });
     });
     var hojaCuota = function () {
-      abrirHojaContenido('Tu cuota', '<p class="texto-apoyo">' + formatoRedondeado(estado.ahorroMensual || 0) + ' al mes</p>' +
+      abrirHojaContenido('Tu cuota', '<p class="texto-apoyo">' + formatoRedondeado(cuotaMes() || 0) + ' al mes</p>' +
         '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + !!estado.cuotaAutomatica + '" id="btn-pie-auto">' +
           '<span>' + icono('i-calendario') + 'Ahorro automático el día de pago</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
         '<button type="button" class="interruptor interruptor-cuota" role="switch" aria-checked="' + !!estado.pasos.bajoLlave + '" id="btn-pie-llave">' +
@@ -5314,7 +5361,7 @@
     var falta = id === 'ds1' && !x.hecho ? (!s.cuentaVivienda ? 'tu cuenta de vivienda' : (!s.rsh ? 'el Registro Social de Hogares' : null)) : null;
     var accion = x.hecho ? '' :
       id === 'equipo' ? enlaceHoja('#perfil', 'Ir a Tu equipo') :
-      id === 'elegir' ? enlaceHoja(estado.caminoElegido ? '#camino/elegir' : '#explorar', estado.caminoElegido ? 'Elegir departamento' : 'Explorar caminos') :
+      id === 'elegir' ? enlaceHoja(esArriendo() ? '#explorar/arriendo-opcion' : estado.caminoElegido ? '#camino/elegir' : '#explorar', estado.caminoElegido ? 'Elegir departamento' : 'Explorar caminos') :
       botonEnHoja('btn-mision-accion', t[1]);
     abrirHojaContenido(x.titulo + (x.hecho ? ' ' + icono('i-check', 'hoja-check') : ''),
       '<p><span class="chip">' + x.etiqueta + '</span>' + (x.fecha ? ' <small class="texto-apoyo">Hasta el ' + formatoFecha(x.fecha) + '</small>' : '') + '</p>' +
@@ -5835,6 +5882,116 @@
     $('btn-usado-camino').addEventListener('click', function () { toast('En la demo, los usados son para mirar (simulado).'); });
   }
   // ---------- 9-nov: Arriendo con opción de compra, camino completo (propuesta Bci) ----------
+  // Hacerlo tu camino: Inicio y Tus pasos siguen sus 6 hitos (entrada, contrato, pie, crédito y escritura).
+  function esArriendo() { return estado.modo === 'vivir' && estado.caminoElegido === 'arriendo-opcion' && !estado.compra; }
+  // El departamento del camino: el que elegiste o, si no, el que antes es tuyo dentro de tu rango.
+  function arriendoActual() {
+    var perfil = perfilActual();
+    var elegido = ARRIENDOS_OPCION.filter(function (u) { return u.id === estado.arriendoElegido; })[0];
+    var rango = rangoActual();
+    var lista = elegido ? [elegido] : ARRIENDOS_OPCION.filter(function (u) { return !rango || enRango(u.listaUF, rango); });
+    if (!lista.length) lista = ARRIENDOS_OPCION;
+    var mejor = lista.map(function (u) { return { u: u, a: arriendoOpcion(u.listaUF, u.arriendoEstimadoIA, perfil) }; })
+      .sort(function (x, y) { return (y.a.cumple - x.a.cumple) || ((x.a.mesesTuyo || 999) - (y.a.mesesTuyo || 999)); })[0];
+    mejor.elegido = !!elegido;
+    return mejor;
+  }
+  function confirmarArriendo(boton, u) {
+    var perfil = perfilActual();
+    var a = u ? arriendoOpcion(u.listaUF, u.arriendoEstimadoIA, perfil) : null;
+    var ya = estado.caminoElegido === 'arriendo-opcion';
+    abrirHojaContenido(u ? '¿Quieres este departamento?' : '¿Hacerlo tu camino?',
+      (a ? '<p class="texto-apoyo">' + esc(u.nombre) + ': ' + (a.cumple ? 'es tuyo en ' + textoMeses(a.mesesTuyo) + (a.mesesEntrada ? ' y te mudas en ' + textoMeses(a.mesesEntrada) : ' y te mudas ya') + '.' : primeraMinuscula(a.razon) + '.') + '</p>' : '') +
+      (ya ? '' : '<p class="texto-apoyo">Tu plan pasa a arriendo con opción de compra. Tu cuenta, tu ahorro y tus misiones se mantienen.</p>') +
+      '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-confirmar-arriendo">' + (u ? 'Sí, quiero este departamento' : 'Sí, hacerlo mi camino') + '</button></div>', boton,
+      function () {
+        $('btn-confirmar-arriendo').addEventListener('click', function () {
+          estado.caminoElegido = 'arriendo-opcion';
+          if (u) estado.arriendoElegido = u.id;
+          guardarEstado();
+          registro.camino = 'arriendo-opcion'; guardarRegistro();
+          cerrarHoja(false);
+          toast(u ? 'Elegiste ' + u.nombre + '.' : 'Tu camino: arriendo con opción de compra.');
+          location.hash = '#camino';
+        });
+      });
+  }
+  // Inicio con este camino: cuándo es tuyo, cuándo te mudas, tu pie y el siguiente paso.
+  function renderInicioArriendo() {
+    var c = $('inicio-principal');
+    var x = arriendoActual(), u = x.u, a = x.a;
+    var ps = estado.pasos;
+    var vive = !!ps.contratoArriendo, tuyo = !!ps.arriendoTuyo;
+    var ingreso = ingresoTotal(estado.sueldoPropio, estado.sueldoPareja) || 0;
+    var minimo = 100000, paso = 50000, maximo = Math.max(1000000, Math.ceil(ingreso * 0.4 / paso) * paso);
+    var mensual = Math.min(maximo, Math.max(minimo, estado.ahorroMensual || 300000));
+    var llevas = ahorradoTuPie(a.meta);
+    var calc = function (m) {
+      var y = arriendoOpcion(u.listaUF, u.arriendoEstimadoIA, Object.assign({}, perfilActual(), { ahorroMensual: m, ahorroActual: Math.max(estado.ahorroActual || 0, llevas) }));
+      if (vive) {
+        // Ya vives ahí: lo que falta del pie con el aporte y el mínimo del tercer año desde que firmaste.
+        var pasaron = Math.max(0, (estado.mesAhorro || 0) - (estado.mesContrato || 0));
+        var resto = mesesParaMeta(Math.max(0, y.meta - llevas), y.aporte) || 0;
+        y.mesesEntrada = 0;
+        y.mesesTuyo = Math.max(resto, ARRIENDO_OPCION.compraDesdeMes - pasaron, 0) + ARRIENDO_OPCION.mesesEscritura;
+      }
+      return y;
+    };
+    a = calc(mensual);
+    var sub = function (y) { return vive ? 'Ya vives en ' + esc(u.nombre) : (y.mesesEntrada ? 'Te mudas en ' + textoMeses(y.mesesEntrada) : 'Te mudas ya'); };
+    c.innerHTML =
+      '<header class="encabezado">' + FIGURAS + campana() +
+        '<h1 id="titulo-inicio" class="h2" tabindex="-1">Tu camino</h1>' +
+        '<p class="texto-apoyo">Arriendo con opción de compra' + SEP + '<a class="enlace" href="#explorar/arriendo-opcion/' + esc(u.id) + '">' + esc(u.nombre) + '</a></p>' +
+      '</header>' +
+      (tuyo
+        ? '<section class="noche sin-slider" aria-labelledby="titulo-plazo"><span class="noche-luna" aria-hidden="true"></span>' +
+            '<p class="noche-etiqueta" id="titulo-plazo">¡Es tuyo!</p><strong class="numero noche-plazo">' + esc(u.nombre) + '</strong>' +
+            '<p class="noche-sub">Firmaste la escritura (simulado)</p></section>'
+        : !a.cumple
+        ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
+            '<h2 class="h3" id="titulo-plazo">' + a.razon + '</h2><p class="texto-apoyo"><a class="enlace" href="#explorar/arriendo-opcion">Ver otros departamentos</a></p></section>'
+        : '<section class="noche' + (vive ? ' sin-slider' : '') + '" aria-labelledby="titulo-plazo">' +
+            '<span class="noche-luna" aria-hidden="true"></span>' +
+            '<p class="noche-etiqueta" id="titulo-plazo">Es tuyo en</p>' +
+            '<strong class="numero noche-plazo' + claseLargo(textoMeses(a.mesesTuyo)) + '" id="numero-plazo" aria-live="polite">' + textoMeses(a.mesesTuyo) + '</strong>' +
+            '<span class="freno-llaves" id="freno-llaves">' + sub(a) + '</span>' +
+            '<div class="noche-edificio" aria-hidden="true"><div class="noche-fachada">' +
+              VENTANAS_CANVAS.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
+            '</div></div>' +
+          '</section>') +
+      (!tuyo && a.cumple && !vive
+        ? '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
+            '<p class="si-juntas-fila"><label for="rango-mensual" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-mensual">' + formatoRedondeado(mensual) + '</strong></p>' +
+            '<input type="range" id="rango-mensual" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '">' +
+            '<p class="delta-plazo" id="delta-plazo" aria-live="polite">Hasta mudarte: para juntar el 5' + NBSP + '%</p>' +
+          '</section>' : '') +
+      (tuyo ? '' : tarjetaObra()) +
+      (tuyo ? '' : '<section class="tarjeta bloque despues" aria-labelledby="titulo-despues">' +
+        '<p class="etiqueta" id="titulo-despues">' + (vive ? 'Hoy pagas al mes' : 'Al mudarte, pagas al mes') + '</p>' +
+        '<strong class="numero">' + formatoRedondeado(a.mensualidad) + '</strong>' +
+        '<ul class="detalle-filas"><li><span>Arriendo</span><strong>' + formatoRedondeado(a.arriendo) + '</strong></li>' +
+          '<li><span>Va a tu pie</span><strong>' + formatoRedondeado(a.aporte) + '</strong></li>' +
+          '<li><span>Al comprar, dividendo</span><span class="en-uf"><strong>' + ufDecimales(a.dividendo / SUPUESTOS.uf, 2) + '</strong><small>hoy son ' + formatoRedondeado(a.dividendo) + '</small></span></li></ul>' +
+        '<a class="dueno-link" href="#explorar/arriendo-opcion/' + esc(u.id) + '">Ver el departamento ›</a>' +
+      '</section>') +
+      animosInicio() +
+      tarjetaSiguientePaso();
+    var rm = $('rango-mensual');
+    if (rm) {
+      var pintar = function () { var v = Number(rm.value); rm.style.setProperty('--lleno', ((v - minimo) / (maximo - minimo) * 100).toFixed(1) + '%'); return v; };
+      pintar();
+      rm.addEventListener('input', function () {
+        var v = pintar(), y = calc(v);
+        $('valor-mensual').textContent = formatoRedondeado(v);
+        if ($('numero-plazo') && y.mesesTuyo !== null) $('numero-plazo').textContent = textoMeses(y.mesesTuyo);
+        if ($('freno-llaves')) $('freno-llaves').textContent = sub(y);
+        var ventana = $('mi-ventana'); if (ventana) { ventana.classList.remove('brilla'); void ventana.offsetWidth; ventana.classList.add('brilla'); }
+      });
+      rm.addEventListener('change', function () { estado.ahorroMensual = Number(rm.value); guardarEstado(); });
+    }
+    iniciarSiguientePaso();
+  }
   // arriendoOpcion (calculos.js): mensualidad = arriendo + aporte a tu pie; cuándo es tuyo; si se sostiene.
   function fotosArriendo(u) { return fotosUsado(u); }
   function fichaArriendo(u) { return esc(u.comuna) + SEP + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + SEP + plural(u.banos || 1, 'baño', 'baños') + SEP + u.m2 + NBSP + 'm²'; }
@@ -5860,7 +6017,7 @@
       '</header>' +
       '<p class="texto-apoyo"><small>Hoy existe en Chile con otras empresas; con Bci es una propuesta.</small></p>' +
       // Comentario 9-nov: ¿Cómo funciona? y ¿Y si me arrepiento? van solo en el detalle de cada departamento.
-      '<button type="button" class="btn btn-mi-camino" id="btn-arriendo-camino">Hacerlo mi camino</button>' +
+      (estado.caminoElegido === 'arriendo-opcion' ? '<p class="chip chip-recomendado">Tu camino</p>' : '<button type="button" class="btn btn-mi-camino" id="btn-arriendo-camino">Hacerlo mi camino</button>') +
       '<h2 class="h3 camino-explorar-titulo">Departamentos</h2>' +
       '<ul class="lista-usados">' + lista.map(function (x, i) {
         var u = x.u, a = x.a;
@@ -5879,7 +6036,7 @@
       }).join('') + '</ul>' +
       '<p class="llega-sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
       '<p class="texto-apoyo texto-centro"><small>Ejemplos simulados' + SEP + 'fotos referenciales</small></p>';
-    $('btn-arriendo-camino').addEventListener('click', function () { toast('En la demo, este camino es para mirar (simulado).'); });
+    if ($('btn-arriendo-camino')) $('btn-arriendo-camino').addEventListener('click', function () { confirmarArriendo($('btn-arriendo-camino')); });
   }
   function renderArriendoDepto(id) {
     var cont = $('caminos-contenido');
@@ -5926,12 +6083,14 @@
       plegable('arriendo-arrepiento', '¿Y si me arrepiento?', 'Recuperas parte de tu pie', siMeArrepientoArriendo()) +
       barrioHtml(u) +
       '<p class="llega-sello detalle-sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
-      '<button type="button" class="btn btn-primario btn-bloque usado-cta" id="btn-arriendo-depto">Quiero este departamento</button>' +
+      (esArriendo() && estado.arriendoElegido === u.id
+        ? '<div class="accion-fija detalle-accion"><p class="aviso">Es tu departamento.</p><a class="btn btn-secundario-dark btn-bloque" href="#camino">Ver mi camino</a></div>'
+        : '<div class="accion-fija detalle-accion"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-arriendo-depto">Quiero este departamento</button></div>') +
       '<p class="texto-apoyo texto-centro"><small>Ejemplo simulado' + SEP + 'fotos referenciales' + SEP + 'arriendo: ' + u.origenArriendo + '</small></p>';
     iniciarGalerias(cont);
     iniciarPlegables();
     iniciarVisita(u);
-    $('btn-arriendo-depto').addEventListener('click', function () { toast('En la demo, este camino es para mirar (simulado).'); });
+    if ($('btn-arriendo-depto')) $('btn-arriendo-depto').addEventListener('click', function () { confirmarArriendo($('btn-arriendo-depto'), u); });
   }
 
   // Hacerlo mi camino: muestra qué cambia y pide confirmar. Lo hecho (cuenta, ahorro, misiones) se conserva.
