@@ -2554,11 +2554,12 @@
       (p.tipo === 'venta'
         ? '<p class="detalle-terminado">Edificio terminado' + SEP + 'lo recibes al firmar</p>' +
           (vivirAqui ? '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>' : '')
-        : '<div class="tarjeta bloque">' +
+        // S26: con el crédito tradicional (camino individual) no se muestra el grupo: no compra en grupo.
+        : (conjunto && ctx !== 'inversiones' && estado.caminoElegido && CAMINOS[estado.caminoElegido] && !CAMINOS[estado.caminoElegido].grupo ? '' : '<div class="tarjeta bloque">' +
         (p.tipo === 'conjunto' ? grupoConEdificio(p, r) : avanceDe(p, r)) +
         '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
         '<p class="frase-cierre">' + frase + '</p>' +
-      '</div>' + (vivirAqui ? '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>' : '')) +
+      '</div>') + (vivirAqui ? '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>' : '')) +
 
       (ctx !== 'inversiones' ? '' :
       '<section class="tarjeta bloque" aria-labelledby="titulo-para-invertir">' +
