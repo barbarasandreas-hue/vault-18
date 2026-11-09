@@ -644,8 +644,14 @@
       '</div></div>';
   }
 
+  // Comentario 9-nov: cuántas personas ya ponen parte del pie compartido (tú incluida si invertiste).
+  function personasPie(p) { return (p.inversionistas || 0) + (invertidoEn(p.id) > 0 ? 1 : 0); }
+  function lineaPersonasPie(p) {
+    var n = personasPie(p);
+    return '<span class="personas-pie">' + icono('i-grupo') + (n ? (n === 1 ? '1 persona ya pone' : n + ' personas ya ponen') + ' parte del pie' : 'Todavía nadie pone parte del pie') + '</span>';
+  }
   // S12-F1: la participación reunida como el 15 % de la casa que se llena.
-  function casaParticipacion(r) {
+  function casaParticipacion(r, p) {
     var pct = porcentajeEntero(r.avanceFinanciamiento);
     var y0 = 80 - 76 * 0.95, alto = 76 * 0.15;
     return '<div class="avance avance-casa">' +
@@ -657,12 +663,13 @@
         '<path class="casa-borde" d="' + FORMA_CASA + '"/>' +
       '</svg>' +
       '<p class="avance-texto"><span>' + icono('i-inversionistas') + 'Participación de 15\u00a0% reunida</span><strong>' + pct + '\u00a0%</strong></p>' +
+      (p && p.tipo === 'financiamiento' ? '<p class="avance-texto">' + lineaPersonasPie(p) + '</p>' : '') +
     '</div>';
   }
 
   function avanceDe(proyecto, r) {
     if (proyecto.tipo === 'venta') return '';
-    return proyecto.tipo === 'conjunto' ? personasGrupo(proyecto, r) : casaParticipacion(r);
+    return proyecto.tipo === 'conjunto' ? personasGrupo(proyecto, r) : casaParticipacion(r, proyecto);
   }
 
   // ---------- S7-F4: explicaciones a un toque ----------
@@ -2016,7 +2023,9 @@
     if (p.tipo !== 'conjunto') {
       etiqueta = 'Precio' + (conIva ? ' sin IVA' : ' del departamento');
       cifra = formatoRedondeado(p.tipo === 'venta' && estado.modo === 'vivir' ? ufAPesos(plazoDepartamento(p).precioUF) : r.escenario.precio);
-      lineas.push(p.cierre ? 'Cierra el ' + formatoFecha(p.cierre) : 'Terminado' + SEP + 'lo recibes al firmar');
+      if (p.tipo === 'financiamiento') lineas.push(lineaPersonasPie(p));
+      lineas.push((p.tipo === 'financiamiento' ? porcentajeEntero(r.avanceFinanciamiento) + NBSP + '% del pie reunido' + SEP : '') +
+        (p.cierre ? 'Cierra el ' + formatoFecha(p.cierre) : 'Terminado' + SEP + 'lo recibes al firmar'));
     } else {
       etiqueta = r.ahorro > 0 ? 'Ahorras al unirte' : 'Si el grupo se completa';
       cifra = formatoRedondeado(r.ahorro > 0 ? r.ahorro : r.ahorroCompleto);
@@ -2266,6 +2275,7 @@
         '<span class="oportunidad-datos"><span><small>Falta por financiar</small><strong>' + formatoRedondeado(ufAPesos(r.faltaUF)) + '</strong></span>' +
           '<span><small>Plazo</small><strong>' + textoPlazo(pl) + '</strong></span></span>' +
         '<span class="oportunidad-barra" aria-hidden="true"><i style="width:' + reunido + '%"></i></span>' +
+        lineaPersonasPie(p) +
         '<span class="oportunidad-pie"><small>' + reunido + NBSP + '% reunido</small><span class="ver">Ver oportunidad <svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></span></span>' +
       '</span></a></li>';
   }

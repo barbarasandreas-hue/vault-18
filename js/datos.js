@@ -12,6 +12,7 @@ var FECHA_REFERENCIA = '2026-11-03';
 //       'venta' = departamento nuevo terminado, se compra solo (S18-F6). Solo en modo vivir; es el que puede ir sin IVA.
 // cupos: compradores que caben en el lote; cuposTomados: los que ya se unieron.
 // ufFinanciadas: parte de la participación de 15 % que ya pusieron inversionistas.
+// inversionistas (simulado, pie compartido): cuántas personas ya pusieron parte de ese 15 %.
 // cierre: fecha en que se cierra el proyecto.
 // etapaObra (compra en grupo): 0 excavación, 1 obra gruesa, 2 terminaciones, 3 recepción, 4 escritura (ETAPAS_OBRA).
 // entregaEstimada: fecha estimada de entrega del edificio.
@@ -48,11 +49,11 @@ var PROYECTOS = [
   { id: 'robles-independencia', recepcionDefinitiva: '2026-06-15', fachada: { color: 'blue-80', pisos: 6 }, clienteBci: false, etapaObra: 4, nombre: 'Edificio Los Robles', comuna: 'Independencia', tipo: 'venta',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
   { id: 'plaza-estacion', fachada: { color: 'green-dark', pisos: 4 }, clienteBci: false, nombre: 'Edificio Plaza Estación', comuna: 'Estación Central', tipo: 'financiamiento',
-    cupos: 1, cuposTomados: 0, ufFinanciadas: 108, cierre: '2027-02-10' },
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 108, inversionistas: 6, cierre: '2027-02-10' },
   { id: 'jardin-independencia', fachada: { color: 'blue-80', pisos: 4 }, clienteBci: true, nombre: 'Edificio Jardín Independencia', comuna: 'Independencia', tipo: 'financiamiento',
-    cupos: 1, cuposTomados: 0, ufFinanciadas: 220.5, cierre: '2027-01-31' },
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 220.5, inversionistas: 11, cierre: '2027-01-31' },
   { id: 'barrio-recoleta', fachada: { color: 'gray-dark', pisos: 6 }, clienteBci: false, nombre: 'Edificio Barrio Recoleta', comuna: 'Recoleta', tipo: 'financiamiento',
-    cupos: 1, cuposTomados: 0, ufFinanciadas: 175.5, cierre: '2027-03-15' }
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 175.5, inversionistas: 9, cierre: '2027-03-15' }
 ];
 
 // Departamentos disponibles de cada proyecto (los que aún no tienen comprador).
