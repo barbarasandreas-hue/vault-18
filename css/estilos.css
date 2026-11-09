@@ -3103,7 +3103,7 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .obra-claro { padding: 8px 12px 4px; border-radius: 12px; background: linear-gradient(180deg, var(--blue-20), var(--white)); }
 .obra-invita h2 { margin: 0; font-weight: 400; }
 /* Abajo en Inicio: la casita a la izquierda y qué hacer a la derecha. */
-.tarjeta-obra { display: grid; grid-template-columns: 112px 1fr; gap: 14px; align-items: center; margin-top: 16px; }
+.tarjeta-obra { display: grid; grid-template-columns: 152px 1fr; gap: 12px; align-items: center; margin-top: 16px; }
 .obra-izq { padding: 8px 6px 2px; border-radius: 12px; background: linear-gradient(180deg, var(--blue-20), var(--white)); }
 .obra-der { display: grid; gap: 6px; justify-items: start; min-width: 0; }
 .obra-der .etiqueta { margin: 0; font-size: 13px; font-weight: 600; color: var(--blue-dark); }
@@ -3119,7 +3119,7 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .tarjeta-obra.con-pie { color: inherit; text-decoration: none; row-gap: 10px; }
 .tarjeta-obra.con-pie:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
 .obra-titulo { font-size: 14px; color: var(--gray-semidark); }
-.tarjeta-obra.con-pie .numero { font-size: 26px; line-height: 1.15; color: var(--gray-dark); }
+.tarjeta-obra.con-pie .numero { font-size: 23px; line-height: 1.15; color: var(--gray-dark); }
 .obra-etapa-chica { font-size: 13px; font-weight: 600; color: var(--blue-dark); }
 .obra-barra { grid-column: 1 / -1; display: block; height: 10px; border-radius: 999px; overflow: hidden; background: var(--gray-light); }
 .obra-barra i { display: block; height: 100%; background: var(--green-normal); border-radius: inherit; }
@@ -3158,3 +3158,5 @@ details.visita[open] > summary { margin-bottom: 6px; }
 /* Evaluación heurística (9-nov): en el detalle de un departamento, la acción principal fija abajo. */
 .detalle-accion { display: grid; gap: 8px; margin-top: 20px; }
 .detalle-accion .aviso { margin: 0; }
+.obra-izq { padding: 10px 6px 4px; }
+.tarjeta-obra .obra-der .btn { width: 100%; padding-inline: 8px; font-size: 13px; letter-spacing: .2px; }
