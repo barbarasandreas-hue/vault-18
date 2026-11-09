@@ -1593,6 +1593,8 @@
         '<input type="range" id="rango-mensual" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '" aria-valuetext="' + formatoRedondeado(mensual) + ' al mes: ' + textoMesesRango(x.desde.meses, x.hasta.meses) + '">' +
         '<p class="delta-plazo" id="delta-plazo" aria-live="polite">' + textoDelta(x.hasta.meses, x.hasta.meses) + '</p>' +
       '</section>' +
+      // Comentario 9-nov: Tu pie va arriba de "Después, pagas al mes".
+      tarjetaObra() +
       '<section class="tarjeta bloque despues" aria-labelledby="titulo-despues">' +
         '<p class="etiqueta" id="titulo-despues">Después, pagas al mes</p>' +
         '<strong class="numero">' + rangoUF(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
@@ -1600,7 +1602,6 @@
         vsArriendo(x.hasta.dividendo) +
         '<a class="dueno-link" href="#camino/dueno">Ver todo lo que pagarías como dueño ›</a>' +
       '</section>' +
-      tarjetaObra() +
       animosInicio() +
       tarjetaSiguientePaso();
 
@@ -1834,8 +1835,8 @@
           '<button type="button" class="enlace" id="btn-cambiar-departamento" aria-haspopup="dialog">Cambiar</button></p>' +
       '</header>' +
       protagonista +
-      (justo ? '' : datos) +
       tarjetaObra() +
+      (justo ? '' : datos) +
       animosInicio() +
       tarjetaSiguientePaso();
     iniciarSiguientePaso();
@@ -5211,18 +5212,23 @@
       guardarEstado();
       var nuevos = hitosAlcanzados(estado.ahorrado, meta).filter(function (h) { return antes.indexOf(h) === -1; });
       if (pago) pieLogro = nuevos.length ? '¡Pasaste el ' + porcentajeEntero(nuevos[nuevos.length - 1]) + NBSP + '% de tu pie!' : 'Llevas ' + plural(estado.racha, 'mes seguido', 'meses seguidos');
+      // 9-nov: la pantalla se queda donde estaba (antes bajaba al enfocar "Simular el mes siguiente").
+      var y = window.scrollY;
       cerrarHoja(false);
       renderTuPie();
+      window.scrollTo(0, y);
       if (!pago) toast(r.resultado === 'protector' ? 'Usaste tu protector: tu racha sigue.' : 'Tu racha vuelve a empezar. Lo ahorrado sigue ahí.');
       else if (nuevos.length) { confeti(); if (navigator.vibrate) navigator.vibrate(40); }
-      if ($('btn-otro-mes')) $('btn-otro-mes').focus();
+      if ($('btn-otro-mes')) $('btn-otro-mes').focus({ preventScroll: true });
     };
     if ($('btn-pagar-cuota')) $('btn-pagar-cuota').addEventListener('click', function () {
       if (!(estado.ahorroMensual > 0)) { abrirMisDatos($('btn-pagar-cuota')); return; }
       pagar(true);
     });
     if ($('btn-otro-mes')) $('btn-otro-mes').addEventListener('click', function () {
-      pieLogro = null; renderTuPie(); if ($('btn-pagar-cuota')) $('btn-pagar-cuota').focus();
+      var y = window.scrollY;
+      pieLogro = null; renderTuPie(); window.scrollTo(0, y);
+      if ($('btn-pagar-cuota')) $('btn-pagar-cuota').focus({ preventScroll: true });
     });
     var hojaCuota = function () {
       abrirHojaContenido('Tu cuota', '<p class="texto-apoyo">' + formatoRedondeado(estado.ahorroMensual || 0) + ' al mes</p>' +
