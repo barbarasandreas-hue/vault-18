@@ -539,7 +539,14 @@
   // S18-F1: para vivir, el precio usa el descuento que el grupo ya tiene (contándote); completar el grupo es posibilidad.
   function resumenBase(proyecto) {
     var op = estado.modo === 'vivir' ? { descuentoHoy: true, yaEstas: esMiProyecto(proyecto) } : null;
-    return resumenProyecto(proyecto, departamentosDe(proyecto.id), cuposExtra(proyecto), invertidoEn(proyecto.id), modoFinanciero(proyecto), op);
+    var r = resumenProyecto(proyecto, departamentosDe(proyecto.id), cuposExtra(proyecto), invertidoEn(proyecto.id), modoFinanciero(proyecto), op);
+    return estado.modo !== 'vivir' && compraSinGrupo(proyecto) ? resumenSinGrupo(proyecto, r) : r;
+  }
+  // 9-nov: para invertir, un edificio en obra con grupo comprado solo (Crédito al 80 %): precio de lista, sin descuento.
+  function resumenSinGrupo(p, r) {
+    var d = departamentosDe(p.id)[0];
+    return Object.assign({}, r, { tipoCompra: 'individual', escenario: escenario(d.listaUF, 'individual', 'propio', 1), ahorro: 0, ahorroCompleto: 0,
+      descuento: 0, rentabilidad: rentabilidad(d.arriendoEstimadoIA, d.listaUF) });
   }
   // S18-F7: para vivir, el crédito de toda la compra (Postular, preaprobación, Firmar y Mi departamento)
   // sale de las mismas piezas que el Detalle y Tu pie: precio con descuento o sin IVA, subsidio y respaldo.
@@ -2109,7 +2116,7 @@
     var r = resumen(p);
     // 9-nov (opción 2): en un camino sin grupo, el edificio en obra se muestra a precio de lista, sin el descuento del grupo.
     var caminoT = sufijo && CAMINOS[sufijo.slice(1)];
-    var solo = p.tipo === 'conjunto' && estado.modo === 'vivir' && !!caminoT && !caminoT.grupo;
+    var solo = p.tipo === 'conjunto' && !!caminoT && !caminoT.grupo;
     var d = departamentosDe(p.id)[0];
     var completo = r.ahorroCompleto > r.ahorro ? formatoRedondeado(r.ahorroCompleto) + ' si se completa' : '';
     var conIva = p.tipo === 'venta' && estado.modo === 'vivir' && piezasValidas(piezasOn()).iva;
@@ -2117,7 +2124,7 @@
     var etiqueta, cifra, lineas = [];
     if (solo) {
       etiqueta = 'Precio del departamento';
-      cifra = formatoRedondeado(ufAPesos(plazoDepartamento(p, null, true).precioUF));
+      cifra = formatoRedondeado(ufAPesos(estado.modo === 'vivir' ? plazoDepartamento(p, null, true).precioUF : d.listaUF));
       lineas.push('En obra' + SEP + (p.entregaEstimada ? 'entrega ' + formatoFecha(p.entregaEstimada) : 'en construcción'));
     } else if (p.tipo !== 'conjunto') {
       etiqueta = 'Precio' + (conIva ? ' sin IVA' : ' del departamento');
@@ -2173,6 +2180,8 @@
       // Con el subsidio, solo los que quedan bajo el tope con las demás piezas.
       if (estado.modo === 'vivir' && piezasValidas(piezasOn()).subsidio) lista = lista.filter(function (p) { return plazoDepartamento(p).on.subsidio; });
       else if (c.inversionistas > 0) lista = lista.filter(function (p) { return p.tipo === 'financiamiento'; });
+      // 9-nov: el Crédito al 80 % (sin grupo ni inversionistas) no muestra los de pie compartido.
+      if (arrendar && !c.grupo && !c.inversionistas) lista = lista.filter(function (p) { return p.tipo !== 'financiamiento'; });
     }
     var rango = rangoActual();
     if (soloCamino && estado.filtroRango && rango) lista = lista.filter(function (p) { return enRango(departamentosDe(p.id)[0].listaUF, rango); });
@@ -2574,8 +2583,10 @@
     var vivirAqui = estado.modo === 'vivir' && paraVivir(p) && ctx !== 'inversiones' && estado.preguntasListas;
     // 9-nov (opción 2): desde un camino sin grupo (o si lo compraste solo), el edificio en obra va a precio de lista
     // y el grupo es solo una posibilidad. Regla del CLAUDE.md: un atajo nunca se da por aplicado si no lo elegiste.
-    var solo = conjunto && estado.modo === 'vivir' && (caminoSinGrupo || compraSinGrupo(p));
+    var solo = conjunto && ctx !== 'inversiones' && (caminoSinGrupo || compraSinGrupo(p));
     var enGrupo = conjunto && !solo;
+    var ahorroGrupo = r.ahorro;
+    if (solo && estado.modo !== 'vivir') { r = resumenSinGrupo(p, r); e = r.escenario; }
     var pd = vivirAqui ? plazoDepartamento(p, null, solo) : null;
 
     var precio = enGrupo
@@ -2657,6 +2668,10 @@
       '</header>' +
       galeria(fotosDe(p, d)) +
       (conjunto && !vivirAqui ? bloqueGrupo : '') +
+      (solo && !vivirAqui && !esMiCompra && !grupoCerrado(p) && r.cuposLibres > 0 && ahorroGrupo > 0
+        ? '<a class="tarjeta fila grupo-posible" href="#camino/proyecto/' + esc(p.id) + '/grupo-invertir">' + icono('i-grupo', 'icono-grande') +
+          '<span><strong>Si te unes a su grupo</strong><small>Podrías pagar ' + formatoRedondeado(ahorroGrupo) + ' menos</small></span>' +
+          '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' : '') +
 
       (vivirAqui
         // S17-F1 y F2: para vivir, el mismo plazo que Inicio y Tu pie, con cifras redondeadas.
