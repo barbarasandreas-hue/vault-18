@@ -3054,5 +3054,6 @@ body.en-familia .vista-familia .icono { display: none; }
 .oportunidad .personas-pie { margin-top: 8px; font-size: 14px; }
 
 /* Comentario 9-nov: plazos en años y meses: más chicos si son largos */
-.noche .noche-plazo.largo { font-size: 30px; line-height: 1.1; }
+.noche .noche-plazo.largo { line-height: 1.15; }
 .noche .noche-etiqueta#titulo-plazo { padding-right: 40px; }
+.noche .noche-plazo.largo { font-size: 32px; }

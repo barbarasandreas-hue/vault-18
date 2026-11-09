@@ -1426,16 +1426,19 @@
     if (a === b) return a === 0 ? 'Ya' : textoMeses(a);
     // Con años, cada lado no se corta: "1 año y 2 meses a / 1 año y 7 meses".
     var junto = function (t) { return t.replace(/ /g, NBSP); };
+    // Corto: si los dos caen en el mismo año, "1 año y 2 a 7 meses".
+    var A = Math.floor(a / 12);
+    if (a >= 12 && a % 12 && A === Math.floor(b / 12) && b % 12) return (A === 1 ? '1 año' : A + ' años') + ' y ' + (a % 12) + ' a ' + textoMeses(b % 12);
     if (b >= 12) return (a === 0 ? 'Ya' : junto(textoMeses(a))) + ' a ' + junto(textoMeses(b));
     return (a === 0 ? 'Ya' : a) + ' a ' + textoMeses(b);
   }
   // Comentario 9-nov: "Tienes el pie para un crédito tradicional en", según tu camino.
-  var PIE_PARA = { 'grupo-vivir': 'comprar en grupo', 'individual-vivir': 'un crédito tradicional', 'arriendo-opcion': 'el arriendo con opción de compra', 'respaldo-familiar': 'un crédito con respaldo familiar' };
+  var PIE_PARA = { 'grupo-vivir': 'compra en grupo', 'individual-vivir': 'crédito tradicional', 'arriendo-opcion': 'arriendo con opción', 'respaldo-familiar': 'respaldo familiar' };
   function etiquetaLlaves(hasta) {
     var para = PIE_PARA[estado.caminoElegido] || PIE_PARA['individual-vivir'];
-    return hasta === 0 ? 'Ya tienes el pie para ' + para : 'Tienes el pie para ' + para + ' en';
+    return hasta === 0 ? 'Ya tienes tu pie para ' + para : 'Tu pie para ' + para + ' en';
   }
-  function claseLargo(t) { return t.length > 16 ? ' largo' : ''; }
+  function claseLargo(t) { return t.indexOf('año') !== -1 ? ' largo' : ''; }
   function textoLlavesRango(x) {
     if (x.desde.meses === null) return '';
     if (x.desde.meses === x.hasta.meses) return x.hasta.llaves;
