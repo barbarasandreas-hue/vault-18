@@ -69,13 +69,13 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
-    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {}, visitaVersion: 2 };
+    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {}, visitaVersion: 2, vecinos: {} };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -332,6 +332,9 @@
       estado.animosDados = Array.isArray(g.animosDados) ? g.animosDados.filter(function (k) { return typeof k === 'string'; }) : null;
       estado.animos = Array.isArray(g.animos) ? g.animos.filter(function (x) { return x && MOTIVO_ANIMO[x.clave] && RELACIONES_EQUIPO.indexOf(x.relacion) !== -1; }).slice(0, 2) : [];
       estado.construido = Number.isInteger(g.construido) ? g.construido : null;
+      // 9-nov: en qué grupos quiere conocer a sus vecinos (solo para vivir, por elección propia).
+      estado.vecinos = {};
+      if (g.vecinos && typeof g.vecinos === 'object') Object.keys(g.vecinos).forEach(function (id) { if (g.vecinos[id] === true && buscarProyecto(id)) estado.vecinos[id] = true; });
       estado.favoritos = Array.isArray(g.favoritos) ? g.favoritos.filter(function (id) { return typeof id === 'string' && buscarProyecto(id); }) : [];
       // S26: lo que ya revisaste en la visita, por departamento.
       estado.visita = {};
@@ -640,6 +643,48 @@
     '</ul>';
   }
 
+  // 9-nov: el grupo da el descuento, pero nadie carga con el riesgo de otros.
+  function siAlguienSeVa(p) {
+    var cerrado = grupoCerrado(p);
+    return '<details class="si-se-va"><summary>' + icono('i-escudo') + '<span>¿Y si alguien se retira?</span><svg class="plegable-flecha" aria-hidden="true"><use href="#i-flecha"/></svg></summary>' +
+      '<ul>' +
+        (cerrado ? '' : '<li>Antes del cierre, cualquiera sale sin costo, tú también.</li>') +
+        '<li>Tu descuento se fija con los que haya al cierre' + (p.cierre ? ' (' + formatoFecha(p.cierre) + ')' : '') + '. Si después alguien se va, su cupo pasa a la lista de espera y tu descuento no baja.</li>' +
+        '<li>Tu pie está en tu propia cuenta en Bci y tu crédito es solo tuyo: nunca pagas la parte de otra persona.</li>' +
+      '</ul></details>';
+  }
+  // 9-nov: Tus vecinos. Solo para vivir y por elección propia: nombre de pila, sin datos de contacto ni pagos.
+  var VECINOS_DEMO = ['Camila', 'Javier', 'Fernanda', 'Matías', 'Valentina', 'Diego', 'Josefa', 'Tomás', 'Antonia'];
+  function tusVecinos(p, r) {
+    if (estado.modo !== 'vivir') return '';
+    var on = !!estado.vecinos[p.id];
+    var cerrado = grupoCerrado(p);
+    var otros = Math.max(0, r.cuposTomados - 1);
+    var sumados = Math.min(otros, Math.max(1, Math.round(otros * 0.6)));
+    var cuerpo;
+    if (!on) cuerpo = '<p class="texto-apoyo">Si quieres, conoce a quienes van a vivir en tu edificio. Solo ven tu nombre de pila: nunca tu teléfono, tu sueldo ni tus pagos.</p>' +
+      '<button type="button" class="btn btn-secundario-dark btn-bloque" data-vecinos="' + esc(p.id) + '">Quiero conocer a mis vecinos</button>';
+    else if (!cerrado) cuerpo = '<p class="texto-apoyo">Listo. Cuando el grupo cierre' + (p.cierre ? ', el ' + formatoFecha(p.cierre) : '') + ', te mostramos a los vecinos que también quieran conocerse.</p>' +
+      '<button type="button" class="enlace" data-vecinos="' + esc(p.id) + '">Ya no quiero</button>';
+    else cuerpo = '<p class="texto-apoyo">' + plural(sumados, 'vecino quiere', 'vecinos quieren') + ' conocerse (simulado):</p>' +
+      '<ul class="vecinos-lista">' + VECINOS_DEMO.slice(0, sumados).map(function (n) { return '<li><span class="vecino-inicial" aria-hidden="true">' + n.charAt(0) + '</span>' + n + '</li>'; }).join('') + '</ul>' +
+      '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-saludar-vecinos">Saludar al grupo</button>' +
+      '<button type="button" class="enlace" data-vecinos="' + esc(p.id) + '">Ya no quiero</button>';
+    return '<section class="tus-vecinos" aria-labelledby="titulo-vecinos"><h3 class="h5" id="titulo-vecinos">' + icono('i-grupo') + 'Tus vecinos</h3>' + cuerpo +
+      '<p class="vecinos-nota"><small>Lo modera Bci. Es opcional y puedes salir cuando quieras.</small></p></section>';
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-vecinos]');
+    if (b) {
+      var id = b.dataset.vecinos;
+      if (estado.vecinos[id]) delete estado.vecinos[id]; else estado.vecinos[id] = true;
+      guardarEstado();
+      toast(estado.vecinos[id] ? 'Te sumaste a Tus vecinos.' : 'Saliste de Tus vecinos.');
+      mostrar();
+      return;
+    }
+    if (ev.target.closest('#btn-saludar-vecinos')) toast('Saludo enviado al grupo (simulado).');
+  });
   function grupoConEdificio(proyecto, r) {
     return '<div class="grupo-edificio">' + edificioGrupo(proyecto, r) +
       '<div class="grupo-datos">' +
@@ -2552,7 +2597,8 @@
         '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
         '<p class="frase-cierre">' + frase + '</p>' +
       '</div>';
-    if (conjunto && bloqueGrupo) bloqueGrupo = bloqueGrupo.replace('<div class="tarjeta bloque">', '<div class="tarjeta bloque grupo-detalle"><h2 class="grupo-detalle-titulo">Tu grupo de compra</h2>');
+    if (conjunto && bloqueGrupo) bloqueGrupo = bloqueGrupo.replace('<div class="tarjeta bloque">', '<div class="tarjeta bloque grupo-detalle"><h2 class="grupo-detalle-titulo">Tu grupo de compra</h2>')
+      .replace(/<\/div>$/, siAlguienSeVa(p) + '</div>');
     contenedor.innerHTML =
       // S25: como el canvas: título, el tipo en un chip y la ficha.
       '<header class="detalle-cabecera">' + (ctx !== 'inversiones' ? botonFavorito(p) : '') +
@@ -6235,6 +6281,8 @@
         '</ul>' +
         (cerrado ? '' : '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-compartir">Compartir el proyecto</button>' +
         (r.cuposLibres > 0 ? '<button type="button" class="btn btn-terciario btn-bloque" id="btn-se-une">Simular que alguien se une</button>' : '')) +
+        siAlguienSeVa(p) +
+        tusVecinos(p, r) +
         // S18-F2: la obra dice la entrega del edificio, con el mismo reloj que Tus llaves.
         '<h3 class="h5 bloque">Tu obra</h3>' +
         obraVisual(p) +

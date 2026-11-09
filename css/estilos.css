@@ -3069,3 +3069,23 @@ details.visita[open] > summary { margin-bottom: 6px; }
 /* 9-nov: el grupo bajo tus llaves, con título */
 .grupo-detalle { margin-top: 14px; }
 .grupo-detalle-titulo { margin: 0 0 10px; font-size: 18px; font-weight: 600; color: var(--gray-dark); }
+
+/* 9-nov: qué pasa si alguien se retira, y Tus vecinos */
+.si-se-va { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--gray-light); }
+.si-se-va > summary { list-style: none; display: flex; align-items: center; gap: 8px; min-height: 40px; cursor: pointer; font-weight: 600; color: var(--blue-dark); }
+.si-se-va > summary::-webkit-details-marker { display: none; }
+.si-se-va > summary span { flex: 1; }
+.si-se-va > summary .icono { margin: 0; width: 20px; height: 20px; color: var(--green-dark); }
+.si-se-va > summary .plegable-flecha { width: 20px; height: 20px; }
+.si-se-va[open] > summary .plegable-flecha { transform: rotate(180deg); }
+.si-se-va ul { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 6px; font-size: 15px; color: var(--gray-dark); line-height: 1.45; }
+.tus-vecinos { margin-top: 18px; padding: 16px; border: 1px solid var(--gray-semilight); border-radius: 12px; display: grid; gap: 10px; }
+.tus-vecinos h3 { display: flex; align-items: center; gap: 8px; margin: 0; }
+.tus-vecinos h3 .icono { margin: 0; width: 22px; height: 22px; color: var(--blue-normal); }
+.tus-vecinos p { margin: 0; }
+.tus-vecinos .enlace { justify-self: center; }
+.vecinos-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.vecinos-lista li { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 4px; border-radius: 999px; background: var(--gray-light); font-size: 14px; font-weight: 600; color: var(--gray-dark); }
+.vecino-inicial { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--blue-normal); color: var(--white); font-size: 13px; }
+.vecinos-nota small { color: var(--gray-semidark); }
+.si-se-va:not([open]) > summary .plegable-flecha { transform: none; }
