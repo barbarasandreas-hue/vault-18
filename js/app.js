@@ -2090,7 +2090,8 @@
   }
   // S25: la tarjeta del canvas: foto, corazón, tipo, nombre, ficha, la cifra, una línea de datos y Ver proyecto.
   // compacta (Un camino): sin el tipo ni "Ver proyecto", y el grupo y el cierre en una línea.
-  function tarjetaProyecto(p, base, compacta) {
+  // sufijo (9-nov): lo que va después del id en la dirección, por ejemplo el camino desde el que se mira.
+  function tarjetaProyecto(p, base, compacta, sufijo) {
     var r = resumen(p);
     var d = departamentosDe(p.id)[0];
     var completo = r.ahorroCompleto > r.ahorro ? formatoRedondeado(r.ahorroCompleto) + ' si se completa' : '';
@@ -2111,7 +2112,7 @@
     }
     var foto = fotoEdificio(p);
     var chipTipo = p.tipo === 'conjunto' ? ['azul', 'Compra en grupo'] : p.tipo === 'venta' ? ['verde', 'Terminado' + (conIva ? SEP + 'sin IVA' : '')] : ['amarillo', NOMBRE_TIPO[p.tipo]];
-    return '<li><a class="tarjeta tarjeta-proyecto tarjeta-canvas" href="' + (base || '#departamentos/') + esc(p.id) + '">' +
+    return '<li><a class="tarjeta tarjeta-proyecto tarjeta-canvas" href="' + (base || '#departamentos/') + esc(p.id) + (sufijo || '') + '">' +
       (foto ? '<img class="tp-foto" src="' + foto + '" alt="' + esc(p.nombre) + ' (foto referencial)" loading="lazy" width="800" height="600">' : '<span class="tp-foto">' + fachada(p) + '</span>') +
       (compacta ? '' : '<span class="tp-tipo ' + chipTipo[0] + '">' + chipTipo[1] + '</span>') +
       '<h2 class="tp-nombre">' + esc(p.nombre) + '</h2>' +
@@ -2527,10 +2528,12 @@
     if (c && !c.grupo && !c.ficha) return estado.caminoElegido;
     return 'pie-compartido';
   }
-  function renderDetalle(id, ctx) {
+  function renderDetalle(id, ctx, caminoVista) {
     ctx = ctx || 'departamentos';
-    $('detalle-volver').setAttribute('href', VOLVER_DETALLE[ctx][0]);
-    $('detalle-volver').lastChild.textContent = VOLVER_DETALLE[ctx][1];
+    $('detalle-volver').setAttribute('href', caminoVista ? '#explorar/' + caminoVista : VOLVER_DETALLE[ctx][0]);
+    $('detalle-volver').lastChild.textContent = caminoVista ? CAMINOS[caminoVista].corto : VOLVER_DETALLE[ctx][1];
+    // 9-nov: si se mira desde un camino sin grupo (por ejemplo, el crédito con garantía del Estado), no va "Tu grupo de compra".
+    var caminoSinGrupo = !!(caminoVista && !CAMINOS[caminoVista].grupo);
     var p = buscarProyecto(id);
     var contenedor = $('detalle-proyecto');
     if (!p) {
@@ -2603,7 +2606,7 @@
     }
 
     // 9-nov: en compra en grupo, cuántos se unieron va arriba, bajo las fotos.
-    var bloqueGrupo = p.tipo === 'venta' || conjunto && ctx !== 'inversiones' && estado.caminoElegido && CAMINOS[estado.caminoElegido] && !CAMINOS[estado.caminoElegido].grupo ? '' : '<div class="tarjeta bloque">' +
+    var bloqueGrupo = p.tipo === 'venta' || caminoSinGrupo || conjunto && ctx !== 'inversiones' && estado.caminoElegido && CAMINOS[estado.caminoElegido] && !CAMINOS[estado.caminoElegido].grupo ? '' : '<div class="tarjeta bloque">' +
         (p.tipo === 'conjunto' ? grupoConEdificio(p, r) : avanceDe(p, r)) +
         '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
         '<p class="frase-cierre">' + frase + '</p>' +
@@ -5449,7 +5452,7 @@
       '<h2 class="h3 camino-explorar-titulo">Explorar</h2>' +
       chipsExplorar(id).replace('</div>', '<button type="button" class="chip chip-filtro chip-favoritos" id="chip-favoritos" aria-pressed="' + soloFavoritos + '">' + icono('i-corazon') + 'Favoritos</button></div>') +
       '<section aria-labelledby="titulo-deptos-camino"><h2 class="oculto-visual" id="titulo-deptos-camino">' + plural(lista.length, 'departamento', 'departamentos') + '</h2>' +
-        (lista.length ? '<ul class="lista-proyectos">' + lista.map(function (p) { return tarjetaProyecto(p, '#camino/proyecto/', true); }).join('') + '</ul>'
+        (lista.length ? '<ul class="lista-proyectos">' + lista.map(function (p) { return tarjetaProyecto(p, '#camino/proyecto/', true, '/' + esc(id)); }).join('') + '</ul>'
           : '<p class="texto-apoyo">' + (soloFavoritos && todos.length ? 'Todavía no guardas ninguno de este camino.' : todos.length ? 'Ninguno con estos filtros.' : 'Hoy no hay departamentos de este camino en tu rango.') + '</p>') +
       '</section>';
     var b = cont.querySelector('[data-simular]');
@@ -6736,7 +6739,8 @@
       case 'ficha': return r('ficha', 'explorar', function () { renderFicha(p[2]); });
       case 'dueno': return r('caminos', p[2] ? 'explorar' : 'inicio', function () { renderMesDueno(p[2]); });
       case 'elegir': return r('proyectos', 'explorar', function () { renderLista('camino'); });
-      case 'proyecto': return r('proyecto', 'explorar', function () { renderDetalle(p[2], 'camino'); });
+      // 9-nov: #camino/proyecto/<departamento>/<camino>: el camino desde el que se mira (Explorar → Un camino).
+      case 'proyecto': return r('proyecto', 'explorar', function () { renderDetalle(p[2], 'camino', CAMINOS[p[3]] ? p[3] : null); });
       case 'avisos': return r('avisos', 'inicio', renderAvisos);
       case 'postular': case 'pie': case 'firmar': case 'mi-departamento':
         return r('mis-proyectos', 'pasos', function () { renderPaso(p[1], p[2]); });
