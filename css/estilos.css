@@ -3094,20 +3094,6 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .cn-contorno { fill: none; stroke: var(--gray-neutral); stroke-width: 2; stroke-dasharray: 5 5; }
 .obra-svg { display: block; width: 100%; height: auto; overflow: visible; }
 .obra-etapa { margin: 4px 0 0; font-size: 14px; font-weight: 600; }
-/* En el azul de Inicio: muros claros, techo y puerta amarillos (como la casa de Base44). */
-.noche-obra { align-self: center; width: 210px; margin: 12px 0 0; text-align: center; color: var(--white); border-radius: 12px; }
-.noche-obra .cn-muro { fill: var(--blue-20); }
-.noche-obra .cn-ventanas rect { fill: var(--blue-60); stroke: var(--blue-dark); }
-.noche-obra .cn-techo, .noche-obra .cn-puerta { fill: var(--yellow-normal); stroke: none; }
-.noche-obra .cn-linea, .noche-obra .cn-linea-fina { stroke: var(--blue-20); }
-.noche-obra .cn-gris { fill: var(--blue-40); }
-.noche-obra .cn-contorno { stroke: var(--blue-40); }
-.noche-obra .cn-letrero path { stroke: var(--blue-20); }
-.noche-obra.brilla .obra-svg { animation: obra-brilla var(--dur-larga) var(--ease-salida); }
-@keyframes obra-brilla { 40% { transform: scale(1.06); filter: drop-shadow(0 0 10px rgba(255, 238, 102, .8)); } }
-.noche-invita { margin-top: 12px; padding: 14px 16px; border-radius: 16px; background: rgba(255, 255, 255, .12); }
-.noche-invita strong { font-size: 20px; font-weight: 400; line-height: 1.25; }
-.noche-invita .noche-pie-ver { margin-top: 8px; }
 /* En Tu pie: la obra a la derecha del saldo, en el azul. */
 .obra-pie { align-self: center; width: 210px; margin: 8px auto 4px; text-align: center; }
 .obra-pie .cn-muro { fill: var(--blue-20); }
@@ -3120,4 +3106,11 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .obra-invita { display: grid; gap: 8px; }
 .obra-claro { padding: 8px 12px 4px; border-radius: 12px; background: linear-gradient(180deg, var(--blue-20), var(--white)); }
 .obra-invita h2 { margin: 0; font-weight: 400; }
-@media (prefers-reduced-motion: reduce) { .noche-obra.brilla .obra-svg { animation: none; } }
+/* Abajo en Inicio: la casita a la izquierda y qué hacer a la derecha. */
+.tarjeta-obra { display: grid; grid-template-columns: 112px 1fr; gap: 14px; align-items: center; margin-top: 16px; }
+.obra-izq { padding: 8px 6px 2px; border-radius: 12px; background: linear-gradient(180deg, var(--blue-20), var(--white)); }
+.obra-der { display: grid; gap: 6px; justify-items: start; min-width: 0; }
+.obra-der .etiqueta { margin: 0; font-size: 13px; font-weight: 600; color: var(--blue-dark); }
+.obra-der h2 { margin: 0; font-weight: 400; line-height: 1.25; }
+.obra-pct { margin: 0; font-size: 14px; color: var(--gray-semidark); }
+.obra-der .btn { margin-top: 4px; padding-inline: 16px; white-space: nowrap; }

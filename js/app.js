@@ -1016,7 +1016,7 @@
         '<p class="texto-apoyo">' + esc(x.p.nombre) + SEP + esc(x.p.comuna) + '</p>' +
       '</header>' +
       novedadesInicio(x) +
-      (x.paso < 4 ? cuandoLlegasCompra(x.p) + animosInicio() + tarjetaSiguientePaso() :
+      (x.paso < 4 ? cuandoLlegasCompra(x.p) + tarjetaObra() + animosInicio() + tarjetaSiguientePaso() :
       '<section class="tarjeta proximo" aria-label="Dónde vas">' +
         '<p class="chip">' + x.etapa + '</p>' +
         '<p class="etiqueta">' + x.etiqueta + '</p>' +
@@ -1341,6 +1341,7 @@
     return x.techo === null ? '—' : textoPlazoMeses(x.techo);
   }
   // S16-F3: tu ventana es más grande (2 columnas × 3 pisos) y adentro estás tú con quienes viven contigo.
+  var VENTANAS_NOCHE = [1, 0, 1, 'tu', 1, 0, 1, 1, 1, 0];
 
 
   // ---------- Sprint 17: un solo plazo, piezas que se suman y texto mínimo (modo vivir) ----------
@@ -1521,26 +1522,35 @@
     '</div>';
   }
   // S25: tu pie dentro del azul de Inicio, como en el canvas.
+  var VENTANAS_CANVAS = [1, 0, 0, 1, 'tu', 1, 0, 1, 1, 1, 1, 0, 1];
   function piePlegadoInicio() {
     var s = fotoPasos();
     if (!s.numeros) return '';
     var pct = s.meta > 0 ? Math.min(100, Math.round(s.ahorrado / s.meta * 100)) : 0;
-    // 9-nov: sin cuenta, una invitación a empezar a construir; con cuenta, el saldo y lo que va de tu departamento.
-    if (!s.cuentaVivienda) return '<a class="noche-pie noche-invita" href="#pie">' +
-      '<strong>Comienza a construir tu pie para tu departamento</strong>' +
-      '<span class="noche-pie-ver">Abrir mi cuenta ›</span></a>';
     return '<a class="noche-pie" href="#pie">' +
-      '<span>Tu pie - Cuenta Vivienda</span>' +
-      '<strong>' + formatoPesos(s.ahorrado) + '</strong><span class="noche-pie-barra" aria-hidden="true"><i style="width:' + pct + '%"></i></span>' +
-      '<small>' + pct + NBSP + '% de ' + formatoRedondeado(s.meta) + '</small>' +
+      '<span>Tu pie' + (s.cuentaVivienda ? ' - Cuenta Vivienda' : '') + '</span>' +
+      (s.cuentaVivienda
+        ? '<strong>' + formatoPesos(s.ahorrado) + '</strong><span class="noche-pie-barra" aria-hidden="true"><i style="width:' + pct + '%"></i></span>' +
+          '<small>' + pct + NBSP + '% de ' + formatoRedondeado(s.meta) + '</small>'
+        : '<strong>Todavía sin cuenta de vivienda</strong>') +
       '<span class="noche-pie-ver">Ver ›</span></a>';
   }
-  // La obra dentro del azul de Inicio. #mi-ventana brilla al mover "Si juntas al mes".
-  function obraInicio() {
+  // 9-nov: abajo en Inicio, tu departamento en construcción a la izquierda y qué hacer a la derecha.
+  // Sin cuenta: la invitación a empezar. Con cuenta: lo que va y seguir sumando.
+  function tarjetaObra() {
     var s = fotoPasos();
+    if (!s.numeros) return '';
     var e = etapaPieActual(s);
-    return '<div class="noche-obra" id="mi-ventana">' + obraSvg(e) +
-      (s.cuentaVivienda ? '<p class="obra-etapa">' + textoEtapaPie(e) + '</p>' : '') + '</div>';
+    var pct = s.meta > 0 ? Math.min(100, Math.round(s.ahorrado / s.meta * 100)) : 0;
+    var derecha = !s.cuentaVivienda
+      ? '<h2 class="h5" id="titulo-obra">Comienza a construir tu pie para tu departamento</h2>' +
+        '<a class="btn btn-primario btn-sm" href="#pie">Abrir mi cuenta</a>'
+      : '<p class="etiqueta">' + textoEtapaPie(e) + '</p>' +
+        '<h2 class="h5" id="titulo-obra">' + (e === 6 ? 'Listo para el siguiente paso' : 'Cada cuota suma una parte') + '</h2>' +
+        '<p class="obra-pct">' + pct + NBSP + '% de tu pie</p>' +
+        '<a class="btn btn-primario btn-sm" href="#pie">' + (e === 6 ? 'Ver tu pie' : 'Sumar a mi pie') + '</a>';
+    return '<section class="tarjeta tarjeta-obra" aria-labelledby="titulo-obra">' +
+      '<div class="obra-izq">' + obraSvg(e) + '</div><div class="obra-der">' + derecha + '</div></section>';
   }
 
 
@@ -1577,7 +1587,9 @@
             '<span class="freno-llaves" id="freno-llaves">' + FRENO[x.hasta.freno] + '</span>' +
             (techoJusto ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(x.deptos.hasta.listaUF) + ' te dejan poco para vivir.</p>' : '') +
             // S25: el edificio del canvas: 4 columnas y tu ventana de 2 × 2.
-            obraInicio() +
+            '<div class="noche-edificio" aria-hidden="true"><div class="noche-fachada">' +
+              VENTANAS_CANVAS.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
+            '</div></div>' +
             piePlegadoInicio() +
           '</section>') +
       // S23-A: vuelven el slider "Si juntas al mes" y lo que pagas después (pedido del 7-nov).
@@ -1593,6 +1605,7 @@
         vsArriendo(x.hasta.dividendo) +
         '<a class="dueno-link" href="#camino/dueno">Ver todo lo que pagarías como dueño ›</a>' +
       '</section>' +
+      tarjetaObra() +
       animosInicio() +
       tarjetaSiguientePaso();
 
@@ -1797,7 +1810,11 @@
           '<strong class="numero noche-plazo" id="numero-plazo" aria-live="polite"></strong>' +
           '<p class="noche-sub">' + subtitulo + '</p>' +
           (r.todaviaNo && !eligio ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(rango.hasta) + ' te dejan poco para vivir.</p>' : '') +
-          obraInicio() +
+          '<div class="noche-edificio" aria-hidden="true"><span class="noche-techo"></span><div class="noche-fachada">' +
+            VENTANAS_NOCHE.map(function (v) {
+              return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>';
+            }).join('') +
+          '</div></div>' +
           // Comentario 9-nov: tu pie arriba, dentro del azul, como en el canvas.
           piePlegadoInicio() +
         '</section>' +
@@ -1824,6 +1841,7 @@
       '</header>' +
       protagonista +
       (justo ? '' : datos) +
+      tarjetaObra() +
       animosInicio() +
       tarjetaSiguientePaso();
     iniciarSiguientePaso();
@@ -1916,7 +1934,9 @@
       '<p class="noche-etiqueta" id="titulo-cuando">Tus llaves en</p>' +
       '<strong class="numero noche-plazo">' + textoMeses(pl.meses) + '</strong>' +
       '<p class="noche-sub">' + fechaLlaves(pl.meses, hoyDemo()) + '</p>' +
-      obraInicio() +
+      '<div class="noche-edificio" aria-hidden="true"><div class="noche-fachada">' +
+        VENTANAS_CANVAS.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
+      '</div></div>' +
       piePlegadoInicio() +
     '</section>';
   }
