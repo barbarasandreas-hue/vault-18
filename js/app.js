@@ -2552,6 +2552,7 @@
         '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
         '<p class="frase-cierre">' + frase + '</p>' +
       '</div>';
+    if (conjunto && bloqueGrupo) bloqueGrupo = bloqueGrupo.replace('<div class="tarjeta bloque">', '<div class="tarjeta bloque grupo-detalle"><h2 class="grupo-detalle-titulo">Tu grupo de compra</h2>');
     contenedor.innerHTML =
       // S25: como el canvas: título, el tipo en un chip y la ficha.
       '<header class="detalle-cabecera">' + (ctx !== 'inversiones' ? botonFavorito(p) : '') +
@@ -2560,13 +2561,15 @@
         '<p class="texto-apoyo">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       '</header>' +
       galeria(fotosDe(p, d)) +
-      (conjunto ? bloqueGrupo : '') +
+      (conjunto && !vivirAqui ? bloqueGrupo : '') +
 
       (vivirAqui
         // S17-F1 y F2: para vivir, el mismo plazo que Inicio y Tu pie, con cifras redondeadas.
         ? '<section class="detalle-llaves" aria-labelledby="det-llaves"><p id="det-llaves">Tus llaves</p>' +
             '<strong>' + (pd.meses === 0 ? 'Ya' : textoMeses(pd.meses)) + '</strong>' +
             '<p>' + pd.llaves + SEP + FRENO[pd.freno] + '</p></section>' +
+          // 9-nov: el grupo va justo debajo de tus llaves.
+          (conjunto ? bloqueGrupo : '') +
           '<ul class="detalle-filas">' +
             '<li><span>Precio' + (conjunto ? ' con descuento' : p.tipo === 'venta' && piezasValidas(piezasOn()).iva ? ' sin IVA' : '') + '</span><strong>' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong></li>' +
             (conjunto ? '<li><span>Ahorras en grupo hoy</span><strong>' + formatoRedondeado(r.ahorro) + '</strong></li>' : '') +

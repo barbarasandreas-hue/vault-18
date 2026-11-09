@@ -3065,3 +3065,7 @@ details.visita > summary h2 { flex: 1; }
 details.visita > summary .plegable-flecha { width: 20px; height: 20px; }
 details.visita[open] > summary .plegable-flecha { transform: rotate(180deg); }
 details.visita[open] > summary { margin-bottom: 6px; }
+
+/* 9-nov: el grupo bajo tus llaves, con título */
+.grupo-detalle { margin-top: 14px; }
+.grupo-detalle-titulo { margin: 0 0 10px; font-size: 18px; font-weight: 600; color: var(--gray-dark); }
