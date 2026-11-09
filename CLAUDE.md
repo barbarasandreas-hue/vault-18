@@ -83,6 +83,8 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 
 - Interfaz en español de Chile. Usar "dinero", nunca "plata".
 - Escribir siempre "departamento" completo, nunca "depto." ni "dpto.".
+- Un nombre por crédito (9-nov): "Crédito con garantía del Estado" (vivir, 90 %), "Crédito al 80 %" (invertir) y "Crédito para usados" (80 %, sin subsidio). No usar "crédito tradicional", "crédito de siempre" ni "crédito con FOGAES" en pantalla.
+- Todo "Paso X de 6" sigue la escalera de Tus pasos (`pasoEscalera` en `js/app.js`).
 - No usar nombres de personas en la interfaz; hablar de "usuario" o "cliente" O "inversionista".
 - Parejas y familias diversas (Sprint 16): no se pregunta ni se guarda el género de nadie; el avatar no tiene opción de género; la pareja es siempre "tu pareja" y su avatar nunca se sugiere; las relaciones de Tu equipo se pueden repetir (dos mamás, dos papás); textos en neutro ("¡Es tuyo!", "Solo yo"), sin "Bienvenida/o", "novio/a", "esposo/a" ni "marido".
 - No usar el auto como forma de juntar el pie. Sí se puede mostrar, en "Todavía no", que terminar de pagar una cuota libera capacidad.

@@ -1483,8 +1483,8 @@
     if (b >= 12) return (a === 0 ? 'Ya' : junto(textoMeses(a))) + ' a ' + junto(textoMeses(b));
     return (a === 0 ? 'Ya' : a) + ' a ' + textoMeses(b);
   }
-  // Comentario 9-nov: "Tienes el pie para un crédito tradicional en", según tu camino.
-  var PIE_PARA = { 'grupo-vivir': 'compra en grupo', 'individual-vivir': 'crédito tradicional', 'arriendo-opcion': 'arriendo con opción', 'respaldo-familiar': 'respaldo familiar' };
+  // Comentario 9-nov: "Tu pie para … en", según tu camino. Evaluación heurística: un solo nombre por crédito.
+  var PIE_PARA = { 'grupo-vivir': 'compra en grupo', 'individual-vivir': 'crédito con garantía del Estado', 'arriendo-opcion': 'arriendo con opción', 'respaldo-familiar': 'respaldo familiar' };
   function etiquetaLlaves(hasta) {
     var para = PIE_PARA[estado.caminoElegido] || PIE_PARA['individual-vivir'];
     return hasta === 0 ? 'Ya tienes tu pie para ' + para : 'Tu pie para ' + para + ' en';
@@ -2665,7 +2665,7 @@
       (p.tipo === 'venta'
         ? '<p class="detalle-terminado">Edificio terminado' + SEP + 'lo recibes al firmar</p>' +
           (vivirAqui ? '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>' : '')
-        // S26: con el crédito tradicional (camino individual) no se muestra el grupo: no compra en grupo.
+        // S26: con el crédito con garantía del Estado (camino individual) no se muestra el grupo: no compra en grupo.
         : (conjunto ? '' : bloqueGrupo) + (vivirAqui ? '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>' : '')) +
 
       (ctx !== 'inversiones' ? '' :
@@ -2922,8 +2922,17 @@
   }
 
   // S15-F1: un solo indicador de pasos (la escalera de Mi camino). Aquí basta una línea.
+  // Evaluación heurística: un solo "Paso X de 6", el de la escalera de Tus pasos.
+  // La compra (Postular, Juntar el pie, Firmar) se numera con el hito que le corresponde.
+  var HITO_DE_COMPRA = { 1: 'preaprobacion', 2: 'pie', 3: 'es-tuyo' };
+  function pasoEscalera(id) {
+    var h = hitoActual(fotoPasos());
+    var i = h.hitos.map(function (x) { return x.id; }).indexOf(id);
+    return i === -1 ? null : { n: i + 1, total: h.total, nombre: h.hitos[i].nombre };
+  }
   function listaPasos(pasoCompra) {
-    return '<p class="paso-de">Paso ' + (pasoCompra + 1) + ' de 5' + SEP + CAMINO[pasoCompra] + '</p>';
+    var e = pasoEscalera(HITO_DE_COMPRA[pasoCompra]);
+    return e ? '<p class="paso-de">Paso ' + e.n + ' de ' + e.total + SEP + e.nombre + '</p>' : '';
   }
 
   // S19-B3: un ejemplo en cada campo de dinero, para saber qué escribir.
@@ -3107,9 +3116,8 @@
   var PARTES_POSTULA = ['Tus datos', 'Tus documentos', 'Resultado'];
   // S25: la ceja del canvas: en qué paso de Tus pasos está la preaprobación.
   function cejaPreaprobacion() {
-    var h = hitoActual(fotoPasos());
-    var i = h.hitos.map(function (x) { return x.id; }).indexOf('preaprobacion');
-    return '<p class="ceja-paso">Paso ' + (i + 1) + ' de ' + h.total + SEP + 'Preaprobación Bci</p>';
+    var e = pasoEscalera('preaprobacion');
+    return e ? '<p class="ceja-paso">Paso ' + e.n + ' de ' + e.total + SEP + e.nombre + '</p>' : '';
   }
   // S24-B3: las tres partes como un indicador con colores Bci (azul, verde, amarillo) y un check en las hechas.
   var COLOR_PARTE = ['azul', 'verde', 'amarillo'];
@@ -3896,7 +3904,7 @@
     // S25: igual al canvas: la alegría arriba, el contrato serio, el día de la firma y firmar con la casilla.
     $('panel-compra').innerHTML =
       '<section class="firma-heroe"' + (recienLlegado ? ' role="status"' : '') + '>' +
-        '<span class="firma-chip">Paso ' + hp.total + ' de ' + hp.total + SEP + 'Es tuyo</span>' +
+        '<span class="firma-chip">Paso ' + pasoEscalera('es-tuyo').n + ' de ' + hp.total + SEP + pasoEscalera('es-tuyo').nombre + '</span>' +
         '<div class="firma-heroe-fila"><span><h2>¡Juntaste tu pie!</h2><span>Solo falta firmar. Revisa todo con calma.</span></span>' +
           '<svg aria-hidden="true" width="92" height="104" viewBox="0 0 92 104"><rect x="8" y="8" width="64" height="96" rx="4" fill="#1B3A63"/>' +
           '<rect x="16" y="18" width="12" height="10" rx="2" fill="#FFE300"/><rect x="34" y="18" width="12" height="10" rx="2" fill="#2E4F80"/><rect x="52" y="18" width="12" height="10" rx="2" fill="#FFE300"/>' +
@@ -4366,7 +4374,8 @@
     var p = buscarProyecto(estado.compra.proyectoId);
     var d = departamentoDeMiCompra(p);
     var paso = pasoEfectivo();
-    $('titulo-paso').textContent = 'Paso ' + (paso + 1) + ' de 5: ' + CAMINO[paso];
+    var ep = pasoEscalera(HITO_DE_COMPRA[paso]);
+    $('titulo-paso').textContent = ep ? 'Paso ' + ep.n + ' de ' + ep.total + ': ' + ep.nombre : CAMINO[paso];
     if (paso === 4) renderMiDepartamento(p, d);
     else if (paso === 3) { renderFirma(p, d, llegoAFirma || estado.compra.paso === 2); llegoAFirma = false; }
     else if (paso === 2) renderTu5(p, d);
@@ -4576,9 +4585,9 @@
       '<li><span>Deja tu familiar</span><strong>' + formatoPesos(r.deposito) + '</strong></li></ul>';
   }
 
-  // S15-F3: frente al crédito de siempre, en una línea.
+  // S15-F3: frente al crédito base del modo (con garantía del Estado para vivir, al 80 % para invertir), en una línea.
   function lineaContraBase(id, n, base, nBase) {
-    if (id === base) return '<p class="contra-base es-base">' + icono('i-banco') + 'El crédito de siempre</p>';
+    if (id === base) return '<p class="contra-base es-base">' + icono('i-banco') + CAMINOS[base].nombre + '</p>';
     var d = diferenciaConBase(id, n, nBase);
     var partes = [];
     if (d.enCuotas) partes.push('Pie en cuotas');
@@ -4586,7 +4595,7 @@
     if (d.mesesAntes > 0) partes.push('llegas ' + plural(d.mesesAntes, 'mes', 'meses') + ' antes');
     if (d.pieMenos > 0 && d.descuento <= 0.001) partes.push('pones ' + formatoPesos(d.pieMenos) + ' menos');
     if (!partes.length) return '';
-    return '<p class="contra-base">' + icono('i-sube') + '<span><small>Frente al crédito de siempre</small>' + partes.join(SEP) + '</span></p>';
+    return '<p class="contra-base">' + icono('i-sube') + '<span><small>Frente al ' + primeraMinuscula(CAMINOS[base].nombre) + '</small>' + partes.join(SEP) + '</span></p>';
   }
 
   // S15-F7: Hoja de Simulación (tasa, dividendo con y sin seguros, CAE y costo total).
@@ -5323,7 +5332,7 @@
     'grupo-pie-compartido': 'Compras en grupo y unos inversionistas ponen parte del pie.',
     'pie-compartido': 'Pones el 5' + NBSP + '% y unos inversionistas ponen el 15' + NBSP + '%.',
     'grupo-invertir': 'Compras con otros, en obra, y pagas menos.',
-    'individual-invertir': 'El crédito de siempre: Bci presta el 80' + NBSP + '%.'
+    'individual-invertir': 'Bci presta el 80' + NBSP + '% y tú pones el 20' + NBSP + '%.'
   };
   // Meses hasta las llaves por un camino. Para vivir, con las piezas que sumaste (igual que Inicio).
   function mesesDeCamino(id, perfil) {
@@ -5377,7 +5386,7 @@
         return '<li><a class="camino-boton color-' + color + '" href="#explorar/' + id + '">' +
           '<span class="camino-figura" aria-hidden="true"><i></i></span>' +
           '<span class="camino-boton-cabeza"><span class="camino-datos">' + (DATOS_CAMINO[id] || []).map(function (d) { return '<span class="chip">' + d + '</span>'; }).join('') + '</span>' + iconoCamino(usados ? 'individual-invertir' : id) + '</span>' +
-          '<span class="camino-boton-cuerpo"><strong class="h4">' + (usados ? 'Crédito de siempre' : CAMINOS[id].nombre) + '</strong>' +
+          '<span class="camino-boton-cuerpo"><strong class="h4">' + (usados ? NOMBRE_USADOS : CAMINOS[id].nombre) + '</strong>' +
           '<span class="camino-boton-texto">' + (TEXTO_EXPLORAR[id] || LINEA_CAMINO[id] || '') + '</span></span>' +
           '<span class="camino-boton-ir" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></a></li>';
       }).join('') + '</ul>' +
@@ -5401,6 +5410,8 @@
         }).join('') +
       '</section>';
   }
+  // Evaluación heurística: el crédito de los usados tiene su propio nombre (antes "Crédito de siempre").
+  var NOMBRE_USADOS = 'Crédito para usados';
   var ORDEN_EXPLORAR = { 'individual-vivir': 1, 'grupo-vivir': 2 };
   var COLOR_EXPLORAR = { 'individual-vivir': 0, 'grupo-vivir': 1, usados: 2, 'arriendo-opcion': 3 };
   var DATOS_CAMINO = {
@@ -5710,8 +5721,8 @@
     cont.innerHTML =
       '<a href="#explorar" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Explorar</a>' +
       '<header class="encabezado">' +
-        '<h1 id="titulo-caminos" class="h2">Crédito de siempre</h1>' +
-        '<p class="texto-apoyo camino-descripcion">Bci te presta hasta el 80' + NBSP + '% del valor y tú juntas el 20' + NBSP + '% de pie. Sirve para departamentos nuevos y usados.</p></header>' +
+        '<h1 id="titulo-caminos" class="h2">' + NOMBRE_USADOS + '</h1>' +
+        '<p class="texto-apoyo camino-descripcion">Bci te presta hasta el 80' + NBSP + '% del valor y tú juntas el 20' + NBSP + '% de pie. Un usado no tiene subsidio a la tasa.</p></header>' +
       '<button type="button" class="btn btn-mi-camino" id="btn-usados-camino">Hacerlo mi camino</button>' +
       '<h2 class="h3 camino-explorar-titulo">Explorar</h2>' +
       '<div class="chips-explorar" role="group" aria-label="Filtrar">' + chip('dos', '2 dormitorios') + chip('barato', 'Hasta ' + formatoUF(2000)) + chip('fav', 'Favoritos') + '</div>' +
@@ -5769,7 +5780,7 @@
     var meses = falta === 0 ? 0 : mesesParaMeta(falta, perfil.ahorroMensual);
     var calza = vivir && u.listaUF <= DS1.tramo4.hastaUF;
     cont.innerHTML =
-      '<a href="#explorar/usados" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Crédito de siempre</a>' +
+      '<a href="#explorar/usados" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>' + NOMBRE_USADOS + '</a>' +
       '<header class="detalle-cabecera">' + botonFavorito({ id: u.id, nombre: titulo }) +
         '<h1 id="titulo-caminos" class="h2">' + titulo + '</h1>' +
         '<span class="tp-tipo verde">Usado' + SEP + 'de ' + u.anio + '</span>' +
