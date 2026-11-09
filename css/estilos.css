@@ -3057,3 +3057,11 @@ body.en-familia .vista-familia .icono { display: none; }
 .noche .noche-plazo.largo { line-height: 1.15; }
 .noche .noche-etiqueta#titulo-plazo { padding-right: 40px; }
 .noche .noche-plazo.largo { font-size: 32px; }
+
+/* 9-nov: Qué revisar en la visita, plegable */
+details.visita > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 0; min-height: 32px; }
+details.visita > summary::-webkit-details-marker { display: none; }
+details.visita > summary h2 { flex: 1; }
+details.visita > summary .plegable-flecha { width: 20px; height: 20px; }
+details.visita[open] > summary .plegable-flecha { transform: rotate(180deg); }
+details.visita[open] > summary { margin-bottom: 6px; }

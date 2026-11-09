@@ -69,13 +69,13 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
-    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {} };
+    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {}, visitaVersion: 2 };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -336,8 +336,13 @@
       // S26: lo que ya revisaste en la visita, por departamento.
       estado.visita = {};
       if (g.visita && typeof g.visita === 'object') Object.keys(g.visita).forEach(function (id) {
-        if (buscarProyecto(id) && Array.isArray(g.visita[id])) estado.visita[id] = g.visita[id].filter(function (n) { return Number.isInteger(n) && n >= 0 && n < 8; });
+        var viejo = g.visitaVersion !== 2; // 9-nov: se sacó el ítem 6 (el viaje al trabajo); lo anterior se corre una posición.
+        var esUsado = USADOS.some(function (u) { return u.id === id; });
+        if ((buscarProyecto(id) || esUsado) && Array.isArray(g.visita[id])) estado.visita[id] = g.visita[id]
+          .filter(function (n) { return Number.isInteger(n) && n >= 0 && (viejo ? n < 8 && n !== 6 : n < 7); })
+          .map(function (n) { return viejo && n === 7 ? 6 : n; });
       });
+      estado.visitaVersion = 2;
       estado.pasos = {};
       if (g.pasos && typeof g.pasos === 'object') CLAVES_PASOS.forEach(function (k) { if (g.pasos[k] === true) estado.pasos[k] = true; });
       if (['solo', 'pareja', 'familia'].indexOf(g.conQuien) !== -1) estado.conQuien = g.conQuien;
@@ -2541,6 +2546,12 @@
         : '<p class="texto-apoyo">' + (esMiCompra ? 'En tu propia compra no puedes invertir.' : 'Este proyecto ya reunió su 15' + NBSP + '%.') + '</p>';
     }
 
+    // 9-nov: en compra en grupo, cuántos se unieron va arriba, bajo las fotos.
+    var bloqueGrupo = p.tipo === 'venta' || conjunto && ctx !== 'inversiones' && estado.caminoElegido && CAMINOS[estado.caminoElegido] && !CAMINOS[estado.caminoElegido].grupo ? '' : '<div class="tarjeta bloque">' +
+        (p.tipo === 'conjunto' ? grupoConEdificio(p, r) : avanceDe(p, r)) +
+        '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
+        '<p class="frase-cierre">' + frase + '</p>' +
+      '</div>';
     contenedor.innerHTML =
       // S25: como el canvas: título, el tipo en un chip y la ficha.
       '<header class="detalle-cabecera">' + (ctx !== 'inversiones' ? botonFavorito(p) : '') +
@@ -2549,6 +2560,7 @@
         '<p class="texto-apoyo">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       '</header>' +
       galeria(fotosDe(p, d)) +
+      (conjunto ? bloqueGrupo : '') +
 
       (vivirAqui
         // S17-F1 y F2: para vivir, el mismo plazo que Inicio y Tu pie, con cifras redondeadas.
@@ -2562,9 +2574,6 @@
             '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2) + '</strong><small>hoy son ' + formatoRedondeado(pd.dividendo) + '</small></span></li>' +
             '<li class="suave"><span>Sin subsidio a la tasa</span><span>' + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + SEP + 'hoy ' + formatoRedondeado(pd.dividendoSinSubsidio) + '</span></li>' +
           '</ul>' +
-          '<section class="tarjeta detalle-calza" aria-labelledby="det-calza"><h2 id="det-calza">Calza con</h2><p>' +
-            [CAMINOS[caminoParaProyecto(p)].nombre].concat(p.tipo === 'venta' && cumpleChip('sin-iva', p, d) ? ['Sin IVA'] : [], pd.on && pd.on.subsidio ? ['Con DS1'] : [])
-              .map(function (t) { return '<span>' + t + '</span>'; }).join('') + '</p></section>' +
           '<a class="tarjeta dueno-card" href="#camino/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
             '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para vivir</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
           barrioHtml(p) +
@@ -2591,11 +2600,7 @@
         ? '<p class="detalle-terminado">Edificio terminado' + SEP + 'lo recibes al firmar</p>' +
           (vivirAqui ? '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>' : '')
         // S26: con el crédito tradicional (camino individual) no se muestra el grupo: no compra en grupo.
-        : (conjunto && ctx !== 'inversiones' && estado.caminoElegido && CAMINOS[estado.caminoElegido] && !CAMINOS[estado.caminoElegido].grupo ? '' : '<div class="tarjeta bloque">' +
-        (p.tipo === 'conjunto' ? grupoConEdificio(p, r) : avanceDe(p, r)) +
-        '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
-        '<p class="frase-cierre">' + frase + '</p>' +
-      '</div>') + (vivirAqui ? '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>' : '')) +
+        : (conjunto ? '' : bloqueGrupo) + (vivirAqui ? '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>' : '')) +
 
       (ctx !== 'inversiones' ? '' :
       '<section class="tarjeta bloque" aria-labelledby="titulo-para-invertir">' +
@@ -5403,7 +5408,6 @@
     ['Busca humedad', 'Manchas en esquinas, ventanas y closets.'],
     ['Pide los gastos comunes reales', 'Las últimas boletas del edificio.'],
     ['Lee el reglamento', 'Mascotas, arriendos y uso de espacios comunes.'],
-    ['Prueba el viaje a tu trabajo', 'En hora punta, como lo harías cada día.'],
     ['Pregunta por bodega y estacionamiento', 'Si vienen incluidos o se pagan aparte.']
   ];
   var ICONOS_BARRIO = {
@@ -5426,12 +5430,14 @@
         '<div class="barrio-mapas"><a class="btn barrio-btn" href="https://www.google.com/maps/dir/?api=1&amp;destination=' + lugar + '&amp;travelmode=transit" target="_blank" rel="noopener">Cómo llegar a tu trabajo</a>' +
           '<a class="barrio-link" href="https://www.google.com/maps/search/?api=1&amp;query=' + lugar + '" target="_blank" rel="noopener">Ver la comuna en el mapa ›</a></div>' +
       '</section>' +
-      '<section class="tarjeta visita" aria-labelledby="titulo-visita">' +
-        '<div class="visita-cabeza"><h2 id="titulo-visita">Qué revisar en la visita</h2><span id="visita-cuenta">' + hechos.length + ' de ' + REVISAR_VISITA.length + '</span></div>' +
+      // 9-nov: plegada; se abre al tocar el título.
+      '<details class="tarjeta visita">' +
+        '<summary class="visita-cabeza"><h2 id="titulo-visita">Qué revisar en la visita</h2><span id="visita-cuenta">' + hechos.length + ' de ' + REVISAR_VISITA.length + '</span>' +
+          '<svg class="plegable-flecha" aria-hidden="true"><use href="#i-flecha"/></svg></summary>' +
         '<ul>' + REVISAR_VISITA.map(function (r, i) {
           return '<li><label><input type="checkbox" data-visita="' + i + '"' + (hechos.indexOf(i) !== -1 ? ' checked' : '') + '><span><strong>' + r[0] + '</strong><small>' + r[1] + '</small></span></label></li>';
         }).join('') + '</ul>' +
-      '</section>';
+      '</details>';
   }
   function iniciarVisita(p) {
     document.querySelectorAll('[data-visita]').forEach(function (c) {
@@ -5647,7 +5653,6 @@
     var falta = Math.max(0, meta - (perfil.ahorroActual || 0));
     var meses = falta === 0 ? 0 : mesesParaMeta(falta, perfil.ahorroMensual);
     var calza = vivir && u.listaUF <= DS1.tramo4.hastaUF;
-    var sellos = ['Crédito de siempre'].concat(calza ? ['Con DS1'] : [], u.dfl2 ? ['DFL-2'] : []);
     cont.innerHTML =
       '<a href="#explorar/usados" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Crédito de siempre</a>' +
       '<header class="detalle-cabecera">' + botonFavorito({ id: u.id, nombre: titulo }) +
@@ -5669,8 +5674,6 @@
         '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + ufDecimales(dividendo / SUPUESTOS.uf, 2) + '</strong><small>hoy son ' + formatoRedondeado(dividendo) + '</small></span></li>' +
       '</ul>' +
       '<p class="texto-apoyo usado-nota"><small>Bci presta el 80' + NBSP + '% a 30 años. Un usado no tiene subsidio a la tasa ni garantía del Estado, por eso el pie es más alto.</small></p>' +
-      '<section class="tarjeta detalle-calza" aria-labelledby="usado-calza"><h2 id="usado-calza">Calza con</h2><p>' +
-        sellos.map(function (t) { return '<span>' + t + '</span>'; }).join('') + '</p></section>' +
       (vivir ? barrioHtml(u) : '') +
       '<button type="button" class="btn btn-primario btn-bloque usado-cta" id="btn-usado-camino">Hacerlo mi camino</button>' +
       '<p class="texto-apoyo texto-centro"><small>Ejemplo simulado' + SEP + 'fotos referenciales</small></p>';
