@@ -109,12 +109,21 @@ function buscarProyecto(id) {
   return null;
 }
 
+// S26: Cómo es vivir ahí. Referencias de cada comuna (no del edificio); se revisan en el mapa.
+var BARRIOS = {
+  'Independencia': { metro: 'Línea 3: Hospitales y Plaza Chacabuco', salud: 'Hospital Clínico de la U. de Chile y Hospital San José', verde: 'Plaza Chacabuco', vida: 'La Vega Central y Patronato, a pocas cuadras' },
+  'Recoleta': { metro: 'Línea 2: Cerro Blanco, Cementerios y Einstein', salud: 'Clínica Dávila', verde: 'Cerro Blanco y el Parque Metropolitano', vida: 'Barrio Patronato y La Vega Central' },
+  'Estación Central': { metro: 'Línea 1: Estación Central y Universidad de Santiago; trenes en la estación', salud: 'Centros de salud de la comuna', verde: 'Parque Quinta Normal, cerca', vida: 'Universidad de Santiago y comercio de Alameda' },
+  'Quinta Normal': { metro: 'Línea 5: Gruta de Lourdes, Blanqueado y Quinta Normal', salud: 'Centros de salud de la comuna', verde: 'Parque Quinta Normal', vida: 'Museos del parque y ferias libres' }
+};
+
 if (typeof module !== 'undefined') module.exports = {
   FECHA_REFERENCIA: FECHA_REFERENCIA,
   ORIGEN_ARRIENDO: ORIGEN_ARRIENDO,
   PROYECTOS: PROYECTOS,
   DEPARTAMENTOS: DEPARTAMENTOS,
   USADOS: USADOS,
+  BARRIOS: BARRIOS,
   departamentosDe: departamentosDe,
   buscarProyecto: buscarProyecto
 };

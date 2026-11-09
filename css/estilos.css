@@ -2966,3 +2966,72 @@ body.en-familia .vista-familia .icono { display: none; }
 .regalo-select { position: relative; display: block; }
 .regalo-select select { width: 100%; height: 52px; padding: 0 44px 0 14px; border: 1.6px solid var(--gray-neutral); border-radius: 12px; background: var(--white); font: inherit; font-size: 17px; -webkit-appearance: none; appearance: none; }
 .regalo-select svg { position: absolute; right: 14px; top: 16px; width: 20px; height: 20px; fill: none; stroke: var(--blue-dark); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+
+/* ===== S26: Tu mes como dueño y Cómo es vivir aquí ===== */
+.dueno-link { display: inline-flex; min-height: 44px; align-items: center; margin-top: 8px; font-weight: 700; }
+.dueno-heroe { display: flex; flex-direction: column; gap: 6px; padding: 20px 18px; border-radius: 24px; color: var(--white); background: linear-gradient(180deg, var(--blue-dark) 0%, var(--blue-normal) 100%); }
+.dueno-heroe p { margin: 0; font-size: 15px; font-weight: 600; }
+.dueno-heroe strong { font-size: 40px; line-height: 1.1; }
+.dueno-vs { align-self: flex-start; padding: 4px 12px; border-radius: 999px; background: rgba(255, 255, 255, .2); font-size: 13px; font-weight: 700; }
+.dueno-barra { display: flex; gap: 3px; height: 14px; margin-top: 10px; border-radius: 999px; overflow: hidden; }
+.dueno-barra i, .dueno-partes i { display: block; }
+.azul.dueno-x, .dueno-barra .azul, .dueno-partes i.azul { background: var(--blue-40); }
+.dueno-barra .azul { background: var(--white); }
+.dueno-barra .celeste { background: var(--blue-40); }
+.dueno-barra .verde { background: var(--green-60); }
+.dueno-barra .amarillo { background: var(--yellow-normal); }
+.dueno-partes { display: flex; flex-direction: column; margin-top: 16px; padding: 6px 18px; }
+.dueno-partes p { display: flex; align-items: center; gap: 12px; margin: 0; min-height: 60px; border-bottom: 1px solid var(--gray-light); }
+.dueno-partes p > span { flex: 1; display: grid; gap: 2px; }
+.dueno-partes small { font-size: 13px; color: var(--gray-semidark); }
+.dueno-partes i { flex: none; width: 12px; height: 12px; border-radius: 3px; }
+.dueno-partes i.azul { background: var(--blue-dark); }
+.dueno-partes i.celeste { background: var(--blue-40); }
+.dueno-partes i.verde { background: var(--green-60); }
+.dueno-partes i.amarillo { background: var(--yellow-normal); }
+.dueno-partes .dueno-contrib { border-bottom: 0; padding: 10px 0; }
+.dueno-compara, .dueno-vivir, .dueno-vez { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; padding: 18px; }
+.dueno-compara h2, .dueno-vivir h2, .dueno-vez h2 { margin: 0 0 6px; font-size: 18px; font-weight: 600; }
+.dueno-compara p, .dueno-vez p { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 0; }
+.dueno-mini { display: block; height: 12px; border-radius: 999px; background: var(--gray-light); overflow: hidden; margin-bottom: 6px; }
+.dueno-mini i { display: block; height: 100%; border-radius: 999px; }
+.dueno-mini.amarillo i { background: var(--yellow-normal); }
+.dueno-mini.azul i { background: var(--blue-normal); }
+.dueno-nota { margin: 4px 0 0; font-size: 14px; color: var(--gray-semidark); }
+.dueno-compara .dueno-nota, .dueno-vez .dueno-nota { display: block; }
+.dueno-vivir > strong { font-size: 30px; }
+.dueno-vivir .carga-chip { align-self: flex-start; }
+.dueno-vez p { min-height: 52px; border-bottom: 1px solid var(--gray-light); }
+.dueno-vez p > span { display: grid; gap: 2px; }
+.dueno-vez small { font-size: 13px; color: var(--gray-semidark); }
+.dueno-vez .dueno-vez-total { border-bottom: 0; font-weight: 700; }
+.dueno-vez .dueno-nota { min-height: 0; border: 0; }
+.dueno-fuente { margin: 16px 0 0; font-size: 13px; color: var(--gray-semidark); }
+.dueno-card { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 14px 16px; color: var(--gray-dark); text-decoration: none; }
+.dueno-card > span:nth-child(2) { flex: 1; display: grid; gap: 2px; }
+.dueno-card small { font-size: 14px; color: var(--gray-semidark); }
+.dueno-card .flecha-derecha { width: 20px; height: 20px; color: var(--blue-dark); }
+.dueno-card:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.barrio, .visita { display: flex; flex-direction: column; margin-top: 14px; padding: 18px; }
+.barrio h2, .visita h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.barrio-sub { margin: 2px 0 8px; font-size: 14px; color: var(--gray-semidark); }
+.barrio ul, .visita ul { list-style: none; margin: 0; padding: 0; display: grid; }
+.barrio li { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--gray-light); }
+.barrio li > span:last-child { display: grid; gap: 2px; }
+.barrio small, .visita small { font-size: 14px; color: var(--gray-semidark); line-height: 1.4; }
+.barrio-icono { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; }
+.barrio-icono svg { width: 22px; height: 22px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.barrio-icono.azul { background: var(--blue-20); } .barrio-icono.azul svg { stroke: var(--blue-dark); }
+.barrio-icono.verde { background: var(--green-20); } .barrio-icono.verde svg { stroke: var(--green-dark); }
+.barrio-icono.rojo { background: var(--red-20); } .barrio-icono.rojo svg { stroke: var(--red-dark); }
+.barrio-icono.amarillo { background: var(--yellow-20); } .barrio-icono.amarillo svg { stroke: var(--gray-dark); }
+.barrio-mapas { display: grid; gap: 4px; justify-items: center; margin-top: 14px; }
+.barrio-btn { width: 100%; min-height: 50px; border-radius: 48px; border: 1.6px solid var(--blue-dark); background: var(--white); color: var(--blue-dark); font-size: 14px; letter-spacing: .5px; }
+.barrio-link { min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; }
+.visita-cabeza { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.visita-cabeza span { font-size: 14px; font-weight: 700; color: var(--green-dark); }
+.visita label { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--gray-light); cursor: pointer; }
+.visita li:last-child label { border-bottom: 0; }
+.visita label > span { display: grid; gap: 2px; }
+.visita input { flex: none; width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--green-dark); }
+.visita input:checked + span strong { color: var(--green-dark); }

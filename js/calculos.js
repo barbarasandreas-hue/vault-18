@@ -15,7 +15,12 @@ var SUPUESTOS = {
   topeRecompraMeses: 84,    // si a los 84 meses no recompró todo, refinancia o vende
   topeFogaesUF: 4500,       // la garantía FOGAES llega a viviendas de hasta UF 4.500
   pctCostosVenta: 0.02,     // supuesto de diseño: corretaje y gastos si el comprador vende
-  protectorCadaMeses: 6     // "Este mes no pude": una vez cada 6 meses
+  protectorCadaMeses: 6,    // "Este mes no pude": una vez cada 6 meses
+  // S26: Tu mes como dueño. Estimados, no datos del edificio:
+  gastoComunM2: 1500,       // $ por m² al mes. Assetplan (mar-2026): en Santiago Centro ≈ $72 mil para deptos de 1 y 2 dormitorios
+  arreglosAnual: 0.0025,    // supuesto de diseño: guardar 0,25 % del valor al año para arreglos (depto nuevo)
+  mudanza: 250000,          // supuesto de diseño: mudanza dentro de Santiago
+  exentoContribucionesUF: 1450 // SII, 1.er semestre 2025: viviendas con avalúo fiscal bajo ≈ $56,8 M no pagan contribuciones
 };
 
 // Cómo se reparte el precio según para qué compra (modelo v3, CLAUDE.md).
@@ -1663,7 +1668,27 @@ function alternarFavorito(lista, id) {
   return l.indexOf(id) === -1 ? l.concat([id]) : l.filter(function (x) { return x !== id; });
 }
 
+// ---------- S26: Tu mes como dueño ----------
+// Todo lo que pagas al mes como dueño, frente a tu arriendo de hoy, y lo que se paga una sola vez.
+// dividendo: en pesos, con seguros. m2: del departamento. precioUF: precio que pagas. arriendo: el de hoy (o null).
+// ingreso y otrasCuotas: para "te queda para vivir" (opcionales).
+function mesDueno(x) {
+  var seguros = Math.round(SUPUESTOS.segurosUF * SUPUESTOS.uf);
+  var gastosComunes = Math.round((x.m2 || 0) * SUPUESTOS.gastoComunM2 / 1000) * 1000;
+  var arreglos = Math.round(x.precioUF * SUPUESTOS.uf * SUPUESTOS.arreglosAnual / 12 / 1000) * 1000;
+  var total = x.dividendo + gastosComunes + arreglos;
+  var r = {
+    dividendo: x.dividendo - seguros, seguros: seguros, gastosComunes: gastosComunes, arreglos: arreglos, total: total,
+    vsArriendo: x.arriendo > 0 ? total - x.arriendo : null,
+    alFirmar: ufAPesos(gastosUF(x.precioUF)), mudanza: SUPUESTOS.mudanza
+  };
+  r.unaVez = r.alFirmar + r.mudanza;
+  r.teQueda = x.ingreso > 0 ? x.ingreso - total - (x.otrasCuotas || 0) : null;
+  return r;
+}
+
 if (typeof module !== 'undefined') module.exports = {
+  mesDueno: mesDueno,
   ETAPAS_CONSTRUCCION: ETAPAS_CONSTRUCCION,
   etapaConstruccion: etapaConstruccion,
   alternarFavorito: alternarFavorito,

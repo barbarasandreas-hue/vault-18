@@ -69,13 +69,13 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
-    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [] };
+    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {} };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -333,6 +333,11 @@
       estado.animos = Array.isArray(g.animos) ? g.animos.filter(function (x) { return x && MOTIVO_ANIMO[x.clave] && RELACIONES_EQUIPO.indexOf(x.relacion) !== -1; }).slice(0, 2) : [];
       estado.construido = Number.isInteger(g.construido) ? g.construido : null;
       estado.favoritos = Array.isArray(g.favoritos) ? g.favoritos.filter(function (id) { return typeof id === 'string' && buscarProyecto(id); }) : [];
+      // S26: lo que ya revisaste en la visita, por departamento.
+      estado.visita = {};
+      if (g.visita && typeof g.visita === 'object') Object.keys(g.visita).forEach(function (id) {
+        if (buscarProyecto(id) && Array.isArray(g.visita[id])) estado.visita[id] = g.visita[id].filter(function (n) { return Number.isInteger(n) && n >= 0 && n < 8; });
+      });
       estado.pasos = {};
       if (g.pasos && typeof g.pasos === 'object') CLAVES_PASOS.forEach(function (k) { if (g.pasos[k] === true) estado.pasos[k] = true; });
       if (['solo', 'pareja', 'familia'].indexOf(g.conQuien) !== -1) estado.conQuien = g.conQuien;
@@ -1510,6 +1515,7 @@
         '<strong class="numero">' + rangoUF(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
         '<p class="hoy-pesos">hoy son ' + formatoRango(x.desde.dividendo, x.hasta.dividendo).replace(/^entre /, '') + '</p>' +
         vsArriendo(x.hasta.dividendo) +
+        '<a class="dueno-link" href="#camino/dueno">Ver todo lo que pagarías como dueño ›</a>' +
       '</section>' +
       animosInicio() +
       tarjetaSiguientePaso();
@@ -2523,6 +2529,9 @@
           '<section class="tarjeta detalle-calza" aria-labelledby="det-calza"><h2 id="det-calza">Calza con</h2><p>' +
             [CAMINOS[caminoParaProyecto(p)].nombre].concat(p.tipo === 'venta' && cumpleChip('sin-iva', p, d) ? ['Sin IVA'] : [], pd.on && pd.on.subsidio ? ['Con DS1'] : [])
               .map(function (t) { return '<span>' + t + '</span>'; }).join('') + '</p></section>' +
+          '<a class="tarjeta dueno-card" href="#camino/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
+            '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para vivir</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
+          barrioHtml(p) +
           '<p class="llega-sello detalle-sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>'
         : '<div class="tarjeta protagonista">' +
         '<p class="etiqueta">Precio del departamento</p>' + precio +
@@ -2568,6 +2577,7 @@
 
     iniciarGalerias(contenedor);
     iniciarPlegables();
+    iniciarVisita(p);
     if ($('btn-detalle-credito')) $('btn-detalle-credito').addEventListener('click', function () {
       abrirHojaContenido('Detalle del crédito', repartoCasa(partesPiezas(pd), formatoRedondeado) +
         '<ul class="datos-inversion"><li><span>Gastos al firmar</span><strong>' + formatoRedondeado(pd.gastos) + '</strong></li>' +
@@ -5343,6 +5353,112 @@
   }
 
 
+  // ---------- S26: Cómo es vivir ahí ----------
+  var REVISAR_VISITA = [
+    ['Ve de día y de noche', 'El ruido y la luz cambian mucho.'],
+    ['Mira hacia dónde da', 'La luz y el calor dependen de la orientación.'],
+    ['Abre las llaves', 'Revisa la presión y cuánto tarda el agua caliente.'],
+    ['Busca humedad', 'Manchas en esquinas, ventanas y closets.'],
+    ['Pide los gastos comunes reales', 'Las últimas boletas del edificio.'],
+    ['Lee el reglamento', 'Mascotas, arriendos y uso de espacios comunes.'],
+    ['Prueba el viaje a tu trabajo', 'En hora punta, como lo harías cada día.'],
+    ['Pregunta por bodega y estacionamiento', 'Si vienen incluidos o se pagan aparte.']
+  ];
+  var ICONOS_BARRIO = {
+    metro: ['azul', 'M7 3h10a2 2 0 0 1 2 2v10a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2zM5 11h14M8 21l2-3M16 21l-2-3M8.5 14.5h.01M15.5 14.5h.01'],
+    verde: ['verde', 'M12 21v-6M12 15c-4 0-6-3-6-6a6 6 0 0 1 12 0c0 3-2 6-6 6z'],
+    salud: ['rojo', 'M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6z'],
+    vida: ['amarillo', 'M4 10h16l-1.5-5h-13zM5 10v10h14V10M9 20v-5h6v5']
+  };
+  function barrioHtml(p) {
+    var b = BARRIOS[p.comuna];
+    if (!b) return '';
+    var hechos = estado.visita[p.id] || [];
+    var fila = function (k, titulo, texto) {
+      return '<li><span class="barrio-icono ' + ICONOS_BARRIO[k][0] + '" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + ICONOS_BARRIO[k][1] + '"/></svg></span><span><strong>' + titulo + '</strong><small>' + texto + '</small></span></li>';
+    };
+    var lugar = encodeURIComponent(p.comuna + ', Santiago, Chile');
+    return '<section class="tarjeta barrio" aria-labelledby="titulo-barrio">' +
+        '<h2 id="titulo-barrio">Cómo es vivir aquí</h2><p class="barrio-sub">' + esc(p.comuna) + SEP + 'referencias de la comuna</p>' +
+        '<ul>' + fila('metro', 'Metro', b.metro) + fila('verde', 'Áreas verdes', b.verde) + fila('salud', 'Salud', b.salud) + fila('vida', 'Para el día a día', b.vida) + '</ul>' +
+        '<div class="barrio-mapas"><a class="btn barrio-btn" href="https://www.google.com/maps/dir/?api=1&amp;destination=' + lugar + '&amp;travelmode=transit" target="_blank" rel="noopener">Cómo llegar a tu trabajo</a>' +
+          '<a class="barrio-link" href="https://www.google.com/maps/search/?api=1&amp;query=' + lugar + '" target="_blank" rel="noopener">Ver la comuna en el mapa ›</a></div>' +
+      '</section>' +
+      '<section class="tarjeta visita" aria-labelledby="titulo-visita">' +
+        '<div class="visita-cabeza"><h2 id="titulo-visita">Qué revisar en la visita</h2><span id="visita-cuenta">' + hechos.length + ' de ' + REVISAR_VISITA.length + '</span></div>' +
+        '<ul>' + REVISAR_VISITA.map(function (r, i) {
+          return '<li><label><input type="checkbox" data-visita="' + i + '"' + (hechos.indexOf(i) !== -1 ? ' checked' : '') + '><span><strong>' + r[0] + '</strong><small>' + r[1] + '</small></span></label></li>';
+        }).join('') + '</ul>' +
+      '</section>';
+  }
+  function iniciarVisita(p) {
+    document.querySelectorAll('[data-visita]').forEach(function (c) {
+      c.addEventListener('change', function () {
+        var n = Number(c.dataset.visita), l = (estado.visita[p.id] || []).filter(function (x) { return x !== n; });
+        if (c.checked) l.push(n);
+        estado.visita = Object.assign({}, estado.visita); estado.visita[p.id] = l;
+        guardarEstado();
+        $('visita-cuenta').textContent = l.length + ' de ' + REVISAR_VISITA.length;
+        if (l.length === REVISAR_VISITA.length) toast('Revisaste todo. ¡Buena visita!');
+      });
+    });
+  }
+
+  // ---------- S26: Tu mes como dueño ----------
+  // Todo lo que pagarías al mes como dueño frente a tu arriendo, cuánto te queda para vivir y lo que se paga una vez.
+  // Con id: ese departamento. Sin id (desde Inicio): el más caro de tu rango, con lo que juntas hoy.
+  function renderMesDueno(id) {
+    var cont = $('caminos-contenido');
+    var p = id ? buscarProyecto(id) : null;
+    var base, m2, volver;
+    if (p) {
+      var dp = departamentosDe(p.id)[0];
+      base = estado.modo === 'vivir' && paraVivir(p) ? plazoDepartamento(p) : resumen(p).escenario;
+      m2 = dp.m2;
+      volver = ['#departamentos/' + esc(p.id), 'Un departamento'];
+    } else {
+      var x = plazoVivir(estado.ahorroMensual || 300000);
+      base = x.hasta;
+      var cand = candidatosVivir().map(function (q) { return departamentosDe(q.id)[0]; }).sort(function (a, b) { return b.listaUF - a.listaUF; });
+      m2 = cand.length ? cand[0].m2 : 45;
+      volver = ['#camino', 'Inicio'];
+    }
+    var ingreso = ingresoTotal(estado.sueldoPropio, estado.sueldoPareja) || 0;
+    var m = mesDueno({ dividendo: base.dividendo, m2: m2, precioUF: base.precioUF, arriendo: estado.arriendoActual, ingreso: ingreso, otrasCuotas: estado.otrasCuotas });
+    var partes = [['azul', 'Dividendo', m.dividendo, 'Lo que le pagas a Bci'], ['celeste', 'Seguros', m.seguros, 'Desgravamen e incendio, van con el dividendo'],
+      ['verde', 'Gastos comunes', m.gastosComunes, 'Estimado para ' + m2 + NBSP + 'm²'], ['amarillo', 'Para arreglos', m.arreglos, 'Lo que conviene guardar cada mes']];
+    var pctVive = ingreso > 0 ? m.teQueda / ingreso : null;
+    var nivel = pctVive === null ? null : pctVive >= 0.5 ? 'holgado' : pctVive >= 0.35 ? 'limite' : 'no-aprueba';
+    cont.innerHTML =
+      '<a href="' + volver[0] + '" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>' + volver[1] + '</a>' +
+      '<header class="encabezado"><h1 id="titulo-caminos" class="h2">Tu mes como dueño</h1>' +
+        '<p class="texto-apoyo">' + (p ? esc(p.nombre) + SEP + m2 + NBSP + 'm²' : 'Un departamento de ' + formatoUF(base.precioUF) + ' y unos ' + m2 + NBSP + 'm²') + '</p></header>' +
+      '<section class="dueno-heroe" aria-labelledby="dueno-total">' +
+        '<p id="dueno-total">Cada mes pagarías</p><strong>' + formatoPesos(m.total) + '</strong>' +
+        (m.vsArriendo !== null ? '<span class="dueno-vs">' + (m.vsArriendo > 0 ? formatoRedondeado(m.vsArriendo) + ' más que tu arriendo de hoy' : m.vsArriendo < 0 ? formatoRedondeado(-m.vsArriendo) + ' menos que tu arriendo de hoy' : 'Lo mismo que tu arriendo de hoy') + '</span>' : '') +
+        '<span class="dueno-barra" aria-hidden="true">' + partes.map(function (x) { return '<i class="' + x[0] + '" style="flex:' + x[2] + '"></i>'; }).join('') + '</span>' +
+      '</section>' +
+      '<section class="tarjeta dueno-partes" aria-label="En qué se va">' + partes.map(function (x) {
+        return '<p><i class="' + x[0] + '" aria-hidden="true"></i><span><strong>' + x[1] + '</strong><small>' + x[3] + '</small></span><strong>' + formatoPesos(x[2]) + '</strong></p>';
+      }).join('') +
+        '<p class="dueno-contrib"><span><strong>Contribuciones</strong><small>Si el avalúo fiscal es menor a ' + formatoUF(SUPUESTOS.exentoContribucionesUF) + ' (≈' + NBSP + formatoRedondeado(ufAPesos(SUPUESTOS.exentoContribucionesUF)) + '), no pagas. Revísalo en el SII.</small></span></p>' +
+      '</section>' +
+      (estado.arriendoActual > 0 ? '<section class="tarjeta dueno-compara" aria-labelledby="dueno-hoy"><h2 id="dueno-hoy">Hoy y como dueño</h2>' +
+        '<p><span>Tu arriendo hoy</span><strong>' + formatoPesos(estado.arriendoActual) + '</strong></p><span class="dueno-mini amarillo" aria-hidden="true"><i style="width:' + Math.min(100, estado.arriendoActual / Math.max(m.total, estado.arriendoActual) * 100).toFixed(1) + '%"></i></span>' +
+        '<p><span>Como dueño</span><strong>' + formatoPesos(m.total) + '</strong></p><span class="dueno-mini azul" aria-hidden="true"><i style="width:' + Math.min(100, m.total / Math.max(m.total, estado.arriendoActual) * 100).toFixed(1) + '%"></i></span>' +
+        '<p class="dueno-nota">La diferencia: el dividendo va a algo que es tuyo; el arriendo, no.</p></section>' : '') +
+      (pctVive !== null ? '<section class="tarjeta dueno-vivir" aria-labelledby="dueno-queda"><h2 id="dueno-queda">Te queda para vivir</h2>' +
+        '<strong>' + formatoPesos(Math.max(0, m.teQueda)) + '</strong>' +
+        '<span class="carga-chip ' + nivel + '">' + (nivel === 'holgado' ? 'Holgado' : nivel === 'limite' ? 'Justo' : 'Poco') + '</span>' +
+        '<p class="dueno-nota">De ' + formatoPesos(ingreso) + ' al mes' + ((estado.otrasCuotas || 0) > 0 ? ', después de tus otras cuotas' : '') + '. Para comida, transporte, cuentas y ahorro.</p></section>' : '') +
+      '<section class="tarjeta dueno-vez" aria-labelledby="dueno-vez"><h2 id="dueno-vez">Una sola vez</h2>' +
+        '<p><span><strong>Gastos al firmar</strong><small>Notaría, tasación, estudio de títulos e inscripción</small></span><strong>' + formatoRedondeado(m.alFirmar) + '</strong></p>' +
+        '<p><span><strong>Mudanza</strong><small>Estimado dentro de Santiago</small></span><strong>' + formatoRedondeado(m.mudanza) + '</strong></p>' +
+        '<p class="dueno-vez-total"><span>Total</span><strong>' + formatoRedondeado(m.unaVez) + '</strong></p>' +
+        '<p class="dueno-nota">Los gastos al firmar ya están en lo que juntas antes de firmar.</p></section>' +
+      '<p class="dueno-fuente">Estimados. Gastos comunes con el promedio de Santiago Centro (Assetplan, mar-2026); arreglos y mudanza son supuestos. Los del edificio los da la administración.</p>';
+  }
+
   // ---------- S23-C: guardar departamentos ----------
   // Los usados también se pueden guardar, pero Tus guardados muestra solo proyectos.
   function guardadosProyectos() { return estado.favoritos.map(buscarProyecto).filter(Boolean); }
@@ -6447,6 +6563,7 @@
     // #camino/…: Explorar (fichas, elegir, departamento), Tus pasos (pasos de la compra) o Inicio.
     switch (p[1]) {
       case 'ficha': return r('ficha', 'explorar', function () { renderFicha(p[2]); });
+      case 'dueno': return r('caminos', p[2] ? 'explorar' : 'inicio', function () { renderMesDueno(p[2]); });
       case 'elegir': return r('proyectos', 'explorar', function () { renderLista('camino'); });
       case 'proyecto': return r('proyecto', 'explorar', function () { renderDetalle(p[2], 'camino'); });
       case 'avisos': return r('avisos', 'inicio', renderAvisos);
