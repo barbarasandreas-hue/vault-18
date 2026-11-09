@@ -5406,7 +5406,7 @@
     'grupo-pie-compartido': 'Compras en grupo y unos inversionistas ponen parte del pie.',
     'pie-compartido': 'Pones el 5' + NBSP + '% y unos inversionistas ponen el 15' + NBSP + '%.',
     'grupo-invertir': 'Compras con otros, en obra, y pagas menos.',
-    'individual-invertir': 'Bci presta el 80' + NBSP + '% y tú pones el 20' + NBSP + '%.'
+    'individual-invertir': 'Bci presta el 80' + NBSP + '% y tú pones el 20' + NBSP + '%. Sirve para nuevos y usados.'
   };
   // Meses hasta las llaves por un camino. Para vivir, con las piezas que sumaste (igual que Inicio).
   function mesesDeCamino(id, perfil) {
@@ -5448,8 +5448,9 @@
     // 9-nov: el arriendo con opción de compra pasó de ficha a camino completo (un botón más, solo para vivir).
     var fichas = ['respaldo-familiar'];
     // S25: como el canvas: tres tarjetas de color (con el crédito de siempre como tercera), favoritos y todos, y otras formas.
-    var ids = x.ids.slice().sort(function (a, b) { return (ORDEN_EXPLORAR[a] || 9) - (ORDEN_EXPLORAR[b] || 9); }).concat(['usados'])
-      .concat(estado.modo === 'vivir' ? ['arriendo-opcion'] : []);
+    // 9-nov: para invertir, los usados no son un camino aparte: son el mismo Crédito al 80 % (se ven dentro de él).
+    var ids = x.ids.slice().sort(function (a, b) { return (ORDEN_EXPLORAR[a] || 9) - (ORDEN_EXPLORAR[b] || 9); })
+      .concat(estado.modo === 'vivir' ? ['usados', 'arriendo-opcion'] : []);
     var nGuardados = guardadosProyectos().length;
     cont.innerHTML =
       '<header class="encabezado"><img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24"><h1 id="titulo-caminos" class="h2">¿Qué quieres explorar?</h1>' +
@@ -5549,6 +5550,10 @@
           '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button>') +
       '<h2 class="h3 camino-explorar-titulo">Explorar</h2>' +
       chipsExplorar(id).replace('</div>', '<button type="button" class="chip chip-filtro chip-favoritos" id="chip-favoritos" aria-pressed="' + soloFavoritos + '">' + icono('i-corazon') + 'Favoritos</button></div>') +
+      (!vivir && id === 'individual-invertir'
+        ? '<a class="tarjeta fila como-funciona" href="#explorar/usados">' + icono('i-casa', 'icono-grande') +
+            '<span><strong>También usados</strong><small>El mismo crédito al 80' + NBSP + '%, sin subsidio a la tasa</small></span>' +
+            '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' : '') +
       '<section aria-labelledby="titulo-deptos-camino"><h2 class="oculto-visual" id="titulo-deptos-camino">' + plural(lista.length, 'departamento', 'departamentos') + '</h2>' +
         (lista.length ? '<ul class="lista-proyectos">' + lista.map(function (p) { return tarjetaProyecto(p, '#camino/proyecto/', true, '/' + esc(id)); }).join('') + '</ul>'
           : '<p class="texto-apoyo">' + (soloFavoritos && todos.length ? 'Todavía no guardas ninguno de este camino.' : todos.length ? 'Ninguno con estos filtros.' : 'Hoy no hay departamentos de este camino en tu rango.') + '</p>') +
@@ -5793,9 +5798,10 @@
         (k === 'fav' ? icono('i-corazon') : '') + texto + '</button>';
     };
     cont.innerHTML =
-      '<a href="#explorar" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Explorar</a>' +
+      (vivir ? '<a href="#explorar" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Explorar</a>'
+        : '<a href="#explorar/individual-invertir" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>' + CAMINOS['individual-invertir'].nombre + '</a>') +
       '<header class="encabezado">' +
-        '<h1 id="titulo-caminos" class="h2">' + NOMBRE_USADOS + '</h1>' +
+        '<h1 id="titulo-caminos" class="h2">' + (vivir ? NOMBRE_USADOS : CAMINOS['individual-invertir'].nombre + SEP + 'usados') + '</h1>' +
         '<p class="texto-apoyo camino-descripcion">Bci te presta hasta el 80' + NBSP + '% del valor y tú juntas el 20' + NBSP + '% de pie. Un usado no tiene subsidio a la tasa.</p></header>' +
       '<button type="button" class="btn btn-mi-camino" id="btn-usados-camino">Hacerlo mi camino</button>' +
       '<h2 class="h3 camino-explorar-titulo">Explorar</h2>' +
@@ -5821,7 +5827,8 @@
         '</li>';
       }).join('') + '</ul>' : '<p class="texto-apoyo">' + (filtroUsados.fav ? 'Todavía no guardas ninguno.' : 'Ninguno con estos filtros.') + '</p>') +
       '<p class="texto-apoyo texto-centro"><small>Ejemplos simulados' + SEP + 'fotos referenciales</small></p>';
-    $('btn-usados-camino').addEventListener('click', function () { toast('En la demo, los usados son para mirar (simulado).'); });
+    // 9-nov: para invertir, es el mismo Crédito al 80 %: se puede hacer tu camino.
+    $('btn-usados-camino').addEventListener('click', function () { if (vivir) toast('En la demo, los usados son para mirar (simulado).'); else confirmarMiCamino('individual-invertir', $('btn-usados-camino')); });
     cont.querySelectorAll('[data-usado-filtro]').forEach(function (b) {
       b.addEventListener('click', function () {
         var k = b.dataset.usadoFiltro;
@@ -5854,7 +5861,7 @@
     var meses = falta === 0 ? 0 : mesesParaMeta(falta, perfil.ahorroMensual);
     var calza = vivir && u.listaUF <= DS1.tramo4.hastaUF;
     cont.innerHTML =
-      '<a href="#explorar/usados" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>' + NOMBRE_USADOS + '</a>' +
+      '<a href="#explorar/usados" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>' + (vivir ? NOMBRE_USADOS : CAMINOS['individual-invertir'].nombre + ' · usados') + '</a>' +
       '<header class="detalle-cabecera">' + botonFavorito({ id: u.id, nombre: titulo }) +
         '<h1 id="titulo-caminos" class="h2">' + titulo + '</h1>' +
         '<span class="tp-tipo verde">Usado' + SEP + 'de ' + u.anio + '</span>' +
@@ -5879,7 +5886,7 @@
       '<p class="texto-apoyo texto-centro"><small>Ejemplo simulado' + SEP + 'fotos referenciales</small></p>';
     iniciarGalerias(cont);
     if (vivir) iniciarVisita(u);
-    $('btn-usado-camino').addEventListener('click', function () { toast('En la demo, los usados son para mirar (simulado).'); });
+    $('btn-usado-camino').addEventListener('click', function () { if (vivir) toast('En la demo, los usados son para mirar (simulado).'); else confirmarMiCamino('individual-invertir', $('btn-usado-camino')); });
   }
   // ---------- 9-nov: Arriendo con opción de compra, camino completo (propuesta Bci) ----------
   // Hacerlo tu camino: Inicio y Tus pasos siguen sus 6 hitos (entrada, contrato, pie, crédito y escritura).

@@ -83,7 +83,7 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 
 - Interfaz en español de Chile. Usar "dinero", nunca "plata".
 - Escribir siempre "departamento" completo, nunca "depto." ni "dpto.".
-- Un nombre por crédito (9-nov): "Crédito con garantía del Estado" (vivir, 90 %), "Crédito al 80 %" (invertir) y "Crédito para usados" (80 %, sin subsidio). No usar "crédito tradicional", "crédito de siempre" ni "crédito con FOGAES" en pantalla.
+- Un nombre por crédito (9-nov): "Crédito con garantía del Estado" (vivir, 90 %), "Crédito al 80 %" (invertir) y "Crédito para usados" (80 %, sin subsidio; solo en modo vivir: para invertir, los usados van dentro del Crédito al 80 %, que es el mismo crédito). No usar "crédito tradicional", "crédito de siempre" ni "crédito con FOGAES" en pantalla.
 - Todo "Paso X de 6" sigue la escalera de Tus pasos (`pasoEscalera` en `js/app.js`).
 - En el detalle de un departamento, la acción principal queda fija abajo (`accion-fija detalle-accion`).
 - Edificios en obra con grupo vistos desde el camino con garantía del Estado (9-nov, opción 2): precio de lista, etiqueta "En obra", sin bloque de grupo y la línea "Si te unes a su grupo: podrías pagar … menos" como posibilidad. Comprarlo así guarda la compra con `sinGrupo` (`compraSinGrupo`, `enGrupoDe`).
