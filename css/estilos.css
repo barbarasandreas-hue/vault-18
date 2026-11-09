@@ -3085,7 +3085,7 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .tus-vecinos p { margin: 0; }
 .tus-vecinos .enlace { justify-self: center; }
 .vecinos-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.vecinos-lista li { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 4px; border-radius: 999px; background: var(--gray-light); font-size: 14px; font-weight: 600; color: var(--gray-dark); }
-.vecino-inicial { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--blue-normal); color: var(--white); font-size: 13px; }
+.vecino-inicial { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--blue-normal); color: var(--white); }
+.vecino-inicial svg { width: 20px; height: 20px; }
 .vecinos-nota small { color: var(--gray-semidark); }
 .si-se-va:not([open]) > summary .plegable-flecha { transform: none; }

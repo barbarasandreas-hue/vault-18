@@ -653,8 +653,7 @@
         '<li>Tu pie está en tu propia cuenta en Bci y tu crédito es solo tuyo: nunca pagas la parte de otra persona.</li>' +
       '</ul></details>';
   }
-  // 9-nov: Tus vecinos. Solo para vivir y por elección propia: nombre de pila, sin datos de contacto ni pagos.
-  var VECINOS_DEMO = ['Camila', 'Javier', 'Fernanda', 'Matías', 'Valentina', 'Diego', 'Josefa', 'Tomás', 'Antonia'];
+  // 9-nov: Tus vecinos. Solo para vivir y por elección propia. Sin nombres (CLAUDE.md): solo la cifra y avatares sin nombre.
   function tusVecinos(p, r) {
     if (estado.modo !== 'vivir') return '';
     var on = !!estado.vecinos[p.id];
@@ -662,12 +661,12 @@
     var otros = Math.max(0, r.cuposTomados - 1);
     var sumados = Math.min(otros, Math.max(1, Math.round(otros * 0.6)));
     var cuerpo;
-    if (!on) cuerpo = '<p class="texto-apoyo">Si quieres, conoce a quienes van a vivir en tu edificio. Solo ven tu nombre de pila: nunca tu teléfono, tu sueldo ni tus pagos.</p>' +
+    if (!on) cuerpo = '<p class="texto-apoyo">Si quieres, conoce a quienes van a vivir en tu edificio. Nunca ven tu teléfono, tu sueldo ni tus pagos.</p>' +
       '<button type="button" class="btn btn-secundario-dark btn-bloque" data-vecinos="' + esc(p.id) + '">Quiero conocer a mis vecinos</button>';
     else if (!cerrado) cuerpo = '<p class="texto-apoyo">Listo. Cuando el grupo cierre' + (p.cierre ? ', el ' + formatoFecha(p.cierre) : '') + ', te mostramos a los vecinos que también quieran conocerse.</p>' +
       '<button type="button" class="enlace" data-vecinos="' + esc(p.id) + '">Ya no quiero</button>';
     else cuerpo = '<p class="texto-apoyo">' + plural(sumados, 'vecino quiere', 'vecinos quieren') + ' conocerse (simulado):</p>' +
-      '<ul class="vecinos-lista">' + VECINOS_DEMO.slice(0, sumados).map(function (n) { return '<li><span class="vecino-inicial" aria-hidden="true">' + n.charAt(0) + '</span>' + n + '</li>'; }).join('') + '</ul>' +
+      '<div class="vecinos-lista" aria-hidden="true">' + new Array(sumados + 1).join('<span class="vecino-inicial">' + icono('i-persona') + '</span>') + '</div>' +
       '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-saludar-vecinos">Saludar al grupo</button>' +
       '<button type="button" class="enlace" data-vecinos="' + esc(p.id) + '">Ya no quiero</button>';
     return '<section class="tus-vecinos" aria-labelledby="titulo-vecinos"><h3 class="h5" id="titulo-vecinos">' + icono('i-grupo') + 'Tus vecinos</h3>' + cuerpo +
