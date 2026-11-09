@@ -678,7 +678,8 @@ function razonTodaviaNo(perfil, dividendo) {
 function caminosDelModo(modo) {
   return modo === 'vivir'
     ? ['grupo-vivir', 'individual-vivir', 'arriendo-opcion', 'respaldo-familiar']
-    : ['grupo-pie-compartido', 'pie-compartido', 'grupo-invertir', 'individual-invertir', 'respaldo-familiar'];
+    // S26: para invertir, o en grupo o con pie compartido; ya no los dos juntos.
+    : ['pie-compartido', 'grupo-invertir', 'individual-invertir', 'respaldo-familiar'];
 }
 
 // Tu mes real: ingreso − arriendo que sigue pagando − otras cuotas − dividendo.
@@ -770,8 +771,8 @@ function recomendarCamino(perfil) {
     var ahorroPct = (perfil.ahorroActual || 0) / ufAPesos(lista);
     if (ahorroPct < UMBRAL_AHORRO - TOLERANCIA) {
       regla = 3;
-      id = perfil.hayGrupo ? 'grupo-pie-compartido' : 'pie-compartido';
-      razon = perfil.hayGrupo ? 'invertir-poco-ahorro' : 'invertir-poco-ahorro-sin-grupo';
+      id = 'pie-compartido';
+      razon = 'invertir-poco-ahorro';
     } else {
       regla = 4;
       id = perfil.hayGrupo ? 'grupo-invertir' : 'individual-invertir';

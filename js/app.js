@@ -346,6 +346,8 @@
       // Quien ya tenía sueldos y ahorro mensual guardados no repite las preguntas.
       estado.preguntasListas = g.preguntasListas === true ||
         (g.preguntasListas === undefined && estado.sueldoPropio > 0 && estado.ahorroMensual > 0);
+      // S26: el camino que juntaba grupo y pie compartido ya no se ofrece: pasa a pie compartido.
+      if (g.caminoElegido === 'grupo-pie-compartido') g.caminoElegido = 'pie-compartido';
       if (typeof CAMINOS !== 'undefined' && CAMINOS[g.caminoElegido] && !CAMINOS[g.caminoElegido].ficha) estado.caminoElegido = g.caminoElegido;
     } catch (e) { /* sin localStorage: valores por defecto */ }
   }
@@ -2425,7 +2427,7 @@
     if (p.tipo === 'venta') return 'individual-vivir';
     if (p.tipo === 'conjunto') {
       if (c && c.grupo) return estado.caminoElegido;
-      return estado.modo === 'vivir' ? 'grupo-vivir' : 'grupo-pie-compartido';
+      return estado.modo === 'vivir' ? 'grupo-vivir' : 'grupo-invertir';
     }
     if (c && !c.grupo && !c.ficha) return estado.caminoElegido;
     return 'pie-compartido';

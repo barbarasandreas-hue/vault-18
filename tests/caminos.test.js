@@ -69,9 +69,9 @@ test('Regla 2: para vivir, grupo si hay; si no, crédito con FOGAES', () => {
   assert.ok(r.otros.includes('arriendo-opcion') && r.otros.includes('respaldo-familiar'));
 });
 
-test('Regla 3: invierte con ahorro menor al 20 %: A + B si hay grupo; si no, B', () => {
+test('Regla 3: invierte con ahorro menor al 20 %: pie compartido (S26: ya no se junta con el grupo)', () => {
   const r = c.recomendarCamino(base);
-  assert.strictEqual(r.id, 'grupo-pie-compartido');
+  assert.strictEqual(r.id, 'pie-compartido');
   assert.strictEqual(r.regla, 3);
   assert.strictEqual(c.recomendarCamino({ ...base, hayGrupo: false }).id, 'pie-compartido');
 });
@@ -208,8 +208,7 @@ test('Todavía no con interruptores: cada cambio recalcula el camino', () => {
 test('Departamento elegido: precio, descuento de su grupo y su arriendo', () => {
   // Parque Quinta Normal: UF 1.750, lote de 8 (3 % de descuento), arriendo $280.000
   const meta = { ...base, listaUF: 1750, cuposGrupo: 8, arriendoMeta: 280000, hayGrupo: true };
-  const r = c.recomendarCamino(meta);
-  assert.strictEqual(r.id, 'grupo-pie-compartido');
+  const r = { numeros: c.numerosCamino('grupo-pie-compartido', 1750, meta) };
   assert.strictEqual(r.numeros.precioUF, 1750 * 0.97);
   assert.strictEqual(r.numeros.pie, c.ufAPesos(1750 * 0.97 * 0.05));
   const neto = c.arriendoNeto(280000) / c.SUPUESTOS.uf;
@@ -230,8 +229,8 @@ test('Rango de precio: el plazo va del piso al techo del rango', () => {
   assert.strictEqual(c.enRango(2500, c.buscarRango('2000-2500')), true);
   assert.strictEqual(c.enRango(2500, c.buscarRango('2500-3000')), false);
   const pr = c.plazoRango(base, r);
-  assert.strictEqual(pr.desde.numeros.precioUF, 1500 * 0.95);
-  assert.strictEqual(pr.hasta.numeros.precioUF, 2000 * 0.95);
+  assert.strictEqual(pr.desde.numeros.precioUF, 1500);
+  assert.strictEqual(pr.hasta.numeros.precioUF, 2000);
   assert.ok(pr.desde.numeros.meses <= pr.hasta.numeros.meses);
   // El techo del rango es el caso conservador: si no conviene, el piso puede convenir igual
   const justo = { ...base, modo: 'vivir', sueldoPropio: 1300000, sueldoPareja: null, arriendoActual: 0 };
