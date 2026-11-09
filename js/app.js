@@ -5403,7 +5403,7 @@
   var COLOR_EXPLORAR = { 'individual-vivir': 0, 'grupo-vivir': 1, usados: 2, 'arriendo-opcion': 3 };
   var DATOS_CAMINO = {
     'individual-vivir': ['Pie 10' + NBSP + '%', 'Nuevos'], 'grupo-vivir': ['Pagan menos', 'En obra'], usados: ['Pie 20' + NBSP + '%', 'Usados'],
-    'arriendo-opcion': ['Te mudas ya', 'Propuesta'],
+    'arriendo-opcion': ['Entras con 5' + NBSP + '%', 'Propuesta'],
     'pie-compartido': ['Pie 5' + NBSP + '%', 'Para arrendar'], 'grupo-pie-compartido': ['Pie 5' + NBSP + '%', 'En grupo'],
     'grupo-invertir': ['Pagan menos', 'En obra'], 'individual-invertir': ['Pie 20' + NBSP + '%', 'Para arrendar']
   };
@@ -5770,18 +5770,18 @@
   function fichaArriendo(u) { return esc(u.comuna) + SEP + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + SEP + plural(u.banos || 1, 'baño', 'baños') + SEP + u.m2 + NBSP + 'm²'; }
   function comoFuncionaArriendo() {
     return '<ol class="arriendo-pasos">' +
-      '<li><strong>Eliges un departamento terminado</strong><small>Un socio de Bci lo compra y firma contigo el contrato. El precio de compra queda fijo en UF.</small></li>' +
-      '<li><strong>Te mudas al mes siguiente</strong><small>Vives ahí desde el comienzo, como en un arriendo.</small></li>' +
-      '<li><strong>Cada mes, arriendo y aporte</strong><small>El aporte va a tu cuenta de vivienda Bci, a tu nombre.</small></li>' +
-      '<li><strong>Con el 10' + NBSP + '% juntado, pides tu crédito</strong><small>Bci te presta el 90' + NBSP + '% con la garantía del Estado.</small></li>' +
+      '<li><strong>Entras con el 5' + NBSP + '% ahorrado</strong><small>Eliges un departamento terminado. Un socio de Bci lo compra y el precio queda fijo en UF.</small></li>' +
+      '<li><strong>Te mudas</strong><small>Firmas un contrato de hasta 5 años y vives ahí desde el comienzo.</small></li>' +
+      '<li><strong>Cada mes, arriendo y aporte</strong><small>Cerca de la mitad va a tu pie, en una cuenta de vivienda bloqueada en Bci, a tu nombre.</small></li>' +
+      '<li><strong>Desde el tercer año, pides tu crédito</strong><small>Con el 20' + NBSP + '% juntado, Bci te presta el 80' + NBSP + '%. Es segunda venta: sin subsidio a la tasa.</small></li>' +
       '<li><strong>Firmas la escritura: es tuyo</strong><small>Desde ahí pagas el dividendo en vez del arriendo.</small></li>' +
     '</ol>';
   }
   function siMeArrepientoArriendo() {
     return '<ul class="lista-check">' +
-      '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Lo que aportaste a tu pie es tuyo: está en tu cuenta de vivienda Bci.</span></li>' +
+      '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Si te vas sin comprar, recuperas tu ahorro inicial y el 80' + NBSP + '% de tus aportes.</span></li>' +
       '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Lo que pagaste de arriendo no se devuelve, como en cualquier arriendo.</span></li>' +
-      '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Tienes hasta 5 años para comprar. Si Bci no te aprueba el crédito, te vas con tu pie.</span></li>' +
+      '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Si Bci no te aprueba el crédito, lo recuperas todo.</span></li>' +
     '</ul>';
   }
   function renderArriendoCamino() {
@@ -5795,11 +5795,11 @@
       '<header class="encabezado">' +
         '<div class="camino-cabeza"><span class="chip chip-propuesta">Propuesta</span></div>' +
         '<h1 id="titulo-caminos" class="h2">Arriendo con opción de compra</h1>' +
-        '<p class="texto-apoyo camino-descripcion">Te mudas ahora a un departamento terminado y lo arriendas. Parte de lo que pagas cada mes va a tu pie. Cuando juntas el 10' + NBSP + '%, Bci te presta el resto y es tuyo.</p>' +
+        '<p class="texto-apoyo camino-descripcion">Entras con el 5' + NBSP + '% ahorrado, te mudas a un departamento terminado y lo arriendas. Parte de lo que pagas cada mes va a tu pie. Desde el tercer año, con el 20' + NBSP + '%, Bci te presta el resto y es tuyo.</p>' +
       '</header>' +
       '<p class="texto-apoyo"><small>Hoy existe en Chile con otras empresas; con Bci es una propuesta.</small></p>' +
       plegable('arriendo-como', '¿Cómo funciona?', 'En 5 pasos', comoFuncionaArriendo()) +
-      plegable('arriendo-arrepiento', '¿Y si me arrepiento?', 'Tu pie no se pierde', siMeArrepientoArriendo()) +
+      plegable('arriendo-arrepiento', '¿Y si me arrepiento?', 'Recuperas casi todo tu pie', siMeArrepientoArriendo()) +
       '<button type="button" class="btn btn-mi-camino" id="btn-arriendo-camino">Hacerlo mi camino</button>' +
       '<h2 class="h3 camino-explorar-titulo">Departamentos</h2>' +
       '<ul class="lista-usados">' + lista.map(function (x, i) {
@@ -5808,7 +5808,7 @@
         var foto = hayFotos() && FOTOS.interiores[t + (i % 2 ? '-cocina' : '-living')];
         return '<li class="tarjeta usado">' +
           (foto ? '<img class="usado-foto" src="fotos/interiores/' + encodeURI(foto) + '" alt="' + (i % 2 ? 'Cocina' : 'Living') + ' de un departamento de ' + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'un ambiente') + ' (foto referencial)" loading="lazy" width="800" height="600">' : '') +
-          '<span class="usado-etiqueta">Terminado' + SEP + 'te mudas ya</span>' +
+          '<span class="usado-etiqueta">Terminado' + SEP + (a.mesesEntrada ? 'te mudas en ' + textoMeses(a.mesesEntrada) : 'te mudas ya') + '</span>' +
           '<h3 class="tp-nombre"><a class="usado-enlace" href="#explorar/arriendo-opcion/' + esc(u.id) + '">' + esc(u.nombre) + '</a></h3>' +
           '<p class="tp-ficha">' + fichaArriendo(u) + '</p>' +
           '<p class="tp-etiqueta">Pagas al mes</p>' +
@@ -5829,13 +5829,14 @@
     var perfil = perfilActual();
     var a = arriendoOpcion(u.listaUF, u.arriendoEstimadoIA, perfil);
     var hoy = hoyDemo();
-    var linea = [
-      ['Hoy', 'Firmas el contrato con el precio fijo'],
-      ['Mes 1', 'Te mudas'],
+    var m0 = a.mesesEntrada || 0;
+    var mes = function (n) { return n === 0 ? 'Hoy' : 'Mes ' + n; };
+    var linea = (m0 ? [['Hoy', 'Juntas el 5' + NBSP + '% para entrar']] : []).concat([
+      [mes(m0), 'Firmas el contrato con el precio fijo y te mudas'],
       ['Cada mes', 'Sumas ' + formatoRedondeado(a.aporte) + ' a tu pie'],
-      [a.mesesPie ? 'Mes ' + a.mesesPie : 'Ya', 'Juntaste tu pie: pides tu crédito Bci'],
-      ['Mes ' + a.mesesTuyo, 'Firmas la escritura: es tuyo']
-    ];
+      [mes(m0 + a.mesCompra), a.mesCompra > a.mesesPie ? 'Tercer año: pides tu crédito Bci' : 'Juntaste el 20' + NBSP + '%: pides tu crédito Bci'],
+      [mes(a.mesesTuyo), 'Firmas la escritura: es tuyo']
+    ]);
     cont.innerHTML =
       '<a href="#explorar/arriendo-opcion" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Arriendo con opción</a>' +
       '<header class="detalle-cabecera">' +
@@ -5846,24 +5847,25 @@
       galeria(fotosArriendo(u)) +
       '<section class="detalle-llaves" aria-labelledby="ao-tuyo"><p id="ao-tuyo">' + (a.cumple ? 'Es tuyo en' : 'Todavía no') + '</p>' +
         '<strong>' + (a.cumple ? textoMeses(a.mesesTuyo) : a.razon) + '</strong>' +
-        '<p>' + (a.cumple ? fechaLlaves(a.mesesTuyo, hoy) + SEP + 'te mudas el próximo mes' : 'Puedes mirar otro departamento o cambiar tus números') + '</p></section>' +
+        '<p>' + (a.cumple ? fechaLlaves(a.mesesTuyo, hoy) + SEP + (m0 ? 'te mudas en ' + textoMeses(m0) : 'te mudas ya') : 'Puedes mirar otro departamento o cambiar tus números') + '</p></section>' +
       '<ul class="detalle-filas">' +
         '<li><span>Arriendo</span><strong>' + formatoRedondeado(a.arriendo) + '</strong></li>' +
         '<li><span>Va a tu pie</span><strong>' + formatoRedondeado(a.aporte) + '</strong></li>' +
         '<li><span>Pagas al mes</span><strong>' + formatoRedondeado(a.mensualidad) + '</strong></li>' +
         (a.pctIngreso !== null ? '<li class="suave"><span>Es de tu ingreso</span><span>' + formatoPorcentaje(a.pctIngreso, 0) + '</span></li>' : '') +
+        '<li><span>Para entrar, el 5' + NBSP + '%</span><strong>' + formatoRedondeado(a.entrada) + '</strong></li>' +
         '<li><span>Precio de compra, fijo</span><span class="en-uf"><strong>' + formatoUF(u.listaUF) + '</strong><small>hoy son ' + formatoRedondeado(ufAPesos(u.listaUF)) + '</small></span></li>' +
-        '<li><span>Juntas antes de firmar</span><strong>' + formatoRedondeado(a.meta) + '</strong></li>' +
+        '<li><span>Juntas antes de comprar</span><strong>' + formatoRedondeado(a.meta) + '</strong></li>' +
         '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + ufDecimales(a.dividendo / SUPUESTOS.uf, 2) + '</strong><small>hoy son ' + formatoRedondeado(a.dividendo) + '</small></span></li>' +
-        '<li class="suave"><span>Sin subsidio a la tasa</span><span>' + ufDecimales(a.dividendoSinSubsidio / SUPUESTOS.uf, 2) + SEP + 'hoy ' + formatoRedondeado(a.dividendoSinSubsidio) + '</span></li>' +
+        '<li class="suave"><span>Peor caso</span><span>' + ufDecimales(a.dividendoPeor / SUPUESTOS.uf, 2) + SEP + 'hoy ' + formatoRedondeado(a.dividendoPeor) + '</span></li>' +
       '</ul>' +
       '<section class="tarjeta bloque" aria-labelledby="ao-cuando"><h2 class="h4" id="ao-cuando">Cuándo pasa a ser tuyo</h2>' +
         '<ol class="arriendo-linea">' + linea.map(function (x, i) {
           return '<li' + (i === linea.length - 1 ? ' class="final"' : '') + '><span class="arriendo-cuando">' + x[0] + '</span><span>' + x[1] + '</span></li>';
         }).join('') + '</ol>' +
-        '<p class="texto-apoyo"><small>Mientras arriendas, el departamento es del socio. Es tuyo al firmar la escritura.</small></p></section>' +
+        '<p class="texto-apoyo"><small>Mientras arriendas, el departamento es del socio. Es tuyo al firmar la escritura. Bci presta el 80' + NBSP + '% sin subsidio a la tasa (segunda venta).</small></p></section>' +
       plegable('arriendo-como', '¿Cómo funciona?', 'En 5 pasos', comoFuncionaArriendo()) +
-      plegable('arriendo-arrepiento', '¿Y si me arrepiento?', 'Tu pie no se pierde', siMeArrepientoArriendo()) +
+      plegable('arriendo-arrepiento', '¿Y si me arrepiento?', 'Recuperas casi todo tu pie', siMeArrepientoArriendo()) +
       barrioHtml(u) +
       '<p class="llega-sello detalle-sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
       '<button type="button" class="btn btn-primario btn-bloque usado-cta" id="btn-arriendo-depto">Quiero este departamento</button>' +

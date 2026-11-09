@@ -42,21 +42,32 @@ test('Tu departamento se construye con tu pie: 37 partes, cada cuota se nota', (
   assert.strictEqual(c.avanceObra(10000000 / 37 * 1.5, 10000000, true).etapa, 'estructura');
 });
 
-test('Arriendo con opción de compra: aporte, cuándo es tuyo y si se sostiene', () => {
-  const perfil = { modo: 'vivir', sueldoPropio: 1400000, sueldoPareja: 900000, otrasCuotas: 0, ahorroActual: 0 };
+test('Arriendo con opción de compra: entras con 5 %, compras al 80 % sin subsidio y desde el mes 24', () => {
+  const perfil = { modo: 'vivir', sueldoPropio: 1400000, sueldoPareja: 900000, otrasCuotas: 0, ahorroActual: 1500000, ahorroMensual: 400000 };
   const a = c.arriendoOpcion(2200, 360000, perfil);
   assert.strictEqual(a.aporte, c.ufAPesos(2200 * 11.7 / 3500));
   assert.strictEqual(a.mensualidad, 360000 + a.aporte);
-  assert.strictEqual(a.meta, c.ufAPesos(2200 * 0.10 + c.gastosUF(2200)));
-  assert.strictEqual(a.mesesPie, Math.ceil(a.meta / a.aporte));
-  assert.strictEqual(a.mesesTuyo, a.mesesPie + 2);
-  assert.strictEqual(a.dividendo, c.ufAPesos(c.dividendoUF(2200, 'vivir')));
+  assert.strictEqual(a.entrada, c.ufAPesos(2200 * 0.05));
+  assert.strictEqual(a.meta, c.ufAPesos(2200 * 0.20 + c.gastosUF(2200)));
+  // Le faltan $3 millones para el 5 %: los junta con su ahorro de hoy antes de mudarse.
+  assert.strictEqual(a.mesesEntrada, Math.ceil((a.entrada - 1500000) / 400000));
+  assert.strictEqual(a.mesesPie, Math.ceil((a.meta - a.entrada) / a.aporte));
+  assert.strictEqual(a.mesCompra, Math.max(a.mesesPie, 24));
+  assert.strictEqual(a.mesesTuyo, a.mesesEntrada + a.mesCompra + 2);
+  // Segunda venta: sin subsidio a la tasa.
+  assert.strictEqual(a.dividendo, c.ufAPesos(c.cuotaFija(2200 * 0.8, c.SUPUESTOS.tasaSinSubsidio, c.SUPUESTOS.mesesBci) + c.SUPUESTOS.segurosUF));
   assert.ok(a.cumple, a.razon);
-  // Lo que ya tienes ahorrado acorta el plazo.
-  assert.ok(c.arriendoOpcion(2200, 360000, Object.assign({}, perfil, { ahorroActual: 5000000 })).mesesTuyo < a.mesesTuyo);
+  // Con el 5 % ya ahorrado se muda de inmediato; nunca compra antes del mes 24.
+  const rico = c.arriendoOpcion(2200, 360000, Object.assign({}, perfil, { ahorroActual: 20000000 }));
+  assert.strictEqual(rico.mesesEntrada, 0);
+  assert.strictEqual(rico.mesCompra, 24);
+  // Sin ahorro mensual ni 5 %, no puede entrar.
+  assert.strictEqual(c.arriendoOpcion(2200, 360000, Object.assign({}, perfil, { ahorroActual: 0, ahorroMensual: 0 })).razon, 'Necesitas el 5 % para entrar');
   // Con un sueldo bajo, la mensualidad no deja el 40 % para vivir.
-  const bajo = c.arriendoOpcion(2200, 360000, { modo: 'vivir', sueldoPropio: 900000, sueldoPareja: 0, otrasCuotas: 0 });
-  assert.strictEqual(bajo.cumple, false);
+  const bajo = c.arriendoOpcion(2200, 360000, { modo: 'vivir', sueldoPropio: 900000, sueldoPareja: 0, otrasCuotas: 0, ahorroActual: 5000000 });
   assert.strictEqual(bajo.razon, 'Te quedaría poco para vivir');
+  // Si te vas: recuperas tu ahorro inicial y el 80 % de tus aportes; si Bci no aprueba, todo.
+  assert.strictEqual(c.devolucionArriendo(4500000, 10000000, 'te-vas'), 12500000);
+  assert.strictEqual(c.devolucionArriendo(4500000, 10000000, 'credito'), 14500000);
   assert.strictEqual(d.ARRIENDOS_OPCION.length, 4);
 });

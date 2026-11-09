@@ -892,23 +892,33 @@ function arriendoConOpcion(listaUF) {
 }
 
 // ---------- 9-nov: Arriendo con opción de compra, como camino completo (propuesta Bci) ----------
-// Hoy lo ofrecen empresas en Chile (referente en la investigación). La versión Bci es una propuesta:
-// un socio compra un departamento terminado y te lo arrienda con el precio de compra fijo en UF desde el día uno.
-// Cada mes pagas el arriendo más un aporte que va a TU cuenta de vivienda Bci: si te vas, ese dinero es tuyo.
-// Cuando juntas el 10 % y los gastos, Bci te presta el 90 % (garantía del Estado) y firmas la escritura.
-// Supuestos: aporte con la proporción de referencia (UF 11,7 al mes en UF 3.500, DF 2023); plazo máximo 5 años;
-// 2 meses desde que juntas tu pie hasta la escritura (preaprobación, tasación y firma).
-var ARRIENDO_OPCION = { aportePorUF: 11.7 / 3500, plazoMaximoMeses: 60, mesesEscritura: 2 };
+// Hoy lo ofrecen empresas en Chile (referente en la investigación, revisado el 9-nov). La versión Bci es una propuesta:
+// - Entras con al menos 5 % ahorrado. Un socio compra el departamento y te lo arrienda; el precio queda fijo en UF.
+// - Cada mes pagas el arriendo más un aporte a tu pie (cerca de la mitad de la cuota; UF 11,7 por cada UF 3.500).
+//   El aporte va a una cuenta de vivienda bloqueada en Bci, a tu nombre.
+// - Contrato de hasta 5 años; compras desde el tercer año (mes 24) o cuando juntes tu pie, lo que pase después.
+// - Al comprar le compras al socio: es segunda venta, así que no hay garantía del Estado ni subsidio a la tasa.
+//   Bci presta el 80 % con la tasa sin subsidio y tú juntas el 20 % más los gastos.
+// - Si te vas sin comprar, recuperas tu ahorro inicial y el 80 % de tus aportes; el 20 % queda para el socio.
+//   Si Bci no te aprueba el crédito, lo recuperas todo. (Supuestos de diseño.)
+var ARRIENDO_OPCION = { aportePorUF: 11.7 / 3500, entrada: 0.05, credito: 0.80, compraDesdeMes: 24,
+  plazoMaximoMeses: 60, mesesEscritura: 2, devolucionSiTeVas: 0.80 };
 function arriendoOpcion(listaUF, arriendoBruto, perfil) {
   var A = ARRIENDO_OPCION;
   var aporte = ufAPesos(listaUF * A.aportePorUF);
   var mensualidad = arriendoBruto + aporte;
-  var meta = ufAPesos(listaUF * MODOS.vivir.usuario + gastosUF(listaUF));
-  var tienes = Math.min(meta, (perfil && perfil.ahorroActual) || 0);
-  var mesesPie = mesesParaMeta(meta - tienes, aporte);
-  var mesesTuyo = mesesPie + A.mesesEscritura;
-  var dividendo = ufAPesos(dividendoUF(listaUF, 'vivir'));
-  var dividendoSinSubsidio = ufAPesos(dividendoUF(listaUF, 'vivir', SUPUESTOS.tasaPeorCaso));
+  var entrada = ufAPesos(listaUF * A.entrada);
+  var meta = ufAPesos(listaUF * (1 - A.credito) + gastosUF(listaUF));
+  var tienes = (perfil && perfil.ahorroActual) || 0;
+  // Antes de mudarte: juntar el 5 % con lo que ahorras hoy cada mes.
+  var mesesEntrada = tienes >= entrada ? 0 : mesesParaMeta(entrada - tienes, perfil && perfil.ahorroMensual);
+  var inicio = Math.min(meta, Math.max(tienes, entrada));
+  var mesesPie = mesesParaMeta(meta - inicio, aporte);               // desde que te mudas
+  var mesCompra = Math.max(mesesPie, A.compraDesdeMes);              // desde que te mudas
+  var mesesTuyo = mesesEntrada === null ? null : mesesEntrada + mesCompra + A.mesesEscritura;
+  var credito = listaUF * A.credito;
+  var dividendo = ufAPesos(cuotaFija(credito, SUPUESTOS.tasaSinSubsidio, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
+  var dividendoPeor = ufAPesos(cuotaFija(credito, SUPUESTOS.tasaPeorCaso, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
   var ingreso = perfil ? ingresoTotal(perfil.sueldoPropio, perfil.sueldoPareja) : null;
   // Mientras arriendas (ya no pagas tu arriendo de hoy): te queda al menos el 40 % para vivir.
   var queda = ingreso ? ingreso - ((perfil && perfil.otrasCuotas) || 0) - mensualidad : null;
@@ -916,15 +926,23 @@ function arriendoOpcion(listaUF, arriendoBruto, perfil) {
   // Al comprar: el mismo límite de carga y "Tu mes real" que el crédito de siempre.
   var s = ingreso ? sostenible(Object.assign({}, perfil, { modo: 'vivir' }), dividendo) : null;
   var alcanzaCredito = !s || s.cumple;
-  var dentroDelPlazo = mesesTuyo <= A.plazoMaximoMeses;
+  var dentroDelPlazo = mesesPie <= A.plazoMaximoMeses;
+  var puedeEntrar = mesesEntrada !== null;
   return {
     precioUF: listaUF, arriendo: arriendoBruto, aporte: aporte, mensualidad: mensualidad,
-    pctIngreso: ingreso ? mensualidad / ingreso : null, meta: meta, tienes: tienes,
-    mesesPie: mesesPie, mesesTuyo: mesesTuyo, dividendo: dividendo, dividendoSinSubsidio: dividendoSinSubsidio,
+    pctIngreso: ingreso ? mensualidad / ingreso : null, entrada: entrada, meta: meta, tienes: tienes,
+    mesesEntrada: mesesEntrada, mesesPie: mesesPie, mesCompra: mesCompra, mesesTuyo: mesesTuyo,
+    dividendo: dividendo, dividendoPeor: dividendoPeor,
     alcanzaArriendo: alcanzaArriendo, alcanzaCredito: alcanzaCredito, dentroDelPlazo: dentroDelPlazo,
-    cumple: alcanzaArriendo && alcanzaCredito && dentroDelPlazo,
-    razon: !alcanzaArriendo ? 'Te quedaría poco para vivir' : !dentroDelPlazo ? 'No juntas tu pie en 5 años' : !alcanzaCredito ? 'Al comprar, la cuota pasa tu límite' : null
+    cumple: puedeEntrar && alcanzaArriendo && alcanzaCredito && dentroDelPlazo,
+    razon: !puedeEntrar ? 'Necesitas el 5 % para entrar' : !alcanzaArriendo ? 'Te quedaría poco para vivir'
+      : !dentroDelPlazo ? 'No juntas tu pie en 5 años' : !alcanzaCredito ? 'Al comprar, la cuota pasa tu límite' : null
   };
+}
+// Si te vas sin comprar: lo que recuperas (supuesto de diseño). aportes = lo que llevas aportado al pie en el contrato.
+function devolucionArriendo(ahorroInicial, aportes, motivo) {
+  var pct = motivo === 'credito' ? 1 : ARRIENDO_OPCION.devolucionSiTeVas;
+  return Math.round(ahorroInicial + aportes * pct);
 }
 
 // Respaldo familiar (referente: Barclays Family Springboard). El comprador pone 5 %, Bci presta 95 %
@@ -1791,6 +1809,7 @@ if (typeof module !== 'undefined') module.exports = {
   arriendoConOpcion: arriendoConOpcion,
   ARRIENDO_OPCION: ARRIENDO_OPCION,
   arriendoOpcion: arriendoOpcion,
+  devolucionArriendo: devolucionArriendo,
   RESPALDO: RESPALDO,
   respaldoFamiliar: respaldoFamiliar,
   MAS_BARATO: MAS_BARATO,
