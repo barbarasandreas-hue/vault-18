@@ -1369,7 +1369,8 @@ function calcularPiezas(perfil, onEntrada, depto, hoyISO) {
   ORDEN_PIEZAS.forEach(function (id) { if (on[id] && bloqueoPieza(id, on, depto, perfil)) on[id] = false; });
   var S = SUPUESTOS_PIEZAS;
   var p = precioConPiezas(d.listaUF, on, d.descuento);
-  var creditoMax = (on.respaldo ? 1 : MODOS.vivir.credito) * p;
+  // 9-nov: con respaldo familiar Bci presta el 95 %, igual que en la ficha (RESPALDO).
+  var creditoMax = (on.respaldo ? RESPALDO.credito : MODOS.vivir.credito) * p;
   // S20-T2: el DS1 según su tramo. Crédito = precio − ahorro − subsidio, con tope de 90 %.
   var ds1 = on.subsidio ? ds1Para(p, perfil) : null;
   var subsidio = ds1 ? ds1.montoUF : 0;

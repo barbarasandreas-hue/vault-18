@@ -72,3 +72,9 @@ test('La mejor pieza nunca es el respaldo familiar', () => {
   assert.notStrictEqual(m, 'respaldo');
   assert.ok(['subsidio', 'iva', 'regalo'].includes(m));
 });
+
+test('Respaldo familiar como pieza: Bci presta 95 % y pones 5 %, igual que la ficha', () => {
+  const r = c.calcularPiezas(pareja, { respaldo: true }, terminado, HOY);
+  assert.ok(Math.abs(r.pctCredito - c.RESPALDO.credito) < 1e-9);
+  assert.strictEqual(r.pie, c.ufAPesos(2150 * 0.05));
+});
