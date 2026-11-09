@@ -2256,7 +2256,6 @@
   var montoSimInversion = 2000000;
   function cabezaInversiones() {
     return '<section class="invertir-heroe" aria-labelledby="titulo-inversiones">' +
-        '<span class="invertir-chip">Propuesta</span>' +
         '<h1 id="titulo-inversiones" class="h2">Invertir en el pie de otros</h1>' +
         '<p>Pones parte del pie de alguien que compra para arrendar. Recibes <strong>6' + NBSP + '% al año en UF</strong> y el arriendo te lo devuelve.</p>' +
         '<a class="invertir-como-btn" href="#inversiones/como">¿Cómo funciona? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>' +
@@ -2266,22 +2265,16 @@
           '<rect x="250" y="4" width="40" height="86" rx="6" fill="#FFFFFF"/>' +
           '<path d="M38 50L96 36l58-14 58-14 58-6" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 7"/></svg>' +
       '</section>' +
-      '<section class="tarjeta bloque si-juntas invertir-sim" aria-labelledby="inv-sim">' +
+      // S25: como el canvas: sin simulador ni los tres pasos (están en ¿Cómo funciona?).
+      (estado.inversiones.length ? '' : '<p class="inv-sin">Aún no tienes inversiones</p>');
+  }
+  // S25: el simulador vive ahora en ¿Cómo funciona invertir?, como en el canvas.
+  function simInversionHtml() {
+    return '<section class="tarjeta bloque si-juntas invertir-sim" aria-labelledby="inv-sim">' +
         '<p class="si-juntas-fila"><label id="inv-sim" for="inv-rango">Si inviertes</label><strong class="numero" id="inv-monto"></strong></p>' +
         '<input type="range" id="inv-rango" min="500000" max="5000000" step="250000" value="' + montoSimInversion + '">' +
         '<div class="invertir-sim-datos"><p><small>En 4 años recibes</small><strong id="inv-final"></strong></p><p class="ganas"><small>Ganas</small><strong id="inv-gana"></strong></p></div>' +
-        '<div class="invertir-anios" aria-hidden="true">' + [0, 1, 2, 3, 4].map(function (a) {
-          return '<span><i class="a' + a + '" id="inv-anio-' + a + '"></i><small>' + (a ? 'Año ' + a : 'Hoy') + '</small></span>';
-        }).join('') + '</div>' +
         '<p class="texto-apoyo"><small>Calculado en UF, con 6' + NBSP + '% al año. Simulado.</small></p>' +
-      '</section>' +
-      '<section class="tarjeta bloque" aria-labelledby="inv-como">' +
-        '<h2 class="h4" id="inv-como">Cómo funciona</h2>' +
-        '<ol class="invertir-tres">' +
-          '<li><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 21V5h10v16M14 9h6v12M2.5 21h19M7 9h1.5M9.5 9H11M7 13h1.5M9.5 13H11"/></svg></span>Eliges un departamento</li>' +
-          '<li><span class="circulo-icono amarillo" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10a2.5 2 0 0 1 5 0c0 2.5-5 1.5-5 4a2.5 2 0 0 0 5 0"/></svg></span>Pones parte de su pie</li>' +
-          '<li><span class="circulo-icono verde" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 17l6-6 4 4 6-7M15 8h5v5"/></svg></span>El arriendo te paga</li>' +
-        '</ol>' +
       '</section>';
   }
   function iniciarSimInversion() {
@@ -2294,7 +2287,7 @@
       $('inv-monto').textContent = formatoPesos(m);
       $('inv-final').textContent = formatoPesos(Math.round(fin));
       $('inv-gana').textContent = '+' + formatoPesos(Math.round(fin - m));
-      for (var a = 0; a <= 4; a++) $('inv-anio-' + a).style.height = Math.max(6, Math.round(m * Math.pow(1 + tasa, a) / tope * 56)) + 'px';
+      for (var a = 0; a <= 4; a++) if ($('inv-anio-' + a)) $('inv-anio-' + a).style.height = Math.max(6, Math.round(m * Math.pow(1 + tasa, a) / tope * 56)) + 'px';
       rango.style.setProperty('--lleno', ((m - 500000) / 4500000 * 100).toFixed(1) + '%');
       rango.setAttribute('aria-valuetext', formatoPesos(m) + ': recibes ' + formatoPesos(Math.round(fin)) + ' en 4 años');
     };
@@ -2303,15 +2296,14 @@
   }
   function renderInversiones() {
     $('inversiones-cabeza').innerHTML = cabezaInversiones();
-    iniciarSimInversion();
     renderMisInversiones();
-    $('estado-inversiones').textContent = estado.inversiones.length ? '' : 'Aún no tienes inversiones';
+    $('estado-inversiones').textContent = '';
     // S24-B4: primero las que más han reunido; se ven 3 y el resto con "Ver todas" (como en el canvas).
     var lista = PROYECTOS.filter(function (p) { return resumen(p).faltaUF > 0 && !esMiProyecto(p); })
       .sort(function (a, b) { return resumen(b).avanceFinanciamiento - resumen(a).avanceFinanciamiento; });
     var visibles = verTodasOportunidades ? lista : lista.slice(0, 3);
     $('lista-oportunidades').innerHTML = lista.length ? visibles.map(tarjetaOportunidad).join('') +
-        (lista.length > visibles.length ? '<li><button type="button" class="btn btn-terciario btn-bloque" id="btn-todas-oportunidades">Ver todas (' + lista.length + ')</button></li>' : '')
+''
       : '<li class="vacio"><h3 class="h4">Sin oportunidades abiertas</h3></li>';
     if ($('btn-todas-oportunidades')) $('btn-todas-oportunidades').addEventListener('click', function () {
       verTodasOportunidades = true; renderInversiones();
@@ -2339,7 +2331,7 @@
     ];
     c.innerHTML =
       '<a href="#inversiones" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Invertir</a>' +
-      '<header class="encabezado"><span class="chip chip-propuesta">Propuesta</span>' +
+      '<header class="encabezado">' +
         '<h1 id="titulo-invertir-como" class="h2">¿Cómo funciona invertir en el pie de otros?</h1>' +
         '<p class="texto-apoyo">Ayudas a una persona joven a comprar su primer departamento con solo el 5' + NBSP + '% de pie. A cambio, eres dueño de una parte del departamento y el arriendo te paga.</p></header>' +
       '<section class="tarjeta bloque" aria-labelledby="ic-quien">' +
@@ -2351,6 +2343,7 @@
           '<li><i class="comp"></i><span><strong>El comprador pone el 5' + NBSP + '%</strong> <span>después de ahorrarlo 12 meses, como prueba de que puede pagar.</span></span></li>' +
         '</ul>' +
       '</section>' +
+      simInversionHtml() +
       '<section class="tarjeta bloque" aria-labelledby="ic-pasos">' +
         '<h2 class="h4" id="ic-pasos">Paso a paso</h2>' +
         '<ol class="respaldo-pasos">' + pasos.map(function (x, i) {
@@ -2369,10 +2362,11 @@
         '<p>Si el comprador se baja, uno de los inversionistas puede quedarse con el departamento. Para marcar esta opción necesitas una preevaluación de Bci.</p></section>' +
       '<h2 class="h4 bloque">Preguntas frecuentes</h2>' +
       '<div class="faq-invertir">' + faq.map(function (f) {
-        return '<details class="tarjeta"><summary><strong>' + f[0] + '</strong><svg class="flecha-abajo" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p>' + f[1] + '</p></details>';
+        return '<details class="tarjeta"><summary><strong>' + f[0] + '</strong><svg class="flecha-abajo" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary><p>' + f[1] + '</p></details>';
       }).join('') + '</div>' +
-      '<p class="tarjeta compacta nota-inversion"><svg class="icono" aria-hidden="true"><use href="#i-info"/></svg><span><strong>Es una propuesta.</strong> Esta forma de invertir aún no existe en Bci. Los números son simulados.</span></p>' +
+      '<p class="tarjeta compacta nota-inversion nota-linea"><svg class="icono" aria-hidden="true"><use href="#i-info"/></svg><span><strong>Es una propuesta.</strong> Esta forma de invertir aún no existe en Bci. Los números son simulados.</span></p>' +
       '<div class="acciones"><a class="btn btn-primario btn-lg btn-bloque" href="#inversiones">Ver oportunidades</a></div>';
+    iniciarSimInversion();
     var rango = $('ic-mes');
     var pintar = function () {
       var mes = Number(rango.value);
@@ -5920,18 +5914,25 @@
 
   var NOMBRE_AVISO = { cuota: 'Tu cuota y tu plazo', grupo: 'Tu grupo', obra: 'Tu obra', departamento: 'Tu departamento e inversiones' };
 
+  // S25: cada aviso con su círculo de color, como en el canvas.
+  var ICONO_AVISO = {
+    cuota: ['verde', 'M3.5 5h17v15.5h-17zM3.5 10h17M8 3v4M16 3v4'],
+    grupo: ['azul', 'M12 20.5S3.5 15.3 3.5 9.2A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.5 2.6c0 6.1-8.5 11.3-8.5 11.3z'],
+    obra: ['amarillo', 'M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zM12 7v5l3 2'],
+    departamento: ['azul', 'M3.5 10.5L12 4l8.5 6.5V20H3.5z']
+  };
   function renderAvisos() {
     var avisos = avisosDelMes(contextoAvisos());
     estado.avisosVistos = claveMesAvisos();
     guardarEstado();
     $('avisos-contenido').innerHTML =
-      '<a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Mi camino</a>' +
+      '<a href="#camino" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Inicio</a>' +
       '<header class="encabezado"><h1 id="titulo-avisos" class="h2">Avisos</h1>' +
-        '<p class="texto-apoyo">Este mes, simulados.</p></header>' +
+        '<p class="texto-apoyo">Este mes' + SEP + 'máximo uno por semana</p></header>' +
       (avisos.length
         ? '<ol class="notificaciones">' + avisos.map(function (a, i) {
             return '<li class="notificacion" style="animation-delay:' + (i * 60) + 'ms">' +
-              '<span class="notificacion-app" aria-hidden="true">' + icono('i-casa') + '</span>' +
+              '<span class="notificacion-app ' + (ICONO_AVISO[a.tipo] || ICONO_AVISO.cuota)[0] + '" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + (ICONO_AVISO[a.tipo] || ICONO_AVISO.cuota)[1] + '"/></svg></span>' +
               '<span class="notificacion-cuerpo"><small>Primer Peldaño · día ' + a.dia + '</small>' +
                 '<strong>' + a.titulo + '</strong><span>' + a.texto + '</span></span></li>';
           }).join('') + '</ol>'
@@ -6200,14 +6201,14 @@
     var lista = estado.listaRegalos;
 
     var esPadre = function (r) { return ['mamá', 'papá', 'abuela', 'abuelo'].indexOf(r) !== -1; };
-    var sel = { monto: 1, avatar: 0, relacion: RELACIONES[0], mensaje: '' };
+    var sel = { monto: 2, avatar: 0, relacion: RELACIONES[0], mensaje: '' };
     var cumple = /umple/.test(lista.ocasion);
     // S24-B4: igual que el canvas: tarjeta de regalo, montos con nombre, avatar y cómo le llega el aviso.
     cont.innerHTML = volver +
       '<section class="regalo-tarjeta" aria-labelledby="titulo-regalo">' +
         '<span class="regalo-papel r1" aria-hidden="true"></span><span class="regalo-papel r2" aria-hidden="true"></span><span class="regalo-papel r3" aria-hidden="true"></span><span class="regalo-papel r4" aria-hidden="true"></span>' +
         '<div class="regalo-tarjeta-cabeza"><img src="logo_bci_negro.svg" alt="Bci" width="52" height="24">' +
-          '<span class="regalo-ocasion">' + icono('i-regalo') + esc(lista.ocasion) + '</span></div>' +
+          '<span class="regalo-ocasion"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21h16v-8H4zM6 13V9h12v4M12 9V6M12 6a1.5 1.5 0 1 0 0-.01"/></svg>' + esc(lista.ocasion) + '</span></div>' +
         '<div class="regalo-tarjeta-titulo"><span class="regalo-caja" aria-hidden="true">' + REGALO_SVG + '</span>' +
           '<h1 class="h3" id="titulo-regalo">Un aporte para su primer departamento</h1></div>' +
         '<p>Está juntando su pie en una Cuenta Vivienda Bci. Tu regalo la acerca a sus llaves.</p>' +
@@ -6224,7 +6225,8 @@
           }).join('') + '</div>' +
           '<p class="regalo-cerca" aria-live="polite">' + icono('i-corazon') + '<span>Cada aporte le deja más cerca de sus llaves.</span></p>' +
           '<div class="campo"><label for="regalo-relacion">Eres su</label>' +
-            '<select id="regalo-relacion" class="campo-select">' + RELACIONES.map(function (r) { return '<option' + (r === sel.relacion ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select></div>' +
+            '<span class="regalo-select"><select id="regalo-relacion" class="campo-select">' + RELACIONES.map(function (r) { return '<option' + (r === sel.relacion ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select>' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></div>' +
           '<div class="campo"><label for="regalo-mensaje">Escríbele algo (opcional)</label>' +
             '<textarea id="regalo-mensaje" class="campo-texto regalo-texto" maxlength="140" rows="3" placeholder="' + (cumple ? '¡Feliz cumpleaños! ' : '') + 'Para tu departamento…">' + esc(sel.mensaje) + '</textarea></div>' +
           '<div class="regalo-avatares-campo"><span class="etiqueta-campo" id="titulo-avatar">Elige tu avatar</span>' +
@@ -6341,16 +6343,15 @@
     c.innerHTML =
       '<ul class="filas tarjeta">' +
         '<li><button type="button" class="fila fila-avatar" id="btn-perfil-avatar" aria-haspopup="dialog">' + avatarSVG(estado.avatar, 48, 'fila-av') +
-          '<span><strong>Tu avatar</strong><small>' + (estado.avatar ? 'Cambiar' : 'Créalo') + (estado.equipo.length ? SEP + 'Tu equipo: ' + plural(estado.equipo.length + 1, 'persona', 'personas') : '') + '</small></span>' +
+          '<span><strong>Tu avatar y tu equipo</strong><small>' + (estado.equipo.length ? textoEquipoPerfil() : (estado.avatar ? 'Cambiar' : 'Créalo')) + '</small></span>' +
           '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button></li>' +
         fila('b', '', 'i-persona', 'Mis datos', (estado.modo === 'vivir' ? 'Para vivir' : 'Para arrendar') + (ingreso ? SEP + formatoPesos(ingreso) + ' al mes' : ''), 'btn-mis-datos') +
         fila('a', '#perfil/avisos', 'i-campana', 'Avisos', activos + ' de ' + TIPOS_AVISO.length + ' activos') +
         fila('a', '#inversiones', 'i-sube', 'Invertir en el pie de otros', estado.inversiones.length ? plural(estado.inversiones.length, 'inversión', 'inversiones') : '6' + NBSP + '% al año en UF') +
         fila('a', '#perfil/ayuda', 'i-ayuda', 'Ayuda', 'Qué significa cada término') +
         fila('a', '#bienvenida', 'i-casa', 'Ver la introducción', '') +
-        fila('a', '#registro', 'i-documento', 'Sesión de prueba', '') +
+        fila('a', '#registro', 'i-documento', 'Sesión de prueba', 'Para las entrevistas') +
       '</ul>' +
-      '<p class="texto-apoyo bloque-chico">Tus datos quedan solo en este teléfono.</p>' +
       '<div class="acciones">' +
         '<button type="button" class="btn btn-terciario btn-bloque" id="btn-reiniciar" aria-expanded="false" aria-controls="confirmar-reinicio">Empezar de nuevo</button>' +
         '<div id="confirmar-reinicio" class="confirmar" hidden>' +
@@ -6378,6 +6379,13 @@
     });
   }
 
+  // S25: "Tu pareja y tu mamá te acompañan", como en el canvas.
+  function textoEquipoPerfil() {
+    var n = estado.equipo.map(function (m) { return (NOMBRE_RELACION[m.relacion] || m.relacion).replace(/^Tu /, 'tu '); });
+    if (!n.length) return '';
+    var t = n.length === 1 ? n[0] : n.slice(0, -1).join(', ') + ' y ' + n[n.length - 1];
+    return t.charAt(0).toUpperCase() + t.slice(1) + (n.length === 1 ? ' te acompaña' : ' te acompañan');
+  }
   // Si el usuario ya postuló y cambia sus sueldos, la carga guardada se vuelve a
   // calcular; si ya no le alcanza para postular, vuelve al paso 1.
   function recalcularPostulacion() {
