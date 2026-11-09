@@ -5493,7 +5493,7 @@
     'individual-vivir': ['Pie 10' + NBSP + '%', 'Nuevos'], 'grupo-vivir': ['Pagan menos', 'En obra'], usados: ['Pie 20' + NBSP + '%', 'Usados'],
     'arriendo-opcion': ['Entras con 5' + NBSP + '%', 'Propuesta'],
     'pie-compartido': ['Pie 5' + NBSP + '%', 'Para arrendar'], 'grupo-pie-compartido': ['Pie 5' + NBSP + '%', 'En grupo'],
-    'grupo-invertir': ['Pagan menos', 'En obra'], 'individual-invertir': ['Pie 20' + NBSP + '%', 'Para arrendar']
+    'grupo-invertir': ['Pagan menos', 'En obra'], 'individual-invertir': ['Pie 20' + NBSP + '%']
   };
   var TEXTO_EXPLORAR = {
     'individual-vivir': 'Bci te presta hasta el 90' + NBSP + '%. Tú juntas solo el 10' + NBSP + '% de pie.',

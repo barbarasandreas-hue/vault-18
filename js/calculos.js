@@ -1132,7 +1132,8 @@ var RAZON_NO_MOSTRADO = {
   'otro-modo-vivir': 'es para comprar y vivir.',
   'sin-grupo': 'no hay grupos en tu rango.',
   'no-alcanza': 'con tus números te dejaría muy justo.',
-  'parecido': 'se parece a los que ya te mostramos.'
+  'parecido': 'se parece a los que ya te mostramos.',
+  'te-mudas': 'es para vivir en el departamento mientras juntas tu pie.'
 };
 function caminosParaMostrar(perfil, rec) {
   var base = caminoBase(perfil.modo);
@@ -1151,7 +1152,11 @@ function caminosParaMostrar(perfil, rec) {
   });
   // Lo que es de otro modo se nombra una vez, para que se entienda por qué no está.
   if (perfil.modo === 'vivir') noMostrados.push({ id: 'pie-compartido', razon: 'otro-modo-arrendar' });
-  else noMostrados.push({ id: 'individual-vivir', razon: 'otro-modo-vivir' });
+  else {
+    noMostrados.push({ id: 'individual-vivir', razon: 'otro-modo-vivir' });
+    // 9-nov: el arriendo con opción también es solo para vivir: te mudas al departamento.
+    noMostrados.push({ id: 'arriendo-opcion', razon: 'te-mudas' });
+  }
   return { base: base, mostrados: mostrados, noMostrados: noMostrados };
 }
 
