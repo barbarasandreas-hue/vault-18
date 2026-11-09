@@ -899,10 +899,10 @@ function arriendoConOpcion(listaUF) {
 // - Contrato de hasta 5 años; compras desde el tercer año (mes 24) o cuando juntes tu pie, lo que pase después.
 // - Al comprar le compras al socio: es segunda venta, así que no hay garantía del Estado ni subsidio a la tasa.
 //   Bci presta el 80 % con la tasa sin subsidio y tú juntas el 20 % más los gastos.
-// - Si te vas sin comprar, recuperas tu ahorro inicial y el 80 % de tus aportes; el 20 % queda para el socio.
+// - Si te vas sin comprar, recuperas tu ahorro inicial y el 50 % de tus aportes; el otro 50 % queda para el socio.
 //   Si Bci no te aprueba el crédito, lo recuperas todo. (Supuestos de diseño.)
 var ARRIENDO_OPCION = { aportePorUF: 11.7 / 3500, entrada: 0.05, credito: 0.80, compraDesdeMes: 24,
-  plazoMaximoMeses: 60, mesesEscritura: 2, devolucionSiTeVas: 0.80 };
+  plazoMaximoMeses: 60, mesesEscritura: 2, devolucionSiTeVas: 0.50 };
 function arriendoOpcion(listaUF, arriendoBruto, perfil) {
   var A = ARRIENDO_OPCION;
   var aporte = ufAPesos(listaUF * A.aportePorUF);

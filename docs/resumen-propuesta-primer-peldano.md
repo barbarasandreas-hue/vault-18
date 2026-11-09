@@ -45,7 +45,7 @@ Primer Peldaño **no inventa un crédito**. Hace tres cosas:
 | **Compra en grupo** | Vivir o invertir | Bci reúne a compradores preaprobados para conseguir un **descuento real** de 3 % (desde 5 unidades) a 5 % (desde 10 unidades). Cada persona paga su pie en cuotas mientras se construye, en **su propia cuenta bloqueada en Bci**. |
 | **Pie compartido** | Invertir | Inversionistas ponen el 15 % como **participación en el valor**, no como préstamo. Reciben un 6 % al año en UF y la persona les recompra su parte con el arriendo. La persona pone solo el 5 %. |
 | **Crédito al 80 %** | Invertir | El crédito de siempre para invertir. Pie del 20 %. |
-| **Arriendo con opción de compra** | Vivir | Entras con el 5 % ahorrado, te mudas a un departamento terminado y lo arriendas, con el precio de compra fijo en UF. Parte de lo que pagas va a tu pie. Desde el tercer año, con el 20 %, Bci te presta el 80 % (sin subsidio, porque es segunda venta) y es tuyo. Si te vas sin comprar, recuperas tu ahorro inicial y el 80 % de tus aportes. Es una propuesta. |
+| **Arriendo con opción de compra** | Vivir | Entras con el 5 % ahorrado, te mudas a un departamento terminado y lo arriendas, con el precio de compra fijo en UF. Parte de lo que pagas va a tu pie. Desde el tercer año, con el 20 %, Bci te presta el 80 % (sin subsidio, porque es segunda venta) y es tuyo. Si te vas sin comprar, recuperas tu ahorro inicial y el 50 % de tus aportes. Es una propuesta. |
 | **Respaldo familiar** | Vivir o invertir | Bci presta el 95 % y la persona pone el 5 %. Un familiar deja el 10 % en una cuenta bloqueada en Bci y lo recupera cuando la deuda baja al 80 % del precio. Es una propuesta. |
 | **Todavía no** | Los dos | Si ningún camino es sostenible, la app lo dice y muestra qué cambiar. |
 

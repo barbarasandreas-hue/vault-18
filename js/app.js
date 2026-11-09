@@ -5779,7 +5779,7 @@
   }
   function siMeArrepientoArriendo() {
     return '<ul class="lista-check">' +
-      '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Si te vas sin comprar, recuperas tu ahorro inicial y el 80' + NBSP + '% de tus aportes.</span></li>' +
+      '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Si te vas sin comprar, recuperas tu ahorro inicial y la mitad de tus aportes.</span></li>' +
       '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Lo que pagaste de arriendo no se devuelve, como en cualquier arriendo.</span></li>' +
       '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Si Bci no te aprueba el crédito, lo recuperas todo.</span></li>' +
     '</ul>';
@@ -5798,8 +5798,7 @@
         '<p class="texto-apoyo camino-descripcion">Entras con el 5' + NBSP + '% ahorrado, te mudas a un departamento terminado y lo arriendas. Parte de lo que pagas cada mes va a tu pie. Desde el tercer año, con el 20' + NBSP + '%, Bci te presta el resto y es tuyo.</p>' +
       '</header>' +
       '<p class="texto-apoyo"><small>Hoy existe en Chile con otras empresas; con Bci es una propuesta.</small></p>' +
-      plegable('arriendo-como', '¿Cómo funciona?', 'En 5 pasos', comoFuncionaArriendo()) +
-      plegable('arriendo-arrepiento', '¿Y si me arrepiento?', 'Recuperas casi todo tu pie', siMeArrepientoArriendo()) +
+      // Comentario 9-nov: ¿Cómo funciona? y ¿Y si me arrepiento? van solo en el detalle de cada departamento.
       '<button type="button" class="btn btn-mi-camino" id="btn-arriendo-camino">Hacerlo mi camino</button>' +
       '<h2 class="h3 camino-explorar-titulo">Departamentos</h2>' +
       '<ul class="lista-usados">' + lista.map(function (x, i) {
@@ -5819,7 +5818,6 @@
       }).join('') + '</ul>' +
       '<p class="llega-sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
       '<p class="texto-apoyo texto-centro"><small>Ejemplos simulados' + SEP + 'fotos referenciales</small></p>';
-    iniciarPlegables();
     $('btn-arriendo-camino').addEventListener('click', function () { toast('En la demo, este camino es para mirar (simulado).'); });
   }
   function renderArriendoDepto(id) {
@@ -5865,7 +5863,7 @@
         }).join('') + '</ol>' +
         '<p class="texto-apoyo"><small>Mientras arriendas, el departamento es del socio. Es tuyo al firmar la escritura. Bci presta el 80' + NBSP + '% sin subsidio a la tasa (segunda venta).</small></p></section>' +
       plegable('arriendo-como', '¿Cómo funciona?', 'En 5 pasos', comoFuncionaArriendo()) +
-      plegable('arriendo-arrepiento', '¿Y si me arrepiento?', 'Recuperas casi todo tu pie', siMeArrepientoArriendo()) +
+      plegable('arriendo-arrepiento', '¿Y si me arrepiento?', 'Recuperas parte de tu pie', siMeArrepientoArriendo()) +
       barrioHtml(u) +
       '<p class="llega-sello detalle-sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
       '<button type="button" class="btn btn-primario btn-bloque usado-cta" id="btn-arriendo-depto">Quiero este departamento</button>' +
