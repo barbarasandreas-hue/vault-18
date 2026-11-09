@@ -1288,7 +1288,7 @@
     return { desde: desde, techo: rr.todaviaNo && !eligio ? desde : nc.meses };
   }
   function textoPlazos(x) {
-    if (x.desde !== null && x.techo !== null && x.desde !== x.techo) return (x.desde === 0 ? 'Ya' : x.desde) + ' a ' + textoMeses(x.techo);
+    if (x.desde !== null && x.techo !== null && x.desde !== x.techo) return (x.desde === 0 ? 'Ya' : x.techo >= 12 ? textoMeses(x.desde) : x.desde) + ' a ' + textoMeses(x.techo);
     return x.techo === null ? '—' : textoPlazoMeses(x.techo);
   }
   // S16-F3: tu ventana es más grande (2 columnas × 3 pisos) y adentro estás tú con quienes viven contigo.
@@ -1424,8 +1424,18 @@
   function textoMesesRango(a, b) {
     if (a === null || b === null) return '—';
     if (a === b) return a === 0 ? 'Ya' : textoMeses(a);
+    // Con años, cada lado no se corta: "1 año y 2 meses a / 1 año y 7 meses".
+    var junto = function (t) { return t.replace(/ /g, NBSP); };
+    if (b >= 12) return (a === 0 ? 'Ya' : junto(textoMeses(a))) + ' a ' + junto(textoMeses(b));
     return (a === 0 ? 'Ya' : a) + ' a ' + textoMeses(b);
   }
+  // Comentario 9-nov: "Tienes el pie para un crédito tradicional en", según tu camino.
+  var PIE_PARA = { 'grupo-vivir': 'comprar en grupo', 'individual-vivir': 'un crédito tradicional', 'arriendo-opcion': 'el arriendo con opción de compra', 'respaldo-familiar': 'un crédito con respaldo familiar' };
+  function etiquetaLlaves(hasta) {
+    var para = PIE_PARA[estado.caminoElegido] || PIE_PARA['individual-vivir'];
+    return hasta === 0 ? 'Ya tienes el pie para ' + para : 'Tienes el pie para ' + para + ' en';
+  }
+  function claseLargo(t) { return t.length > 16 ? ' largo' : ''; }
   function textoLlavesRango(x) {
     if (x.desde.meses === null) return '';
     if (x.desde.meses === x.hasta.meses) return x.hasta.llaves;
@@ -1502,8 +1512,8 @@
             '<h2 class="h3" id="titulo-plazo">' + razon + ' ' + ayuda('tu-limite') + '</h2></section>'
         : '<section class="noche" aria-labelledby="titulo-plazo">' +
             '<span class="noche-luna" aria-hidden="true"></span>' +
-            '<p class="noche-etiqueta" id="titulo-plazo">Tus llaves</p>' +
-            '<strong class="numero noche-plazo" id="numero-plazo" aria-live="polite">' + textoMesesRango(x.desde.meses, x.hasta.meses) + '</strong>' +
+            '<p class="noche-etiqueta" id="titulo-plazo">' + etiquetaLlaves(x.hasta.meses) + '</p>' +
+            '<strong class="numero noche-plazo' + claseLargo(textoMesesRango(x.desde.meses, x.hasta.meses)) + '" id="numero-plazo" aria-live="polite">' + textoMesesRango(x.desde.meses, x.hasta.meses) + '</strong>' +
             '<span class="oculto-visual" id="llaves-fecha">' + textoLlavesRango(x) + '</span>' +
             '<span class="freno-llaves" id="freno-llaves">' + FRENO[x.hasta.freno] + '</span>' +
             (techoJusto ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(x.deptos.hasta.listaUF) + ' te dejan poco para vivir.</p>' : '') +
@@ -1537,7 +1547,10 @@
       var y = plazoVivir(v);
       $('valor-mensual').textContent = formatoRedondeado(v);
       if ($('numero-plazo')) {
-        $('numero-plazo').textContent = textoMesesRango(y.desde.meses, y.hasta.meses);
+        var tp = textoMesesRango(y.desde.meses, y.hasta.meses);
+        $('numero-plazo').textContent = tp;
+        $('numero-plazo').classList.toggle('largo', !!claseLargo(tp));
+        $('titulo-plazo').textContent = etiquetaLlaves(y.hasta.meses);
         $('llaves-fecha').textContent = textoLlavesRango(y);
         $('freno-llaves').textContent = FRENO[y.hasta.freno];
         var ventana = $('mi-ventana'); ventana.classList.remove('brilla'); void ventana.offsetWidth; ventana.classList.add('brilla');
@@ -3541,7 +3554,12 @@
       '<p class="texto-apoyo explica-ahorro" id="explica-ahorro" aria-live="polite">' + TIPOS_AHORRO[estado.tipoAhorro] + '</p>';
   }
 
-  function textoMeses(n) { return n === 1 ? '1 mes' : n + ' meses'; }
+  // Comentario 9-nov: desde 12 meses se lee en años y meses ("1 año y 2 meses").
+  function textoMeses(n) {
+    if (n < 12) return n === 1 ? '1 mes' : n + ' meses';
+    var a = Math.floor(n / 12), m = n % 12;
+    return (a === 1 ? '1 año' : a + ' años') + (m ? ' y ' + (m === 1 ? '1 mes' : m + ' meses') : '');
+  }
 
   // Plazo de la recompra para mostrar: con el tope de 84 meses.
   function textoPlazo(pl) {
