@@ -3044,3 +3044,6 @@ body.en-familia .vista-familia .icono { display: none; }
 .usado .usado-ver { margin: 6px 0 0; color: var(--blue-normal); font-weight: 600; }
 .usado-nota { margin: 10px 4px 0; }
 .usado-cta { margin-top: 18px; }
+
+/* Comentario 9-nov: en la compra no hay slider debajo del azul */
+.noche.sin-slider { padding-bottom: 20px; margin-bottom: 16px; }

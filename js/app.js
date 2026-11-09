@@ -960,7 +960,7 @@
         '<p class="texto-apoyo">' + esc(x.p.nombre) + SEP + esc(x.p.comuna) + '</p>' +
       '</header>' +
       novedadesInicio(x) +
-      (x.paso < 4 ? cuandoLlegasCompra(x.p) + animosInicio() + tarjetaSiguientePaso() + tuPieCompacto() :
+      (x.paso < 4 ? cuandoLlegasCompra(x.p) + animosInicio() + tarjetaSiguientePaso() :
       '<section class="tarjeta proximo" aria-label="Dónde vas">' +
         '<p class="chip">' + x.etapa + '</p>' +
         '<p class="etiqueta">' + x.etiqueta + '</p>' +
@@ -1725,6 +1725,8 @@
               return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>';
             }).join('') +
           '</div></div>' +
+          // Comentario 9-nov: tu pie arriba, dentro del azul, como en el canvas.
+          piePlegadoInicio() +
         '</section>' +
         '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
           '<p class="si-juntas-fila"><label for="rango-mensual" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-mensual">' + formatoPesos(mensual) + '</strong></p>' +
@@ -1750,8 +1752,7 @@
       protagonista +
       (justo ? '' : datos) +
       animosInicio() +
-      tarjetaSiguientePaso() +
-      tuPieCompacto();
+      tarjetaSiguientePaso();
     iniciarSiguientePaso();
 
     if ($('numero-plazo')) {
@@ -1836,10 +1837,17 @@
   // Con compra: cuándo llegas según lo que falta del pie y la entrega del edificio.
   function cuandoLlegasCompra(p) {
     var pl = plazoTuPie(p, metaCompra(p));
-    return '<section class="tarjeta proximo" aria-labelledby="titulo-cuando">' +
-      '<p class="etiqueta" id="titulo-cuando">Tus llaves en</p>' +
-      '<strong class="numero display-2">' + textoMeses(pl.meses) + '</strong>' +
-      '<p class="texto-apoyo">' + fechaLlaves(pl.meses, hoyDemo()) + '</p></section>';
+    // Comentario 9-nov: como el canvas: tus llaves en el azul y tu pie adentro, arriba.
+    return '<section class="noche sin-slider" aria-labelledby="titulo-cuando">' +
+      '<span class="noche-luna" aria-hidden="true"></span>' +
+      '<p class="noche-etiqueta" id="titulo-cuando">Tus llaves en</p>' +
+      '<strong class="numero noche-plazo">' + textoMeses(pl.meses) + '</strong>' +
+      '<p class="noche-sub">' + fechaLlaves(pl.meses, hoyDemo()) + '</p>' +
+      '<div class="noche-edificio" aria-hidden="true"><div class="noche-fachada">' +
+        VENTANAS_CANVAS.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
+      '</div></div>' +
+      piePlegadoInicio() +
+    '</section>';
   }
   function tarjetaSiguientePaso() {
     var s = fotoPasos();
