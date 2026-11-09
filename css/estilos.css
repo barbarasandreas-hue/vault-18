@@ -3125,3 +3125,8 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .obra-barra i { display: block; height: 100%; background: var(--green-normal); border-radius: inherit; }
 .obra-pie-linea { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-top: -4px; font-size: 14px; color: var(--gray-semidark); }
 .noche > .noche-edificio:last-child { margin-bottom: 20px; }
+/* Comentario 9-nov: la tarjeta de Tu pie en Inicio, con el mismo azul de arriba. */
+.tarjeta-obra { background: linear-gradient(180deg, var(--blue-dark) 0%, var(--blue-normal) 100%); border: 0; color: var(--white); }
+.tarjeta-obra h2, .tarjeta-obra .obra-titulo, .tarjeta-obra.con-pie .numero, .tarjeta-obra .obra-etapa-chica, .tarjeta-obra .obra-pie-linea, .tarjeta-obra .linea-ver { color: var(--white); }
+.tarjeta-obra .obra-barra { background: var(--white); }
+.tarjeta-obra.con-pie:focus-visible { outline-color: var(--white); }
