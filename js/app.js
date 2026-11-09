@@ -1053,7 +1053,7 @@
   function barraPreguntas(n) {
     return '<div class="barra-preguntas" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="' + n +
       '" aria-label="Pregunta ' + n + ' de 4">' +
-      [1, 2, 3, 4].map(function (i) { return '<span class="' + (i <= n ? 'lleno' : '') + '"></span>'; }).join('') + '</div>';
+      [1, 2, 3, 4].map(function (i) { return '<span class="b' + i + (i <= n ? ' lleno' : '') + '"></span>'; }).join('') + '</div>';
   }
 
   function textoPlazoMeses(n) { return n === 0 ? 'Ya lo tienes' : textoMeses(n); }
@@ -1065,32 +1065,38 @@
     var c = $('inicio-principal');
     // S16-F2: arriba, tu escena. Cada respuesta le suma algo (tu pareja, tu familia, tu mascota).
     var cabeza = function (titulo) {
-      return '<header class="encabezado">' + FIGURAS + barraPreguntas(n) +
-        '<div class="escena-preguntas">' +
-          '<div class="escena-figuras" aria-hidden="true">' + escena(84, 'escena-av') + '</div>' +
-        '</div>' +
+      // S25: como el canvas: marca, barra de 4 colores Bci, "Pregunta N de 4" y el título.
+      return '<header class="encabezado preguntas-cabeza"><p class="marca-intro"><img class="logo-bci logo-intro" src="logo_bci_negro.svg" alt="Bci" width="78" height="36"><span class="sep" aria-hidden="true">·</span>Primer Peldaño</p>' +
+        barraPreguntas(n) + '<p class="pregunta-n">Pregunta ' + n + ' de 4</p>' +
         '<h1 id="titulo-inicio" class="h2" tabindex="-1">' + titulo + '</h1></header>';
     };
     var atras = n > 1 ? '<p class="texto-centro"><button type="button" class="enlace" id="btn-atras-pregunta">Atrás</button></p>' : '';
 
     if (n === 1) {
-      var opcion = function (modo, ic, texto) {
-        return '<button type="button" class="opcion-grande" role="radio" aria-checked="' + (estado.modoElegido && estado.modo === modo) + '" data-modo="' + modo + '">' +
-          icono(ic, 'opcion-icono') + '<span>' + texto + '</span></button>';
+      var opcion = function (modo, dibujo, texto, sub) {
+        return '<button type="button" class="opcion-grande opcion-' + modo + '" role="radio" aria-checked="' + (estado.modoElegido && estado.modo === modo) + '" data-modo="' + modo + '">' +
+          '<span class="opcion-circulo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + dibujo + '"/></svg></span><strong>' + texto + '</strong><small>' + sub + '</small></button>';
       };
       c.innerHTML = cabeza('¿Para qué quieres tu departamento?') +
         '<div class="opciones-grandes" role="radiogroup" aria-labelledby="titulo-inicio">' +
-          opcion('vivir', 'i-casa', 'Para vivir') + opcion('arrendar', 'i-llave', 'Para arrendar') +
-        '</div>';
+          opcion('vivir', 'M3.5 10.5L12 4l8.5 6.5V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z', 'Para vivir', 'Tu primera vivienda') +
+          opcion('arrendar', 'M4 17l6-6 4 4 6-7M15 8h5v5', 'Para arrendar', 'Inversión') +
+        '</div>' +
+        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-siguiente">Siguiente</button></div>';
       c.querySelectorAll('.opcion-grande').forEach(function (b) {
         b.addEventListener('click', function () {
           estado.modo = b.dataset.modo;
           estado.modoElegido = true;
           guardarEstado();
-          estado.pregunta = 2;
           renderPreguntas();
-          $('titulo-inicio').focus();
+          c.querySelector('[data-modo="' + estado.modo + '"]').focus();
         });
+      });
+      $('btn-siguiente').addEventListener('click', function () {
+        if (!estado.modoElegido) { temblar(c.querySelector('.opciones-grandes')); return; }
+        estado.pregunta = 2;
+        renderPreguntas();
+        $('titulo-inicio').focus();
       });
       return;
     }
@@ -2939,14 +2945,14 @@
     var hayCuotas = (estado.otrasCuotas || 0) > 0;
     var sug = ev.nivel === 'holgado' ? null : sugerencia(p, ev);
     var html =
-      '<div class="tarjeta semaforo semaforo-' + ev.nivel + '">' +
-        '<p class="etiqueta">Parte de tu sueldo ' + ayuda('carga') + '</p>' +
+      '<div class="tarjeta semaforo carga-canvas semaforo-' + ev.nivel + '">' +
+        '<p class="carga-titulo">Parte de tu sueldo que iría al dividendo</p>' +
         medidorCarga(hayCuotas ? ev.cargaTotal : ev.cargaDividendo, hayCuotas ? ev.cargaDividendo : null) +
-        '<div class="semaforo-fila">' +
-          '<strong class="numero display-2">' + formatoPorcentaje(hayCuotas ? ev.cargaTotal : ev.cargaDividendo, 1) + '</strong>' +
-          '<p class="estado-semaforo"><svg aria-hidden="true"><use href="#' + s.icono + '"/></svg>' + s.palabra + '</p>' +
-        '</div>' +
-        (hayCuotas ? '<p class="texto-apoyo">Dividendo solo: ' + formatoPorcentaje(ev.cargaDividendo, 1) + '</p>' : '') +
+        '<strong class="carga-numero">' + formatoPorcentaje(hayCuotas ? ev.cargaTotal : ev.cargaDividendo, 1) + '</strong>' +
+        '<span class="carga-chip ' + ev.nivel + '">' + (ev.nivel === 'limite' ? 'Justo' : ev.nivel === 'no-aprueba' ? 'Alto' : 'Holgado') + '</span>' +
+        '<p class="carga-explica">' + (ev.nivel === 'holgado' ? 'Bci pide que no pase del 25' + NBSP + '%. Te sobra margen.' : ev.nivel === 'limite' ? 'Estás cerca de lo que pide Bci: poco margen.' : 'Pasa lo que pide Bci: 25' + NBSP + '%, y con cuotas 30' + NBSP + '%.') + '</p>' +
+        (hayCuotas ? '<p class="carga-explica">Dividendo solo: ' + formatoPorcentaje(ev.cargaDividendo, 1) + '</p>' : '') +
+        '<p class="carga-leyenda" aria-hidden="true"><span><i class="holgado"></i>Holgado</span><span><i class="justo"></i>Justo</span><span><i class="alto"></i>Alto</span></p>' +
       '</div>' +
       (sug ? sug.html : '');
     // Solo se vuelve a dibujar si algo cambió: así, al salir de un campo, nada se mueve bajo el dedo
@@ -2960,14 +2966,20 @@
   }
 
 
+  // S25: el contrato en tres tarjetas con ícono, como en el canvas.
+  var ICONO_CONTRATO = { indefinido: 'M4 8h16v12H4zM9 8V5h6v3M4 13h16', 'plazo-fijo': 'M4 6h16v14H4zM4 10h16M8 3.5v4M16 3.5v4M9 15h3', independiente: 'M4 5h16v11H4zM2.5 19.5h19M10 16v3.5M14 16v3.5' };
   function campoContrato() {
     var opcion = function (valor) {
       return '<input type="radio" name="contrato" id="contrato-' + valor + '" value="' + valor + '"' +
-        (estado.contrato === valor ? ' checked' : '') + '><label for="contrato-' + valor + '">' + CONTRATOS[valor] + '</label>';
+        (estado.contrato === valor ? ' checked' : '') + '><label for="contrato-' + valor + '"><span class="contrato-circulo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + ICONO_CONTRATO[valor] + '"/></svg></span>' + CONTRATOS[valor] + '</label>';
     };
-    return '<fieldset class="selector selector-tres"><legend>Tu tipo de contrato</legend>' +
-      '<div class="selector-opciones">' + opcion('indefinido') + opcion('plazo-fijo') + opcion('independiente') + '</div>' +
+    return '<fieldset class="contratos"><legend>Tu tipo de contrato</legend>' +
+      '<div class="contratos-opciones">' + opcion('indefinido') + opcion('plazo-fijo') + opcion('independiente') + '</div>' +
       '</fieldset>';
+  }
+  function personaGanan(color, quien, monto) {
+    return '<span class="ganan-persona"><span class="ganan-av ' + color + '" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.2 3.6-7 8-7s8 2.8 8 7"/></svg></span>' +
+      '<span><small>' + quien + '</small><strong>' + formatoPesos(monto || 0) + '</strong></span></span>';
   }
 
   // Postula tiene tres partes: Tus datos → Tus documentos → Resultado (S8-F2).
@@ -2981,6 +2993,12 @@
   }
 
   var PARTES_POSTULA = ['Tus datos', 'Tus documentos', 'Resultado'];
+  // S25: la ceja del canvas: en qué paso de Tus pasos está la preaprobación.
+  function cejaPreaprobacion() {
+    var h = hitoActual(fotoPasos());
+    var i = h.hitos.map(function (x) { return x.id; }).indexOf('preaprobacion');
+    return '<p class="ceja-paso">Paso ' + (i + 1) + ' de ' + h.total + SEP + 'Preaprobación Bci</p>';
+  }
   // S24-B3: las tres partes como un indicador con colores Bci (azul, verde, amarillo) y un check en las hechas.
   var COLOR_PARTE = ['azul', 'verde', 'amarillo'];
   function partesPostula(actual) {
@@ -2989,7 +3007,7 @@
       var est = j < i ? 'hecha' : (j === i ? 'actual' : 'pendiente');
       return '<li class="' + est + ' ' + COLOR_PARTE[j] + '"' + (j === i ? ' aria-current="step"' : '') + '>' +
         '<span class="paso-postula-marca" aria-hidden="true">' + (j < i ? '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : (j + 1)) + '</span>' +
-        '<span class="paso-postula-nombre">' + ['Datos', 'Documentos', 'Resultado'][j] + '</span></li>';
+        '<span class="paso-postula-nombre">' + ['Tus datos', 'Documentos', 'Resultado'][j] + '</span></li>';
     }).join('') + '</ol>';
   }
 
@@ -3010,18 +3028,19 @@
     var e = resumen(p).escenario;
     var yaTiene = estado.sueldoPropio > 0 && !editandoPostula;
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Pagas al mes', e.totalMes, formatoRedondeado) +
-      listaPasos(1) +
-      '<section class="bloque" aria-labelledby="titulo-postula">' +
-        '<h2 class="h3" id="titulo-postula">Postula</h2>' +
+      '<section aria-labelledby="titulo-postula">' +
+        cejaPreaprobacion() +
+        '<h2 class="h2 titulo-postula" id="titulo-postula">Tus datos</h2>' +
         partesPostula('Tus datos') +
         // S17-F5: no se vuelve a pedir lo ya respondido: se muestra con "Cambiar".
         (yaTiene
-          ? '<div class="tarjeta compacta resumen-datos" id="resumen-datos">' + ingresoHogar() + '<ul class="datos-inversion">' +
-              '<li><span>Tu sueldo</span><strong>' + formatoPesos(estado.sueldoPropio) + '</strong></li>' +
-              (estado.sueldoPareja ? '<li><span>Tu pareja</span><strong>' + formatoPesos(estado.sueldoPareja) + '</strong></li>' : '') +
-              '<li><span>Otras cuotas</span><strong>' + formatoPesos(estado.otrasCuotas || 0) + '</strong></li>' +
-            '</ul><button type="button" class="enlace" id="btn-cambiar-postula">Cambiar</button></div>'
+          ? '<section class="tarjeta ganan" id="resumen-datos" aria-labelledby="titulo-ganan">' +
+              '<div class="ganan-cabeza"><h3 id="titulo-ganan">Lo que ' + (estado.sueldoPareja ? 'ganan' : 'ganas') + ' al mes</h3><button type="button" class="enlace" id="btn-cambiar-postula">Cambiar</button></div>' +
+              '<strong class="ganan-total">' + formatoPesos((estado.sueldoPropio || 0) + (estado.sueldoPareja || 0)) + '</strong>' +
+              (estado.sueldoPareja ? '<p class="barra-partida" aria-hidden="true"><i class="tu" style="flex:' + estado.sueldoPropio + '"></i><i class="pareja" style="flex:' + estado.sueldoPareja + '"></i></p>' : '') +
+              '<div class="ganan-personas">' + personaGanan('azul', 'Tú', estado.sueldoPropio) + (estado.sueldoPareja ? personaGanan('verde', 'Tu pareja', estado.sueldoPareja) : '') + '</div>' +
+              '<p class="ganan-cuotas"><span>Otras cuotas que pagas</span><strong>' + formatoPesos(estado.otrasCuotas || 0) + '</strong></p>' +
+            '</section>'
           : '') +
         '<div class="formulario" id="form-postula"' + (yaTiene ? ' hidden' : '') + '>' +
           campoDinero('sueldo-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
@@ -3030,8 +3049,8 @@
         '</div>' +
         campoContrato() +
         '<div id="carga-resultado" aria-live="polite"></div>' +
-        '<p class="sello sello-bci">' + icono('i-escudo') + 'Sin compromiso</p>' +
-        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-postular" aria-describedby="postular-explica">Postular</button></div>' +
+        '<p class="sin-compromiso"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/></svg>Sin compromiso: postular no te obliga a comprar</p>' +
+        '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-postular" aria-describedby="postular-explica">Seguir</button>' +
           '<div class="acciones">' +
           '<p class="texto-apoyo" id="postular-explica"></p>' +
           '<p class="texto-centro"><button type="button" class="enlace" id="btn-salir">Salir de esta compra</button></p>' +
@@ -3121,70 +3140,44 @@
     return DOCUMENTOS.every(function (x) { return !!docs[x.id]; });
   }
 
+  // S25: como el canvas: anillo con cuántos faltan, aviso para clientes Bci y una fila por documento.
+  var ICONO_DOC = {
+    liquidaciones: ['azul', 'M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5'],
+    afp: ['verde', 'M4 19h16M6 16V11M10 16V8M14 16v-6M18 16V6'],
+    contrato: ['amarillo', 'M4 8h16v12H4zM9 8V5h6v3M4 13h16'],
+    carnet: ['rojo', 'M3 6h18v12H3zM8 10.5a1.8 1.8 0 1 0 0 .01M5.5 15c.4-1.4 1.4-2 2.5-2s2.1.6 2.5 2M13 10h5M13 13h4']
+  };
+  var NOMBRE_DOC = { liquidaciones: ['Liquidaciones de sueldo', 'Las últimas 3'], afp: ['Cotizaciones de AFP', 'Los últimos 12 meses'],
+    contrato: ['Contrato de trabajo', 'O certificado de antigüedad'], carnet: ['Carnet', 'Por los dos lados'] };
   function renderDocumentos(p) {
     var c = estado.compra;
     var docs = c.documentos || {};
-    var eligio = c.cliente === true || c.cliente === false;
-
-    var opciones =
-      '<div class="opciones-cliente">' +
-        '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-soy-cliente">Soy cliente Bci</button>' +
-        '<button type="button" class="btn btn-terciario btn-bloque" id="btn-subir-docs"' + (c.cliente === false ? ' aria-pressed="true"' : '') + '>No soy cliente: subir documentos</button>' +
-      '</div>';
-
-    var lista = '';
-    if (c.cliente === false) {
-      // S16-F6: pasaporte con timbres. Cada página es un documento; al subirlo cae el timbre "Listo".
-      var listos = DOCUMENTOS.filter(function (x) { return !!docs[x.id]; }).length;
-      var vuelta = 2 * Math.PI * 22;
-      lista = '<div class="docs-avance"><svg class="docs-anillo" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="22"/>' +
-          '<circle class="lleno" cx="26" cy="26" r="22" style="stroke-dasharray:' + vuelta.toFixed(1) + ';stroke-dashoffset:' + (vuelta * (1 - listos / DOCUMENTOS.length)).toFixed(1) + '"/></svg>' +
-          '<span class="docs-anillo-texto" aria-hidden="true">' + listos + '/' + DOCUMENTOS.length + '</span>' +
-          '<p class="pasaporte-cuenta">' + (listos === DOCUMENTOS.length ? '¡Todo listo!' : listos + ' de ' + DOCUMENTOS.length + ' timbrados') + '</p></div>' +
-        '<ul class="pasaporte">' + DOCUMENTOS.map(function (x) {
-        var archivo = docs[x.id];
-        return '<li class="documento pagina' + (archivo ? ' listo' : '') + '" id="doc-' + x.id + '">' +
-          '<button type="button" class="pagina-boton btn-subir" data-doc="' + x.id + '" aria-haspopup="dialog" aria-expanded="false">' +
-            '<span class="documento-icono timbre' + (archivo && docRecien === x.id ? ' cae' : '') + '" aria-hidden="true">' + (archivo ? 'LISTO' : 'FALTA') + '</span>' +
-            '<strong>' + x.corto + '</strong>' +
-            '<small>' + (archivo ? 'Listo' : 'Falta') + '</small>' +
-            '<span class="oculto-visual">' + x.nombre + '. ' + (archivo ? 'Cambiar' : 'Subir') + '</span>' +
-          '</button>' +
-        '</li>';
-      }).join('') + '</ul>';
-    }
-
+    if (c.cliente !== false) guardarCompra(Object.assign({}, c, { cliente: false }));
+    var total = DOCUMENTOS.length;
+    var listos = DOCUMENTOS.filter(function (x) { return !!docs[x.id]; }).length;
+    var faltan = total - listos;
+    var vuelta = 2 * Math.PI * 31;
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Pagas al mes', resumen(p).escenario.totalMes, formatoRedondeado) +
-      listaPasos(1) +
-      '<section class="bloque" aria-labelledby="titulo-documentos">' +
-        '<h2 class="h3" id="titulo-documentos">Tus documentos</h2>' +
+      '<section aria-labelledby="titulo-documentos">' +
+        cejaPreaprobacion() +
+        '<h2 class="h2 titulo-postula" id="titulo-documentos">Tus documentos</h2>' +
         partesPostula('Tus documentos') +
-        '<p class="aviso">En esta demo tus archivos no se guardan ni se envían.</p>' +
-        opciones + lista +
-        (c.cliente === false
-          ? '<div class="accion-fija">' + (documentosListos()
-            ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-preaprobacion">Ver mi preaprobación</button>'
-            : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-siguiente-doc" aria-haspopup="dialog">Subir ' +
-                DOCUMENTOS.filter(function (x) { return !docs[x.id]; })[0].corto.toLowerCase() + '</button>') + '</div>'
-          : '') +
+        '<div class="tarjeta docs-resumen"><span class="docs-anillo-caja" aria-hidden="true"><svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="31" fill="none" stroke="#D4E7D5" stroke-width="10"/>' +
+            '<circle cx="38" cy="38" r="31" fill="none" stroke="#28892B" stroke-width="10" stroke-linecap="round" transform="rotate(-90 38 38)" style="stroke-dasharray:' + (vuelta * listos / total).toFixed(1) + ' ' + vuelta.toFixed(1) + '"/></svg>' +
+            '<strong>' + listos + '/' + total + '</strong></span>' +
+          '<span><strong>' + (faltan ? plural(faltan, 'documento por subir', 'documentos por subir') : 'Todo listo') + '</strong><small>' + (faltan ? 'Toma unos 2 minutos' : 'Bci ya tiene lo que necesita') + '</small></span></div>' +
+        '<p class="docs-cliente"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5h.01"/></svg><span>Si eres cliente Bci, ya los tenemos. Solo revisa que estén.</span></p>' +
+        '<ul class="docs-lista">' + DOCUMENTOS.map(function (x) {
+          var ok = !!docs[x.id], ic = ICONO_DOC[x.id] || ICONO_DOC.liquidaciones, nm = NOMBRE_DOC[x.id] || [x.nombre, ''];
+          return '<li class="tarjeta doc-fila" id="doc-' + x.id + '"><span class="doc-icono ' + ic[0] + '" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + ic[1] + '"/></svg></span>' +
+            '<span class="doc-texto"><strong>' + nm[0] + '</strong><span class="doc-estado' + (ok ? ' listo' : '') + '">' + (ok ? '✓ Listo' : 'Falta' + SEP + nm[1]) + '</span></span>' +
+            '<button type="button" class="doc-boton btn-subir' + (ok ? '' : ' falta') + '" data-doc="' + x.id + '" aria-haspopup="dialog" aria-label="' + (ok ? 'Cambiar ' : 'Subir ') + nm[0] + '">' + (ok ? 'Cambiar' : 'Subir') + '</button></li>';
+        }).join('') + '</ul>' +
+        (faltan ? '' : '<div class="docs-todo" role="status"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#FFFFFF"/><path d="M6.5 12.5l3.6 3.6L17.5 8.8" fill="none" stroke="#28652B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>¡Todo listo! Ya puedes pedirla.</div>') +
+        '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-ver-preaprobacion">Pedir mi preaprobación</button>' +
         '<div class="acciones"><button type="button" class="enlace" id="btn-volver-datos">Volver a mis datos</button></div>' +
       '</section>';
 
-    $('btn-soy-cliente').addEventListener('click', function () {
-      conCarga($('btn-soy-cliente'), function () {
-        guardarCompra(Object.assign({}, estado.compra, { cliente: true, subpaso: 'resultado' }));
-        renderMiCompra();
-        window.scrollTo(0, 0);
-        anunciar('Listo. Esta es tu preaprobación.');
-      });
-    });
-    $('btn-subir-docs').addEventListener('click', function () {
-      guardarCompra(Object.assign({}, estado.compra, { cliente: false }));
-      renderDocumentos(p);
-      var primero = document.querySelector('.btn-subir');
-      if (primero) primero.focus();
-    });
     $('btn-volver-datos').addEventListener('click', function () {
       guardarSubpaso('datos');
       renderMiCompra();
@@ -3192,14 +3185,15 @@
     document.querySelectorAll('.btn-subir').forEach(function (boton) {
       boton.addEventListener('click', function () { abrirHoja(p, boton); });
     });
-    if ($('btn-siguiente-doc')) $('btn-siguiente-doc').addEventListener('click', function () {
-      var falta = DOCUMENTOS.filter(function (x) { return !docs[x.id]; })[0];
-      abrirHoja(p, document.querySelector('.btn-subir[data-doc="' + falta.id + '"]'));
-    });
     var ver = $('btn-ver-preaprobacion');
     if (ver) {
       ver.addEventListener('click', function () {
-        if (!documentosListos()) return;
+        // Si falta alguno, se abre el que falta.
+        if (!documentosListos()) {
+          var falta = DOCUMENTOS.filter(function (x) { return !docs[x.id]; })[0];
+          abrirHoja(p, document.querySelector('.btn-subir[data-doc="' + falta.id + '"]'));
+          return;
+        }
         conCarga(ver, function () {
           guardarSubpaso('resultado');
           renderMiCompra();
@@ -3285,9 +3279,9 @@
         var svg = mini.outerHTML;
         cerrarHoja(false);
         var fila = $('doc-' + id);
-        var destino = fila.querySelector('.documento-icono');
+        var destino = fila.querySelector('.doc-icono');
         fila.classList.add('subiendo');
-        fila.querySelector('small').textContent = 'Subiendo…';
+        fila.querySelector('.doc-estado').textContent = 'Subiendo…';
         anunciar('Subiendo ' + nombre + '…');
         volar(svg, origen, destino.getBoundingClientRect());
         setTimeout(function () {
@@ -3304,8 +3298,8 @@
             $('btn-ver-preaprobacion').focus();
             toast('Subiste todos tus documentos.');
           } else {
-            if ($('btn-siguiente-doc')) $('btn-siguiente-doc').focus();
-            anunciar(x.nombre + ': timbrado.');
+            var sig = document.querySelector('.doc-boton.falta'); if (sig) sig.focus();
+            anunciar(x.nombre + ': listo.');
           }
         }, ESPERA_CARGA);
       });
@@ -3337,46 +3331,48 @@
       puedeSeguir = true;
       var alcanza = r.creditoUF >= creditoNecesario - 1e-9;
       // S17-F5: el resultado en palabras de la persona; las cifras del crédito, en "Ver números".
-      var usa = Math.min(1, creditoNecesario / r.creditoUF);
+      var rg = rangoActual();
+      var tope = Math.max(r.creditoUF, rg ? rg.hasta : 0, creditoNecesario);
+      var ev = evaluarCarga(e.totalMes, estado.otrasCuotas, estado.sueldoPropio, estado.sueldoPareja);
+      var cargaV = ev ? ((estado.otrasCuotas || 0) > 0 ? ev.cargaTotal : ev.cargaDividendo) : null;
+      // S25: igual al canvas: celebración centrada, si alcanza para tu rango, dos datos y cuándo vence.
       cuerpo =
         (alcanza
-          // S24-B3: la alegría de llegar y, debajo, los números serios del crédito.
-          ? '<div class="aprobado-heroe"><span class="aprobado-confeti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>' +
-              '<p class="aprobado-chip">' + icono('i-ok') + 'Preaprobado' + SEP + 'simulado</p>' +
-              '<strong class="h3 aprobado-titulo">¡Bci te aprueba este departamento!</strong>' +
-              '<p class="aprobado-monto"><small>Bci te presta hasta</small><strong class="numero">' + formatoRedondeado(ufAPesos(r.creditoUF)) + '</strong></p>' +
+          ? '<section class="preaprobado-heroe"><span class="pp-papel p1" aria-hidden="true"></span><span class="pp-papel p2" aria-hidden="true"></span><span class="pp-papel p3" aria-hidden="true"></span><span class="pp-papel p4" aria-hidden="true"></span><span class="pp-papel p5" aria-hidden="true"></span>' +
+              '<span class="pp-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-8.5"/></svg></span>' +
+              '<h3>¡Bci te preaprobó!</h3><p>Te podría prestar hasta</p>' +
+              '<strong>' + formatoRedondeado(ufAPesos(r.creditoUF)) + '</strong>' +
+              '<span class="pp-chip">' + formatoUF(r.creditoUF) + SEP + 'simulado</span></section>' +
+            '<section class="tarjeta pp-rango"><p class="pp-rango-titulo">' + icono('i-ok') + (rg ? 'Alcanza para tu rango' : 'Alcanza para este departamento') + '</p>' +
+              '<span class="pp-barra" aria-hidden="true"><i style="left:' + ((rg ? rg.desde : creditoNecesario * 0.9) / tope * 100).toFixed(1) + '%;width:' + (((rg ? rg.hasta - rg.desde : creditoNecesario * 0.1)) / tope * 100).toFixed(1) + '%"></i></span>' +
+              '<p class="pp-rango-leyenda"><span>UF 0</span><span class="tuyo">' + (rg ? 'Tu rango: ' + textoRango(rg) : 'Este departamento') + '</span><span>' + formatoUF(r.creditoUF) + '</span></p></section>' +
+            '<div class="pp-dos">' +
+              '<div class="tarjeta pp-dato"><span class="circulo-icono verde" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 16a8 8 0 0 1 16 0M12 16l3-5"/></svg></span><small>Parte de tu sueldo</small><strong>' + (cargaV !== null ? formatoPorcentaje(cargaV, 1) : '—') + '</strong>' +
+                (ev ? '<span class="carga-chip ' + ev.nivel + '">' + (ev.nivel === 'limite' ? 'Justo' : ev.nivel === 'no-aprueba' ? 'Alto' : 'Holgado') + '</span>' : '') + '</div>' +
+              '<div class="tarjeta pp-dato"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span><small>Dividendo máximo</small><strong>' + ufDecimales(r.dividendo / SUPUESTOS.uf, 2) + '</strong><small>al mes' + SEP + 'hoy son ' + formatoPesos(r.dividendo) + '</small></div>' +
             '</div>' +
-            '<div class="tarjeta bloque aprobado-cobertura">' +
-              '<p class="etiqueta">Este departamento usa ' + formatoPorcentaje(usa, 0) + ' de lo que te prestan</p>' +
-              '<p class="cobertura-barra" aria-hidden="true"><i style="width:' + (usa * 100).toFixed(1) + '%"></i></p>' +
-              '<p class="cobertura-leyenda"><span>Necesita ' + formatoRedondeado(ufAPesos(creditoNecesario)) + '</span><span>Tope ' + formatoRedondeado(ufAPesos(r.creditoUF)) + '</span></p>' +
-              '<p class="aprobado-dividendo"><span>Pagarías hasta al mes</span><span class="en-uf"><strong>' + formatoUF(r.dividendo / SUPUESTOS.uf) + '</strong><small>hoy son ' + formatoRedondeado(r.dividendo) + '</small></span></p>' +
-            '</div>'
+            '<p class="pp-vence">' + icono('i-pronto') + '<span><strong>La preaprobación vence.</strong> Su vigencia la confirma Bci. Conviene pedirla con tu pie casi listo.</span></p>'
           : '<div class="tarjeta protagonista aprobado no-alcanza">' +
               '<p class="estado-semaforo">' + icono('i-alerta') + 'Simulado</p><strong class="h3 aprobado-titulo">Este departamento supera lo que Bci te presta</strong>' +
-            '</div>') +
+            '</div>' +
         plegable('numeros-pre', 'Ver números', '',
           '<ul class="datos-inversion">' +
             '<li><span>Bci te presta hasta</span><strong>' + formatoRedondeado(ufAPesos(r.creditoUF)) + '</strong></li>' +
             '<li><span>Este departamento necesita</span><strong>' + formatoRedondeado(ufAPesos(creditoNecesario)) + '</strong></li>' +
             '<li><span>Pagarías hasta al mes</span><strong>' + formatoRedondeado(r.dividendo) + '</strong></li>' +
-          '</ul>');
+          '</ul>'));
       puedeSeguir = alcanza;
     }
 
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Pagas al mes', e.totalMes) +
-      listaPasos(1) +
-      '<section class="bloque" aria-labelledby="titulo-resultado">' +
-        '<h2 class="h3" id="titulo-resultado">Tu preaprobación</h2>' +
+      '<section aria-labelledby="titulo-resultado">' +
+        cejaPreaprobacion() +
+        '<h2 class="oculto-visual" id="titulo-resultado">Tu preaprobación</h2>' +
         partesPostula('Resultado') +
         cuerpo +
-        '<section class="tarjeta bloque" aria-labelledby="titulo-falta">' +
-          '<h3 class="h5" id="titulo-falta">Lo que falta</h3>' +
-          '<ol class="falta-linea"><li>Tasación</li><li>Estudio de títulos</li><li>Firma</li></ol>' +
-        '</section>' +
         (puedeSeguir
-          ? '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-seguir-pie">Seguir a Tu pie</button></div>'
+          ? '<button type="button" class="btn btn-primario btn-lg btn-bloque pp-seguir" id="btn-seguir-pie">Volver a tus pasos</button>' +
+            '<p class="texto-centro"><a class="pp-link" href="#departamentos">Ver departamentos que te alcanzan ›</a></p>'
           : '<div class="acciones"><a href="#proyectos" class="btn btn-primario btn-bloque">Ver proyectos</a></div>') +
         '<div class="acciones"><button type="button" class="enlace" id="btn-editar-datos">Editar mis datos</button></div>' +
       '</section>';
@@ -3387,9 +3383,8 @@
       seguir.addEventListener('click', function () {
         conCarga(seguir, function () {
           guardarCompra(Object.assign({}, estado.compra, { paso: pasoTrasPostular(metaCompra(p), p) }));
-          renderMisProyectos();
-          window.scrollTo(0, 0);
-          anunciar('Preaprobación lista. Sigue Tu pie.');
+          location.hash = '#pasos';
+          anunciar('Preaprobación lista.');
         });
       });
     }
@@ -3760,15 +3755,12 @@
           Math.round(e.pctCredito * 100) + ' % (' + formatoPesos(e.reparto.bci) + ') a 30 años, tasa de ejemplo ' + formatoPorcentaje(SUPUESTOS.tasaBci, 2) + ' ' + info('tasa-ejemplo') + ': ' + formatoPesos(e.dividendo) + ' al mes.')
       : '';
     var filasVivir = arrendar ? '' :
-      '<ul class="datos-inversion">' +
-        '<li><span>Precio' + (e.conPiezas && e.conPiezas.iva ? ' sin IVA' : '') + '</span><strong>' + formatoPesos(e.precio) + '</strong></li>' +
-        '<li><span>Bci te presta</span><strong>' + formatoPesos(e.reparto.bci) + '</strong></li>' +
-        (e.subsidio ? '<li><span>Subsidio del Estado</span><strong>' + formatoPesos(e.subsidio) + '</strong></li>' : '') +
-        '<li><span>Pagas al mes</span><strong>' + formatoPesos(e.dividendo) + '</strong></li>' +
-        '<li><span>Plazo</span><strong>30 años</strong></li>' +
-        '<li><span>Tasa de ejemplo ' + info('tasa-ejemplo') + '</span><strong>' + formatoPorcentaje(SUPUESTOS.tasaBci, 2) + '</strong></li>' +
-        '<li><span>Sin subsidio a la tasa</span><strong>' + formatoPesos(e.dividendoSinSubsidio) + ' al mes</strong></li>' +
-      '</ul>';
+      '<p class="firma-fila"><span>Precio' + (e.conPiezas && e.conPiezas.iva ? ' sin IVA' : '') + '</span><strong>' + formatoPesos(e.precio) + '</strong></p>' +
+      '<p class="firma-fila"><span>Bci te presta</span><strong>' + formatoPesos(e.reparto.bci) + '</strong></p>' +
+      (e.subsidio ? '<p class="firma-fila"><span>Subsidio del Estado</span><strong>' + formatoPesos(e.subsidio) + '</strong></p>' : '') +
+      '<p class="firma-fila"><span>Plazo</span><strong>30 años</strong></p>' +
+      '<p class="firma-fila"><span>Tasa de ejemplo ' + info('tasa-ejemplo') + '</span><strong>' + formatoPorcentaje(SUPUESTOS.tasaBci, 2) + '</strong></p>' +
+      '<p class="firma-fila suave"><span>Sin subsidio a la tasa</span><span>' + ufDecimales(e.dividendoSinSubsidio / SUPUESTOS.uf, 2) + SEP + 'hoy ' + formatoPesos(e.dividendoSinSubsidio) + '</span></p>';
     var segunda = arrendar && e.pctInversionistas === 0 ? ''
       : arrendar
       ? filaFirma('Participación de los inversionistas ' + ayuda('participacion'),
@@ -3778,34 +3770,41 @@
       : filaFirma(e.conPiezas && e.conPiezas.respaldo ? 'Respaldo familiar · propuesta' : 'Garantía del Estado (FOGAES)',
           e.conPiezas && e.conPiezas.respaldo ? 'Un familiar deja una garantía en Bci.' : 'Departamentos nuevos de hasta UF 6.000. Bci te presta hasta el 90 %.');
 
+    var hp = hitoActual(fotoPasos());
+    var nota = arrendar ? '' : (e.conPiezas && e.conPiezas.respaldo
+      ? '<p class="firma-nota"><strong>Respaldo familiar (propuesta):</strong> un familiar deja una garantía en Bci.</p>'
+      : '<p class="firma-nota"><strong>Garantía del Estado (FOGAES):</strong> departamentos nuevos de hasta UF 6.000. Bci te presta hasta el 90' + NBSP + '%.</p>');
+    var TRAMITES = [['Tasación del departamento', 'M4 20V9l8-5 8 5v11zM9 20v-6h6v6'], ['Seguros de desgravamen e incendio', 'M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z'],
+      ['Escritura en la notaría', 'M4 20l3-1 11-11-2-2L5 17zM14 6l2 2'], ['Inscripción en el Conservador', 'M7 3h7l4 4v14H7zM14 3v4h4M10 13h5M10 17h5'], ['Entrega de llaves', 'M8 12a3.5 3.5 0 1 0 0 .01M11.5 12H21M18 12v3M21 12v2']];
+    // S25: igual al canvas: la alegría arriba, el contrato serio, el día de la firma y firmar con la casilla.
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Ya tienes', metaCompra(p)) + listaPasos(3) +
-      // S24-B3: la alegría de llegar (héroe) y la seriedad del contrato (tarjeta tipo documento).
       '<section class="firma-heroe"' + (recienLlegado ? ' role="status"' : '') + '>' +
-        '<span class="firma-llave" aria-hidden="true"><svg><use href="#i-llave"/></svg></span>' +
-        '<p class="firma-chip">Último paso</p>' +
-        '<h2 class="h3">¡Juntaste tu pie!</h2>' +
-        '<p>Solo falta firmar. Revisa con calma lo que firmas.</p>' +
+        '<span class="firma-chip">Paso ' + hp.total + ' de ' + hp.total + SEP + 'Es tuyo</span>' +
+        '<div class="firma-heroe-fila"><span><h2>¡Juntaste tu pie!</h2><span>Solo falta firmar. Revisa todo con calma.</span></span>' +
+          '<svg aria-hidden="true" width="92" height="104" viewBox="0 0 92 104"><rect x="8" y="8" width="64" height="96" rx="4" fill="#1B3A63"/>' +
+          '<rect x="16" y="18" width="12" height="10" rx="2" fill="#FFE300"/><rect x="34" y="18" width="12" height="10" rx="2" fill="#2E4F80"/><rect x="52" y="18" width="12" height="10" rx="2" fill="#FFE300"/>' +
+          '<rect x="16" y="36" width="12" height="10" rx="2" fill="#2E4F80"/><rect x="34" y="36" width="30" height="22" rx="2" fill="#FFF499"/>' +
+          '<circle cx="49" cy="45" r="4" fill="#90A4AE"/><path d="M42 58c0-5 3-8 7-8s7 3 7 8z" fill="#546E7A"/>' +
+          '<rect x="16" y="54" width="12" height="10" rx="2" fill="#FFE300"/><rect x="16" y="72" width="12" height="10" rx="2" fill="#2E4F80"/><rect x="34" y="72" width="12" height="10" rx="2" fill="#FFE300"/><rect x="52" y="72" width="12" height="10" rx="2" fill="#FFE300"/>' +
+          '<rect x="32" y="88" width="16" height="16" rx="2" fill="#2772CC"/></svg></div>' +
       '</section>' +
-      '<section class="tarjeta bloque firma-doc" aria-labelledby="titulo-firma">' +
-        '<div class="firma-doc-cabeza"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4M9 11h6M9 14.5h6M9 18h4"/></svg></span>' +
-          '<span><h2 class="h4" id="titulo-firma">Lo que firmas</h2><small>Contrato de crédito hipotecario Bci</small></span></div>' +
-        (arrendar ? '' : '<p class="firma-monto"><small>Pagas al mes</small><strong class="numero">' + formatoUF(e.dividendo / SUPUESTOS.uf) + '</strong><small>hoy son ' + formatoPesos(e.dividendo) + '</small></p>') +
+      '<section class="tarjeta firma-doc" aria-labelledby="titulo-firma">' +
+        '<div class="firma-doc-cabeza"><span class="firma-doc-icono" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4M9 11h6M9 14.5h6M9 18h4"/></svg></span>' +
+          '<span><h2 id="titulo-firma">Lo que firmas</h2><small>' + esc(p.nombre) + SEP + esc(p.comuna) + '</small></span></div>' +
+        (arrendar ? '' : '<div class="firma-monto"><span>Pagas al mes</span><span><strong>' + ufDecimales(e.dividendo / SUPUESTOS.uf, 2) + '</strong><small>hoy son ' + formatoPesos(e.dividendo) + '</small></span></div>') +
         filasVivir +
-        '<ul class="lista-check">' + credito + segunda + '</ul>' +
-        '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
+        (arrendar ? '<ul class="lista-check">' + credito + segunda + '</ul>' : nota) +
       '</section>' +
-      '<section class="tarjeta bloque" aria-labelledby="titulo-tramites">' +
-        '<h2 class="h4" id="titulo-tramites">Tus trámites</h2>' +
-        '<ol class="tramites"><li class="hecho">Preaprobación</li><li class="hecho">Tu pie</li><li class="hecho">Tasación y estudio de títulos</li>' +
-          '<li class="actual">Firma de la escritura</li><li>Inscripción y entrega de llaves</li></ol>' +
+      '<section class="tarjeta firma-dia" aria-labelledby="titulo-tramites">' +
+        '<h2 id="titulo-tramites">El día de la firma</h2>' +
+        '<ol>' + TRAMITES.map(function (t) {
+          return '<li><span class="firma-dia-icono" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + t[1] + '"/></svg></span><span>' + t[0] + '</span></li>';
+        }).join('') + '</ol>' +
       '</section>' +
-      '<label class="firma-reviso"><input type="checkbox" id="firma-reviso"><span>Revisé los montos y entiendo lo que firmo.</span></label>' +
-      '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque btn-mantener" id="btn-firmar" aria-disabled="true" aria-describedby="firma-explica">' +
-        '<span class="mantener-relleno" aria-hidden="true"></span><span class="mantener-texto">Mantén para firmar</span></button></div>' +
-        '<div class="acciones">' +
-        '<p class="texto-apoyo" id="firma-explica">Marca la casilla para firmar' + SEP + 'firma simulada.</p>' +
-      '</div>';
+      '<label class="firma-reviso"><input type="checkbox" id="firma-reviso"><span>Revisé los montos y entiendo lo que firmo</span></label>' +
+      '<button type="button" class="btn btn-primario btn-lg btn-bloque btn-mantener" id="btn-firmar" aria-disabled="true" aria-describedby="firma-explica">' +
+        '<span class="mantener-relleno" aria-hidden="true"></span><span class="mantener-texto">Marca la casilla para firmar</span></button>' +
+      '<p class="firma-explica" id="firma-explica">Mantén apretado 2 segundos' + SEP + 'firma simulada</p>';
 
     // S14-F5: mantener presionado 1,5 s para firmar. Con teclado (o con movimiento reducido), un toque firma.
     var boton = $('btn-firmar');
@@ -3815,7 +3814,7 @@
     var reviso = $('firma-reviso');
     reviso.addEventListener('change', function () {
       boton.setAttribute('aria-disabled', String(!reviso.checked));
-      $('firma-explica').textContent = reviso.checked ? 'Mantén el botón 2 segundos' + SEP + 'firma simulada.' : 'Marca la casilla para firmar' + SEP + 'firma simulada.';
+      boton.querySelector('.mantener-texto').textContent = reviso.checked ? 'Mantén para firmar' : 'Marca la casilla para firmar';
     });
     function cancelar() { clearTimeout(espera); espera = null; boton.classList.remove('presionando'); }
     boton.addEventListener('pointerdown', function (ev) {
@@ -4101,36 +4100,30 @@
       var tiene = antes !== null && antes !== undefined && antes > 0;
       var dif = tiene ? m.e.totalMes - antes : 0;
       cuerpo =
-        '<div class="tarjeta protagonista">' +
-          '<p class="etiqueta">Este mes pagaste</p>' +
-          '<strong class="numero display-3">' + formatoPesos(m.e.totalMes) + '</strong>' +
-          '<p class="texto-apoyo">Con seguros incluidos.</p>' +
-          (tiene ? '<ul class="datos-inversion">' +
-            '<li><span>Antes, de arriendo</span><strong>' + formatoPesos(antes) + '</strong></li>' +
-            '<li><span>Diferencia</span><strong>' + (dif === 0 ? 'Lo mismo' : (dif > 0 ? '+' : '−') + formatoPesos(Math.abs(dif)) + ' al mes') + '</strong></li>' +
-          '</ul>' : '') +
-        '</div>' +
+        '<section class="tarjeta md-pagaste"><p>Este mes pagaste</p>' +
+          '<strong>' + formatoPesos(m.e.totalMes) + '</strong>' +
+          '<p class="md-pagaste-detalle">Con seguros incluidos.' + (tiene ? ' Antes, de arriendo: ' + formatoPesos(antes) + ' (' + (dif === 0 ? 'lo mismo' : (dif > 0 ? '+' : '−') + formatoPesos(Math.abs(dif)) + ' al mes') + ')' : '') + '</p>' +
+        '</section>' +
         (tiene ? '' : campoDinero('arriendo-antes', 'Lo que pagabas de arriendo', antes));
     }
 
     $('panel-compra').innerHTML =
-      tarjetaCompacta(p, 'Pagas al mes', m.e.totalMes) + listaPasos(4) +
       (recienFirmado || Date.now() < puertaHasta ? puertaEquipo() : '') +
-      '<h2 class="h3 bloque" id="titulo-departamento">' + (recienFirmado ? '<span class="llave-firma" aria-hidden="true">' + icono('i-llave', 'icono-grande') + '</span>' : '') + 'Mi departamento</h2><p class="texto-apoyo">Mes ' + m.mes + '</p>' +
-      // Fotos: tu departamento, con la misma galería del detalle (referencial).
-      galeria(fotosDe(p, departamentoDeMiCompra(p))) +
+      // S25: igual al canvas: la foto con "Es tuyo", lo que pagaste, tu patrimonio en azul y tu avance.
+      '<header class="md-cabeza"><p class="md-marca"><img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24"><span class="figuras-bci" aria-hidden="true"></span></p>' +
+        '<h2 class="md-titulo" id="titulo-departamento">' + (recienFirmado ? '<span class="llave-firma" aria-hidden="true">' + icono('i-llave', 'icono-grande') + '</span>' : '') + 'Mi departamento</h2>' +
+        '<p class="texto-apoyo">' + esc(p.nombre) + SEP + 'Mes ' + m.mes + '</p></header>' +
+      (fotoEdificio(p) ? '<figure class="md-foto"><img src="' + fotoEdificio(p) + '" alt="' + esc(p.nombre) + ' (foto referencial)" width="800" height="600"><figcaption>' + icono('i-llave') + 'Es tuyo</figcaption></figure>' : '') +
       cuerpo +
       loTuyo(m) +
-      '<section class="tarjeta bloque" aria-labelledby="titulo-deudas">' +
-        '<h2 class="h4" id="titulo-deudas">Tu avance</h2>' +
+      '<section class="tarjeta md-avance" aria-labelledby="titulo-deudas">' +
+        '<h2 id="titulo-deudas">Tu avance</h2>' +
         (m.conInversionistas ? barraParticipacion(m) : '') +
         barraDeuda('Crédito Bci (30 años)', m.mes, SUPUESTOS.mesesBci, m.saldoBci, m.avanceBci) +
-        '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Calculado sin plusvalía</p>' +
       '</section>' +
+      '<p class="llega-sello">Calculado sin plusvalía</p>' +
       seccionArrepiento(m) +
-      '<div class="acciones">' +
-        '<button type="button" class="btn btn-terciario btn-bloque" id="btn-otro-mes">Simular otro mes</button>' +
-      '</div>';
+      '<button type="button" class="btn md-otro-mes" id="btn-otro-mes">Simular otro mes</button>';
     var patrimonio = ufAPesos(m.patrimonioUF);
     contarHasta($('lo-tuyo'), loTuyoMostrado, patrimonio, formatoPesos);
     loTuyoMostrado = patrimonio;
@@ -6303,9 +6296,9 @@
   // S13-F5: lo tuyo en el departamento hoy y cuánto creció este mes (sin plusvalía).
   var loTuyoMostrado = null;
   function loTuyo(m) {
-    var html = '<section class="tarjeta bloque lo-tuyo" aria-labelledby="titulo-lo-tuyo">' +
-      '<ul class="datos-inversion"><li><span id="titulo-lo-tuyo">Tu patrimonio ' + ayuda('patrimonio') + '</span><strong class="numero" id="lo-tuyo"></strong></li></ul>' +
-      '<p class="crecio">' + icono('i-sube', 'icono-crecio') + 'Creció ' + formatoPesos(ufAPesos(m.crecimientoUF)) + ' este mes</p>' +
+    var html = '<section class="lo-tuyo md-patrimonio" aria-labelledby="titulo-lo-tuyo">' +
+      '<p><span id="titulo-lo-tuyo">Tu patrimonio</span> ' + ayuda('patrimonio') + '</p><strong id="lo-tuyo"></strong>' +
+      '<p class="md-crecio">Creció ' + formatoPesos(ufAPesos(m.crecimientoUF)) + ' este mes</p>' +
     '</section>';
     return html;
   }
