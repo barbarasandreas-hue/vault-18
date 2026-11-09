@@ -764,7 +764,7 @@
     'regalo-pie': { termino: 'Regalo para tu pie', pregunta: '¿Cómo funciona el regalo para tu pie?',
       texto: 'Para un cumpleaños o una Navidad, tu familia aporta a tu cuenta Bci con un enlace, sin descargar la app. Tú eliges si ven los montos o solo el avance.' },
     'mas-barato': { termino: 'Comprar más barato', pregunta: '¿Cómo baja el precio?',
-      texto: 'Un usado parecido cuesta cerca de 17,6 % menos, pero no tiene subsidio a la tasa. IVA cero baja cerca de 6,5 % los departamentos nuevos, del 1-dic-2026 al 1-dic-2027.' },
+      texto: 'Un usado parecido cuesta cerca de 17,6 % menos, pero no tiene subsidio a la tasa. IVA cero baja cerca de 10 % los terminados antes del 17-oct-2026, del 1-dic-2026 al 1-dic-2027.' },
     'financiamiento-pie': { termino: 'Pie compartido', pregunta: '¿Qué es el pie compartido?',
       texto: 'Pones el 5 % y unos inversionistas el 15 %. El arriendo les paga una renta y te devuelve su parte de a poco.' }
   };

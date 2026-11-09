@@ -910,11 +910,12 @@ function respaldoFamiliar(listaUF) {
 
 // ---------- Comprar más barato (S9-F5) ----------
 
-// Ajustes de precio: usado (−17,6 %, TOCTOC 2024) e IVA cero (−6,5 %, estimación de Hacienda).
+// Ajustes de precio: usado (−17,6 %, TOCTOC 2024) e IVA cero (−10 %, supuesto; el gobierno estima hasta ~14 %).
+// 9-nov: un solo valor del IVA cero en toda la app; las piezas lo leen de aquí.
 // El usado no tiene subsidio a la tasa (exige primera venta) ni IVA cero.
 var MAS_BARATO = {
   usado: { descuento: 0.176, sinSubsidio: true },
-  'iva-cero': { descuento: 0.065, sinSubsidio: false, desde: '2026-12-01', hasta: '2027-12-01' }
+  'iva-cero': { descuento: 0.10, sinSubsidio: false, desde: '2026-12-01', hasta: '2027-12-01' }
 };
 
 // Pie y dividendo de un departamento con un ajuste (o ninguno), y cuánto baja el pie frente
@@ -1292,7 +1293,7 @@ function formatoSegunEtapa(valor, etapa) {
 var SUPUESTOS_PIEZAS = {
   descuentoGrupo: 0.05,       // lote de 10 (descuentoGrupo)
   // El DS1 (subsidio del Estado) va en DS1, abajo: dos tramos según el precio (S20-T2).
-  bajaIVA: 0.10,              // supuesto (el gobierno estima hasta ~14 %)
+  bajaIVA: MAS_BARATO['iva-cero'].descuento, // el mismo de Comprar más barato
   finIVA: '2027-12-01',
   regalo: 300000,
   creditoSiempre: 0.80

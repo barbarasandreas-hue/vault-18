@@ -150,13 +150,15 @@ test('Ficha respaldo familiar: 5 % propio, 10 % del familiar y cuándo se libera
 });
 
 test('Comprar más barato: usado e IVA cero bajan el pie del mismo departamento', () => {
+  // 9-nov: el IVA cero es el mismo 10 % en Comprar más barato y en las piezas.
+  assert.strictEqual(c.SUPUESTOS_PIEZAS ? c.SUPUESTOS_PIEZAS.bajaIVA : 0.10, 0.10);
   const u = c.pieMasBarato(2500, 'individual', 'vivir', 1, 'usado');
   assert.strictEqual(u.pie, c.ufAPesos(2500 * 0.824 * 0.1));
   assert.strictEqual(u.baja, 10266250 - u.pie);
   assert.strictEqual(u.sinSubsidio, true);
   assert.strictEqual(u.dividendo, c.ufAPesos(c.dividendoUF(2500 * 0.824, 'vivir', c.SUPUESTOS.tasaSinSubsidio)));
   const i = c.pieMasBarato(2500, 'individual', 'vivir', 1, 'iva-cero');
-  assert.strictEqual(i.pie, c.ufAPesos(2500 * 0.935 * 0.1));
+  assert.strictEqual(i.pie, c.ufAPesos(2500 * 0.90 * 0.1));
   assert.strictEqual(i.sinSubsidio, false);
   // Sin ajuste (solo filtro de tamaño) no baja nada frente a sí mismo
   assert.strictEqual(c.pieMasBarato(1200, 'individual', 'vivir', 1, null).baja, 0);
@@ -166,7 +168,7 @@ test('Comprar más barato: usado e IVA cero bajan el pie del mismo departamento'
   assert.strictEqual(pq.pieSinAjuste, c.ufAPesos(1750 * 0.97 * 0.05));
   // IVA cero en grupo: con descuento de grupo, comparado con el mismo proyecto en grupo
   const ig = c.pieMasBarato(2500, 'lote', 'arrendar', 10, 'iva-cero');
-  assert.strictEqual(ig.pie, c.ufAPesos(2500 * 0.935 * 0.95 * 0.05));
+  assert.strictEqual(ig.pie, c.ufAPesos(2500 * 0.90 * 0.95 * 0.05));
   assert.strictEqual(ig.baja, c.ufAPesos(2375 * 0.05) - ig.pie);
 });
 
