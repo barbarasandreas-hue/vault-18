@@ -60,6 +60,7 @@
     novedades: [],           // S19-B4: lo que cambió desde la última visita (cambiosDesdeVisita), hasta que se ve
     construido: null,        // S23-B: la última etapa del departamento que se vio construida (para animar solo lo nuevo)
     favoritos: [],           // S23-C: proyectos guardados con el corazón
+    trabajo: '',             // 9-nov: dónde trabaja (para ver cómo llegar en el mapa, dentro de la app)
     animosDados: null,       // S22-F2: hitos y misiones que ya recibieron su "¡Bien!" (null = todavía no se mira)
     animos: [],              // S22-F2: "¡Bien!" de Tu equipo que falta ver [{ clave, motivo, relacion, id }]
     pasos: {}                // S21-B3: hitos y misiones hechos { cuentaVivienda, rsh, ds1Postulado, documentos, bajoLlave, preaprobado }
@@ -69,13 +70,13 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
-    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {}, visitaVersion: 2, vecinos: {} };
+    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {}, visitaVersion: 2, vecinos: {}, trabajo: '' };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -333,6 +334,7 @@
       estado.animos = Array.isArray(g.animos) ? g.animos.filter(function (x) { return x && MOTIVO_ANIMO[x.clave] && RELACIONES_EQUIPO.indexOf(x.relacion) !== -1; }).slice(0, 2) : [];
       estado.construido = Number.isInteger(g.construido) ? g.construido : null;
       // 9-nov: en qué grupos quiere conocer a sus vecinos (solo para vivir, por elección propia).
+      estado.trabajo = typeof g.trabajo === 'string' ? g.trabajo.slice(0, 120) : '';
       estado.vecinos = {};
       if (g.vecinos && typeof g.vecinos === 'object') Object.keys(g.vecinos).forEach(function (id) { if (g.vecinos[id] === true && buscarProyecto(id)) estado.vecinos[id] = true; });
       estado.favoritos = Array.isArray(g.favoritos) ? g.favoritos.filter(function (id) { return typeof id === 'string' && buscarProyecto(id); }) : [];
@@ -5499,6 +5501,31 @@
     salud: ['rojo', 'M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6z'],
     vida: ['amarillo', 'M4 10h16l-1.5-5h-13zM5 10v10h14V10M9 20v-5h6v5']
   };
+  // 9-nov: mapa embebido (sin clave de API). Con dirección de trabajo, muestra la ruta en transporte público.
+  function lugarComuna(comuna) { return encodeURIComponent(comuna + ', Santiago, Chile'); }
+  function urlMapa(comuna, trabajo) {
+    return trabajo
+      ? 'https://maps.google.com/maps?saddr=' + encodeURIComponent(trabajo + ', Santiago, Chile') + '&amp;daddr=' + lugarComuna(comuna) + '&amp;dirflg=r&amp;output=embed'
+      : 'https://maps.google.com/maps?q=' + lugarComuna(comuna) + '&amp;z=14&amp;output=embed';
+  }
+  function urlMapaAfuera(comuna, trabajo) {
+    return trabajo
+      ? 'https://www.google.com/maps/dir/?api=1&amp;origin=' + encodeURIComponent(trabajo + ', Santiago, Chile') + '&amp;destination=' + lugarComuna(comuna) + '&amp;travelmode=transit'
+      : 'https://www.google.com/maps/search/?api=1&amp;query=' + lugarComuna(comuna);
+  }
+  function iniciarMapaBarrio(p) {
+    var f = $('form-trabajo');
+    if (!f) return;
+    f.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      estado.trabajo = $('campo-trabajo').value.trim().slice(0, 120);
+      guardarEstado();
+      var amp = function (u) { return u.replace(/&amp;/g, '&'); };
+      $('barrio-iframe').src = amp(urlMapa(p.comuna, estado.trabajo));
+      $('barrio-abrir').href = amp(urlMapaAfuera(p.comuna, estado.trabajo));
+      $('barrio-ruta').textContent = estado.trabajo ? 'En transporte público, desde ' + estado.trabajo : '';
+    });
+  }
   function barrioHtml(p) {
     var b = BARRIOS[p.comuna];
     if (!b) return '';
@@ -5506,12 +5533,16 @@
     var fila = function (k, titulo, texto) {
       return '<li><span class="barrio-icono ' + ICONOS_BARRIO[k][0] + '" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + ICONOS_BARRIO[k][1] + '"/></svg></span><span><strong>' + titulo + '</strong><small>' + texto + '</small></span></li>';
     };
-    var lugar = encodeURIComponent(p.comuna + ', Santiago, Chile');
     return '<section class="tarjeta barrio" aria-labelledby="titulo-barrio">' +
         '<h2 id="titulo-barrio">Cómo es vivir aquí</h2><p class="barrio-sub">' + esc(p.comuna) + SEP + 'referencias de la comuna</p>' +
         '<ul>' + fila('metro', 'Metro', b.metro) + fila('verde', 'Áreas verdes', b.verde) + fila('salud', 'Salud', b.salud) + fila('vida', 'Para el día a día', b.vida) + '</ul>' +
-        '<div class="barrio-mapas"><a class="btn barrio-btn" href="https://www.google.com/maps/dir/?api=1&amp;destination=' + lugar + '&amp;travelmode=transit" target="_blank" rel="noopener">Cómo llegar a tu trabajo</a>' +
-          '<a class="barrio-link" href="https://www.google.com/maps/search/?api=1&amp;query=' + lugar + '" target="_blank" rel="noopener">Ver la comuna en el mapa ›</a></div>' +
+        // Comentario 9-nov: el mapa va dentro de la app (antes abría Google Maps afuera).
+        '<div class="barrio-mapa"><iframe id="barrio-iframe" title="Mapa de ' + esc(p.comuna) + '" src="' + urlMapa(p.comuna, estado.trabajo) + '" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>' +
+        '<form class="barrio-trabajo" id="form-trabajo"><label for="campo-trabajo">¿Dónde trabajas?</label>' +
+          '<div class="barrio-trabajo-fila"><input id="campo-trabajo" type="text" autocomplete="street-address" maxlength="120" placeholder="Dirección o comuna" value="' + esc(estado.trabajo) + '">' +
+          '<button type="submit" class="btn btn-primario btn-sm">Ver ruta</button></div>' +
+          '<p class="barrio-ruta" id="barrio-ruta" aria-live="polite">' + (estado.trabajo ? 'En transporte público, desde ' + esc(estado.trabajo) : '') + '</p></form>' +
+        '<a class="barrio-link" id="barrio-abrir" href="' + urlMapaAfuera(p.comuna, estado.trabajo) + '" target="_blank" rel="noopener">Abrir en Google Maps</a>' +
       '</section>' +
       // 9-nov: plegada; se abre al tocar el título.
       '<details class="tarjeta visita">' +
@@ -5523,6 +5554,7 @@
       '</details>';
   }
   function iniciarVisita(p) {
+    iniciarMapaBarrio(p);
     document.querySelectorAll('[data-visita]').forEach(function (c) {
       c.addEventListener('change', function () {
         var n = Number(c.dataset.visita), l = (estado.visita[p.id] || []).filter(function (x) { return x !== n; });
@@ -5768,15 +5800,6 @@
   // arriendoOpcion (calculos.js): mensualidad = arriendo + aporte a tu pie; cuándo es tuyo; si se sostiene.
   function fotosArriendo(u) { return fotosUsado(u); }
   function fichaArriendo(u) { return esc(u.comuna) + SEP + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + SEP + plural(u.banos || 1, 'baño', 'baños') + SEP + u.m2 + NBSP + 'm²'; }
-  function comoFuncionaArriendo() {
-    return '<ol class="arriendo-pasos">' +
-      '<li><strong>Entras con el 5' + NBSP + '% ahorrado</strong><small>Eliges un departamento terminado. Un socio de Bci lo compra y el precio queda fijo en UF.</small></li>' +
-      '<li><strong>Te mudas</strong><small>Firmas un contrato de hasta 5 años y vives ahí desde el comienzo.</small></li>' +
-      '<li><strong>Cada mes, arriendo y aporte</strong><small>Cerca de la mitad va a tu pie, en una cuenta de vivienda bloqueada en Bci, a tu nombre.</small></li>' +
-      '<li><strong>Desde el tercer año, pides tu crédito</strong><small>Con el 20' + NBSP + '% juntado, Bci te presta el 80' + NBSP + '%. Es segunda venta: sin subsidio a la tasa.</small></li>' +
-      '<li><strong>Firmas la escritura: es tuyo</strong><small>Desde ahí pagas el dividendo en vez del arriendo.</small></li>' +
-    '</ol>';
-  }
   function siMeArrepientoArriendo() {
     return '<ul class="lista-check">' +
       '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Si te vas sin comprar, recuperas tu ahorro inicial y la mitad de tus aportes.</span></li>' +
@@ -5862,7 +5885,6 @@
           return '<li' + (i === linea.length - 1 ? ' class="final"' : '') + '><span class="arriendo-cuando">' + x[0] + '</span><span>' + x[1] + '</span></li>';
         }).join('') + '</ol>' +
         '<p class="texto-apoyo"><small>Mientras arriendas, el departamento es del socio. Es tuyo al firmar la escritura. Bci presta el 80' + NBSP + '% sin subsidio a la tasa (segunda venta).</small></p></section>' +
-      plegable('arriendo-como', '¿Cómo funciona?', 'En 5 pasos', comoFuncionaArriendo()) +
       plegable('arriendo-arrepiento', '¿Y si me arrepiento?', 'Recuperas parte de tu pie', siMeArrepientoArriendo()) +
       barrioHtml(u) +
       '<p class="llega-sello detalle-sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
