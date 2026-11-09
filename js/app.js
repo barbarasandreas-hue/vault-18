@@ -5566,11 +5566,13 @@
           (foto ? '<img class="usado-foto" src="fotos/interiores/' + encodeURI(foto) + '" alt="' + (tipo.indexOf('cocina') !== -1 ? 'Cocina' : 'Living') + ' de un departamento de ' + (u.dormitorios || 1) + ' dormitorio' + (u.dormitorios > 1 ? 's' : '') + ' (foto referencial)" loading="lazy" width="800" height="600">' : '') +
           botonFavorito({ id: u.id, nombre: titulo }) +
           '<span class="usado-etiqueta">Usado' + SEP + 'de ' + u.anio + (!vivir && u.dfl2 ? SEP + 'DFL-2' : '') + '</span>' +
-          '<h3 class="tp-nombre">' + titulo + '</h3>' +
+          // Comentario 9-nov: la tarjeta entera abre el departamento (el corazón queda encima).
+          '<h3 class="tp-nombre"><a class="usado-enlace" href="#explorar/usados/' + esc(u.id) + '">' + titulo + '</a></h3>' +
           '<p class="tp-ficha">' + esc(u.comuna) + SEP + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + SEP + plural(u.banos || 1, 'baño', 'baños') + SEP + u.m2 + NBSP + 'm²</p>' +
           '<p class="tp-etiqueta">Precio</p>' +
           '<p class="usado-precio"><strong class="tp-cifra">' + formatoUF(u.listaUF) + '</strong> <span>' + formatoRedondeado(ufAPesos(u.listaUF)) + '</span></p>' +
           '<p class="tp-linea">Pie de ' + formatoUF(u.listaUF * 0.2) + (calza ? SEP + 'calza con DS1' : '') + '</p>' +
+          '<p class="usado-ver" aria-hidden="true">Ver departamento ›</p>' +
         '</li>';
       }).join('') + '</ul>' : '<p class="texto-apoyo">' + (filtroUsados.fav ? 'Todavía no guardas ninguno.' : 'Ninguno con estos filtros.') + '</p>') +
       '<p class="texto-apoyo texto-centro"><small>Ejemplos simulados' + SEP + 'fotos referenciales</small></p>';
@@ -5585,6 +5587,58 @@
     });
   }
   var filtroUsados = {};
+
+  // Comentario 9-nov: el detalle de un usado. Crédito de siempre: Bci presta el 80 %, sin subsidio a la tasa.
+  function fotosUsado(u) {
+    var t = u.dormitorios === 0 ? 'estudio' : u.dormitorios === 1 ? '1d' : '2d';
+    var ficha = u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'estudio';
+    return ESPACIOS[t].filter(function (e) { return hayFotos() && FOTOS.interiores[t + '-' + e]; }).map(function (e) {
+      return { src: 'fotos/interiores/' + encodeURI(FOTOS.interiores[t + '-' + e]), alt: NOMBRE_ESPACIO[e] + ' de un departamento de ' + ficha + ' (foto referencial)', nombre: NOMBRE_ESPACIO[e] };
+    });
+  }
+  function renderUsado(id) {
+    var cont = $('caminos-contenido');
+    var u = USADOS.filter(function (x) { return x.id === id; })[0];
+    if (!u) { location.replace('#explorar/usados'); return; }
+    var vivir = estado.modo === 'vivir';
+    var titulo = 'Departamento en ' + esc(u.comuna);
+    var pie = ufAPesos(u.listaUF * 0.2), gastos = ufAPesos(gastosUF(u.listaUF)), meta = pie + gastos;
+    var dividendo = ufAPesos(cuotaFija(u.listaUF * 0.8, SUPUESTOS.tasaSinSubsidio, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
+    var perfil = perfilActual();
+    var falta = Math.max(0, meta - (perfil.ahorroActual || 0));
+    var meses = falta === 0 ? 0 : mesesParaMeta(falta, perfil.ahorroMensual);
+    var calza = vivir && u.listaUF <= DS1.tramo4.hastaUF;
+    var sellos = ['Crédito de siempre'].concat(calza ? ['Con DS1'] : [], u.dfl2 ? ['DFL-2'] : []);
+    cont.innerHTML =
+      '<a href="#explorar/usados" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Crédito de siempre</a>' +
+      '<header class="detalle-cabecera">' + botonFavorito({ id: u.id, nombre: titulo }) +
+        '<h1 id="titulo-caminos" class="h2">' + titulo + '</h1>' +
+        '<span class="tp-tipo verde">Usado' + SEP + 'de ' + u.anio + '</span>' +
+        '<p class="texto-apoyo">' + esc(u.comuna) + SEP + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + SEP + plural(u.banos || 1, 'baño', 'baños') + SEP + u.m2 + NBSP + 'm²</p>' +
+      '</header>' +
+      galeria(fotosUsado(u)) +
+      (vivir && isFinite(meses)
+        ? '<section class="detalle-llaves" aria-labelledby="usado-llaves"><p id="usado-llaves">Tus llaves</p>' +
+            '<strong>' + (meses === 0 ? 'Ya' : textoMeses(meses)) + '</strong>' +
+            '<p>' + (meses === 0 ? 'Ya tienes lo que se junta antes de firmar' : 'Si sigues ahorrando como ahora') + '</p></section>'
+        : '') +
+      '<ul class="detalle-filas">' +
+        '<li><span>Precio</span><strong>' + formatoRedondeado(ufAPesos(u.listaUF)) + '</strong></li>' +
+        '<li><span>Pie (20' + NBSP + '%)</span><strong>' + formatoRedondeado(pie) + '</strong></li>' +
+        '<li><span>Gastos de escritura</span><strong>' + formatoRedondeado(gastos) + '</strong></li>' +
+        '<li><span>Juntas antes de firmar</span><strong>' + formatoRedondeado(meta) + '</strong></li>' +
+        '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + ufDecimales(dividendo / SUPUESTOS.uf, 2) + '</strong><small>hoy son ' + formatoRedondeado(dividendo) + '</small></span></li>' +
+      '</ul>' +
+      '<p class="texto-apoyo usado-nota"><small>Bci presta el 80' + NBSP + '% a 30 años. Un usado no tiene subsidio a la tasa ni garantía del Estado, por eso el pie es más alto.</small></p>' +
+      '<section class="tarjeta detalle-calza" aria-labelledby="usado-calza"><h2 id="usado-calza">Calza con</h2><p>' +
+        sellos.map(function (t) { return '<span>' + t + '</span>'; }).join('') + '</p></section>' +
+      (vivir ? barrioHtml(u) : '') +
+      '<button type="button" class="btn btn-primario btn-bloque usado-cta" id="btn-usado-camino">Hacerlo mi camino</button>' +
+      '<p class="texto-apoyo texto-centro"><small>Ejemplo simulado' + SEP + 'fotos referenciales</small></p>';
+    iniciarGalerias(cont);
+    if (vivir) iniciarVisita(u);
+    $('btn-usado-camino').addEventListener('click', function () { toast('En la demo, los usados son para mirar (simulado).'); });
+  }
   // Hacerlo mi camino: muestra qué cambia y pide confirmar. Lo hecho (cuenta, ahorro, misiones) se conserva.
   function confirmarMiCamino(id, boton) {
     var perfil = perfilActual();
@@ -6548,6 +6602,7 @@
     if (p[0] === 'explorar') {
       if (p[1] === 'cambia') return r('caminos', 'explorar', function () { cambiosActivos = {}; renderCaminos(); });
       if (p[1] && p[2] === 'como') return r('caminos', 'explorar', function () { renderLlegaAntes(p[1]); });
+      if (p[1] === 'usados' && p[2]) return r('caminos', 'explorar', function () { renderUsado(p[2]); });
       if (p[1] === 'usados') return r('caminos', 'explorar', renderUsados);
       if (p[1] === 'guardados') return r('caminos', 'explorar', renderGuardados);
       if (p[1]) return r('caminos', 'explorar', function () { renderUnCamino(p[1]); });
