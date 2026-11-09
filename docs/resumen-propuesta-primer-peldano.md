@@ -17,13 +17,13 @@
 
 ## 2. Propuesta de valor
 
-Primer Peldaño **no inventa un crédito**. Hace cuatro cosas:
+Primer Peldaño **no inventa un crédito**. Hace tres cosas:
 - traduce el pie a cuotas que la persona sí puede pagar;
 - compara, con sus propios números, los caminos que existen hoy;
 - la acompaña mes a mes hasta escriturar.
 
 **Las tres intenciones:**
-1. **Acercar:** que la primera vivienda deje de sentirse lejana. El dato que guía todo es "Tus llaves en 1 año y 2 meses".
+1. **Acercar:** que la primera vivienda deje de sentirse lejana. El dato que guía todo es la fecha de tus llaves (por ejemplo, "Tus llaves en 1 año y 2 meses").
 2. **Aclarar:** dejar todo claro, con los pasos que ya se pueden dar hoy.
 3. **Acompañar:** asesorar durante toda la compra, desde los números hasta la firma.
 
@@ -43,19 +43,20 @@ Primer Peldaño **no inventa un crédito**. Hace cuatro cosas:
 |---|---|---|
 | **Crédito con garantía del Estado** | Vivir | Es el crédito de siempre, con FOGAES y el subsidio a la tasa. Pie del 10 %. |
 | **Compra en grupo** | Vivir o invertir | Bci reúne a compradores preaprobados para conseguir un **descuento real** de 3 % (desde 5 unidades) a 5 % (desde 10 unidades). Cada persona paga su pie en cuotas mientras se construye, en **su propia cuenta bloqueada en Bci**. |
-| **Pie compartido** | Invertir | Inversionistas ponen el 15 % como **participación en el valor**, no como préstamo. Reciben un 6 % al año en UF y la persona les recompra su parte con el arriendo. Ella pone solo el 5 %. |
+| **Pie compartido** | Invertir | Inversionistas ponen el 15 % como **participación en el valor**, no como préstamo. Reciben un 6 % al año en UF y la persona les recompra su parte con el arriendo. La persona pone solo el 5 %. |
 | **Crédito al 80 %** | Invertir | El crédito de siempre para invertir. Pie del 20 %. |
 | **Arriendo con opción de compra** | Vivir | Parte de lo que pagas cada mes va al pie. Es una ficha informativa. |
-| **Respaldo familiar** | Vivir o invertir | Un familiar deja dinero en una cuenta bloqueada en Bci por unos 5 años y lo recupera con intereses. Es una propuesta. |
-| **Crédito de siempre (usados)** | Vivir o invertir | Bci presta el 80 % para departamentos usados, sin subsidio a la tasa. |
+| **Respaldo familiar** | Vivir o invertir | Bci presta el 95 % y la persona pone el 5 %. Un familiar deja el 10 % en una cuenta bloqueada en Bci y lo recupera cuando la deuda baja al 80 % del precio. Es una propuesta. |
 | **Todavía no** | Los dos | Si ningún camino es sostenible, la app lo dice y muestra qué cambiar. |
 
 **Cambio del 9 de noviembre:** para invertir ya no se ofrece "grupo y pie compartido" como un solo camino. La persona elige uno u otro.
 
+**Comprar más barato** no es un camino, es un filtro sobre todos: un departamento usado (cerca de 17,6 % menos, con crédito al 80 % y sin subsidio a la tasa) o uno terminado sin IVA (cerca de 10 % menos).
+
 **Piezas que acercan la fecha** (en "¿Cómo puedes llegar antes?"):
 - el descuento del grupo;
 - el subsidio DS1;
-- departamentos terminados sin IVA (Ley 21.850);
+- departamentos terminados sin IVA (Ley 21.850), cerca de 10 % menos;
 - un regalo familiar para el pie;
 - el respaldo familiar.
 
@@ -76,7 +77,7 @@ El principio es que los compradores **se acompañan, pero no dependen unos de ot
 - **Hay una fecha límite de cierre:** cada grupo tiene un "Cierra el…". Si no llega al mínimo, nadie queda amarrado.
 - **El contacto entre compradores es anónimo por defecto:**
   - la app solo muestra cifras del grupo ("6 de 10", "5 de 6 pagaron este mes") y nunca señala a quien no pagó;
-  - en modo vivir existe **Tus vecinos**: es opcional, se abre al cierre, muestra solo el nombre de pila y lo modera Bci.
+  - en modo vivir existe **Tus vecinos**: es opcional, se abre al cierre, muestra cuántos quieren conocerse (sin nombres) y lo modera Bci.
 
 ## 6. La app
 
@@ -85,7 +86,7 @@ La barra tiene 4 pestañas: **Inicio · Tus pasos · Explorar · Perfil**.
 | Pantalla | Qué responde |
 |---|---|
 | **Inicio** | ¿Cuándo llego? La tarjeta azul muestra "Tu pie para … en 1 año y 2 a 7 meses", tu pie con su avance y el slider "Si juntas al mes". También lo que pagarás después, comparado con tu arriendo, y tu siguiente paso. |
-| **Tus pasos** | ¿Qué me falta? La escalera de 6 hitos (Números, Cuenta, Crédito, Pie, Final, Es tuyo) y las misiones (DS1, Registro Social de Hogares, documentos, ahorro automático y otras). |
+| **Tus pasos** | ¿Qué me falta? La escalera de 6 hitos y las misiones (DS1, Registro Social de Hogares, documentos, ahorro automático y otras). Comprando solo: Números, Cuenta, Pie, Crédito, Reserva, Es tuyo. En grupo, el crédito va antes del pie: Números, Cuenta, Crédito, Pie, Final, Es tuyo. |
 | **Explorar** | ¿Cómo y qué compro? Los caminos en tarjetas de color, cada camino con sus departamentos, y el detalle de cada departamento. |
 | **Detalle de un departamento** | Tus llaves, tu grupo de compra (con "¿Y si alguien se retira?"), el precio y el dividendo, tu mes como dueño, cómo es vivir en la comuna y qué revisar en la visita. |
 | **Tu pie** | Lo que llevas, tu cuota del mes, la racha, "Este mes no pude", el regalo familiar y las capas que protegen tu pie. |
@@ -128,13 +129,13 @@ Supuestos: UF $41.065, departamento de UF 2.500 de lista y crédito a 30 años c
 |---|---|---|
 | Vivir, crédito con FOGAES (90 %) | 10 % ≈ $10,3 millones | ≈ $442 mil al mes |
 | Vivir, en grupo (−5 %) | 10 % ≈ $9,8 millones | ≈ $421 mil al mes |
-| Invertir con pie compartido | 5 % ≈ $5,1 millones | ≈ $396 mil al mes; el arriendo recompra el 15 % en unos 51 meses |
+| Invertir con pie compartido | 5 % ≈ $5,1 millones | ≈ $396 mil al mes; con un arriendo de $420 mil que va entero a la recompra, el 15 % se recompra en unos 51 meses |
 
 Las cifras vigentes, con la tasa de 3,46 %, están en `tests/calculos.test.js`.
 
 ## 10. Estado del prototipo (9 de noviembre de 2026)
 
-- **App:** publicada en claude.ai, versión 20. Pasa 200 pruebas automáticas de los cálculos.
+- **App:** publicada en claude.ai, versión 20. Pasa 201 pruebas automáticas de los cálculos.
 - **Diseño:** las 23 pantallas de Claude Design están copiadas en `taller4 claude/3_Desarrollo_actual/Claude_Design/`.
 - **Agregado el 9 de noviembre (Sprint 26):**
   - Tu mes como dueño;
@@ -145,6 +146,7 @@ Las cifras vigentes, con la tasa de 3,46 %, están en `tests/calculos.test.js`.
   - qué pasa si alguien se retira;
   - Tus vecinos;
   - plazos en años y meses.
+- **Corregido el 9 de noviembre:** el IVA cero vale 10 % en toda la app, el respaldo familiar es 95 % en la ficha y en la pieza, y Tus vecinos ya no muestra nombres.
 - **Evaluación heurística:** `evaluations/evaluacion-heuristica-nielsen-norman.md`. Lo primero que hay que arreglar es usar un solo nombre para cada crédito y hacer coincidir la numeración de los pasos.
 - **Pendiente:**
   - `git push` a GitHub;
