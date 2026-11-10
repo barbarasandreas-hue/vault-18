@@ -1252,8 +1252,8 @@ function normalizarAvatar(a) {
   return {
     piel: entero(a.piel, 5),
     pelo: AVATAR_PELOS.indexOf(a.pelo) !== -1 ? a.pelo : null,
-    colorPelo: entero(a.colorPelo, 6),
-    ropa: entero(a.ropa, 6),
+    colorPelo: entero(a.colorPelo, 9),
+    ropa: entero(a.ropa, 9),
     accesorios: Array.isArray(a.accesorios) ? AVATAR_ACCESORIOS.filter(function (x) { return a.accesorios.indexOf(x) !== -1; }) : [],
     mascota: a.mascota === 'perro' || a.mascota === 'gato' ? a.mascota : ''
   };

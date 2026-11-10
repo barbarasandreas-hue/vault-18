@@ -92,8 +92,11 @@
   // ---------- S16: avatar y Tu equipo ----------
   // Sin género: todos los peinados, colores y accesorios son para todos. Lo no elegido se dibuja neutro (gris).
   var AV_PIEL = ['#F3D3B5', '#E8BFA0', '#C99572', '#9C6B47', '#6B4630'];
-  var AV_COLOR_PELO = [['#2B2B2B', 'Pelo negro'], ['#6D4C41', 'Pelo castaño'], ['#A1774F', 'Pelo castaño claro'], ['#D9B26A', 'Pelo rubio'], ['#2772CC', 'Pelo azul'], ['#B0BEC5', 'Canas']];
-  var AV_ROPA = [['#2772CC', 'Ropa azul'], ['#1D5699', 'Ropa azul oscuro'], ['#28892B', 'Ropa verde'], ['#37474F', 'Ropa gris oscuro'], ['#FFE300', 'Ropa amarilla'], ['#E2E8EA', 'Ropa gris claro']];
+  var AV_COLOR_PELO = [['#2B2B2B', 'Pelo negro'], ['#6D4C41', 'Pelo castaño'], ['#A1774F', 'Pelo castaño claro'], ['#D9B26A', 'Pelo rubio'], ['#2772CC', 'Pelo azul'], ['#B0BEC5', 'Canas'],
+    ['#ED0C19', 'Pelo rojo'], ['#28892B', 'Pelo verde'], ['#FFE300', 'Pelo amarillo']];
+  var AV_ROPA = [['#2772CC', 'Ropa azul'], ['#1D5699', 'Ropa azul oscuro'], ['#28892B', 'Ropa verde'], ['#37474F', 'Ropa gris oscuro'], ['#FFE300', 'Ropa amarilla'], ['#E2E8EA', 'Ropa gris claro'],
+    // 9-nov: los colores Bci que faltaban (rojo y verde oscuro), al final para no cambiar los avatares guardados.
+    ['#ED0C19', 'Ropa roja'], ['#28652B', 'Ropa verde oscuro'], ['#B20913', 'Ropa roja oscura']];
   var AV_NOMBRE_PELO = { corto: 'Corto', largo: 'Largo', 'moño': 'Moño', rizado: 'Rizado', rapado: 'Rapado', ondulado: 'Ondulado' };
   var AV_NOMBRE_ACC = { lentes: 'Lentes', audifonos: 'Audífonos', mochila: 'Mochila', gorro: 'Gorro', planta: 'Planta' };
   var AV_OSCURO = '#263238';
