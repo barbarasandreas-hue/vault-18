@@ -3248,3 +3248,11 @@ details.visita[open] > summary { margin-bottom: 6px; }
 /* 10-nov: Tu pie antes de abrir la cuenta, con el mismo azul que después de abrirla. */
 .obra-invita { padding: 20px 18px; border: 0; border-radius: 24px; color: var(--white); background: linear-gradient(180deg, var(--blue-dark) 0%, var(--blue-normal) 100%); }
 .obra-invita h2, .obra-invita .texto-apoyo { color: var(--white); }
+/* 10-nov: que se sienta cuando algo está bien: "Te queda para vivir" se pinta según el nivel. */
+.dueno-vivir.dueno-holgado { background: var(--green-20); border-color: var(--green-40); }
+.dueno-vivir.dueno-holgado > strong { color: var(--green-dark); }
+.dueno-vivir.dueno-holgado .carga-chip { background: var(--green-dark); color: var(--white); }
+.dueno-vivir.dueno-limite { background: var(--yellow-20); border-color: var(--yellow-60); }
+.dueno-vivir.dueno-no-aprueba { background: var(--red-20); border-color: var(--red-40); }
+.dueno-vivir.dueno-no-aprueba > strong { color: var(--red-dark); }
+.dueno-vez .dueno-vez-sub { display: block; min-height: 0; margin: -6px 0 4px; border: 0; font-size: 13px; color: var(--gray-semidark); }

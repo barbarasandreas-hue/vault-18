@@ -1213,7 +1213,7 @@
           (estado.conQuien === 'pareja' ? campoDinero('q-pareja', 'Sueldo de tu pareja', estado.sueldoPareja)
             : estado.conQuien === 'familia' ? campoDinero('q-pareja', 'Sueldo de un familiar codeudor (opcional)', estado.sueldoPareja) +
               '<p class="texto-apoyo campo-nota"><small>Si compra contigo como codeudor, su sueldo se suma al de tu hogar.</small></p>' : '') +
-          campoDinero('q-otras', 'Otras cuotas al mes', estado.otrasCuotas) +
+          campoDinero('q-otras', 'Deudas estimadas al mes', estado.otrasCuotas) +
         '</div>' +
         '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-siguiente">Siguiente</button></div>' +
         atras;
@@ -2408,7 +2408,7 @@
         '<div class="selector-opciones">' + opcion('vivir', 'Para vivir') + opcion('arrendar', 'Para arrendar') + '</div></fieldset>' +
       campoDinero('datos-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
       campoDinero('datos-pareja', estado.conQuien === 'familia' ? 'Sueldo de tu familiar codeudor' : 'Sueldo líquido de tu pareja', estado.sueldoPareja) +
-      campoDinero('datos-otras', 'Otras cuotas al mes', estado.otrasCuotas) +
+      campoDinero('datos-otras', 'Deudas estimadas al mes', estado.otrasCuotas) +
       campoDinero('datos-ahorro', 'Lo que tienes ahorrado', estado.ahorroActual) +
       campoDinero('datos-mensual', 'Lo que puedes juntar al mes', estado.ahorroMensual) +
       campoDinero('datos-arriendo', 'Lo que pagas hoy de arriendo', estado.arriendoActual) +
@@ -3379,7 +3379,7 @@
         '<div class="formulario" id="form-postula"' + (yaTiene ? ' hidden' : '') + '>' +
           campoDinero('sueldo-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
           campoDinero('sueldo-pareja', 'Sueldo líquido de tu pareja', estado.sueldoPareja) +
-          campoDinero('otras-cuotas', 'Otras cuotas al mes', estado.otrasCuotas) +
+          campoDinero('otras-cuotas', 'Deudas estimadas al mes', estado.otrasCuotas) +
         '</div>' +
         campoContrato() +
         '<div id="carga-resultado" aria-live="polite"></div>' +
@@ -4947,7 +4947,7 @@
     var total = m.ingreso;
     var tramos = [
       { clave: 'dividendo', icono: 'i-banco', nombre: 'Dividendo', monto: m.dividendo },
-      { clave: 'cuotas', icono: 'i-documento', nombre: 'Otras cuotas', monto: m.otras },
+      { clave: 'cuotas', icono: 'i-documento', nombre: 'Deudas', monto: m.otras },
       { clave: 'arriendo', icono: 'i-llave', nombre: 'Arriendo', monto: m.arriendo },
       { clave: 'queda', icono: 'i-persona', nombre: 'Te queda', monto: Math.max(0, m.queda) }
     ].filter(function (t) { return t.monto > 0; });
@@ -5890,11 +5890,11 @@
         '<p><span>Tu arriendo hoy</span><strong>' + formatoPesos(estado.arriendoActual) + '</strong></p><span class="dueno-mini amarillo" aria-hidden="true"><i style="width:' + Math.min(100, estado.arriendoActual / Math.max(m.total, estado.arriendoActual) * 100).toFixed(1) + '%"></i></span>' +
         '<p><span>Como dueño</span><strong>' + formatoPesos(m.total) + '</strong></p><span class="dueno-mini azul" aria-hidden="true"><i style="width:' + Math.min(100, m.total / Math.max(m.total, estado.arriendoActual) * 100).toFixed(1) + '%"></i></span>' +
         '<p class="dueno-nota">La diferencia: el dividendo va a algo que es tuyo; el arriendo, no.</p></section>' : '') +
-      (pctVive !== null ? '<section class="tarjeta dueno-vivir" aria-labelledby="dueno-queda"><h2 id="dueno-queda">Te queda para vivir</h2>' +
+      (pctVive !== null ? '<section class="tarjeta dueno-vivir dueno-' + nivel + '" aria-labelledby="dueno-queda"><h2 id="dueno-queda">Te queda para vivir</h2>' +
         '<strong>' + formatoPesos(Math.max(0, m.teQueda)) + '</strong>' +
         '<span class="carga-chip ' + nivel + '">' + (nivel === 'holgado' ? 'Holgado' : nivel === 'limite' ? 'Justo' : 'Poco') + '</span>' +
-        '<p class="dueno-nota">De ' + formatoPesos(ingreso) + ' al mes' + ((estado.otrasCuotas || 0) > 0 ? ', después de tus otras cuotas' : '') + '. Para comida, transporte, cuentas y ahorro.</p></section>' : '') +
-      '<section class="tarjeta dueno-vez" aria-labelledby="dueno-vez"><h2 id="dueno-vez">Una sola vez</h2>' +
+        '<p class="dueno-nota">De ' + formatoPesos(ingreso) + ' al mes' + ((estado.otrasCuotas || 0) > 0 ? ', después de tus deudas' : '') + '. Para comida, transporte, cuentas y ahorro.</p></section>' : '') +
+      '<section class="tarjeta dueno-vez" aria-labelledby="dueno-vez"><h2 id="dueno-vez">Gastos de compra</h2><p class="dueno-vez-sub">Una sola vez</p>' +
         '<p><span><strong>Gastos al firmar</strong><small>Notaría, tasación, estudio de títulos e inscripción</small></span><strong>' + formatoRedondeado(m.alFirmar) + '</strong></p>' +
         '<p><span><strong>Mudanza</strong><small>Estimado dentro de Santiago</small></span><strong>' + formatoRedondeado(m.mudanza) + '</strong></p>' +
         '<p class="dueno-vez-total"><span>Total</span><strong>' + formatoRedondeado(m.unaVez) + '</strong></p>' +
