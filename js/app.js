@@ -5189,7 +5189,6 @@
     var s = fotoPasos();
     var h = hitoActual(s);
     var ms = misiones(s, hoyDemo());
-    var pendientes = ms.filter(function (x) { return !x.hecho; });
     var camino = nombreCaminoActual();
     var todaviaNo = estado.preguntasListas && rangoActual() && !estado.compra && (esArriendo() ? !arriendoActual().a.cumple : estado.modo === 'vivir' ? evaluarCabe().razon : recomendarCamino(perfilActual()).todaviaNo);
     // S25: como el canvas: la escalera en escalones de colores, el paso elegido y las misiones en tarjetas.
@@ -5199,6 +5198,8 @@
     var actualI = h.terminado ? h.total - 1 : h.indice - 1;
     if (pasoElegido === null || pasoElegido >= h.total || celebra) pasoElegido = actualI;
     var sel = h.hitos[pasoElegido];
+    // 10-nov: las misiones van separadas por paso; aquí, las del paso elegido (pendientes primero).
+    var delPaso = misionesPorPaso(h, ms)[pasoElegido].slice().sort(function (a, b) { return a.hecho - b.hecho; });
     // 9-nov (colores): el color dice el estado: verde oscuro hecho, azul ahora, gris falta.
     var colorDe = function (x) { return x.estado === 'hecho' ? 'esc-hecho' : x.estado === 'actual' ? 'esc-ahora' : 'esc-falta'; };
     cont.innerHTML =
@@ -5232,10 +5233,9 @@
             : '<p class="paso-elegido-despues">Se abre cuando termines el paso ' + h.indice + '.</p>') +
         '</div></article>' +
       '<section aria-labelledby="titulo-misiones" class="misiones-canvas">' +
-        '<div class="misiones-cabeza"><h2 class="h3" id="titulo-misiones">Misiones</h2><button type="button" class="enlace" id="btn-todas-misiones" aria-haspopup="dialog">Ver todas ›</button></div>' +
-        (pendientes.length ? '<ul class="misiones-tarjetas">' + pendientes.slice(0, 3).map(function (x, k) { return tarjetaMision(x, k); }).join('') + '</ul>'
-          : '<p class="tarjeta compacta">Hiciste todas tus misiones.</p>') +
-        '<p class="misiones-nota">En "Ver todas" están las fechas que importan.</p>' +
+        '<div class="misiones-cabeza"><h2 class="h3" id="titulo-misiones">Misiones del paso ' + (pasoElegido + 1) + '</h2><a class="enlace" href="#pasos/misiones">Ver todas ›</a></div>' +
+        (delPaso.length ? '<ul class="misiones-tarjetas">' + delPaso.map(function (x, k) { return x.hecho ? filaMision(x) : tarjetaMision(x, k); }).join('') + '</ul>'
+          : '<p class="tarjeta compacta">Este paso no tiene misiones.</p>') +
       '</section>';
     cont.querySelectorAll('[data-paso]').forEach(function (b) {
       b.addEventListener('click', function () { pasoElegido = Number(b.dataset.paso); renderTusPasos(); cont.querySelector('[data-paso="' + pasoElegido + '"]').focus(); });
@@ -5246,7 +5246,6 @@
     cont.querySelectorAll('[data-mision]').forEach(function (b) {
       b.addEventListener('click', function () { abrirMision(b.dataset.mision, b); });
     });
-    $('btn-todas-misiones').addEventListener('click', function () { abrirTodasMisiones($('btn-todas-misiones')); });
     if (celebra) confeti();
     if ($('btn-meta-rango')) $('btn-meta-rango').addEventListener('click', function () { abrirCambiarRango($('btn-meta-rango')); });
   }
@@ -5571,6 +5570,40 @@
       });
   }
 
+  // 10-nov: cada misión va en el paso al que ayuda (ayudaA); las que no son de un paso (como sumar tu equipo) van en el paso de ahora.
+  function misionesPorPaso(h, ms) {
+    var ids = h.hitos.map(function (x) { return x.id; });
+    var actual = h.terminado ? h.total - 1 : h.indice - 1;
+    var grupos = h.hitos.map(function () { return []; });
+    ms.forEach(function (x) { var i = ids.indexOf(x.ayudaA); grupos[i === -1 ? actual : i].push(x); });
+    return grupos;
+  }
+  // 10-nov: "Ver todas" lleva a una pantalla con todas las misiones separadas por etapa.
+  function renderTodasMisiones() {
+    var cont = $('pasos-contenido');
+    var s = fotoPasos(), hoy = hoyDemo(), h = hitoActual(s);
+    var grupos = misionesPorPaso(h, misiones(s, hoy));
+    var fechas = FECHAS_IMPORTAN.filter(function (f) { return diasHastaFecha(f.fecha, hoy) >= 0 && (f.id !== 'ds1' || s.ds1); });
+    var estadoTexto = { hecho: 'Listo', actual: 'Ahora', pendiente: 'Después' };
+    cont.innerHTML =
+      '<a href="#pasos" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Tus pasos</a>' +
+      '<header class="encabezado"><h1 id="titulo-pasos" class="h2" tabindex="-1">Todas tus misiones</h1>' +
+        '<p class="texto-apoyo">Separadas por paso</p></header>' +
+      h.hitos.map(function (x, i) {
+        if (!grupos[i].length) return '';
+        return '<section class="tarjeta bloque misiones-etapa etapa-' + x.estado + '" aria-labelledby="etapa-' + i + '">' +
+          '<div class="misiones-etapa-cabeza"><h2 class="h5" id="etapa-' + i + '">Paso ' + (i + 1) + SEP + x.nombre + '</h2>' +
+            '<span class="chip">' + estadoTexto[x.estado] + '</span></div>' +
+          '<ul class="filas">' + grupos[i].map(filaMision).join('') + '</ul></section>';
+      }).join('') +
+      (fechas.length ? '<section class="tarjeta bloque" aria-labelledby="titulo-fechas"><h2 class="h5" id="titulo-fechas">Fechas que importan</h2>' +
+        '<ul class="filas">' + fechas.map(function (f) {
+          return '<li><div class="fila">' + icono('i-calendario', 'icono-grande') + '<span><strong>' + formatoFecha(f.fecha) + '</strong><small>' + f.texto + '</small></span></div></li>';
+        }).join('') + '</ul></section>' : '');
+    cont.querySelectorAll('[data-mision]').forEach(function (b) {
+      b.addEventListener('click', function () { abrirMision(b.dataset.mision, b); });
+    });
+  }
   function abrirTodasMisiones(boton) {
     var s = fotoPasos();
     var hoy = hoyDemo();
@@ -7258,7 +7291,7 @@
     if (p[0] === 'registro') return r('registro', 'perfil', renderRegistro);
     if (p[0] === 'perfil') return r('perfil', 'perfil', function () { renderPerfil(p[1]); });
     // S21-B1: cuatro pestañas. Las direcciones de antes se mantienen; cambia la pestaña que se marca.
-    if (p[0] === 'pasos') return r('pasos', 'pasos', renderTusPasos);
+    if (p[0] === 'pasos') return r('pasos', 'pasos', p[1] === 'misiones' ? renderTodasMisiones : renderTusPasos);
     // S21-B5: Tu pie. Si la compra está en su paso del pie, se usa esa pantalla.
     if (p[0] === 'pie') return r('pie', 'inicio', function () { if (estado.compra && pasoEfectivo() === 2) location.replace('#camino/pie'); else renderTuPie(); });
     if (p[0] === 'explorar') {
