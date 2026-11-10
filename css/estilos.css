@@ -3238,3 +3238,7 @@ details.visita[open] > summary { margin-bottom: 6px; }
 /* Comentario 10-nov: más aire entre el edificio en construcción y "Si juntas al mes". */
 .noche:has(.obra-en-noche) { padding-bottom: 100px; }
 .noche.sin-slider:has(.obra-en-noche) { padding-bottom: 28px; }
+/* Comentario 10-nov: sobre el azul, el botón va en blanco con texto azul oscuro para que combine (contraste 7,4:1). */
+.obra-en-noche .btn-primario { background: var(--white); border-color: var(--white); color: var(--blue-dark); }
+.obra-en-noche .btn-primario:hover { background: var(--blue-20); border-color: var(--blue-20); }
+.obra-en-noche .btn-primario:focus-visible { outline: 3px solid var(--white); outline-offset: 2px; }
