@@ -1042,7 +1042,7 @@
         '<p class="texto-apoyo">' + esc(x.p.nombre) + SEP + esc(x.p.comuna) + '</p>' +
       '</header>' +
       novedadesInicio(x) +
-      (x.paso < 4 ? tarjetaObra() + cuandoLlegasCompra(x.p) + animosInicio() + tarjetaSiguientePaso() :
+      (x.paso < 4 ? cuandoLlegasCompra(x.p) + animosInicio() + tarjetaSiguientePaso() :
       '<section class="tarjeta proximo" aria-label="Dónde vas">' +
         '<p class="chip">' + x.etapa + '</p>' +
         '<p class="etiqueta">' + x.etiqueta + '</p>' +
@@ -1563,18 +1563,20 @@
   var VENTANAS_CANVAS = [1, 0, 0, 1, 'tu', 1, 0, 1, 1, 1, 1, 0, 1];
   // 9-nov: abajo en Inicio, tu departamento en construcción a la izquierda y qué hacer a la derecha.
   // Sin cuenta: la invitación a empezar. Con cuenta: lo que va y seguir sumando.
-  function tarjetaObra() {
+  // Comentario 10-nov: el edificio en construcción va dentro de la sección azul de Inicio (dentro = true).
+  function tarjetaObra(dentro) {
     var s = fotoPasos();
     if (!s.numeros) return '';
     var o = avanceObraDe(s);
+    var clase = dentro ? 'tarjeta-obra obra-en-noche' : 'tarjeta tarjeta-obra';
     if (!s.cuentaVivienda)
-      return '<section class="tarjeta tarjeta-obra" aria-labelledby="titulo-obra">' +
+      return '<div class="' + clase + '">' +
         '<div class="obra-izq">' + obraSvg(o) + '</div><div class="obra-der">' +
           '<h2 class="h5" id="titulo-obra">Comienza a construir tu pie para tu departamento</h2>' +
-          '<a class="btn btn-primario btn-sm" href="#pie">Abrir mi cuenta</a></div></section>';
+          '<a class="btn btn-primario btn-sm" href="#pie">Abrir mi cuenta</a></div></div>';
     // Comentario 9-nov: Tu pie (Cuenta Vivienda) y su avance van en la misma tarjeta que tu departamento en obra.
     var pct = s.meta > 0 ? Math.min(100, Math.round(s.ahorrado / s.meta * 100)) : 0;
-    return '<a class="tarjeta tarjeta-obra con-pie" href="#pie" aria-label="Tu pie: ' + formatoPesos(s.ahorrado) + ', ' + pct + ' % de ' + formatoRedondeado(s.meta) + '. ' + textoEtapaPie(o) + '. Ver tu pie">' +
+    return '<a class="' + clase + ' con-pie" href="#pie" aria-label="Tu pie: ' + formatoPesos(s.ahorrado) + ', ' + pct + ' % de ' + formatoRedondeado(s.meta) + '. ' + textoEtapaPie(o) + '. Ver tu pie">' +
       '<div class="obra-izq">' + obraSvg(o) + '</div>' +
       '<div class="obra-der">' +
         '<span class="obra-titulo">Tu pie' + SEP + 'Cuenta Vivienda</span>' +
@@ -1610,8 +1612,8 @@
         '<h1 id="titulo-inicio" class="h2" tabindex="-1">Tu camino</h1>' +
         '<p class="texto-apoyo">' + textoRango(rango) + SEP + '<button type="button" class="enlace" id="btn-cambiar-departamento" aria-haspopup="dialog">Cambiar</button></p>' +
       '</header>' +
-      // 10-nov: el edificio que se construye va arriba en Inicio.
-      tarjetaObra() +
+      // 10-nov: el edificio que se construye va dentro de la sección azul; con "Todavía no", arriba.
+      (justo ? tarjetaObra() : '') +
       (justo
         ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
             '<h2 class="h3" id="titulo-plazo">' + razon + ' ' + ayuda('tu-limite') + '</h2>' + salidaPrincipalHtml() + '</section>'
@@ -1623,9 +1625,7 @@
             '<span class="freno-llaves" id="freno-llaves">' + FRENO[x.hasta.freno] + '</span>' +
             (techoJusto ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(x.deptos.hasta.listaUF) + ' te dejan poco para vivir.</p>' : '') +
             // S25: el edificio del canvas: 4 columnas y tu ventana de 2 × 2.
-            '<div class="noche-edificio" aria-hidden="true"><div class="noche-fachada">' +
-              VENTANAS_CANVAS.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
-            '</div></div>' +
+            tarjetaObra(true) +
           '</section>') +
       // S23-A: vuelven el slider "Si juntas al mes" y lo que pagas después (pedido del 7-nov).
       '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
@@ -1657,7 +1657,7 @@
         $('titulo-plazo').textContent = etiquetaLlaves(y.hasta.meses);
         $('llaves-fecha').textContent = textoLlavesRango(y);
         $('freno-llaves').textContent = FRENO[y.hasta.freno];
-        var ventana = $('mi-ventana'); ventana.classList.remove('brilla'); void ventana.offsetWidth; ventana.classList.add('brilla');
+        var ventana = $('mi-ventana'); if (ventana) { ventana.classList.remove('brilla'); void ventana.offsetWidth; ventana.classList.add('brilla'); }
       }
       var dp = $('delta-plazo'); dp.innerHTML = textoDelta(x.hasta.meses, y.hasta.meses);
       dp.className = 'delta-plazo' + (y.hasta.meses < x.hasta.meses ? ' sube' : y.hasta.meses > x.hasta.meses ? ' baja' : '');
@@ -1904,11 +1904,7 @@
           '<strong class="numero noche-plazo" id="numero-plazo" aria-live="polite"></strong>' +
           '<p class="noche-sub">' + subtitulo + '</p>' +
           (r.todaviaNo && !eligio ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(rango.hasta) + ' te dejan poco para vivir.</p>' : '') +
-          '<div class="noche-edificio" aria-hidden="true"><span class="noche-techo"></span><div class="noche-fachada">' +
-            VENTANAS_NOCHE.map(function (v) {
-              return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>';
-            }).join('') +
-          '</div></div>' +
+          tarjetaObra(true) +
           // Comentario 9-nov: tu pie arriba, dentro del azul, como en el canvas.
         '</section>' +
         '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
@@ -1932,8 +1928,8 @@
         '<p class="texto-apoyo">' + textoRango(rango) + SEP +
           '<button type="button" class="enlace" id="btn-cambiar-departamento" aria-haspopup="dialog">Cambiar</button></p>' +
       '</header>' +
-      // 10-nov: el edificio que se construye va arriba en Inicio.
-      tarjetaObra() +
+      // 10-nov: el edificio que se construye va dentro de la sección azul; con "Todavía no", arriba.
+      (justo ? tarjetaObra() : '') +
       protagonista +
       (justo ? '' : datos) +
       animosInicio() +
@@ -1961,7 +1957,7 @@
         rangoMensual.setAttribute('aria-valuetext', formatoPesos(v) + ' al mes: ' + textoPlazos(x));
         // La ventana brilla un instante cuando el plazo cambia.
         var ventana = $('mi-ventana');
-        ventana.classList.remove('brilla'); void ventana.offsetWidth; ventana.classList.add('brilla');
+        if (ventana) { ventana.classList.remove('brilla'); void ventana.offsetWidth; ventana.classList.add('brilla'); }
       });
       rangoMensual.addEventListener('change', function () {
         estado.ahorroMensual = Number(rangoMensual.value);
@@ -2031,9 +2027,7 @@
       '<p class="noche-etiqueta" id="titulo-cuando">Logras tu pie en</p>' +
       '<strong class="numero noche-plazo">' + (mesesPie === 0 ? 'Ya' : textoMeses(mesesPie)) + '</strong>' +
       '<p class="noche-sub">Tus llaves: ' + fechaLlaves(pl.meses, hoyDemo()) + '</p>' +
-      '<div class="noche-edificio" aria-hidden="true"><div class="noche-fachada">' +
-        VENTANAS_CANVAS.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
-      '</div></div>' +
+      tarjetaObra(true) +
     '</section>';
   }
   function tarjetaSiguientePaso() {
@@ -6139,7 +6133,7 @@
         '<h1 id="titulo-inicio" class="h2" tabindex="-1">Tu camino</h1>' +
         '<p class="texto-apoyo">Arriendo con opción de compra' + SEP + '<a class="enlace" href="#explorar/arriendo-opcion/' + esc(u.id) + '">' + esc(u.nombre) + '</a></p>' +
       '</header>' +
-      (tuyo ? '' : tarjetaObra()) +
+      (!tuyo && !a.cumple ? tarjetaObra() : '') +
       (tuyo
         ? '<section class="noche sin-slider" aria-labelledby="titulo-plazo"><span class="noche-luna" aria-hidden="true"></span>' +
             '<p class="noche-etiqueta" id="titulo-plazo">¡Es tuyo!</p><strong class="numero noche-plazo">' + esc(u.nombre) + '</strong>' +
@@ -6152,9 +6146,7 @@
             '<p class="noche-etiqueta" id="titulo-plazo">Es tuyo en</p>' +
             '<strong class="numero noche-plazo' + claseLargo(textoMeses(a.mesesTuyo)) + '" id="numero-plazo" aria-live="polite">' + textoMeses(a.mesesTuyo) + '</strong>' +
             '<span class="freno-llaves" id="freno-llaves">' + sub(a) + '</span>' +
-            '<div class="noche-edificio" aria-hidden="true"><div class="noche-fachada">' +
-              VENTANAS_CANVAS.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
-            '</div></div>' +
+            tarjetaObra(true) +
           '</section>') +
       (!tuyo && a.cumple && !vive
         ? '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +

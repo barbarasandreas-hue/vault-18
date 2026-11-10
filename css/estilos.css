@@ -3231,6 +3231,7 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .visita-bloque:empty { display: none; }
 .visita-bloque .aviso { justify-self: stretch; }
 
-/* 10-nov: por ahora no va el edificio con la persona en su ventana; arriba en Inicio va el edificio que se construye. */
-.noche-edificio { display: none; }
-.tarjeta-obra + .noche, .tarjeta-obra + .todavia-no { margin-top: 12px; }
+/* 10-nov: el edificio que se construye va dentro de la sección azul de Inicio (en vez del edificio con la persona). */
+.tarjeta-obra.obra-en-noche { margin: 14px 0 0; padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none; grid-template-columns: 132px 1fr; }
+.obra-en-noche .obra-izq { background: rgba(255, 255, 255, .92); }
+.tarjeta-obra + .todavia-no { margin-top: 12px; }
