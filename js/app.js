@@ -2000,13 +2000,16 @@
   function fechaCorta(iso) { return formatoFecha(iso).replace(/ de \d{4}$/, ''); }
   // Con compra: cuándo llegas según lo que falta del pie y la entrega del edificio.
   function cuandoLlegasCompra(p) {
-    var pl = plazoTuPie(p, metaCompra(p));
+    var meta = metaCompra(p);
+    var pl = plazoTuPie(p, meta);
+    var mesesPie = mesesParaMeta(Math.max(0, meta - ahorradoTuPie(meta)), estado.ahorroMensual) || 0;
     // Comentario 9-nov: como el canvas: tus llaves en el azul y tu pie adentro, arriba.
     return '<section class="noche sin-slider" aria-labelledby="titulo-cuando">' +
       '<span class="noche-luna" aria-hidden="true"></span>' +
-      '<p class="noche-etiqueta" id="titulo-cuando">Tus llaves en</p>' +
-      '<strong class="numero noche-plazo">' + textoMeses(pl.meses) + '</strong>' +
-      '<p class="noche-sub">' + fechaLlaves(pl.meses, hoyDemo()) + '</p>' +
+      // Comentario 9-nov: la cifra es cuándo logras tu pie; las llaves (que pueden esperar la entrega) van debajo.
+      '<p class="noche-etiqueta" id="titulo-cuando">Logras tu pie en</p>' +
+      '<strong class="numero noche-plazo">' + (mesesPie === 0 ? 'Ya' : textoMeses(mesesPie)) + '</strong>' +
+      '<p class="noche-sub">Tus llaves: ' + fechaLlaves(pl.meses, hoyDemo()) + '</p>' +
       '<div class="noche-edificio" aria-hidden="true"><div class="noche-fachada">' +
         VENTANAS_CANVAS.map(function (v) { return v === 'tu' ? '<span class="nv tu" id="mi-ventana">' + escena(46, 'ventana-av') + '</span>' : '<span class="nv' + (v ? ' on' : '') + '"></span>'; }).join('') +
       '</div></div>' +
