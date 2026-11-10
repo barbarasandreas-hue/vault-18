@@ -1042,7 +1042,7 @@
         '<p class="texto-apoyo">' + esc(x.p.nombre) + SEP + esc(x.p.comuna) + '</p>' +
       '</header>' +
       novedadesInicio(x) +
-      (x.paso < 4 ? cuandoLlegasCompra(x.p) + tarjetaObra() + animosInicio() + tarjetaSiguientePaso() :
+      (x.paso < 4 ? tarjetaObra() + cuandoLlegasCompra(x.p) + animosInicio() + tarjetaSiguientePaso() :
       '<section class="tarjeta proximo" aria-label="Dónde vas">' +
         '<p class="chip">' + x.etapa + '</p>' +
         '<p class="etiqueta">' + x.etiqueta + '</p>' +
@@ -1610,6 +1610,8 @@
         '<h1 id="titulo-inicio" class="h2" tabindex="-1">Tu camino</h1>' +
         '<p class="texto-apoyo">' + textoRango(rango) + SEP + '<button type="button" class="enlace" id="btn-cambiar-departamento" aria-haspopup="dialog">Cambiar</button></p>' +
       '</header>' +
+      // 10-nov: el edificio que se construye va arriba en Inicio.
+      tarjetaObra() +
       (justo
         ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
             '<h2 class="h3" id="titulo-plazo">' + razon + ' ' + ayuda('tu-limite') + '</h2>' + salidaPrincipalHtml() + '</section>'
@@ -1631,8 +1633,6 @@
         '<input type="range" id="rango-mensual" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '" aria-valuetext="' + formatoRedondeado(mensual) + ' al mes: ' + textoMesesRango(x.desde.meses, x.hasta.meses) + '">' +
         '<p class="delta-plazo" id="delta-plazo" aria-live="polite">' + textoDelta(x.hasta.meses, x.hasta.meses) + '</p>' +
       '</section>' +
-      // Comentario 9-nov: Tu pie va arriba de "Después, pagas al mes".
-      tarjetaObra() +
       '<section class="tarjeta bloque despues" aria-labelledby="titulo-despues">' +
         '<p class="etiqueta" id="titulo-despues">Después, pagas al mes</p>' +
         '<strong class="numero">' + rangoUF(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
@@ -1932,8 +1932,9 @@
         '<p class="texto-apoyo">' + textoRango(rango) + SEP +
           '<button type="button" class="enlace" id="btn-cambiar-departamento" aria-haspopup="dialog">Cambiar</button></p>' +
       '</header>' +
-      protagonista +
+      // 10-nov: el edificio que se construye va arriba en Inicio.
       tarjetaObra() +
+      protagonista +
       (justo ? '' : datos) +
       animosInicio() +
       tarjetaSiguientePaso();
@@ -6138,6 +6139,7 @@
         '<h1 id="titulo-inicio" class="h2" tabindex="-1">Tu camino</h1>' +
         '<p class="texto-apoyo">Arriendo con opción de compra' + SEP + '<a class="enlace" href="#explorar/arriendo-opcion/' + esc(u.id) + '">' + esc(u.nombre) + '</a></p>' +
       '</header>' +
+      (tuyo ? '' : tarjetaObra()) +
       (tuyo
         ? '<section class="noche sin-slider" aria-labelledby="titulo-plazo"><span class="noche-luna" aria-hidden="true"></span>' +
             '<p class="noche-etiqueta" id="titulo-plazo">¡Es tuyo!</p><strong class="numero noche-plazo">' + esc(u.nombre) + '</strong>' +
@@ -6160,7 +6162,6 @@
             '<input type="range" id="rango-mensual" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '">' +
             '<p class="delta-plazo" id="delta-plazo" aria-live="polite">Hasta mudarte: para juntar el 5' + NBSP + '%</p>' +
           '</section>' : '') +
-      (tuyo ? '' : tarjetaObra()) +
       (tuyo ? '' : '<section class="tarjeta bloque despues" aria-labelledby="titulo-despues">' +
         '<p class="etiqueta" id="titulo-despues">' + (vive ? 'Hoy pagas al mes' : 'Al mudarte, pagas al mes') + '</p>' +
         '<strong class="numero">' + formatoRedondeado(a.mensualidad) + '</strong>' +
