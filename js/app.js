@@ -7377,6 +7377,21 @@
   // Historial propio de rutas: si la nueva es la anterior, es "Atrás" y se recupera dónde estaba.
   var pilaRutas = [];
   var primeraPantalla = true;
+  // 10-nov: en las páginas largas, el mismo "volver" de arriba se repite al final, para no tener que subir.
+  function ponerVolverAbajo(pantalla) {
+    if (!pantalla) return;
+    pantalla.querySelectorAll('.volver-abajo').forEach(function (x) { x.remove(); });
+    var arriba = pantalla.querySelector('a.enlace.volver');
+    if (!arriba || !arriba.getAttribute('href')) return;
+    if (pantalla.scrollHeight < window.innerHeight * 1.3) return;
+    var a = document.createElement('a');
+    a.className = 'btn btn-terciario btn-bloque volver-abajo';
+    a.href = arriba.getAttribute('href');
+    var donde = arriba.textContent.trim();
+    a.innerHTML = '<svg aria-hidden="true"><use href="#i-flecha"/></svg>' + (donde.length <= 14 ? 'Volver a ' + esc(donde) : 'Volver');
+    a.setAttribute('aria-label', 'Volver a ' + donde);
+    pantalla.appendChild(a);
+  }
   function mostrar() {
     cerrarHoja(false);
     cerrarToastViejo();
@@ -7410,6 +7425,7 @@
     window.scrollTo(0, yVolver);
     // S11-F1: la pantalla que entra hace un fundido corto (la que sale no se anima).
     var visible = $('pantalla-' + destino.pantalla);
+    ponerVolverAbajo(visible);
     // Al cambiar de pantalla, el foco va a su título: así el lector de pantalla anuncia dónde llegó.
     if (!primeraPantalla) {
       var titulo = visible.querySelector('h1');

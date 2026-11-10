@@ -3273,3 +3273,7 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .cn-grua .cn-grua-cabina { fill: var(--blue-normal); }
 .cn-grua .cn-grua-peso { fill: var(--gray-semidark); }
 .cn-grua .cn-grua-viga { fill: var(--yellow-normal); stroke: var(--yellow-dark); stroke-width: 1; }
+/* 10-nov: volver al final de las páginas largas. */
+.volver-abajo { margin: 24px 0 8px; gap: 8px; }
+.volver-abajo svg { width: 18px; height: 18px; transform: rotate(90deg); fill: none; stroke: currentColor; }
+.pantalla:has(.accion-fija) .volver-abajo { margin-bottom: 96px; }
