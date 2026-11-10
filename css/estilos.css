@@ -3277,3 +3277,13 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .volver-abajo { margin: 24px 0 8px; gap: 8px; }
 .volver-abajo svg { width: 18px; height: 18px; transform: rotate(90deg); fill: none; stroke: currentColor; }
 .pantalla:has(.accion-fija) .volver-abajo { margin-bottom: 96px; }
+/* 10-nov: la grúa se mueve para que se entienda que está construyendo. El carro va y viene por la pluma
+   y el cable baja la viga hasta el edificio. Sin movimiento si la persona lo pidió (prefers-reduced-motion). */
+.cn-grua .cn-grua-trolley { fill: var(--gray-semidark); }
+.cn-grua .cn-grua-cable { stroke-width: 1.2; transform-box: fill-box; transform-origin: 50% 0; animation: grua-cable 6s var(--ease-mover) infinite; }
+.cn-grua .cn-grua-viga { animation: grua-viga 6s var(--ease-mover) infinite; }
+.cn-grua-carro { animation: grua-carro 6s var(--ease-mover) infinite; }
+@keyframes grua-carro { 0%, 100% { transform: translateX(0); } 30%, 70% { transform: translateX(-24px); } }
+@keyframes grua-cable { 0%, 30%, 100% { transform: scaleY(1); } 50%, 60% { transform: scaleY(4); } 70% { transform: scaleY(1); } }
+@keyframes grua-viga { 0%, 30%, 100% { transform: translateY(0); } 50%, 60% { transform: translateY(36px); } 70% { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .cn-grua-carro, .cn-grua .cn-grua-cable, .cn-grua .cn-grua-viga { animation: none; } }
