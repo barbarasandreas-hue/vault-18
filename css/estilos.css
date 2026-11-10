@@ -3227,3 +3227,6 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .horarios-visita .btn { text-transform: none; letter-spacing: 0; font-size: 16px; }
 .detalle-accion .btn-sm { justify-self: center; min-height: 36px; font-size: 14px; }
 .detalle-accion .sello { justify-self: start; margin: 0; }
+.visita-bloque { display: grid; gap: 8px; justify-items: start; margin-top: 16px; }
+.visita-bloque:empty { display: none; }
+.visita-bloque .aviso { justify-self: stretch; }

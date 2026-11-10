@@ -2658,20 +2658,24 @@
     return [{ fecha: en(martes), hora: '18:30' }, { fecha: en(sabado), hora: '11:00' }, { fecha: en(sabado + 7), hora: '11:00' }]
       .sort(function (a, b) { return a.fecha < b.fecha ? -1 : 1; });
   }
+  // Comentario 10-nov: la barra fija lleva solo el botón; lo que explica (cuánto falta, la fecha) va en la página.
   function accionVisita(p) {
     var v = estado.visitas[p.id];
-    if (v && v.fue) return '<p class="sello">' + icono('i-ok') + 'Ya lo visitaste</p>' +
-      '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-comprar">Elegir este departamento</button>';
-    if (v) return '<p class="aviso">Tu visita: ' + textoVisita(v) + '</p>' +
-      '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-ya-visite">Ya lo visité</button>' +
+    if (v && v.fue) return '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-comprar">Elegir este departamento</button>';
+    if (v) return '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-ya-visite">Ya lo visité</button>';
+    var meta = metaCompra(p), tengo = ahorradoTuPie(meta), umbral = Math.ceil(meta / 2);
+    if (tengo < umbral) return '<a href="#pie" class="btn btn-secundario-dark btn-lg btn-bloque">Juntar mi pie</a>';
+    return '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-agendar" aria-haspopup="dialog">Agendar visita</button>';
+  }
+  function infoVisita(p) {
+    var v = estado.visitas[p.id];
+    if (v && v.fue) return '<p class="sello visita-info">' + icono('i-ok') + 'Ya lo visitaste</p>';
+    if (v) return '<p class="aviso visita-info">Tu visita: ' + textoVisita(v) + '</p>' +
       '<button type="button" class="btn btn-terciario btn-sm" id="btn-agendar" aria-haspopup="dialog">Cambiar la visita</button>';
     var meta = metaCompra(p), tengo = ahorradoTuPie(meta), umbral = Math.ceil(meta / 2);
-    if (tengo < umbral) {
-      var falta = umbral - tengo, m = mesesParaMeta(falta, estado.ahorroMensual);
-      return '<p class="aviso">Visitas con la mitad de tu pie: te faltan ' + formatoRedondeado(falta) + (m ? ', unos ' + textoMeses(m) : '') + '.</p>' +
-        '<a href="#pie" class="btn btn-secundario-dark btn-lg btn-bloque">Juntar mi pie</a>';
-    }
-    return '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-agendar" aria-haspopup="dialog">Agendar visita</button>';
+    if (tengo >= umbral) return '';
+    var falta = umbral - tengo, m = mesesParaMeta(falta, estado.ahorroMensual);
+    return '<p class="aviso visita-info">Visitas con la mitad de tu pie: te faltan ' + formatoRedondeado(falta) + (m ? ', unos ' + textoMeses(m) : '') + '.</p>';
   }
   function abrirAgenda(p, boton, alListo) {
     var hs = horariosVisita();
@@ -2866,6 +2870,7 @@
       '</section>') +
 
       // Evaluación heurística (punto 3): la acción principal queda fija abajo mientras se lee el detalle.
+      (ctx === 'camino' && /btn-(comprar|ya-visite|agendar)|href="#pie"/.test(comprar) ? '<div class="visita-bloque">' + infoVisita(p) + '</div>' : '') +
       '<div class="acciones accion-fija detalle-accion">' + comprar + '</div>';
 
     iniciarGalerias(contenedor);
