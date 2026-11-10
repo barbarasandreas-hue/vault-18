@@ -120,6 +120,7 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
   - El monto exacto ("$9.752.938") aparece solo en la simulación, la preaprobación y Firmar.
   - Un atajo (compra en grupo, regalo, IVA cero) nunca se da por aplicado si la persona no lo eligió: se muestra como posibilidad ("podrías llegar 3 meses antes").
   - Una sola cifra grande por pantalla, en la unidad que la persona siente: dinero al mes o meses. Los millones, como máximo una vez.
+  - En Inicio, el plazo del pie va en meses ("15 a 27 meses"); si pasa de un año, debajo y en chico: "aprox. 1 año y 3 meses a 2 años y 3 meses" (10-nov, `mesesRango` y `aproxRango`).
 
 ## Stack técnico
 

@@ -3242,3 +3242,6 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .obra-en-noche .btn-primario { background: var(--white); border-color: var(--white); color: var(--blue-dark); }
 .obra-en-noche .btn-primario:hover { background: var(--blue-20); border-color: var(--blue-20); }
 .obra-en-noche .btn-primario:focus-visible { outline: 3px solid var(--white); outline-offset: 2px; }
+/* 10-nov: el plazo del pie en meses; los años, en chico debajo. */
+.noche-aprox { display: block; margin: 0; font-size: 14px; color: var(--white); opacity: .9; }
+.noche-aprox:empty { display: none; }

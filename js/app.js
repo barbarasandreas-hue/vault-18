@@ -1373,6 +1373,18 @@
     var desde = eligio ? numerosCamino(idc, rango.desde, pf).meses : plazoRango(pf, rango).desde.numeros.meses;
     return { desde: desde, techo: rr.todaviaNo && !eligio ? desde : nc.meses };
   }
+  // 10-nov: el plazo del pie va en meses; si pasa del año, abajo y en chico va "aprox. 1 año y 3 meses".
+  function mesesRango(a, b) {
+    if (a === null || b === null || a === undefined || b === undefined) return '—';
+    if (a === b) return a === 0 ? 'Ya' : (a === 1 ? '1 mes' : a + ' meses');
+    return (a === 0 ? 'Ya' : a) + ' a ' + b + ' meses';
+  }
+  function aproxRango(a, b) {
+    if (a === null || b === null || a === undefined || b === undefined || Math.max(a, b) < 12) return '';
+    return 'aprox. ' + (a === b ? textoMeses(a) : textoMesesRango(a, b));
+  }
+  function mesesPlazos(x) { return x.techo === null ? '—' : mesesRango(x.desde !== null ? x.desde : x.techo, x.techo); }
+  function aproxPlazos(x) { return x.techo === null ? '' : aproxRango(x.desde !== null ? x.desde : x.techo, x.techo); }
   function textoPlazos(x) {
     if (x.desde !== null && x.techo !== null && x.desde !== x.techo) return (x.desde === 0 ? 'Ya' : x.techo >= 12 ? textoMeses(x.desde) : x.desde) + ' a ' + textoMeses(x.techo);
     return x.techo === null ? '—' : textoPlazoMeses(x.techo);
@@ -1620,7 +1632,8 @@
         : '<section class="noche" aria-labelledby="titulo-plazo">' +
             '<span class="noche-luna" aria-hidden="true"></span>' +
             '<p class="noche-etiqueta" id="titulo-plazo">' + etiquetaLlaves(x.hasta.meses) + '</p>' +
-            '<strong class="numero noche-plazo' + claseLargo(textoMesesRango(x.desde.meses, x.hasta.meses)) + '" id="numero-plazo" aria-live="polite">' + textoMesesRango(x.desde.meses, x.hasta.meses) + '</strong>' +
+            '<strong class="numero noche-plazo' + claseLargo(mesesRango(x.desde.meses, x.hasta.meses)) + '" id="numero-plazo" aria-live="polite">' + mesesRango(x.desde.meses, x.hasta.meses) + '</strong>' +
+            '<span class="noche-aprox" id="plazo-aprox">' + aproxRango(x.desde.meses, x.hasta.meses) + '</span>' +
             '<span class="oculto-visual" id="llaves-fecha">' + textoLlavesRango(x) + '</span>' +
             '<span class="freno-llaves" id="freno-llaves">' + FRENO[x.hasta.freno] + '</span>' +
             (techoJusto ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(x.deptos.hasta.listaUF) + ' te dejan poco para vivir.</p>' : '') +
@@ -1651,8 +1664,9 @@
       var y = plazoVivir(v);
       $('valor-mensual').textContent = formatoRedondeado(v);
       if ($('numero-plazo')) {
-        var tp = textoMesesRango(y.desde.meses, y.hasta.meses);
+        var tp = mesesRango(y.desde.meses, y.hasta.meses);
         $('numero-plazo').textContent = tp;
+        $('plazo-aprox').textContent = aproxRango(y.desde.meses, y.hasta.meses);
         $('numero-plazo').classList.toggle('largo', !!claseLargo(tp));
         $('titulo-plazo').textContent = etiquetaLlaves(y.hasta.meses);
         $('llaves-fecha').textContent = textoLlavesRango(y);
@@ -1902,6 +1916,7 @@
           '<span class="noche-estrella" style="left:64%;top:12px" aria-hidden="true"></span><span class="noche-estrella" style="left:74%;top:30px" aria-hidden="true"></span><span class="noche-estrella" style="left:60%;top:32px" aria-hidden="true"></span>' +
           '<p class="noche-etiqueta" id="titulo-plazo">Tu ventana se enciende en</p>' +
           '<strong class="numero noche-plazo" id="numero-plazo" aria-live="polite"></strong>' +
+          '<span class="noche-aprox" id="plazo-aprox"></span>' +
           '<p class="noche-sub">' + subtitulo + '</p>' +
           (r.todaviaNo && !eligio ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(rango.hasta) + ' te dejan poco para vivir.</p>' : '') +
           tarjetaObra(true) +
@@ -1937,8 +1952,9 @@
     iniciarSiguientePaso();
 
     if ($('numero-plazo')) {
-      if (plazo.desde !== null && plazo.techo !== null && plazo.desde !== plazo.techo) $('numero-plazo').textContent = textoPlazos(plazo);
-      else contarHasta($('numero-plazo'), plazoMostrado, plazo.techo, function (v) { return v === null ? '—' : textoPlazoMeses(v); });
+      if (plazo.desde !== null && plazo.techo !== null && plazo.desde !== plazo.techo) $('numero-plazo').textContent = mesesPlazos(plazo);
+      else contarHasta($('numero-plazo'), plazoMostrado, plazo.techo, function (v) { return v === null ? '—' : v === 0 ? 'Ya lo tienes' : mesesRango(v, v); });
+      $('plazo-aprox').textContent = aproxPlazos(plazo);
       plazoMostrado = plazo.techo;
     }
     var rangoMensual = $('rango-mensual');
@@ -1953,7 +1969,8 @@
         var v = pintar();
         var x = plazosCon(perfil, v);
         $('valor-mensual').textContent = formatoPesos(v);
-        $('numero-plazo').textContent = textoPlazos(x);
+        $('numero-plazo').textContent = mesesPlazos(x);
+        $('plazo-aprox').textContent = aproxPlazos(x);
         rangoMensual.setAttribute('aria-valuetext', formatoPesos(v) + ' al mes: ' + textoPlazos(x));
         // La ventana brilla un instante cuando el plazo cambia.
         var ventana = $('mi-ventana');
@@ -2025,7 +2042,8 @@
       '<span class="noche-luna" aria-hidden="true"></span>' +
       // Comentario 9-nov: la cifra es cuándo logras tu pie; las llaves (que pueden esperar la entrega) van debajo.
       '<p class="noche-etiqueta" id="titulo-cuando">Logras tu pie en</p>' +
-      '<strong class="numero noche-plazo">' + (mesesPie === 0 ? 'Ya' : textoMeses(mesesPie)) + '</strong>' +
+      '<strong class="numero noche-plazo">' + mesesRango(mesesPie, mesesPie) + '</strong>' +
+      (aproxRango(mesesPie, mesesPie) ? '<span class="noche-aprox">' + aproxRango(mesesPie, mesesPie) + '</span>' : '') +
       '<p class="noche-sub">Tus llaves: ' + fechaLlaves(pl.meses, hoyDemo()) + '</p>' +
       tarjetaObra(true) +
     '</section>';
