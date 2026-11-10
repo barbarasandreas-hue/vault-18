@@ -1554,7 +1554,7 @@
     if (d < 0) return '↓ Te demoras ' + textoMeses(-d) + ' más que con lo que juntas hoy';
     return 'Mueve para ver qué cambia.';
   }
-  // S24-B1: el dividendo se muestra en UF y debajo cuánto es hoy en pesos.
+  // S24-B1 (10-nov): la UF va chica, bajo el monto en pesos.
   function rangoUF(desde, hasta) {
     var a = ufDecimales(Math.min(desde, hasta) / SUPUESTOS.uf, 1), b = ufDecimales(Math.max(desde, hasta) / SUPUESTOS.uf, 1);
     return a === b ? b : a + ' a ' + b.replace('UF\u00a0', '');
@@ -1568,7 +1568,7 @@
     return '<div class="vs-arriendo" aria-hidden="true">' +
       '<p><span>Tu arriendo hoy</span><strong>' + formatoRedondeado(estado.arriendoActual) + '</strong></p>' +
       '<span class="b gris"><i style="width:' + (estado.arriendoActual / max * 100).toFixed(1) + '%"></i></span>' +
-      '<p><span>Tu dividendo</span><span><strong>' + ufDecimales(div / SUPUESTOS.uf, 2) + '</strong> <span class="hoy">' + SEP + 'hoy ' + formatoRedondeado(div) + '</span></span></p>' +
+      '<p><span>Tu dividendo</span><span><strong>' + formatoRedondeado(div) + '</strong> <span class="hoy">' + SEP + ufDecimales(div / SUPUESTOS.uf, 2) + '</span></span></p>' +
       '<span class="b azul"><i style="width:' + (div / max * 100).toFixed(1) + '%"></i></span>' +
     '</div>';
   }
@@ -1649,8 +1649,9 @@
       '</section>' +
       '<section class="tarjeta bloque despues" aria-labelledby="titulo-despues">' +
         '<p class="etiqueta" id="titulo-despues">Después, pagas al mes</p>' +
-        '<strong class="numero">' + rangoUF(x.desde.dividendo, x.hasta.dividendo) + '</strong>' +
-        '<p class="hoy-pesos">hoy son ' + formatoRango(x.desde.dividendo, x.hasta.dividendo).replace(/^entre /, '') + '</p>' +
+        // 10-nov: primero en pesos y, más chico, en UF (en toda la app).
+        '<strong class="numero">' + formatoRango(x.desde.dividendo, x.hasta.dividendo).replace(/^entre /, '').replace(' y ', ' a ') + '</strong>' +
+        '<p class="hoy-pesos">' + rangoUF(x.desde.dividendo, x.hasta.dividendo) + '</p>' +
         vsArriendo(x.hasta.dividendo) +
         '<a class="dueno-link" href="#camino/dueno">Ver todo lo que pagarías como dueño ›</a>' +
       '</section>' +
@@ -2838,8 +2839,8 @@
             '<li><span>Precio' + (enGrupo ? ' con descuento' : p.tipo === 'venta' && piezasValidas(piezasOn()).iva ? ' sin IVA' : '') + '</span><strong>' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong></li>' +
             (enGrupo ? '<li><span>Ahorras en grupo hoy</span><strong>' + formatoRedondeado(r.ahorro) + '</strong></li>' : '') +
             '<li><span>Juntas antes de firmar</span><strong>' + formatoRedondeado(pd.meta) + '</strong></li>' +
-            '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2) + '</strong><small>hoy son ' + formatoRedondeado(pd.dividendo) + '</small></span></li>' +
-            '<li class="suave"><span>Sin subsidio a la tasa</span><span>' + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + SEP + 'hoy ' + formatoRedondeado(pd.dividendoSinSubsidio) + '</span></li>' +
+            '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + formatoRedondeado(pd.dividendo) + '</strong><small>' + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2) + '</small></span></li>' +
+            '<li class="suave"><span>Sin subsidio a la tasa</span><span>' + formatoRedondeado(pd.dividendoSinSubsidio) + SEP + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + '</span></li>' +
           '</ul>' +
           grupoPosible +
           '<a class="tarjeta dueno-card" href="#camino/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
@@ -2877,7 +2878,7 @@
           '<li><span>Rentabilidad</span><strong>6\u00a0% al año en UF</strong></li>' +
           '<li><span>Plazo</span><strong>' + textoPlazo(plazoRecompra(r.porFinanciarUF, r.netoMensualUF, 1)) + '</strong></li>' +
           '<li><span>Tu respaldo</span><strong>Parte del departamento ' + ayuda('participacion') + '</strong></li>' +
-          '<li><span>Falta por financiar</span><strong>' + formatoUF(r.faltaUF) + ' = ' + formatoPesos(ufAPesos(r.faltaUF)) + '</strong></li>' +
+          '<li><span>Falta por financiar</span><span class="en-uf"><strong>' + formatoRedondeado(ufAPesos(r.faltaUF)) + '</strong><small>' + formatoUF(r.faltaUF) + '</small></span></li>' +
         '</ul>' +
         (conjunto ? casaParticipacion(r) : '') +
         '<p class="frase-cierre">Ganancias y pérdidas, según la parte de cada uno. ' + ayuda('cuenta-custodia') + '</p>' +
@@ -3085,7 +3086,7 @@
       return '<li class="tarjeta inversion">' +
         '<a class="enlace" href="#inversiones/' + esc(p.id) + '">' + esc(p.nombre) + '</a>' +
         (x.respaldo ? '<p class="chip-fila"><span class="chip chip-propuesta">Comprador de respaldo</span></p>' : '') +
-        '<p class="inversion-fila"><span>Invertiste</span><strong>' + formatoUF(x.montoUF) + '</strong></p>' +
+        '<p class="inversion-fila"><span>Invertiste</span><span class="en-uf"><strong>' + formatoRedondeado(ufAPesos(x.montoUF)) + '</strong><small>' + formatoUF(x.montoUF) + '</small></span></p>' +
         '<p class="inversion-fila"><span>Recibes el próximo mes</span><strong>' + formatoPesos(proximo) + '</strong></p>' +
         barraAvance('Meses de recompra', Math.min(x.cuotasCobradas, total) + ' de ' + total, avance(x.cuotasCobradas, total)) +
       '</li>';
@@ -3683,7 +3684,7 @@
             '<div class="pp-dos">' +
               '<div class="tarjeta pp-dato"><span class="circulo-icono verde" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 16a8 8 0 0 1 16 0M12 16l3-5"/></svg></span><small>Parte de tu sueldo</small><strong>' + (cargaV !== null ? formatoPorcentaje(cargaV, 1) : '—') + '</strong>' +
                 (ev ? '<span class="carga-chip ' + ev.nivel + '">' + (ev.nivel === 'limite' ? 'Justo' : ev.nivel === 'no-aprueba' ? 'Alto' : 'Holgado') + '</span>' : '') + '</div>' +
-              '<div class="tarjeta pp-dato"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span><small>Dividendo máximo</small><strong>' + ufDecimales(r.dividendo / SUPUESTOS.uf, 2) + '</strong><small>al mes' + SEP + 'hoy son ' + formatoPesos(r.dividendo) + '</small></div>' +
+              '<div class="tarjeta pp-dato"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span><small>Dividendo máximo</small><strong>' + formatoRedondeado(r.dividendo) + '</strong><small>al mes' + SEP + ufDecimales(r.dividendo / SUPUESTOS.uf, 2) + '</small></div>' +
             '</div>' +
             '<p class="pp-vence">' + icono('i-pronto') + '<span><strong>La preaprobación vence.</strong> Su vigencia la confirma Bci. Conviene pedirla con tu pie casi listo.</span></p>'
           : '<div class="tarjeta protagonista aprobado no-alcanza">' +
@@ -4099,7 +4100,7 @@
       (e.subsidio ? '<p class="firma-fila"><span>Subsidio del Estado</span><strong>' + formatoPesos(e.subsidio) + '</strong></p>' : '') +
       '<p class="firma-fila"><span>Plazo</span><strong>30 años</strong></p>' +
       '<p class="firma-fila"><span>Tasa de ejemplo ' + info('tasa-ejemplo') + '</span><strong>' + formatoPorcentaje(SUPUESTOS.tasaBci, 2) + '</strong></p>' +
-      '<p class="firma-fila suave"><span>Sin subsidio a la tasa</span><span>' + ufDecimales(e.dividendoSinSubsidio / SUPUESTOS.uf, 2) + SEP + 'hoy ' + formatoPesos(e.dividendoSinSubsidio) + '</span></p>';
+      '<p class="firma-fila suave"><span>Sin subsidio a la tasa</span><span>' + formatoPesos(e.dividendoSinSubsidio) + SEP + ufDecimales(e.dividendoSinSubsidio / SUPUESTOS.uf, 2) + '</span></p>';
     var segunda = arrendar && e.pctInversionistas === 0 ? ''
       : arrendar
       ? filaFirma('Participación de los inversionistas ' + ayuda('participacion'),
@@ -4130,7 +4131,7 @@
       '<section class="tarjeta firma-doc" aria-labelledby="titulo-firma">' +
         '<div class="firma-doc-cabeza"><span class="firma-doc-icono" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2.5h8l4 4V21.5H6zM14 2.5v4h4M9 11h6M9 14.5h6M9 18h4"/></svg></span>' +
           '<span><h2 id="titulo-firma">Lo que firmas</h2><small>' + esc(p.nombre) + SEP + esc(p.comuna) + '</small></span></div>' +
-        (arrendar ? '' : '<div class="firma-monto"><span>Pagas al mes</span><span><strong>' + ufDecimales(e.dividendo / SUPUESTOS.uf, 2) + '</strong><small>hoy son ' + formatoPesos(e.dividendo) + '</small></span></div>') +
+        (arrendar ? '' : '<div class="firma-monto"><span>Pagas al mes</span><span><strong>' + formatoPesos(e.dividendo) + '</strong><small>' + ufDecimales(e.dividendo / SUPUESTOS.uf, 2) + '</small></span></div>') +
         filasVivir +
         (arrendar ? '<ul class="lista-check">' + credito + segunda + '</ul>' : nota) +
       '</section>' +
@@ -4968,7 +4969,7 @@
         return '<li><span class="punto tramo-' + t.clave + '" aria-hidden="true"></span>' + icono(t.icono) + '<span>' + t.nombre + '</span><strong>' + formatoPesos(t.monto) + '</strong></li>';
       }).join('') + '</ul>' +
       '<ul class="datos-inversion"><li><span>Te prestan hasta</span><strong>' +
-        formatoUF(capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo) || 0) + '</strong></li></ul>' +
+        formatoRedondeado(ufAPesos(capacidadCompraUF(estado.sueldoPropio, estado.sueldoPareja, estado.modo) || 0)) + '</strong></li></ul>' +
     '</section>';
   }
 
@@ -6056,8 +6057,8 @@
           '<h3 class="tp-nombre"><a class="usado-enlace" href="#explorar/usados/' + esc(u.id) + '">' + titulo + '</a></h3>' +
           '<p class="tp-ficha">' + esc(u.comuna) + SEP + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + SEP + plural(u.banos || 1, 'baño', 'baños') + SEP + u.m2 + NBSP + 'm²</p>' +
           '<p class="tp-etiqueta">Precio</p>' +
-          '<p class="usado-precio"><strong class="tp-cifra">' + formatoUF(u.listaUF) + '</strong> <span>' + formatoRedondeado(ufAPesos(u.listaUF)) + '</span></p>' +
-          '<p class="tp-linea">Pie de ' + formatoUF(u.listaUF * 0.2) + (calza ? SEP + 'calza con DS1' : '') + '</p>' +
+          '<p class="usado-precio"><strong class="tp-cifra">' + formatoRedondeado(ufAPesos(u.listaUF)) + '</strong> <span>' + formatoUF(u.listaUF) + '</span></p>' +
+          '<p class="tp-linea">Pie de ' + formatoRedondeado(ufAPesos(u.listaUF * 0.2)) + (calza ? SEP + 'calza con DS1' : '') + '</p>' +
           '<p class="usado-ver" aria-hidden="true">Ver departamento ›</p>' +
         '</li>';
       }).join('') + '</ul>' : '<p class="texto-apoyo">' + (filtroUsados.fav ? 'Todavía no guardas ninguno.' : 'Ninguno con estos filtros.') + '</p>') +
@@ -6113,7 +6114,7 @@
         '<li><span>Pie (20' + NBSP + '%)</span><strong>' + formatoRedondeado(pie) + '</strong></li>' +
         '<li><span>Gastos de escritura</span><strong>' + formatoRedondeado(gastos) + '</strong></li>' +
         '<li><span>Juntas antes de firmar</span><strong>' + formatoRedondeado(meta) + '</strong></li>' +
-        '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + ufDecimales(dividendo / SUPUESTOS.uf, 2) + '</strong><small>hoy son ' + formatoRedondeado(dividendo) + '</small></span></li>' +
+        '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + formatoRedondeado(dividendo) + '</strong><small>' + ufDecimales(dividendo / SUPUESTOS.uf, 2) + '</small></span></li>' +
       '</ul>' +
       '<p class="texto-apoyo usado-nota"><small>Bci presta el 80' + NBSP + '% a 30 años. Un usado no tiene subsidio a la tasa ni garantía del Estado, por eso el pie es más alto.</small></p>' +
       (vivir ? barrioHtml(u) : '') +
@@ -6223,7 +6224,7 @@
         '<strong class="numero">' + formatoRedondeado(a.mensualidad) + '</strong>' +
         '<ul class="detalle-filas"><li><span>Arriendo</span><strong>' + formatoRedondeado(a.arriendo) + '</strong></li>' +
           '<li><span>Va a tu pie</span><strong>' + formatoRedondeado(a.aporte) + '</strong></li>' +
-          '<li><span>Al comprar, dividendo</span><span class="en-uf"><strong>' + ufDecimales(a.dividendo / SUPUESTOS.uf, 2) + '</strong><small>hoy son ' + formatoRedondeado(a.dividendo) + '</small></span></li></ul>' +
+          '<li><span>Al comprar, dividendo</span><span class="en-uf"><strong>' + formatoRedondeado(a.dividendo) + '</strong><small>' + ufDecimales(a.dividendo / SUPUESTOS.uf, 2) + '</small></span></li></ul>' +
         '<a class="dueno-link" href="#explorar/arriendo-opcion/' + esc(u.id) + '">Ver el departamento ›</a>' +
       '</section>') +
       animosInicio() +
@@ -6321,10 +6322,10 @@
         '<li><span>Pagas al mes</span><strong>' + formatoRedondeado(a.mensualidad) + '</strong></li>' +
         (a.pctIngreso !== null ? '<li class="suave"><span>Es de tu ingreso</span><span>' + formatoPorcentaje(a.pctIngreso, 0) + '</span></li>' : '') +
         '<li><span>Para entrar, el 5' + NBSP + '%</span><strong>' + formatoRedondeado(a.entrada) + '</strong></li>' +
-        '<li><span>Precio de compra, fijo</span><span class="en-uf"><strong>' + formatoUF(u.listaUF) + '</strong><small>hoy son ' + formatoRedondeado(ufAPesos(u.listaUF)) + '</small></span></li>' +
+        '<li><span>Precio de compra, fijo</span><span class="en-uf"><strong>' + formatoRedondeado(ufAPesos(u.listaUF)) + '</strong><small>' + formatoUF(u.listaUF) + ' fijo</small></span></li>' +
         '<li><span>Juntas antes de comprar</span><strong>' + formatoRedondeado(a.meta) + '</strong></li>' +
-        '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + ufDecimales(a.dividendo / SUPUESTOS.uf, 2) + '</strong><small>hoy son ' + formatoRedondeado(a.dividendo) + '</small></span></li>' +
-        '<li class="suave"><span>Peor caso</span><span>' + ufDecimales(a.dividendoPeor / SUPUESTOS.uf, 2) + SEP + 'hoy ' + formatoRedondeado(a.dividendoPeor) + '</span></li>' +
+        '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + formatoRedondeado(a.dividendo) + '</strong><small>' + ufDecimales(a.dividendo / SUPUESTOS.uf, 2) + '</small></span></li>' +
+        '<li class="suave"><span>Peor caso</span><span>' + formatoRedondeado(a.dividendoPeor) + SEP + ufDecimales(a.dividendoPeor / SUPUESTOS.uf, 2) + '</span></li>' +
       '</ul>' +
       '<section class="tarjeta bloque" aria-labelledby="ao-cuando"><h2 class="h4" id="ao-cuando">Cuándo pasa a ser tuyo</h2>' +
         '<ol class="arriendo-linea">' + linea.map(function (x, i) {
@@ -6577,7 +6578,7 @@
           '<div class="respaldo-compara">' +
             '<p><small>Sin respaldo</small><strong id="rf-pie10">' + formatoPesos(ufAPesos(respaldoUF * 0.1)) + '</strong><small>10' + NBSP + '% de pie</small></p>' +
             '<p class="con"><small>Con respaldo</small><strong id="rf-pie5">' + formatoPesos(f.pie) + '</strong><small>5' + NBSP + '% de pie</small></p></div>' +
-          '<p class="respaldo-dividendo"><span>Tu dividendo al mes</span><span class="en-uf"><strong id="rf-div-uf">' + ufDecimales(f.dividendo / SUPUESTOS.uf, 2) + '</strong><small id="rf-div">hoy son ' + formatoPesos(f.dividendo) + '</small></span></p>' +
+          '<p class="respaldo-dividendo"><span>Tu dividendo al mes</span><span class="en-uf"><strong id="rf-div">' + formatoPesos(f.dividendo) + '</strong><small id="rf-div-uf">' + ufDecimales(f.dividendo / SUPUESTOS.uf, 2) + '</small></span></p>' +
         '</div>' +
         '<div id="vista-fam" role="tabpanel" aria-labelledby="tab-fam"' + (tu ? ' hidden' : '') + '>' +
           '<p class="respaldo-titular">Deja su dinero guardado, no lo regala</p>' +
@@ -6587,7 +6588,8 @@
         '</div>' +
       '</section>' +
       '<section class="tarjeta bloque si-juntas" aria-labelledby="rf-precio">' +
-        '<p class="si-juntas-fila"><label for="rf-rango" id="rf-precio">Si tu departamento cuesta</label><strong class="numero" id="rf-uf">' + formatoUF(respaldoUF) + '</strong></p>' +
+        '<p class="si-juntas-fila"><label for="rf-rango" id="rf-precio">Si tu departamento cuesta</label><strong class="numero" id="rf-uf">' + formatoRedondeado(ufAPesos(respaldoUF)) + '</strong></p>' +
+        '<p class="texto-apoyo rf-uf-chico"><small id="rf-uf-chico">' + formatoUF(respaldoUF) + '</small></p>' +
         '<input type="range" id="rf-rango" min="1500" max="3000" step="100" value="' + respaldoUF + '">' +
         '<p class="texto-apoyo"><small>Mueve la barra: los montos de arriba cambian.</small></p>' +
       '</section>' +
@@ -6619,11 +6621,12 @@
     rango.addEventListener('input', function () {
       respaldoUF = Number(rango.value);
       var g = respaldoFamiliar(respaldoUF);
-      $('rf-uf').textContent = formatoUF(respaldoUF);
+      $('rf-uf').textContent = formatoRedondeado(ufAPesos(respaldoUF));
+      $('rf-uf-chico').textContent = formatoUF(respaldoUF);
       $('rf-pie10').textContent = formatoPesos(ufAPesos(respaldoUF * 0.1));
       $('rf-pie5').textContent = formatoPesos(g.pie);
       $('rf-div-uf').textContent = ufDecimales(g.dividendo / SUPUESTOS.uf, 2);
-      $('rf-div').textContent = 'hoy son ' + formatoPesos(g.dividendo);
+      $('rf-div').textContent = formatoPesos(g.dividendo);
       $('rf-deposito').textContent = formatoRedondeado(g.deposito);
       rango.setAttribute('aria-valuetext', formatoUF(respaldoUF) + ': pones ' + formatoRedondeado(g.pie));
       pintar();

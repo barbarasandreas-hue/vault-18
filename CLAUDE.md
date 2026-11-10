@@ -114,7 +114,7 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
   - Los datos se muestran en filas (etiqueta y monto), no dentro de una oración.
   - No se repite "Es una simulación…": basta una palabra ("simulado") donde haga falta.
   - Se mantienen siempre, aunque sean texto: el sello sin plusvalía, el peor caso (por ejemplo, el dividendo sin subsidio), si un camino existe hoy o es una propuesta, y los avisos de la demo que pide el plan.
-- Los montos se muestran en pesos chilenos, con punto de miles (es-CL).
+- Los montos se muestran en pesos chilenos, con punto de miles (es-CL). Siempre primero en pesos y, más chico debajo o al lado, en UF (10-nov): "$221 mil · UF 5,38". Nunca la UF como cifra principal.
 - **La precisión del número va con lo que la persona ya decidió** (5-nov-2026):
   - Sin departamento elegido, todo sale de su rango de precio y se muestra en rangos y redondeado, con la etiqueta "con tu rango". Ejemplos: "entre $8 y $10 millones", "unos $600 mil al mes", "11 a 15 meses".
   - Con un departamento elegido, se redondea: "$9,8 millones", "$443 mil al mes".
