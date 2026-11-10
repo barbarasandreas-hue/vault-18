@@ -1764,7 +1764,7 @@
   var piezaAbierta = null, mesesLlegaAntes = null;
   // S24-B2: una línea por ayuda, para que se entienda sin abrir el "?".
   var DESC_PIEZA = {
-    grupo: 'Compras con otros y la inmobiliaria baja el precio.',
+    grupo: 'Te unes a otros para comprar, cada uno su departamento, y baja el precio.',
     subsidio: 'El Estado pone UF que se suman a tu pie.',
     iva: 'Algunos departamentos nuevos no cobran IVA.',
     regalo: 'Tu familia aporta a tu pie con un enlace.',
@@ -5534,7 +5534,7 @@
     ds1: ['Subsidio del Estado para tu primera vivienda. Se postula en línea en el Minvu.', 'Ya postulé'],
     rsh: ['Lo pide el DS1. Te inscribes en línea con tu ClaveÚnica.', 'Ya me inscribí'],
     documentos: ['Liquidaciones de sueldo, cotizaciones y carnet. Si eres cliente Bci, ya los tenemos.', 'Completar'],
-    'bajo-llave': ['Para sacar plata de tu pie avisas 30 días antes. Así no se gasta.', 'Guardar bajo llave'],
+    'bajo-llave': ['Para sacar dinero de tu pie avisas 30 días antes. Así no se gasta.', 'Guardar bajo llave'],
     'ahorro-auto': ['Bci pasa tu cuota a tu cuenta de vivienda el día de pago.', 'Activar'],
     equipo: ['Suma a tu pareja o familia para que te acompañen.', null],
     elegir: ['Mira tus caminos y elige un departamento.', null]
@@ -5624,11 +5624,11 @@
 
   // ---------- S21-B4: Explorar, caminos primero ----------
   var LINEA_CAMINO = {
-    'grupo-vivir': 'Compras con otros y pagas menos. Edificios en obra.',
+    'grupo-vivir': 'Te unes a otras personas para comprar; cada uno con su departamento.',
     'individual-vivir': 'Bci te presta hasta el 90' + NBSP + '% con la garantía del Estado.',
     'grupo-pie-compartido': 'Compras en grupo y unos inversionistas ponen parte del pie.',
     'pie-compartido': 'Pones el 5' + NBSP + '% y unos inversionistas ponen el 15' + NBSP + '%.',
-    'grupo-invertir': 'Compras con otros, en obra, y pagas menos.',
+    'grupo-invertir': 'Te unes a otras personas para comprar; cada uno con su departamento.',
     'individual-invertir': 'Bci presta el 80' + NBSP + '% y tú pones el 20' + NBSP + '%. Sirve para nuevos y usados.'
   };
   // Meses hasta las llaves por un camino. Para vivir, con las piezas que sumaste (igual que Inicio).
@@ -5720,7 +5720,7 @@
   };
   var TEXTO_EXPLORAR = {
     'individual-vivir': 'Bci te presta hasta el 90' + NBSP + '%. Tú juntas solo el 10' + NBSP + '% de pie.',
-    'grupo-vivir': 'Compras con otras personas un edificio en obra y pagan menos.',
+    'grupo-vivir': 'Te unes a otras personas para comprar, pero cada uno con su propio departamento.',
     usados: 'Bci te presta el 80' + NBSP + '%. Sirve para departamentos usados.',
     'arriendo-opcion': 'Te mudas ahora y parte de tu arriendo va a tu pie.'
   };
@@ -5738,7 +5738,7 @@
   // S24-B2: la descripción larga de cada camino (Un camino), como en el canvas.
   var soloFavoritos = false;
   var DESCRIPCION_CAMINO = {
-    'grupo-vivir': 'Te unes con otras personas para comprar departamentos en un mismo edificio en obra. Como compran varios, la inmobiliaria les baja el precio entre 3 y 5' + NBSP + '%: más descuento mientras más se unan.',
+    'grupo-vivir': 'Te unes con otras personas para comprar en un mismo edificio en obra, pero cada uno con su propio departamento, su propio crédito y su propia escritura. Como compran varios, la inmobiliaria les baja el precio entre 3 y 5' + NBSP + '%: más descuento mientras más se unan.',
     'individual-vivir': 'Bci te presta hasta el 90' + NBSP + '% con la garantía del Estado. Tú juntas solo el 10' + NBSP + '% de pie y eliges un departamento nuevo.'
   };
   function chipsPiezas() {
@@ -6537,6 +6537,7 @@
     '<rect x="246" y="52" width="12" height="10" rx="2" fill="#2E4F80"/><rect x="266" y="52" width="12" height="10" rx="2" fill="#FFF499"/><rect x="286" y="52" width="6" height="10" rx="2" fill="#2E4F80"/>' +
     '<rect x="246" y="70" width="12" height="10" rx="2" fill="#FFE300"/><rect x="286" y="70" width="6" height="10" rx="2" fill="#FFE300"/>' +
     '<rect x="262" y="84" width="16" height="20" rx="2" fill="#2772CC"/></svg>';
+  function enlaceRespaldo() { return location.href.split('#')[0] + '#camino/ficha/respaldo-familiar/familiar'; }
   function renderRespaldo(cont) {
     var id = 'respaldo-familiar';
     if (respaldoUF === null) respaldoUF = Math.min(3000, Math.max(1500, Math.round(listaMeta() / 100) * 100));
@@ -6545,13 +6546,13 @@
     var tu = respaldoVista === 'tu';
     var pasos = [['Tu familiar deja el 10' + NBSP + '%', 'Lo guarda en una cuenta Bci con intereses, como garantía.', 'azul'],
       ['Bci te presta el 95' + NBSP + '%', 'Tú pones solo el 5' + NBSP + '% de pie.', 'verde'],
-      ['La plata vuelve a tu familiar', 'Cuando tu deuda baja al 80' + NBSP + '% del valor, el depósito se libera.', 'azul-oscuro']];
+      ['El dinero vuelve a tu familiar', 'Cuando tu deuda baja al 80' + NBSP + '% del valor, el depósito se libera.', 'azul-oscuro']];
     cont.innerHTML =
       '<a href="#explorar" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Explorar</a>' +
       '<section class="respaldo-heroe" aria-labelledby="titulo-ficha">' +
         '<span class="respaldo-chip">Propuesta' + SEP + 'aún no existe en Chile</span>' +
         '<h1 id="titulo-ficha" class="h2">Respaldo familiar</h1>' +
-        '<p>Un familiar te ayuda con el pie <strong>sin regalarte la plata</strong>: la deja guardada en Bci como garantía y la recupera después.</p>' +
+        '<p>Un familiar te ayuda con el pie <strong>sin regalarte el dinero</strong>: la deja guardada en Bci como garantía y la recupera después.</p>' +
         DIBUJO_RESPALDO +
       '</section>' +
       '<section class="tarjeta bloque" aria-labelledby="titulo-vista">' +
@@ -6567,7 +6568,7 @@
           '<p class="respaldo-dividendo"><span>Tu dividendo al mes</span><span class="en-uf"><strong id="rf-div-uf">' + ufDecimales(f.dividendo / SUPUESTOS.uf, 2) + '</strong><small id="rf-div">hoy son ' + formatoPesos(f.dividendo) + '</small></span></p>' +
         '</div>' +
         '<div id="vista-fam" role="tabpanel" aria-labelledby="tab-fam"' + (tu ? ' hidden' : '') + '>' +
-          '<p class="respaldo-titular">Deja su plata guardada, no la regala</p>' +
+          '<p class="respaldo-titular">Deja su dinero guardado, no lo regala</p>' +
           '<p class="respaldo-deposito"><span><small>Deja en Bci</small><strong id="rf-deposito">' + formatoRedondeado(f.deposito) + '</strong></span><small>10' + NBSP + '%' + SEP + 'con intereses</small></p>' +
           '<p class="respaldo-dividendo"><span>La recupera en</span><strong>' + (f.mesesLibera / 12).toFixed(1).replace('.', ',') + ' años</strong></p>' +
           '<p class="texto-apoyo"><small>Cuando tu deuda baja al 80' + NBSP + '%</small></p>' +
@@ -6583,6 +6584,13 @@
         '<ol class="respaldo-pasos">' + pasos.map(function (x, i) {
           return '<li><span class="respaldo-num ' + x[2] + '" aria-hidden="true">' + (i + 1) + '</span><span><strong>' + x[0] + '</strong><small>' + x[1] + '</small></span></li>';
         }).join('') + '</ol>' +
+      '</section>' +
+      // 10-nov: un enlace para mandárselo al familiar (abre esta misma ficha en la vista "Tu familiar").
+      '<section class="tarjeta bloque respaldo-invita" aria-labelledby="rf-invita">' +
+        '<h2 class="h4" id="rf-invita">Cuéntale a tu familiar</h2>' +
+        '<p class="texto-apoyo">Mándale este enlace: verá cómo lo vive y lo pueden conversar.</p>' +
+        '<p class="enlace-copiar"><span id="rf-enlace">' + esc(enlaceRespaldo()) + '</span></p>' +
+        '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-enviar-enlace">Enviar enlace</button>' +
       '</section>' +
       '<p class="respaldo-riesgo">' + icono('i-alerta') + '<span><strong>Lo que hay que saber</strong><small>Si no pagas y hay remate, tu familiar puede perder su depósito.</small></span></p>' +
       '<p class="respaldo-inspira"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Se inspira en Barclays Family Springboard, del Reino Unido.</p>' +
@@ -6607,6 +6615,13 @@
       $('rf-deposito').textContent = formatoRedondeado(g.deposito);
       rango.setAttribute('aria-valuetext', formatoUF(respaldoUF) + ': pones ' + formatoRedondeado(g.pie));
       pintar();
+    });
+    $('btn-enviar-enlace').addEventListener('click', function () {
+      var url = enlaceRespaldo(), texto = 'Mira cómo me podrías ayudar con el pie de mi departamento, sin regalarme el dinero:';
+      if (navigator.share) { navigator.share({ title: 'Respaldo familiar', text: texto, url: url }).catch(function () {}); return; }
+      var listo = function () { toast('Enlace copiado. Pégalo en un mensaje a tu familiar.'); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(listo, function () { toast('Copia el enlace de arriba y mándaselo.'); });
+      else toast('Copia el enlace de arriba y mándaselo.');
     });
     if ($('btn-me-interesa')) $('btn-me-interesa').addEventListener('click', function () {
       registro.meInteresa.push(id);
@@ -7317,7 +7332,7 @@
     }
     // #camino/…: Explorar (fichas, elegir, departamento), Tus pasos (pasos de la compra) o Inicio.
     switch (p[1]) {
-      case 'ficha': return r('ficha', 'explorar', function () { if (p[2] === 'arriendo-opcion') location.replace('#explorar/arriendo-opcion'); else renderFicha(p[2]); });
+      case 'ficha': return r('ficha', 'explorar', function () { if (p[2] === 'arriendo-opcion') location.replace('#explorar/arriendo-opcion'); else { if (p[2] === 'respaldo-familiar' && p[3] === 'familiar') respaldoVista = 'fam'; renderFicha(p[2]); } });
       case 'dueno': return r('caminos', p[2] ? 'explorar' : 'inicio', function () { renderMesDueno(p[2]); });
       case 'elegir': return r('proyectos', 'explorar', function () { renderLista('camino'); });
       // 9-nov: #camino/proyecto/<departamento>/<camino>: el camino desde el que se mira (Explorar → Un camino).

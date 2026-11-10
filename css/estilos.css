@@ -3264,3 +3264,7 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .misiones-etapa.etapa-hecho .misiones-etapa-cabeza .chip { background: var(--green-20); color: var(--green-dark); }
 .misiones-etapa.etapa-pendiente .misiones-etapa-cabeza .chip { background: var(--gray-semilight); color: var(--gray-dark); }
 .misiones-tarjetas > li > .mision-fila { width: 100%; }
+/* 10-nov: el enlace para mandarle a tu familiar (respaldo familiar). */
+.respaldo-invita { display: grid; gap: 10px; }
+.respaldo-invita h2, .respaldo-invita .texto-apoyo { margin: 0; }
+.enlace-copiar { margin: 0; padding: 10px 12px; border: 1px dashed var(--blue-40); border-radius: var(--radio-campo); background: var(--blue-20); color: var(--blue-dark); font-size: 14px; overflow-wrap: anywhere; user-select: all; }
