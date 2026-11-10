@@ -3235,3 +3235,6 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .tarjeta-obra.obra-en-noche { margin: 14px 0 0; padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none; grid-template-columns: 132px 1fr; }
 .obra-en-noche .obra-izq { background: rgba(255, 255, 255, .92); }
 .tarjeta-obra + .todavia-no { margin-top: 12px; }
+/* Comentario 10-nov: más aire entre el edificio en construcción y "Si juntas al mes". */
+.noche:has(.obra-en-noche) { padding-bottom: 100px; }
+.noche.sin-slider:has(.obra-en-noche) { padding-bottom: 28px; }
