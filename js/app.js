@@ -1379,9 +1379,10 @@
     if (a === b) return a === 0 ? 'Ya' : (a === 1 ? '1 mes' : a + ' meses');
     return (a === 0 ? 'Ya' : a) + ' a ' + b + ' meses';
   }
+  // Comentario 10-nov: una sola fecha, la del caso conservador (el techo del rango).
   function aproxRango(a, b) {
-    if (a === null || b === null || a === undefined || b === undefined || Math.max(a, b) < 12) return '';
-    return 'aprox. ' + (a === b ? textoMeses(a) : textoMesesRango(a, b));
+    if (b === null || b === undefined || b < 12) return '';
+    return 'aprox. ' + textoMeses(b);
   }
   function mesesPlazos(x) { return x.techo === null ? '—' : mesesRango(x.desde !== null ? x.desde : x.techo, x.techo); }
   function aproxPlazos(x) { return x.techo === null ? '' : aproxRango(x.desde !== null ? x.desde : x.techo, x.techo); }
