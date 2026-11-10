@@ -3213,3 +3213,6 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .capa-ic { width: 22px; height: 22px; flex: none; margin-top: 1px; }
 .paso-elegido-ceja { color: var(--blue-dark); }
 .paso-elegido-ceja.despues { color: var(--gray-semidark); }
+/* Comentario 9-nov: en Usados, el botón con flecha en amarillo (la flecha en gris oscuro; el amarillo nunca como texto). */
+.camino-boton.color-2 .camino-boton-ir { background: var(--yellow-normal); box-shadow: 0 2px 6px rgba(55, 71, 79, .25); }
+.camino-boton.color-2 .camino-boton-ir svg { stroke: var(--gray-dark); }
