@@ -3162,3 +3162,54 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .tarjeta-obra .obra-der .btn { width: 100%; padding-inline: 8px; font-size: 13px; letter-spacing: .2px; }
 .detalle-accion .btn { min-height: 50px; padding: 10px 16px; font-size: 15px; letter-spacing: .3px; white-space: nowrap; }
 .todavia-salida { margin: 10px 0 12px; font-size: 16px; line-height: 1.4; color: var(--gray-dark); }
+
+/* ---------- 9-nov: colores con un solo significado (maqueta B) ----------
+   Verde: acción y logro · Azul: información y tu plan · Amarillo (fondo): atención suave ·
+   Rojo: urgencia o error · Gris: neutro y comparación. */
+
+/* Explorar: cada camino en el tono suave de su color, con borde, sombra y un botón con flecha. Sin figuras. */
+.camino-boton { color: var(--gray-dark); border: 1px solid transparent; box-shadow: 0 4px 12px rgba(55, 71, 79, .12); min-height: 150px; }
+.camino-boton:hover { border: 1px solid transparent; box-shadow: 0 6px 16px rgba(55, 71, 79, .18); }
+.camino-boton .camino-figura, .camino-boton .camino-dibujo { display: none; }
+.camino-boton strong { color: var(--gray-dark); }
+.camino-boton .chip, .camino-boton.color-2 .chip { background: var(--white); color: var(--gray-dark); }
+.camino-boton.color-0 { background: var(--blue-20); border-color: var(--blue-40); }
+.camino-boton.color-1 { background: var(--green-20); border-color: var(--green-40); }
+.camino-boton.color-2 { background: var(--yellow-20); border-color: var(--yellow-60); color: var(--gray-dark); }
+.camino-boton.color-3 { background: var(--red-20); border-color: var(--red-40); }
+.camino-boton .camino-boton-ir { top: 50%; bottom: auto; margin-top: -20px; width: 40px; height: 40px; }
+.camino-boton .camino-boton-ir svg { stroke: var(--white); }
+.camino-boton.color-0 .camino-boton-ir { background: var(--blue-dark); }
+.camino-boton.color-1 .camino-boton-ir { background: var(--green-dark); }
+.camino-boton.color-2 .camino-boton-ir { background: var(--gray-dark); }
+.camino-boton.color-3 .camino-boton-ir { background: var(--red-dark); }
+.camino-boton.color-0 .camino-boton-ir svg, .camino-boton.color-1 .camino-boton-ir svg, .camino-boton.color-3 .camino-boton-ir svg { stroke: var(--white); }
+
+/* Tus pasos: el color de cada escalón dice su estado. */
+.escalon.esc-hecho, .paso-elegido-num.esc-hecho { background: var(--green-dark); color: var(--white); }
+.escalon.esc-ahora, .paso-elegido-num.esc-ahora { background: var(--blue-normal); color: var(--white); }
+.escalon.esc-falta, .paso-elegido-num.esc-falta { background: var(--gray-semilight); color: var(--gray-semidark); }
+.escalon.esc-ahora[aria-pressed="true"], .escalon.esc-ahora { box-shadow: 0 0 0 3px var(--white), 0 0 0 5px var(--blue-dark); }
+.escalones .actual .escalon-nombre { color: var(--blue-dark); }
+.escalones-leyenda { display: flex; gap: 14px; margin: -6px 0 0; font-size: 12px; color: var(--gray-semidark); }
+.escalones-leyenda span { display: inline-flex; align-items: center; gap: 5px; }
+.escalones-leyenda i { width: 10px; height: 10px; border-radius: 3px; }
+.escalones-leyenda i.esc-hecho { background: var(--green-dark); }
+.escalones-leyenda i.esc-ahora { background: var(--blue-normal); }
+.escalones-leyenda i.esc-falta { background: var(--gray-neutral); }
+
+/* Todavía no: atención suave, en amarillo de fondo (nunca como texto). */
+.todavia-no { border-left: 0; background: var(--yellow-20); border: 1px solid var(--yellow-normal); }
+.todavia-no .estado-semaforo, .estado-pronto { background: var(--yellow-normal); color: var(--gray-dark); }
+
+/* Tu arriendo hoy: comparación, en gris. */
+.vs-arriendo .b.gris { background: var(--gray-light); }
+.vs-arriendo .b.gris i { background: var(--gray-neutral); }
+
+/* Etiquetas de tipo en las tarjetas: neutras. */
+.tp-tipo.azul, .tp-tipo.verde, .tp-tipo.amarillo { background: var(--gray-semilight); color: var(--gray-dark); }
+
+/* Tu pie está protegido: check verde o candado gris. */
+.capa-ic { width: 22px; height: 22px; flex: none; margin-top: 1px; }
+.paso-elegido-ceja { color: var(--blue-dark); }
+.paso-elegido-ceja.despues { color: var(--gray-semidark); }

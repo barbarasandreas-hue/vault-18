@@ -1534,7 +1534,7 @@
     var max = Math.max(estado.arriendoActual, div);
     return '<div class="vs-arriendo" aria-hidden="true">' +
       '<p><span>Tu arriendo hoy</span><strong>' + formatoRedondeado(estado.arriendoActual) + '</strong></p>' +
-      '<span class="b amarillo"><i style="width:' + (estado.arriendoActual / max * 100).toFixed(1) + '%"></i></span>' +
+      '<span class="b gris"><i style="width:' + (estado.arriendoActual / max * 100).toFixed(1) + '%"></i></span>' +
       '<p><span>Tu dividendo</span><span><strong>' + ufDecimales(div / SUPUESTOS.uf, 2) + '</strong> <span class="hoy">' + SEP + 'hoy ' + formatoRedondeado(div) + '</span></span></p>' +
       '<span class="b azul"><i style="width:' + (div / max * 100).toFixed(1) + '%"></i></span>' +
     '</div>';
@@ -5094,7 +5094,8 @@
     var actualI = h.terminado ? h.total - 1 : h.indice - 1;
     if (pasoElegido === null || pasoElegido >= h.total || celebra) pasoElegido = actualI;
     var sel = h.hitos[pasoElegido];
-    var colorDe = function (x, i) { return x.estado === 'pendiente' ? 'claro-' + i : 'solido-' + i; };
+    // 9-nov (colores): el color dice el estado: verde oscuro hecho, azul ahora, gris falta.
+    var colorDe = function (x) { return x.estado === 'hecho' ? 'esc-hecho' : x.estado === 'actual' ? 'esc-ahora' : 'esc-falta'; };
     cont.innerHTML =
       '<header class="encabezado"><img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24">' +
         '<h1 id="titulo-pasos" class="h2">Tus pasos</h1>' +
@@ -5103,6 +5104,7 @@
         (estado.modo === 'vivir' ? '' : '<a class="enlace" href="#explorar/cambia">Ver qué lo cambia</a>') + '</span></p>' + (esArriendo() ? '<section class="tarjeta bloque meta-mes">' + salidaArriendoHtml(arriendoActual().u) + '</section>' : estado.modo === 'vivir' ? salidasHtml() : '') : '') +
       '<section aria-labelledby="titulo-hitos" class="tarjeta escalones-tarjeta">' +
         '<div class="escalones-cabeza"><h2 id="titulo-hitos">Tu escalera</h2><span>' + listos + ' de ' + h.total + ' listos</span></div>' +
+        '<p class="escalones-leyenda" aria-hidden="true"><span><i class="esc-hecho"></i>Hecho</span><span><i class="esc-ahora"></i>Ahora</span><span><i class="esc-falta"></i>Falta</span></p>' +
         '<ol class="escalones" aria-label="Tus pasos">' + h.hitos.map(function (x, i) {
           return '<li class="' + x.estado + '">' +
             (x.estado === 'actual' ? '<svg class="escalon-av' + (celebra ? ' sube' : '') + '" width="30" height="40" viewBox="0 0 30 40" aria-hidden="true"><circle cx="15" cy="9" r="7" fill="#E8BFA0"/><path d="M8 6a7 7 0 0 1 14 0c-3-2-9-2-14 0z" fill="#37474F"/><path d="M4 40c0-10 5-17 11-17s11 7 11 17z" fill="#28892B"/></svg>' : '') +
@@ -5173,7 +5175,9 @@
     ['verde', 'M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4']
   ];
   function tarjetaMision(x, k) {
-    var ic = x.fecha ? ICONOS_MISION[0] : ICONOS_MISION[1 + (k % 2)];
+    // 9-nov (colores): rojo solo si vence en menos de 30 días; el resto, azul.
+    var urgente = x.fecha && diasEntre(hoyDemo(), x.fecha) >= 0 && diasEntre(hoyDemo(), x.fecha) <= 30;
+    var ic = urgente ? ICONOS_MISION[0] : ['azul', ICONOS_MISION[1 + (k % 2)][1]];
     return '<li><button type="button" class="mision-tarjeta" data-mision="' + x.id + '" aria-haspopup="dialog">' +
       '<span class="mision-circulo ' + ic[0] + '" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="' + ic[1] + '"/></svg></span>' +
       '<span class="mision-texto"><strong>' + x.titulo + '</strong>' + (x.fecha ? '<small>' + textoVence(x.fecha) + (/^Vence/.test(textoVence(x.fecha)) ? SEP + fechaCorta(x.fecha) : '') + '</small>' : '') + '</span>' +
@@ -5297,6 +5301,11 @@
   }
   // 9-nov: con el arriendo con opción firmado, la cuota de Tu pie es el aporte de la mensualidad.
   function cuotaMes() { return esArriendo() && estado.pasos.contratoArriendo ? arriendoActual().a.aporte : estado.ahorroMensual; }
+  function capaIcono(activa) {
+    return activa
+      ? '<svg class="capa-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#28652B"/><path d="M6.5 12.5l3.6 3.6L17.5 8.8" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      : '<svg class="capa-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="none" stroke="#546E7A" stroke-width="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="#546E7A" stroke-width="2"/></svg>';
+  }
   function renderTuPie() {
     var cont = $('pie-contenido');
     var s = fotoPasos();
@@ -5354,9 +5363,10 @@
       '<button type="button" class="tarjeta fila fila-regalo" id="btn-pedir-regalo" aria-haspopup="dialog"><span class="regalo-circulo" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="1" fill="none" stroke="#B20913" stroke-width="2"/><path d="M3 7h18v3H3zM12 7v13M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0" fill="none" stroke="#B20913" stroke-width="2" stroke-linejoin="round"/></svg></span>' +
         '<span><strong>Regalo para tu pie</strong><small>Comparte un enlace con tu familia</small><span class="regalo-compartir">Compartir ›</span></span></button>' +
       '<section class="tarjeta pie-protegido" aria-labelledby="titulo-protegido"><h2 id="titulo-protegido">Tu pie está protegido</h2>' +
-        '<div><i class="f-rojo" aria-hidden="true"></i><span><strong>Separado y bajo llave</strong><small>Avisas 30 días antes de sacar</small></span></div>' +
-        '<div><i class="f-verde" aria-hidden="true"></i><span><strong>En UF</strong><small>No lo come la inflación</small></span></div>' +
-        '<div><i class="f-azul" aria-hidden="true"></i><span><strong>Un mes malo</strong><small>Lo ahorrado no se pierde</small></span></div>' +
+        // 9-nov (colores): check verde si la capa está activa; candado gris si no.
+        '<div>' + capaIcono(s.bajoLlave) + '<span><strong>Separado y bajo llave</strong><small>' + (s.bajoLlave ? 'Avisas 30 días antes de sacar' : 'Actívalo con el lápiz, en Tu cuota') + '</small></span></div>' +
+        '<div>' + capaIcono(true) + '<span><strong>En UF</strong><small>No lo come la inflación</small></span></div>' +
+        '<div>' + capaIcono(true) + '<span><strong>Un mes malo</strong><small>Lo ahorrado no se pierde</small></span></div>' +
       '</section>';
     $('btn-pedir-regalo').addEventListener('click', function () { abrirPedirRegalo($('btn-pedir-regalo')); });
     $('btn-movimientos').addEventListener('click', function () {

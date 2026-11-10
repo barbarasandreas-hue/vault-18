@@ -146,4 +146,4 @@ La app tiene un modelo mental muy claro: la escalera de 6 pasos y "tus llaves en
 | 4 | Invertir está escondido en Perfil | Nielsen 6 · Norman (descubrimiento) | Media | Un acceso desde Explorar, o desde Inicio en modo invertir. |
 | 5 | "Hacerlo mi camino" en los usados no hace nada (**en el arriendo con opción ya funciona, 9-nov**) | Nielsen 3 · Norman (indicadores de acción) | Baja | Deshabilitarlo con una explicación, o hacer que funcione. |
 | 6 | ~~"Todavía no" sin un siguiente paso~~ **Resuelto (9-nov):** el "sí" más cercano con fecha y un botón | Nielsen 9 | Baja | Agregar una acción concreta para salir de ese estado. |
-| 7 | Colores con varios significados | Nielsen 4 | Baja | Un color por camino y otro distinto para los avisos. |
+| 7 | ~~Colores con varios significados~~ **Resuelto (9-nov):** un significado por color (ver CLAUDE.md) | Nielsen 4 | Baja | Un color por camino y otro distinto para los avisos. |

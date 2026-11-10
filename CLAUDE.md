@@ -99,6 +99,7 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
   - Listas: viñetas con ícono de check cuando el orden no importa; listas numeradas solo para secuencias o prioridades.
   - Accesibilidad: contraste AA como mínimo, pensando en usuarios con baja visión. Ojo: el texto blanco sobre `--green-normal` no llega a AA en tamaño normal; seguir la regla de `docs/bci-kit.md`. El amarillo nunca se usa como texto.
   - Íconos: Bci usa una fuente propia que no es pública; usar íconos SVG de línea dibujados en el código.
+  - **Un significado por color (9-nov):** verde = acción y logro; azul = información y tu plan; amarillo (solo fondo) = atención suave ("Todavía no", "en el límite"); rojo = urgencia o error (misiones que vencen en menos de 30 días, "no aprueba"); gris = neutro y comparación ("Tu arriendo hoy", etiquetas de tipo, pasos que faltan). Los caminos de Explorar van en el tono 20 de su color, con borde, sombra y botón con flecha en el tono fuerte; títulos en gris. La escalera: verde oscuro hecho, azul ahora, gris falta.
 - Fondos claros. Tipografía: **Overpass** (la del Bci Kit) para títulos y textos, desde Google Fonts. Los títulos van en peso 400, no en negrita.
 - Mobile first (390 px de ancho). Un número y una acción por pantalla. Se entiende en 10 segundos. Siempre mostrar el escenario sin plusvalía.
 - **Textos mínimos, al estilo Bci** (sin explicaciones innecesarias):
