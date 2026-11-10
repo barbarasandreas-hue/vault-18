@@ -3161,3 +3161,4 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .obra-izq { padding: 10px 6px 4px; }
 .tarjeta-obra .obra-der .btn { width: 100%; padding-inline: 8px; font-size: 13px; letter-spacing: .2px; }
 .detalle-accion .btn { min-height: 50px; padding: 10px 16px; font-size: 15px; letter-spacing: .3px; white-space: nowrap; }
+.todavia-salida { margin: 10px 0 12px; font-size: 16px; line-height: 1.4; color: var(--gray-dark); }

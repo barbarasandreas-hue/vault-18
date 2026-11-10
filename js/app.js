@@ -1592,7 +1592,7 @@
       '</header>' +
       (justo
         ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
-            '<h2 class="h3" id="titulo-plazo">' + razon + ' ' + ayuda('tu-limite') + '</h2></section>'
+            '<h2 class="h3" id="titulo-plazo">' + razon + ' ' + ayuda('tu-limite') + '</h2>' + salidaPrincipalHtml() + '</section>'
         : '<section class="noche" aria-labelledby="titulo-plazo">' +
             '<span class="noche-luna" aria-hidden="true"></span>' +
             '<p class="noche-etiqueta" id="titulo-plazo">' + etiquetaLlaves(x.hasta.meses) + '</p>' +
@@ -1651,23 +1651,78 @@
   }
 
   // S19-B4: cuando todavía no llega, una meta concreta para este mes (metaDelMes en calculos.js).
-  function metaMesHtml() {
+
+  // ---------- 9-nov: "Todavía no" con salida (evaluación heurística, punto 6) ----------
+  // Lo que, por sí solo, hace que te alcance, con su fecha. Orden: ayudas que existen hoy, terminar cuotas,
+  // un rango más bajo, la compra en grupo (propuesta) y sumar una renta.
+  function conCambios(cambios, fn) {
+    var antes = {};
+    Object.keys(cambios).forEach(function (k) { antes[k] = estado[k]; estado[k] = cambios[k]; });
+    try { return fn(); } finally { Object.keys(antes).forEach(function (k) { estado[k] = antes[k]; }); }
+  }
+  var salidasActuales = [];
+  function salidasTodaviaNo() {
+    var lista = [];
     var on = piezasOn();
-    var lista = metaDelMes({ ahorroMensual: estado.ahorroMensual || 0, otrasCuotas: estado.otrasCuotas || 0,
-      subsidio: on.subsidio ? false : cabeCon('subsidio'), iva: on.iva ? false : cabeCon('iva') });
-    var texto = function (m) {
-      if (m.tipo === 'ahorrar') return 'Aparta ' + formatoRedondeado(m.monto) + ' este mes';
-      if (m.tipo === 'subsidio') return '<a href="#explorar">Revisa el subsidio del Estado</a>';
-      if (m.tipo === 'iva') return '<a href="#explorar">Mira los terminados sin IVA</a>';
-      if (m.tipo === 'cuota') return 'Termina una de tus otras cuotas';
-      return '<button type="button" class="enlace" id="btn-meta-rango" aria-haspopup="dialog">Prueba un rango más bajo</button>';
+    var mensual = estado.ahorroMensual || 300000;
+    var llaves = function (onX) { var x = plazoVivir(mensual, onX); return x.desde.meses; };
+    var pieza = function (id, texto, boton, href) {
+      if (on[id]) return;
+      var on2 = Object.assign({}, on); on2[id] = true;
+      if (piezasValidas(on2)[id] && evaluarCabe(on2).cabe) lista.push({ tipo: 'pieza', id: id, texto: texto, boton: boton, href: href, meses: llaves(on2) });
     };
-    return '<section class="tarjeta bloque meta-mes" aria-labelledby="titulo-meta-mes">' +
-      '<h2 class="h5" id="titulo-meta-mes">Tu meta de este mes</h2>' +
-      '<ul class="lista-check">' + lista.map(function (m) {
-        return '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>' + texto(m) + '</span></li>';
-      }).join('') + '</ul>' +
-    '</section>';
+    pieza('subsidio', 'Con el subsidio DS1 sí te alcanza', 'Ver cómo sumar el DS1', '#explorar/individual-vivir/como');
+    pieza('iva', 'Con un departamento sin IVA sí te alcanza', 'Ver los sin IVA', '#explorar/individual-vivir/como');
+    if (estado.otrasCuotas > 0) conCambios({ otrasCuotas: 0 }, function () {
+      if (evaluarCabe().cabe) lista.push({ tipo: 'cuota', texto: 'Al terminar tus otras cuotas sí te alcanza', boton: 'Actualizar mis cuotas', meses: llaves() });
+    });
+    var actual = rangoActual();
+    if (actual) RANGOS_PRECIO.filter(function (x) { return x.hasta <= actual.desde; }).reverse().some(function (x) {
+      return conCambios({ rangoPrecio: x.id }, function () {
+        if (!candidatosVivir().length || !evaluarCabe().cabe) return false;
+        lista.push({ tipo: 'rango', rango: x, texto: 'En el rango ' + textoRango(x) + ' sí hay departamentos que te alcanzan', boton: 'Cambiar mi rango', meses: llaves() });
+        return true;
+      });
+    });
+    pieza('grupo', 'Comprando en grupo sí te alcanza', 'Ver la compra en grupo', '#explorar/grupo-vivir');
+    // Sumar una renta (tu pareja o un familiar como codeudor), de $50 mil en $50 mil, hasta $2 millones.
+    for (var extra = 50000; extra <= 2000000; extra += 50000) {
+      var cabe = conCambios({ sueldoPareja: (estado.sueldoPareja || 0) + extra }, function () { return evaluarCabe().cabe ? llaves() : false; });
+      if (cabe !== false) { lista.push({ tipo: 'renta', extra: extra, texto: 'Con ' + formatoRedondeado(extra) + ' más de renta en tu hogar sí te alcanza', boton: 'Sumar a alguien de tu equipo', href: '#perfil', meses: cabe }); break; }
+    }
+    salidasActuales = lista;
+    return lista;
+  }
+  function textoSalida(x) { return x.texto + (typeof x.meses === 'number' ? ': llaves en ' + fechaLlaves(x.meses, hoyDemo()) : '') + '.'; }
+  function botonSalida(x, i, clase) {
+    return x.href ? '<a class="' + clase + '" href="' + x.href + '">' + x.boton + '</a>'
+      : '<button type="button" class="' + clase + '" data-salida="' + i + '"' + (x.tipo === 'cuota' ? ' aria-haspopup="dialog"' : '') + '>' + x.boton + '</button>';
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-salida]');
+    if (!b) return;
+    var x = salidasActuales[Number(b.dataset.salida)];
+    if (!x) return;
+    if (x.tipo === 'cuota') abrirMisDatos(b);
+    else if (x.tipo === 'rango') { estado.rangoPrecio = x.rango.id; guardarEstado(); toast('Tu rango: ' + textoRango(x.rango) + '.'); mostrar(); }
+  });
+  // Inicio: la razón, el "sí" más cercano con su fecha y una acción.
+  function salidaPrincipalHtml() {
+    var x = salidasTodaviaNo()[0];
+    if (!x) return '<p class="todavia-salida">Sigue juntando tu pie: cuando cambien tus números, te avisamos.</p>';
+    return '<p class="todavia-salida">' + textoSalida(x) + '</p>' + botonSalida(x, 0, 'btn btn-primario btn-bloque');
+  }
+  // Tus pasos: todas las salidas, más apartar lo de este mes.
+  function salidasHtml() {
+    var lista = salidasTodaviaNo();
+    return '<section class="tarjeta bloque meta-mes" aria-labelledby="titulo-que-cambia">' +
+      '<h2 class="h5" id="titulo-que-cambia">Qué lo cambia</h2>' +
+      '<ul class="lista-check">' +
+        (estado.ahorroMensual > 0 ? '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Mientras tanto, aparta ' + formatoRedondeado(estado.ahorroMensual) + ' este mes en tu pie</span></li>' : '') +
+        lista.map(function (x, i) {
+          return '<li><svg aria-hidden="true"><use href="#i-check"/></svg><span>' + textoSalida(x) + '<br>' + botonSalida(x, i, 'enlace') + '</span></li>';
+        }).join('') +
+      '</ul></section>';
   }
 
   // S17-F9: Llega antes. Cada pieza es una fila: nombre, efecto, "?" e interruptor. La recomendada lleva ★.
@@ -1816,6 +1871,11 @@
       ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo">' +
           '<p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
           '<h2 class="h3" id="titulo-plazo">Hoy te dejaría muy justo</h2>' +
+          (function () {
+            var cx = cambiosTodaviaNo(perfil, idCamino)[0];
+            return (cx ? '<p class="todavia-salida">' + tituloCambio(cx) + ' sí te dejaría bien.</p>' : '') +
+              '<a class="btn btn-primario btn-bloque" href="#explorar/cambia">Ver qué lo cambia</a>';
+          })() +
         '</section>'
       : '<section class="noche" aria-labelledby="titulo-plazo">' +
           '<span class="noche-luna" aria-hidden="true"></span>' +
@@ -5026,7 +5086,7 @@
     var ms = misiones(s, hoyDemo());
     var pendientes = ms.filter(function (x) { return !x.hecho; });
     var camino = nombreCaminoActual();
-    var todaviaNo = estado.preguntasListas && rangoActual() && !estado.compra && (estado.modo === 'vivir' ? evaluarCabe().razon : recomendarCamino(perfilActual()).todaviaNo);
+    var todaviaNo = estado.preguntasListas && rangoActual() && !estado.compra && (esArriendo() ? !arriendoActual().a.cumple : estado.modo === 'vivir' ? evaluarCabe().razon : recomendarCamino(perfilActual()).todaviaNo);
     // S25: como el canvas: la escalera en escalones de colores, el paso elegido y las misiones en tarjetas.
     var listos = listosDe(h);
     var celebra = listosVistos !== null && listos > listosVistos;
@@ -5040,7 +5100,7 @@
         '<h1 id="titulo-pasos" class="h2">Tus pasos</h1>' +
         '<p class="texto-apoyo">' + (h.terminado ? 'Llegaste: es tuyo' : 'Vas en el paso ' + h.indice + ' de ' + h.total + SEP + h.nombre) + '</p></header>' +
       (todaviaNo ? '<p class="tarjeta compacta aviso-todavia">' + icono('i-pronto') + '<span><strong>Todavía no</strong> ' +
-        '<a class="enlace" href="#explorar">Ver qué lo cambia</a></span></p>' + (estado.modo === 'vivir' ? metaMesHtml() : '') : '') +
+        (estado.modo === 'vivir' ? '' : '<a class="enlace" href="#explorar/cambia">Ver qué lo cambia</a>') + '</span></p>' + (esArriendo() ? '<section class="tarjeta bloque meta-mes">' + salidaArriendoHtml(arriendoActual().u) + '</section>' : estado.modo === 'vivir' ? salidasHtml() : '') : '') +
       '<section aria-labelledby="titulo-hitos" class="tarjeta escalones-tarjeta">' +
         '<div class="escalones-cabeza"><h2 id="titulo-hitos">Tu escalera</h2><span>' + listos + ' de ' + h.total + ' listos</span></div>' +
         '<ol class="escalones" aria-label="Tus pasos">' + h.hitos.map(function (x, i) {
@@ -5938,6 +5998,17 @@
         });
       });
   }
+  // "Todavía no" en este camino: otro departamento que sí te alcance, o cambiar tus números.
+  function salidaArriendoHtml(u) {
+    var perfil = perfilActual();
+    var otro = ARRIENDOS_OPCION.filter(function (x) { return x.id !== u.id; })
+      .map(function (x) { return { u: x, a: arriendoOpcion(x.listaUF, x.arriendoEstimadoIA, perfil) }; })
+      .filter(function (x) { return x.a.cumple; }).sort(function (x, y) { return x.a.mesesTuyo - y.a.mesesTuyo; })[0];
+    if (otro) return '<p class="todavia-salida">En ' + esc(otro.u.nombre) + ' sí te alcanza: es tuyo en ' + textoMeses(otro.a.mesesTuyo) + '.</p>' +
+      '<a class="btn btn-primario btn-bloque" href="#explorar/arriendo-opcion/' + esc(otro.u.id) + '">Ver ese departamento</a>';
+    return '<p class="todavia-salida">Con estos números, ningún departamento de este camino te alcanza.</p>' +
+      '<a class="btn btn-primario btn-bloque" href="#explorar">Ver otros caminos</a>';
+  }
   // Inicio con este camino: cuándo es tuyo, cuándo te mudas, tu pie y el siguiente paso.
   function renderInicioArriendo() {
     var c = $('inicio-principal');
@@ -5972,7 +6043,7 @@
             '<p class="noche-sub">Firmaste la escritura (simulado)</p></section>'
         : !a.cumple
         ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
-            '<h2 class="h3" id="titulo-plazo">' + a.razon + '</h2><p class="texto-apoyo"><a class="enlace" href="#explorar/arriendo-opcion">Ver otros departamentos</a></p></section>'
+            '<h2 class="h3" id="titulo-plazo">' + a.razon + '</h2>' + salidaArriendoHtml(u) + '</section>'
         : '<section class="noche' + (vive ? ' sin-slider' : '') + '" aria-labelledby="titulo-plazo">' +
             '<span class="noche-luna" aria-hidden="true"></span>' +
             '<p class="noche-etiqueta" id="titulo-plazo">Es tuyo en</p>' +
