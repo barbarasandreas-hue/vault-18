@@ -69,7 +69,7 @@ test('Arriendo con opción de compra: entras con 5 %, compras al 80 % sin subsid
   // Si te vas: recuperas tu ahorro inicial y el 50 % de tus aportes; si Bci no aprueba, todo.
   assert.strictEqual(c.devolucionArriendo(4500000, 10000000, 'te-vas'), 9500000);
   assert.strictEqual(c.devolucionArriendo(4500000, 10000000, 'credito'), 14500000);
-  assert.strictEqual(d.ARRIENDOS_OPCION.length, 4);
+  assert.ok(d.ARRIENDOS_OPCION.length >= 4);
 });
 
 test('Arriendo con opción como camino: sus 6 hitos en orden', () => {

@@ -39,6 +39,15 @@ var PROYECTOS = [
     cupos: 6, cuposTomados: 2, ufFinanciadas: 0, cierre: '2027-01-31' },
   { id: 'terrazas-quinta', fachada: { color: 'blue-normal', pisos: 7 }, clienteBci: false, grupo: { cuotaPromedio: 760000, mesesAhorrando: 5, unidoHaceDias: 1, pagaronMes: 6 }, etapaObra: 2, entregaEstimada: '2027-09-30', nombre: 'Edificio Terrazas Quinta Normal', comuna: 'Quinta Normal', tipo: 'conjunto',
     cupos: 10, cuposTomados: 7, ufFinanciadas: 0, cierre: '2026-12-20' },
+  // 9-nov: más opciones para el test con usuarios, sobre todo en los precios más bajos (UF 1.100 a 2.000).
+  { id: 'brisas-independencia', ds19: true, fachada: { color: 'green-dark', pisos: 6 }, clienteBci: true, grupo: { cuotaPromedio: 360000, mesesAhorrando: 2, unidoHaceDias: 2, pagaronMes: 5 }, etapaObra: 0, entregaEstimada: '2028-04-30', nombre: 'Edificio Brisas Independencia', comuna: 'Independencia', tipo: 'conjunto',
+    cupos: 10, cuposTomados: 5, ufFinanciadas: 0, cierre: '2027-02-20' },
+  { id: 'andes-estacion', fachada: { color: 'blue-dark', pisos: 8 }, clienteBci: false, grupo: { cuotaPromedio: 420000, mesesAhorrando: 3, unidoHaceDias: 4, pagaronMes: 3 }, etapaObra: 1, entregaEstimada: '2027-12-31', nombre: 'Edificio Mirador Los Andes', comuna: 'Estación Central', tipo: 'conjunto',
+    cupos: 8, cuposTomados: 4, ufFinanciadas: 0, cierre: '2027-01-25' },
+  { id: 'cumbres-quinta', fachada: { color: 'blue-80', pisos: 5 }, clienteBci: true, grupo: { cuotaPromedio: 470000, mesesAhorrando: 4, unidoHaceDias: 3, pagaronMes: 4 }, etapaObra: 1, entregaEstimada: '2027-11-30', nombre: 'Edificio Cumbres de Quinta Normal', comuna: 'Quinta Normal', tipo: 'conjunto',
+    cupos: 10, cuposTomados: 6, ufFinanciadas: 0, cierre: '2027-01-10' },
+  { id: 'mapocho-recoleta', fachada: { color: 'gray-semidark', pisos: 6 }, clienteBci: false, grupo: { cuotaPromedio: 560000, mesesAhorrando: 2, unidoHaceDias: 6, pagaronMes: 3 }, etapaObra: 0, entregaEstimada: '2028-02-29', nombre: 'Edificio Ribera Mapocho', comuna: 'Recoleta', tipo: 'conjunto',
+    cupos: 8, cuposTomados: 3, ufFinanciadas: 0, cierre: '2027-02-28' },
   // Terminados (se compran solos, se entregan al firmar):
   { id: 'acacias-quinta', recepcionDefinitiva: '2026-08-20', fachada: { color: 'green-dark', pisos: 5 }, clienteBci: true, etapaObra: 4, nombre: 'Edificio Las Acacias', comuna: 'Quinta Normal', tipo: 'venta',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
@@ -48,12 +57,24 @@ var PROYECTOS = [
     cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
   { id: 'robles-independencia', recepcionDefinitiva: '2026-06-15', fachada: { color: 'blue-80', pisos: 6 }, clienteBci: false, etapaObra: 4, nombre: 'Edificio Los Robles', comuna: 'Independencia', tipo: 'venta',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
+  { id: 'olivos-estacion', recepcionDefinitiva: '2026-07-10', fachada: { color: 'green-normal', pisos: 5 }, clienteBci: false, etapaObra: 4, nombre: 'Edificio Los Olivos', comuna: 'Estación Central', tipo: 'venta',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
+  { id: 'quillayes-independencia', recepcionDefinitiva: '2026-10-01', fachada: { color: 'gray-semidark', pisos: 4 }, clienteBci: true, etapaObra: 4, nombre: 'Edificio Los Quillayes', comuna: 'Independencia', tipo: 'venta',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
+  { id: 'boldos-quinta', recepcionDefinitiva: '2026-11-02', fachada: { color: 'blue-normal', pisos: 6 }, clienteBci: false, etapaObra: 4, nombre: 'Edificio Los Boldos', comuna: 'Quinta Normal', tipo: 'venta',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
   { id: 'plaza-estacion', fachada: { color: 'green-dark', pisos: 4 }, clienteBci: false, nombre: 'Edificio Plaza Estación', comuna: 'Estación Central', tipo: 'financiamiento',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 108, inversionistas: 6, cierre: '2027-02-10' },
   { id: 'jardin-independencia', fachada: { color: 'blue-80', pisos: 4 }, clienteBci: true, nombre: 'Edificio Jardín Independencia', comuna: 'Independencia', tipo: 'financiamiento',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 220.5, inversionistas: 11, cierre: '2027-01-31' },
   { id: 'barrio-recoleta', fachada: { color: 'gray-dark', pisos: 6 }, clienteBci: false, nombre: 'Edificio Barrio Recoleta', comuna: 'Recoleta', tipo: 'financiamiento',
-    cupos: 1, cuposTomados: 0, ufFinanciadas: 175.5, inversionistas: 9, cierre: '2027-03-15' }
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 175.5, inversionistas: 9, cierre: '2027-03-15' },
+  { id: 'ribera-recoleta', fachada: { color: 'blue-normal', pisos: 5 }, clienteBci: true, nombre: 'Edificio Ribera Recoleta', comuna: 'Recoleta', tipo: 'financiamiento',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 93.75, inversionistas: 5, cierre: '2027-02-28' },
+  { id: 'esquina-quinta', fachada: { color: 'green-normal', pisos: 4 }, clienteBci: false, nombre: 'Edificio Esquina Quinta Normal', comuna: 'Quinta Normal', tipo: 'financiamiento',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 144, inversionistas: 7, cierre: '2027-02-15' },
+  { id: 'vista-andes-independencia', fachada: { color: 'gray-dark', pisos: 7 }, clienteBci: true, nombre: 'Edificio Vista Andes', comuna: 'Independencia', tipo: 'financiamiento',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 132, inversionistas: 6, cierre: '2027-03-31' }
 ];
 
 // Departamentos disponibles de cada proyecto (los que aún no tienen comprador).
@@ -89,7 +110,18 @@ var DEPARTAMENTOS = [
   { id: 'pe-601', proyectoId: 'plaza-estacion', comuna: 'Estación Central', piso: 6, m2: 22, dormitorios: 0, banos: 1, listaUF: 1200, arriendoEstimadoIA: 200000, origenArriendo: ORIGEN_ARRIENDO },
   { id: 'ji-303', proyectoId: 'jardin-independencia', comuna: 'Independencia', piso: 3, m2: 50, dormitorios: 2, banos: 1, listaUF: 2450, arriendoEstimadoIA: 410000, origenArriendo: ORIGEN_ARRIENDO },
   // Barrio Recoleta: rinde menos de 3,9 % neto
-  { id: 'br-1004', proyectoId: 'barrio-recoleta', comuna: 'Recoleta', piso: 10, m2: 40, dormitorios: 1, banos: 1, listaUF: 1950, arriendoEstimadoIA: 275000, origenArriendo: ORIGEN_ARRIENDO }
+  { id: 'br-1004', proyectoId: 'barrio-recoleta', comuna: 'Recoleta', piso: 10, m2: 40, dormitorios: 1, banos: 1, listaUF: 1950, arriendoEstimadoIA: 275000, origenArriendo: ORIGEN_ARRIENDO },
+  // 9-nov: departamentos de los proyectos nuevos (uno por proyecto).
+  { id: 'bi-305', proyectoId: 'brisas-independencia', comuna: 'Independencia', piso: 3, m2: 21, dormitorios: 0, banos: 1, listaUF: 1100, arriendoEstimadoIA: 175000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ma-402', proyectoId: 'andes-estacion', comuna: 'Estación Central', piso: 4, m2: 30, dormitorios: 1, banos: 1, listaUF: 1350, arriendoEstimadoIA: 215000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'cq-207', proyectoId: 'cumbres-quinta', comuna: 'Quinta Normal', piso: 2, m2: 33, dormitorios: 1, banos: 1, listaUF: 1550, arriendoEstimadoIA: 245000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'rm-604', proyectoId: 'mapocho-recoleta', comuna: 'Recoleta', piso: 6, m2: 42, dormitorios: 2, banos: 1, listaUF: 2000, arriendoEstimadoIA: 325000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'lo-204', proyectoId: 'olivos-estacion', comuna: 'Estación Central', piso: 2, m2: 24, dormitorios: 0, banos: 1, listaUF: 1150, arriendoEstimadoIA: 195000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'lq-301', proyectoId: 'quillayes-independencia', comuna: 'Independencia', piso: 3, m2: 35, dormitorios: 1, banos: 1, listaUF: 1500, arriendoEstimadoIA: 245000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'lb-503', proyectoId: 'boldos-quinta', comuna: 'Quinta Normal', piso: 5, m2: 44, dormitorios: 2, banos: 1, listaUF: 2100, arriendoEstimadoIA: 340000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'rr-402', proyectoId: 'ribera-recoleta', comuna: 'Recoleta', piso: 4, m2: 24, dormitorios: 0, banos: 1, listaUF: 1250, arriendoEstimadoIA: 210000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'eq-302', proyectoId: 'esquina-quinta', comuna: 'Quinta Normal', piso: 3, m2: 34, dormitorios: 1, banos: 1, listaUF: 1600, arriendoEstimadoIA: 265000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'va-605', proyectoId: 'vista-andes-independencia', comuna: 'Independencia', piso: 6, m2: 46, dormitorios: 2, banos: 1, listaUF: 2200, arriendoEstimadoIA: 365000, origenArriendo: ORIGEN_ARRIENDO }
 ];
 
 // S22-F4: departamentos usados de ejemplo para el crédito de siempre (Bci presta el 80 %, sin subsidio a la tasa,
@@ -98,7 +130,11 @@ var USADOS = [
   { id: 'us-indep-1', comuna: 'Independencia', anio: 2012, m2: 52, dormitorios: 2, banos: 1, listaUF: 2300, dfl2: true },
   { id: 'us-quinta-1', comuna: 'Quinta Normal', anio: 2008, m2: 45, dormitorios: 2, banos: 1, listaUF: 1900, dfl2: true },
   { id: 'us-recoleta-1', comuna: 'Recoleta', anio: 2015, m2: 36, dormitorios: 1, banos: 1, listaUF: 1600, dfl2: false },
-  { id: 'us-estacion-1', comuna: 'Estación Central', anio: 2017, m2: 30, dormitorios: 1, banos: 1, listaUF: 1450, dfl2: true }
+  { id: 'us-estacion-1', comuna: 'Estación Central', anio: 2017, m2: 30, dormitorios: 1, banos: 1, listaUF: 1450, dfl2: true },
+  { id: 'us-estacion-2', comuna: 'Estación Central', anio: 2014, m2: 26, dormitorios: 0, banos: 1, listaUF: 1150, dfl2: true },
+  { id: 'us-indep-2', comuna: 'Independencia', anio: 2010, m2: 34, dormitorios: 1, banos: 1, listaUF: 1400, dfl2: true },
+  { id: 'us-recoleta-2', comuna: 'Recoleta', anio: 2005, m2: 50, dormitorios: 2, banos: 1, listaUF: 2000, dfl2: true },
+  { id: 'us-quinta-2', comuna: 'Quinta Normal', anio: 2019, m2: 48, dormitorios: 2, banos: 2, listaUF: 2450, dfl2: false }
 ];
 
 // 9-nov: arriendo con opción de compra (propuesta Bci). Departamentos terminados: te mudas al firmar el contrato.
@@ -108,7 +144,10 @@ var ARRIENDOS_OPCION = [
   { id: 'ao-maitenes', nombre: 'Edificio Los Maitenes', comuna: 'Independencia', anio: 2025, piso: 7, m2: 44, dormitorios: 2, banos: 1, listaUF: 2200, arriendoEstimadoIA: 360000, origenArriendo: ORIGEN_ARRIENDO },
   { id: 'ao-brisas', nombre: 'Edificio Brisas de Recoleta', comuna: 'Recoleta', anio: 2026, piso: 4, m2: 36, dormitorios: 1, banos: 1, listaUF: 1650, arriendoEstimadoIA: 270000, origenArriendo: ORIGEN_ARRIENDO },
   { id: 'ao-alameda', nombre: 'Edificio Alameda Poniente', comuna: 'Estación Central', anio: 2025, piso: 12, m2: 28, dormitorios: 0, banos: 1, listaUF: 1350, arriendoEstimadoIA: 230000, origenArriendo: ORIGEN_ARRIENDO },
-  { id: 'ao-lilas', nombre: 'Edificio Las Lilas', comuna: 'Quinta Normal', anio: 2026, piso: 3, m2: 50, dormitorios: 2, banos: 2, listaUF: 2450, arriendoEstimadoIA: 390000, origenArriendo: ORIGEN_ARRIENDO }
+  { id: 'ao-lilas', nombre: 'Edificio Las Lilas', comuna: 'Quinta Normal', anio: 2026, piso: 3, m2: 50, dormitorios: 2, banos: 2, listaUF: 2450, arriendoEstimadoIA: 390000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ao-palmas', nombre: 'Edificio Las Palmas', comuna: 'Recoleta', anio: 2025, piso: 5, m2: 24, dormitorios: 0, banos: 1, listaUF: 1150, arriendoEstimadoIA: 200000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ao-pimientos', nombre: 'Edificio Los Pimientos', comuna: 'Independencia', anio: 2026, piso: 8, m2: 33, dormitorios: 1, banos: 1, listaUF: 1450, arriendoEstimadoIA: 240000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ao-castanos', nombre: 'Edificio Los Castaños', comuna: 'Quinta Normal', anio: 2025, piso: 2, m2: 35, dormitorios: 1, banos: 1, listaUF: 1550, arriendoEstimadoIA: 255000, origenArriendo: ORIGEN_ARRIENDO }
 ];
 
 function departamentosDe(proyectoId) {
