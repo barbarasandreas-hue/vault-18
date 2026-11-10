@@ -72,13 +72,13 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
-    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {}, visitaVersion: 2, vecinos: {}, trabajo: '', arriendoElegido: null, mesContrato: null };
+    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {}, visitaVersion: 2, vecinos: {}, trabajo: '', arriendoElegido: null, mesContrato: null, visitas: {} };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -340,6 +340,12 @@
       estado.construido = Number.isInteger(g.construido) ? g.construido : null;
       // 9-nov: en qué grupos quiere conocer a sus vecinos (solo para vivir, por elección propia).
       estado.trabajo = typeof g.trabajo === 'string' ? g.trabajo.slice(0, 120) : '';
+      // 10-nov: visitas agendadas por departamento ({ fecha, hora, fue }).
+      estado.visitas = {};
+      if (g.visitas && typeof g.visitas === 'object') Object.keys(g.visitas).forEach(function (id) {
+        var v = g.visitas[id];
+        if (buscarProyecto(id) && v && /^\d{4}-\d{2}-\d{2}$/.test(v.fecha) && typeof v.hora === 'string') estado.visitas[id] = { fecha: v.fecha, hora: v.hora.slice(0, 5), fue: !!v.fue };
+      });
       estado.mesContrato = Number.isInteger(g.mesContrato) ? g.mesContrato : null;
       estado.arriendoElegido = ARRIENDOS_OPCION.some(function (u) { return u.id === g.arriendoElegido; }) ? g.arriendoElegido : null;
       estado.vecinos = {};
@@ -2636,6 +2642,58 @@
     if (c && !c.grupo && !c.ficha) return estado.caminoElegido;
     return 'pie-compartido';
   }
+  // 10-nov: agendar visita antes de elegir. La visita se pide con la mitad del pie, para no hacer perder tiempo a la corredora.
+  var DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  var MESES_NOMBRE = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  function textoVisita(v) {
+    var f = v.fecha.split('-').map(Number), d = new Date(Date.UTC(f[0], f[1] - 1, f[2]));
+    return DIAS_SEMANA[d.getUTCDay()] + ' ' + f[2] + ' de ' + MESES_NOMBRE[f[1] - 1] + ', ' + v.hora;
+  }
+  // Tres horarios de ejemplo desde hoy (la fecha real, no la de la demo: una visita es una cita de verdad):
+  // el próximo martes en la tarde y los dos sábados siguientes en la mañana.
+  function horariosVisita() {
+    var h = new Date(), base = Date.UTC(h.getFullYear(), h.getMonth(), h.getDate()), dia = new Date(base).getUTCDay();
+    var en = function (n) { return new Date(base + n * 864e5).toISOString().slice(0, 10); };
+    var martes = ((2 - dia + 7) % 7) || 7, sabado = ((6 - dia + 7) % 7) || 7;
+    return [{ fecha: en(martes), hora: '18:30' }, { fecha: en(sabado), hora: '11:00' }, { fecha: en(sabado + 7), hora: '11:00' }]
+      .sort(function (a, b) { return a.fecha < b.fecha ? -1 : 1; });
+  }
+  function accionVisita(p) {
+    var v = estado.visitas[p.id];
+    if (v && v.fue) return '<p class="sello">' + icono('i-ok') + 'Ya lo visitaste</p>' +
+      '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-comprar">Elegir este departamento</button>';
+    if (v) return '<p class="aviso">Tu visita: ' + textoVisita(v) + '</p>' +
+      '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-ya-visite">Ya lo visité</button>' +
+      '<button type="button" class="btn btn-terciario btn-sm" id="btn-agendar" aria-haspopup="dialog">Cambiar la visita</button>';
+    var meta = metaCompra(p), tengo = ahorradoTuPie(meta), umbral = Math.ceil(meta / 2);
+    if (tengo < umbral) {
+      var falta = umbral - tengo, m = mesesParaMeta(falta, estado.ahorroMensual);
+      return '<p class="aviso">Visitas con la mitad de tu pie: te faltan ' + formatoRedondeado(falta) + (m ? ', unos ' + textoMeses(m) : '') + '.</p>' +
+        '<a href="#pie" class="btn btn-secundario-dark btn-lg btn-bloque">Juntar mi pie</a>';
+    }
+    return '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-agendar" aria-haspopup="dialog">Agendar visita</button>';
+  }
+  function abrirAgenda(p, boton, alListo) {
+    var hs = horariosVisita();
+    abrirHojaContenido('Agendar visita',
+      '<p class="texto-apoyo">' + esc(p.nombre) + '. Te acompaña la corredora de la inmobiliaria.</p>' +
+      '<div class="horarios-visita">' + hs.map(function (h, i) {
+        return '<button type="button" class="btn btn-secundario-dark btn-bloque" data-horario="' + i + '">' + textoVisita(h) + '</button>';
+      }).join('') + '</div><p class="texto-apoyo">Horarios de ejemplo · simulado</p>', boton, function (hoja) {
+        hoja.querySelectorAll('[data-horario]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            var h = hs[Number(b.dataset.horario)];
+            estado.visitas = Object.assign({}, estado.visitas);
+            estado.visitas[p.id] = { fecha: h.fecha, hora: h.hora, fue: false };
+            guardarEstado();
+            cerrarHoja(false);
+            toast('Visita agendada: ' + textoVisita(h));
+            alListo();
+          });
+        });
+      });
+  }
+
   function renderDetalle(id, ctx, caminoVista) {
     ctx = ctx || 'departamentos';
     $('detalle-volver').setAttribute('href', caminoVista ? '#explorar/' + caminoVista : VOLVER_DETALLE[ctx][0]);
@@ -2716,8 +2774,9 @@
     } else if (r.cuposLibres === 0) {
       comprar = '<p class="aviso">Sin cupos disponibles.</p>';
     } else {
+      // 10-nov: comprar es una decisión grande. Primero se visita (con la mitad del pie juntada) y solo después se elige.
       comprar = ctx === 'camino'
-        ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-comprar">Elegir este departamento</button>'
+        ? accionVisita(p)
         : (!estado.preguntasListas
           ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-me-alcanza">¿Me alcanza?</button>'
           : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-llevar" aria-haspopup="dialog">Elegir este departamento</button>');
@@ -2817,6 +2876,16 @@
         '<ul class="datos-inversion"><li><span>Gastos al firmar</span><strong>' + formatoRedondeado(pd.gastos) + '</strong></li>' +
         (enGrupo && r.ahorroCompleto > r.ahorro ? '<li><span>Si el grupo se completa, ahorras</span><strong>' + formatoRedondeado(r.ahorroCompleto) + '</strong></li>' : '') + '</ul>',
         $('btn-detalle-credito'));
+    });
+    if ($('btn-agendar')) $('btn-agendar').addEventListener('click', function () {
+      abrirAgenda(p, $('btn-agendar'), function () { renderDetalle(id, ctx, caminoVista); var b = $('btn-ya-visite'); if (b) b.focus(); });
+    });
+    if ($('btn-ya-visite')) $('btn-ya-visite').addEventListener('click', function () {
+      estado.visitas = Object.assign({}, estado.visitas);
+      estado.visitas[p.id] = Object.assign({}, estado.visitas[p.id], { fue: true });
+      guardarEstado();
+      renderDetalle(id, ctx, caminoVista);
+      var b = $('btn-comprar'); if (b) b.focus();
     });
     var botonComprar = $('btn-comprar');
     if (botonComprar) {
