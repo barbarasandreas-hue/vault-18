@@ -5167,7 +5167,17 @@
     if (antes !== o.listas) { estado.construido = o.listas; guardarEstado(); }
     var terminado = o.etapa === 'listo';
     var grua = o.etapa !== 'terreno' && !terminado
-      ? '<g class="cn-grua"><path d="M206 130V20M190 20h34M206 20l-10 8M196 20v14"/><rect x="192" y="34" width="8" height="6"/></g>' : '';
+      // 10-nov: grúa torre (mástil reticulado, pluma, contrapeso y una viga colgando) para que no parezca el juego del ahorcado.
+      ? '<g class="cn-grua">' +
+          '<path d="M202 130V26M210 130V26"/>' +
+          '<path class="cn-grua-fina" d="M202 130L210 120M202 120L210 110M202 110L210 100M202 100L210 90M202 90L210 80M202 80L210 70M202 70L210 60M202 60L210 50M202 50L210 40M202 40L210 30"/>' +
+          '<path d="M146 20H224M146 26H212M146 20v6"/>' +
+          '<path class="cn-grua-fina" d="M150 26l6-6l6 6l6-6l6 6l6-6l6 6l6-6l6 6l6-6l6 6l6-6M206 12L150 20M206 12L224 20M206 12V20"/>' +
+          '<rect class="cn-grua-cabina" x="211" y="27" width="8" height="7" rx="1"/>' +
+          '<rect class="cn-grua-peso" x="214" y="21" width="10" height="9" rx="1"/>' +
+          '<path class="cn-grua-fina" d="M161 26v14"/>' +
+          '<rect class="cn-grua-viga" x="150" y="40" width="22" height="4" rx="1"/>' +
+        '</g>' : '';
     var piezas = '';
     for (var i = 0; i < o.listas; i++)
       piezas += '<g class="cn-pieza' + (i >= nuevaDesde ? ' cn-nueva' : '') + '" style="--i:' + (i - nuevaDesde) + '">' + piezaObra(i) + '</g>';

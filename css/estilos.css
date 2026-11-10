@@ -3268,3 +3268,8 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .respaldo-invita { display: grid; gap: 10px; }
 .respaldo-invita h2, .respaldo-invita .texto-apoyo { margin: 0; }
 .enlace-copiar { margin: 0; padding: 10px 12px; border: 1px dashed var(--blue-40); border-radius: var(--radio-campo); background: var(--blue-20); color: var(--blue-dark); font-size: 14px; overflow-wrap: anywhere; user-select: all; }
+/* 10-nov: grúa torre de la obra. */
+.cn-grua .cn-grua-fina { stroke-width: 1.2; }
+.cn-grua .cn-grua-cabina { fill: var(--blue-normal); }
+.cn-grua .cn-grua-peso { fill: var(--gray-semidark); }
+.cn-grua .cn-grua-viga { fill: var(--yellow-normal); stroke: var(--yellow-dark); stroke-width: 1; }
