@@ -3217,3 +3217,6 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .camino-boton.color-2 .camino-boton-ir { background: var(--yellow-normal); box-shadow: 0 2px 6px rgba(55, 71, 79, .25); }
 /* Comentario 9-nov: flecha blanca (pedido). Contraste bajo sobre amarillo: trazo más grueso y una sombra para que se vea. */
 .camino-boton.color-2 .camino-boton-ir svg { stroke: var(--white); stroke-width: 3.4; filter: drop-shadow(0 1px 1px rgba(55, 71, 79, .45)); }
+/* Comentario 9-nov: crear tu avatar en las preguntas iniciales. */
+.pregunta-avatar { display: flex; align-items: center; gap: 16px; margin: 4px 0 16px; padding: 12px 16px; border-radius: 16px; background: var(--white); border: 1px solid var(--gray-semilight); }
+.pregunta-escena { display: flex; align-items: flex-end; gap: 2px; min-height: 64px; }

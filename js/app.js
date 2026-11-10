@@ -1182,10 +1182,15 @@
     }
 
     if (n === 2) {
+      // Comentario 9-nov: parte en "Solo yo"; el sueldo de la pareja aparece solo si eliges "Con mi pareja".
+      if (!estado.conQuien) { estado.conQuien = 'solo'; guardarEstado(); }
       var quien = function (v, texto) {
         return '<button type="button" class="chip-opcion" role="radio" aria-checked="' + (estado.conQuien === v) + '" data-quien="' + v + '">' + texto + '</button>';
       };
       c.innerHTML = cabeza(estado.conQuien === 'solo' ? '¿Cuánto ganas?' : '¿Cuánto ganan?') +
+        // Comentario 9-nov: aquí también se crea tu avatar.
+        '<div class="pregunta-avatar"><span class="pregunta-escena" aria-hidden="true">' + escena(64, 'escena-av') + '</span>' +
+          '<button type="button" class="btn btn-secundario-dark btn-sm" id="btn-crear-avatar" aria-haspopup="dialog">' + (estado.avatar ? 'Cambiar mi avatar' : 'Crea tu avatar') + '</button></div>' +
         '<div class="con-quien">' +
           '<p class="etiqueta" id="titulo-con-quien">¿Con quién vas a vivir?</p>' +
           '<div class="chips-opcion" role="radiogroup" aria-labelledby="titulo-con-quien">' +
@@ -1195,12 +1200,12 @@
         '</div>' +
         '<div class="formulario">' +
           campoDinero('q-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
-          (estado.conQuien === 'solo' ? '' : campoDinero('q-pareja', 'Sueldo de tu pareja', estado.sueldoPareja)) +
+          (estado.conQuien === 'pareja' ? campoDinero('q-pareja', 'Sueldo de tu pareja', estado.sueldoPareja) : '') +
           campoDinero('q-otras', 'Otras cuotas al mes', estado.otrasCuotas) +
         '</div>' +
         '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-siguiente">Siguiente</button></div>' +
         atras;
-      if (estado.conQuien === 'solo') { estado.sueldoPareja = null; guardarEstado(); }
+      if (estado.conQuien !== 'pareja') { estado.sueldoPareja = null; guardarEstado(); }
       [['q-propio', 'sueldoPropio'], ['q-pareja', 'sueldoPareja'], ['q-otras', 'otrasCuotas']].forEach(function (x) {
         if (!$(x[0])) return;
         $(x[0]).addEventListener('input', function () {
@@ -1216,6 +1221,9 @@
           guardarEstado();
           volverA('[data-quien="' + b.dataset.quien + '"]');
         });
+      });
+      $('btn-crear-avatar').addEventListener('click', function () {
+        editarMiAvatar($('btn-crear-avatar'), function () { volverA('#btn-crear-avatar'); });
       });
       if ($('btn-agregar-familia')) $('btn-agregar-familia').addEventListener('click', function () {
         agregarAlEquipo($('btn-agregar-familia'), null, function () { volverA('#btn-agregar-familia'); }, 'mamá');
