@@ -1203,12 +1203,15 @@
         '</div>' +
         '<div class="formulario">' +
           campoDinero('q-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
-          (estado.conQuien === 'pareja' ? campoDinero('q-pareja', 'Sueldo de tu pareja', estado.sueldoPareja) : '') +
+          // 9-nov: con familia, un familiar puede sumar su sueldo como codeudor (crédito con codeudor solidario).
+          (estado.conQuien === 'pareja' ? campoDinero('q-pareja', 'Sueldo de tu pareja', estado.sueldoPareja)
+            : estado.conQuien === 'familia' ? campoDinero('q-pareja', 'Sueldo de un familiar codeudor (opcional)', estado.sueldoPareja) +
+              '<p class="texto-apoyo campo-nota"><small>Si compra contigo como codeudor, su sueldo se suma al de tu hogar.</small></p>' : '') +
           campoDinero('q-otras', 'Otras cuotas al mes', estado.otrasCuotas) +
         '</div>' +
         '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-siguiente">Siguiente</button></div>' +
         atras;
-      if (estado.conQuien !== 'pareja') { estado.sueldoPareja = null; guardarEstado(); }
+      if (estado.conQuien === 'solo') { estado.sueldoPareja = null; guardarEstado(); }
       [['q-propio', 'sueldoPropio'], ['q-pareja', 'sueldoPareja'], ['q-otras', 'otrasCuotas']].forEach(function (x) {
         if (!$(x[0])) return;
         $(x[0]).addEventListener('input', function () {
@@ -2384,7 +2387,7 @@
       '<fieldset class="selector"><legend>¿Para qué quieres el departamento?</legend>' +
         '<div class="selector-opciones">' + opcion('vivir', 'Para vivir') + opcion('arrendar', 'Para arrendar') + '</div></fieldset>' +
       campoDinero('datos-propio', 'Tu sueldo líquido', estado.sueldoPropio) +
-      campoDinero('datos-pareja', 'Sueldo líquido de tu pareja', estado.sueldoPareja) +
+      campoDinero('datos-pareja', estado.conQuien === 'familia' ? 'Sueldo de tu familiar codeudor' : 'Sueldo líquido de tu pareja', estado.sueldoPareja) +
       campoDinero('datos-otras', 'Otras cuotas al mes', estado.otrasCuotas) +
       campoDinero('datos-ahorro', 'Lo que tienes ahorrado', estado.ahorroActual) +
       campoDinero('datos-mensual', 'Lo que puedes juntar al mes', estado.ahorroMensual) +

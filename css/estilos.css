@@ -3220,3 +3220,4 @@ details.visita[open] > summary { margin-bottom: 6px; }
 /* Comentario 9-nov: crear tu avatar en las preguntas iniciales. */
 .pregunta-avatar { display: flex; align-items: center; gap: 16px; margin: 4px 0 16px; padding: 12px 16px; border-radius: 16px; background: var(--white); border: 1px solid var(--gray-semilight); }
 .pregunta-escena { display: flex; align-items: flex-end; gap: 2px; min-height: 64px; }
+.campo-nota { margin: -6px 0 6px; }
