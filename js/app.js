@@ -745,7 +745,7 @@
       '<h2 class="h4" id="titulo-conoce-' + esc(p.id) + '">Conoce a tu grupo</h2>' +
       // Capa 1: Bci responde por cada uno.
       '<div class="grupo-sello">' + icono('i-escudo') + '<span><strong>Todos están preaprobados por Bci</strong>' +
-        '<small>Bci revisó el historial de crédito de cada uno. Tú ves el resultado, no sus datos.</small></span></div>' +
+        '<small>Bci revisó el historial de crédito de cada uno.</small></span></div>' +
       '<ul class="grupo-cifras">' +
         '<li><strong>' + r.cuposTomados + ' de ' + r.cupos + '</strong><small>se unieron</small></li>' +
         '<li><strong>' + plural(g.mesesAhorrando || 1, 'mes', 'meses') + '</strong><small>ahorrando juntos</small></li>' +
