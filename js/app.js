@@ -2947,6 +2947,16 @@
         '<span><strong>Si te unes a su grupo</strong><small>' + r.cuposTomados + ' de ' + r.cupos + ' personas ya se unieron. Podrías pagar ' + formatoRedondeado(menos) + ' menos' + (antes > 0 ? ' y llegar ' + plural(antes, 'mes', 'meses') + ' antes' : '') + '</small></span>' +
         '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>';
     }
+    // 11-nov: el mismo departamento en grupo también se puede comprar solo, desde aquí mismo.
+    var soloPosible = '';
+    if (conjunto && !solo && !esMiCompra && ctx !== 'inversiones') {
+      var caminoSolo = estado.modo === 'vivir' ? 'individual-vivir' : 'individual-invertir';
+      var masSolo = vivirAqui ? ufAPesos(plazoDepartamento(p, null, true).precioUF - pd.precioUF) : 0;
+      soloPosible = '<a class="tarjeta fila grupo-posible" href="#camino/proyecto/' + esc(p.id) + '/' + caminoSolo + '">' + icono('i-casa', 'icono-grande') +
+        '<span><strong>Comprarlo sin grupo</strong><small>Con ' + CAMINOS[caminoSolo].corto.replace(/^C/, 'c') + ', sin esperar que el grupo se complete' +
+        (masSolo > 0 ? '. Pagas ' + formatoRedondeado(masSolo) + ' más' : '') + '</small></span>' +
+        '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>';
+    }
     var invertiste = invertidoEn(p.id) > 0;
     var comprar;
     if (p.tipo === 'financiamiento' && estado.modo === 'vivir' && !esMiCompra) {
@@ -3005,7 +3015,7 @@
         '<p class="texto-apoyo">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       '</header>' +
       galeria(fotosDe(p, d)) +
-      (conjunto && !vivirAqui ? bloqueGrupo + conoceGrupo : '') +
+      (conjunto && !vivirAqui ? bloqueGrupo + conoceGrupo + soloPosible : '') +
       (solo && !vivirAqui && !esMiCompra && !grupoCerrado(p) && r.cuposLibres > 0 && ahorroGrupo > 0
         ? '<a class="tarjeta fila grupo-posible" href="#camino/proyecto/' + esc(p.id) + '/grupo-invertir">' + icono('i-grupo', 'icono-grande') +
           '<span><strong>Si te unes a su grupo</strong><small>Podrías pagar ' + formatoRedondeado(ahorroGrupo) + ' menos</small></span>' +
@@ -3025,7 +3035,7 @@
             '<li><span>Después pagas al mes</span><span class="en-uf"><strong>' + formatoRedondeado(pd.dividendo) + '</strong><small>' + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2) + '</small></span></li>' +
             '<li class="suave"><span>Sin subsidio a la tasa</span><span>' + formatoRedondeado(pd.dividendoSinSubsidio) + SEP + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + '</span></li>' +
           '</ul>' +
-          grupoPosible +
+          grupoPosible + soloPosible +
           // 11-nov (comentario): quiénes están en el grupo, justo antes de Tu mes como dueño.
           (conjunto ? conoceGrupo : '') +
           '<a class="tarjeta dueno-card" href="#camino/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
