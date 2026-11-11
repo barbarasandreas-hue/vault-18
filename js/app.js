@@ -5425,19 +5425,14 @@
     var sugerido = null;
     if (!id) { try { sugerido = recomendarCamino(perfilActual()).id; } catch (e) { sugerido = null; } }
     var cid = id || sugerido;
-    var nombre = cid && CAMINOS[cid] ? CAMINOS[cid].nombre : null;
-    var linea = cid === 'arriendo-opcion' ? 'Te mudas con el 5' + NBSP + '% y parte de tu arriendo va a tu pie.' : (LINEA_CAMINO[cid] || '');
+    var nombre = cid && CAMINOS[cid] ? CAMINOS[cid].corto : 'Elige cómo comprar';
     var aviso = caminoRecien ? '<p class="camino-pasos-aviso" role="status">' + icono('i-check') + 'Listo: estos son tus pasos con ' + primeraMinuscula(CAMINOS[caminoRecien].corto) + '.</p>' : '';
     caminoRecien = null;
-    if (id) return aviso + '<section class="tarjeta camino-pasos" aria-label="Tu camino">' +
-        '<span class="camino-pasos-ceja">Sigues este camino</span><strong>' + nombre + '</strong>' + (linea ? '<small>' + linea + '</small>' : '') +
-        '<span class="camino-pasos-enlaces">' + (estado.compra ? '' : '<a class="enlace" href="#explorar/' + id + '">Ver el camino</a>') + '<a class="enlace" href="#explorar">Cambiar de camino</a></span></section>';
-    return aviso + '<section class="tarjeta camino-pasos sin-elegir" aria-label="Tu camino">' +
-        '<span class="camino-pasos-ceja">Aún no eliges un camino</span>' +
-        '<strong>' + (nombre ? 'Tus pasos son los de ' + primeraMinuscula(CAMINOS[cid].corto) : 'Elige cómo quieres comprar') + '</strong>' +
-        '<small>Es el camino sugerido para ti. Mira los otros y elige el que quieres seguir.</small>' +
-        '<span class="camino-pasos-enlaces"><a class="btn btn-secundario-dark btn-sm" href="#explorar">Elegir mi camino</a></span></section>';
+    return aviso + '<a class="tarjeta camino-pasos' + (id ? '' : ' sin-elegir') + '" href="#explorar">' +
+        '<span><small>' + (id ? 'Tu camino' : 'Camino sugerido' + SEP + 'aún no eliges') + '</small><strong>' + nombre + '</strong></span>' +
+        '<span class="camino-pasos-cambiar">' + (id ? 'Cambiar' : 'Elegir') + ' ›</span></a>';
   }
+
   function renderTusPasos() {
     var cont = $('pasos-contenido');
     var s = fotoPasos();
@@ -6059,18 +6054,31 @@
         .sort(function (a, b) { return (ORDEN_EXPLORAR[a] || 9) - (ORDEN_EXPLORAR[b] || 9); })
         .concat(estado.modo === 'vivir' ? ['usados', 'arriendo-opcion'] : []);
       if (ids.length < 2) return;
-      var html = '<nav class="otros-caminos" aria-label="Cambiar de camino"><p class="otros-caminos-titulo">Cambiar de camino</p><div class="otros-caminos-lista">' +
-        ids.map(function (id) {
-          var nombre = id === 'usados' ? NOMBRE_USADOS : CAMINOS[id].corto;
-          var color = COLOR_EXPLORAR[id] !== undefined ? COLOR_EXPLORAR[id] : 1;
-          return '<a class="chip camino-chip punto-' + color + '" href="#explorar/' + id + '"' + (id === actual ? ' aria-current="page"' : '') + '>' + nombre + '</a>';
-        }).join('') + '</div></nav>';
-      var cab = cont.querySelector('.encabezado');
-      if (cab) cab.insertAdjacentHTML('afterend', html);
-      var activo = cont.querySelector('.camino-chip[aria-current]');
-      if (activo) setTimeout(function () { var l = activo.parentNode; l.scrollLeft += activo.getBoundingClientRect().left - l.getBoundingClientRect().left - 24; }, 0);
+      var h1 = cont.querySelector('.encabezado h1');
+      if (!h1) return;
+      h1.insertAdjacentHTML('afterend', '<button type="button" class="cambiar-camino" id="btn-cambiar-camino" aria-haspopup="dialog">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/></svg>Cambiar de camino</button>');
+      var b = $('btn-cambiar-camino');
+      b.addEventListener('click', function () {
+        abrirHojaContenido('Cambiar de camino',
+          '<ul class="hoja-caminos">' + ids.map(function (id) {
+            var nombre = id === 'usados' ? NOMBRE_USADOS : CAMINOS[id].nombre;
+            var color = COLOR_EXPLORAR[id] !== undefined ? COLOR_EXPLORAR[id] : 1;
+            var linea = TEXTO_EXPLORAR[id] || LINEA_CAMINO[id] || '';
+            var es = id === actual;
+            return '<li><a class="hoja-camino punto-' + color + '" href="#explorar/' + id + '"' + (es ? ' aria-current="page"' : '') + ' data-cerrar-hoja>' +
+              '<span><strong>' + nombre + '</strong><small>' + linea + '</small></span>' +
+              (es ? '<span class="chip">Lo estás viendo</span>' : '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg>') + '</a></li>';
+          }).join('') + '</ul>', b,
+          function () {
+            document.querySelectorAll('[data-cerrar-hoja]').forEach(function (a) {
+              a.addEventListener('click', function () { cerrarHoja(false); });
+            });
+          });
+      });
     } catch (e) { /* si falla, la página sigue igual */ }
   }
+
 
   function renderUnCamino(id) {
     var cont = $('caminos-contenido');
@@ -6098,7 +6106,6 @@
           '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button>') +
       '<h2 class="h3 camino-explorar-titulo">Explorar</h2>' +
       chipsExplorar(id).replace('</div>', '<button type="button" class="chip chip-filtro chip-favoritos" id="chip-favoritos" aria-pressed="' + soloFavoritos + '">' + icono('i-corazon') + 'Favoritos</button></div>') +
-      (vivir ? '<p class="chips-que"><a class="enlace" href="#explorar/' + id + '/como">¿Qué ' + (id === 'grupo-vivir' ? 'son el DS1 y el DS19' : 'son el DS1, el DS19 y sin IVA') + '?</a></p>' : '') +
       (!vivir && id === 'individual-invertir'
         ? '<a class="tarjeta fila como-funciona" href="#explorar/usados">' + icono('i-casa', 'icono-grande') +
             '<span><strong>También usados</strong><small>El mismo crédito al 80' + NBSP + '%, sin subsidio a la tasa</small></span>' +
@@ -6664,12 +6671,18 @@
 
   // 11-nov: "Ver mis pasos con este camino": antes de confirmar se ven los pasos de ese camino y, al confirmar, vas a Tus pasos.
   function pasosDeCamino(id) {
-    var g = { c: estado.caminoElegido, p: estado.piezas };
+    var g = { c: estado.caminoElegido, p: estado.piezas, k: estado.compra };
     try {
+      if (choqueCompra(id)) estado.compra = null;
       estado.caminoElegido = id;
       if (estado.modo === 'vivir' && CAMINOS[id] && !CAMINOS[id].ficha) estado.piezas = Object.assign({}, estado.piezas, { grupo: !!CAMINOS[id].grupo });
       return hitoActual(fotoPasos());
-    } finally { estado.caminoElegido = g.c; estado.piezas = g.p; }
+    } finally { estado.caminoElegido = g.c; estado.piezas = g.p; estado.compra = g.k; }
+  }
+  // 11-nov: tu departamento elegido es de otro tipo (en grupo o solo) que este camino.
+  function choqueCompra(id) {
+    var p = proyectoCompra();
+    return !!(p && CAMINOS[id] && !CAMINOS[id].ficha && enGrupoDe(p) !== !!CAMINOS[id].grupo) || !!(p && id === 'arriendo-opcion');
   }
   function listaPasosPrevia(h) {
     return '<ol class="pasos-previa">' + h.hitos.map(function (x, i) {
@@ -6687,10 +6700,18 @@
     abrirHojaContenido('Tus pasos con ' + primeraMinuscula(CAMINOS[id].corto),
       '<p class="texto-apoyo">Si sigues este camino, estos son tus ' + h.total + ' pasos hasta las llaves. ' + fecha + '</p>' +
       listaPasosPrevia(h) +
-      '<p class="texto-apoyo"><small>Tu cuenta, tu ahorro y tus misiones se mantienen. Puedes cambiar de camino cuando quieras.</small></p>' +
-      '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-confirmar-camino">Seguir este camino</button></div>', boton,
+      (choqueCompra(id)
+        ? '<p class="aviso">Ya elegiste ' + esc(proyectoCompra().nombre) + ', que es de otro camino. Para seguir este, elige uno de sus departamentos.</p>' +
+          '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-ver-deptos-camino">Ver sus departamentos</button></div>'
+        : '<p class="texto-apoyo"><small>Tu cuenta, tu ahorro y tus misiones se mantienen. Puedes cambiar de camino cuando quieras.</small></p>' +
+          '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-confirmar-camino">Seguir este camino</button></div>'), boton,
       function () {
-        $('btn-confirmar-camino').addEventListener('click', function () {
+        if ($('btn-ver-deptos-camino')) $('btn-ver-deptos-camino').addEventListener('click', function () {
+          cerrarHoja(false);
+          var l = document.querySelector('#caminos-contenido .lista-proyectos');
+          if (l) l.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        if ($('btn-confirmar-camino')) $('btn-confirmar-camino').addEventListener('click', function () {
           estado.caminoElegido = id;
           if (estado.modo === 'vivir') estado.piezas = Object.assign({}, estado.piezas, { grupo: !!CAMINOS[id].grupo });
           guardarEstado();

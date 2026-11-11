@@ -3398,3 +3398,22 @@ a.camino-es-tuyo { text-decoration: none; }
 .ayuda-tu span { display: flex; flex-direction: column; gap: 2px; }
 .chip-existe { background: #D7EBD8; color: #1E4D21; }
 .chips-que { margin: -4px 0 12px; font-size: 14px; }
+
+/* 11-nov (2): tarjeta del camino en Tus pasos, en una fila */
+.camino-pasos { flex-direction: row !important; align-items: center; justify-content: space-between; gap: 12px !important; padding: 12px 16px !important; text-decoration: none; }
+.camino-pasos > span:first-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.camino-pasos small { font-size: 13px !important; }
+.camino-pasos strong { font-size: 16px !important; }
+.camino-pasos-cambiar { flex: none; color: #1D5699; font-weight: 700; font-size: 14px; }
+/* Cambiar de camino: botón bajo el título y hoja con los caminos */
+.cambiar-camino { display: inline-flex; align-items: center; gap: 6px; margin: 4px 0 8px; padding: 6px 12px; border: 1px solid #CFD8DC; border-radius: 999px; background: #fff; color: #1D5699; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.cambiar-camino svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hoja-caminos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.hoja-camino { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1px solid #ECEFF1; text-decoration: none; color: #37474F; border-left: 6px solid #1D5699; }
+.hoja-camino.punto-1 { border-left-color: #28652B; }
+.hoja-camino.punto-2 { border-left-color: #E8B600; }
+.hoja-camino.punto-3 { border-left-color: #B20913; }
+.hoja-camino > span:first-child { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.hoja-camino small { color: #546E7A; font-size: 14px; line-height: 1.35; }
+.hoja-camino[aria-current] { background: #F1F5FA; }
+.hoja-camino .flecha-derecha { width: 20px; height: 20px; flex: none; }
