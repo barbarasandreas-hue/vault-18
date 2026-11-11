@@ -2992,8 +2992,10 @@
         '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
         '<p class="frase-cierre">' + frase + '</p>' +
       '</div>';
+    var conoceGrupo = '';
+    if (conjunto && bloqueGrupo) conoceGrupo = conoceTuGrupo(p, r);
     if (conjunto && bloqueGrupo) bloqueGrupo = bloqueGrupo.replace('<div class="tarjeta bloque">', '<div class="tarjeta bloque grupo-detalle"><h2 class="grupo-detalle-titulo">Tu grupo de compra</h2>')
-      .replace(/<\/div>$/, siAlguienSeVa(p) + '</div>') + conoceTuGrupo(p, r);
+      .replace(/<\/div>$/, siAlguienSeVa(p) + '</div>');
     contenedor.innerHTML =
       // S25: como el canvas: título, el tipo en un chip y la ficha.
       '<header class="detalle-cabecera">' + (ctx !== 'inversiones' ? botonFavorito(p) : '') +
@@ -3002,7 +3004,7 @@
         '<p class="texto-apoyo">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       '</header>' +
       galeria(fotosDe(p, d)) +
-      (conjunto && !vivirAqui ? bloqueGrupo : '') +
+      (conjunto && !vivirAqui ? bloqueGrupo + conoceGrupo : '') +
       (solo && !vivirAqui && !esMiCompra && !grupoCerrado(p) && r.cuposLibres > 0 && ahorroGrupo > 0
         ? '<a class="tarjeta fila grupo-posible" href="#camino/proyecto/' + esc(p.id) + '/grupo-invertir">' + icono('i-grupo', 'icono-grande') +
           '<span><strong>Si te unes a su grupo</strong><small>Podrías pagar ' + formatoRedondeado(ahorroGrupo) + ' menos</small></span>' +
@@ -3023,6 +3025,8 @@
             '<li class="suave"><span>Sin subsidio a la tasa</span><span>' + formatoRedondeado(pd.dividendoSinSubsidio) + SEP + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + '</span></li>' +
           '</ul>' +
           grupoPosible +
+          // 11-nov (comentario): quiénes están en el grupo, justo antes de Tu mes como dueño.
+          (conjunto ? conoceGrupo : '') +
           '<a class="tarjeta dueno-card" href="#camino/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
             '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para tus gastos</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
           barrioHtml(p) +
