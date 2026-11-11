@@ -3347,3 +3347,16 @@ details.visita[open] > summary { margin-bottom: 6px; }
 /* 11-nov: descuento del grupo en las tarjetas */
 .tp-descuento{color:#28652B;font-weight:700}
 .tp-linea s{color:#546E7A}
+
+/* 11-nov: cambiar de camino dentro de un camino */
+.otros-caminos { margin: 4px 0 16px; }
+.otros-caminos-titulo { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--gray-dark, #37474F); }
+.otros-caminos-lista { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: none; }
+.otros-caminos-lista::-webkit-scrollbar { display: none; }
+.camino-chip { flex: none; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; text-decoration: none; background: var(--white, #fff); color: var(--gray-dark, #37474F); border: 1px solid #CFD8DC; border-radius: 999px; padding: 8px 14px; font-size: 14px; }
+.camino-chip::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #1D5699; }
+.camino-chip.punto-0::before { background: #1D5699; }
+.camino-chip.punto-1::before { background: #28652B; }
+.camino-chip.punto-2::before { background: #E8B600; }
+.camino-chip.punto-3::before { background: #B20913; }
+.camino-chip[aria-current] { background: var(--gray-dark, #37474F); color: #fff; border-color: transparent; font-weight: 700; }

@@ -6025,6 +6025,27 @@
     var n = ORDEN_PIEZAS.filter(function (id) { return on[id] && id !== 'grupo'; });
     return n.length ? '<p class="chip-fila">' + n.map(function (id) { return '<span class="chip chip-existe">' + PIEZAS_VIVIR[id].nombre + '</span>'; }).join(' ') + '</p>' : '';
   }
+  // 11-nov: dentro de un camino, cambiarse a otro sin volver a Explorar.
+  function ponerOtrosCaminos(cont, actual) {
+    try {
+      var perfil = perfilActual();
+      var ids = caminosExplorar(perfil, recomendarCamino(perfil)).ids.slice()
+        .sort(function (a, b) { return (ORDEN_EXPLORAR[a] || 9) - (ORDEN_EXPLORAR[b] || 9); })
+        .concat(estado.modo === 'vivir' ? ['usados', 'arriendo-opcion'] : []);
+      if (ids.length < 2) return;
+      var html = '<nav class="otros-caminos" aria-label="Cambiar de camino"><p class="otros-caminos-titulo">Cambiar de camino</p><div class="otros-caminos-lista">' +
+        ids.map(function (id) {
+          var nombre = id === 'usados' ? NOMBRE_USADOS : CAMINOS[id].corto;
+          var color = COLOR_EXPLORAR[id] !== undefined ? COLOR_EXPLORAR[id] : 1;
+          return '<a class="chip camino-chip punto-' + color + '" href="#explorar/' + id + '"' + (id === actual ? ' aria-current="page"' : '') + '>' + nombre + '</a>';
+        }).join('') + '</div></nav>';
+      var cab = cont.querySelector('.encabezado');
+      if (cab) cab.insertAdjacentHTML('afterend', html);
+      var activo = cont.querySelector('.camino-chip[aria-current]');
+      if (activo) setTimeout(function () { var l = activo.parentNode; l.scrollLeft += activo.getBoundingClientRect().left - l.getBoundingClientRect().left - 24; }, 0);
+    } catch (e) { /* si falla, la página sigue igual */ }
+  }
+
   function renderUnCamino(id) {
     var cont = $('caminos-contenido');
     if (!CAMINOS[id] || CAMINOS[id].ficha) { location.replace('#explorar'); return; }
@@ -6073,6 +6094,7 @@
         if (nuevo) nuevo.focus();
       });
     });
+    ponerOtrosCaminos(cont, id);
   }
 
 
@@ -6338,6 +6360,7 @@
         cont.querySelector('[data-usado-filtro="' + k + '"]').focus();
       });
     });
+    ponerOtrosCaminos(cont, 'usados');
   }
   var filtroUsados = {};
 
@@ -6554,6 +6577,7 @@
       '<p class="llega-sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
       '<p class="texto-apoyo texto-centro"><small>Ejemplos simulados' + SEP + 'fotos referenciales</small></p>';
     if ($('btn-arriendo-camino')) $('btn-arriendo-camino').addEventListener('click', function () { confirmarArriendo($('btn-arriendo-camino')); });
+    ponerOtrosCaminos(cont, 'arriendo-opcion');
   }
   function renderArriendoDepto(id) {
     var cont = $('caminos-contenido');
