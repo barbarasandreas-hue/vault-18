@@ -61,8 +61,8 @@ test('S21: siguientePaso, 1) lo que vence pronto, con su requisito primero', () 
 test('S21: siguientePaso, 2) destraba el hito actual', () => {
   assert.strictEqual(c.siguientePaso(base(), HOY).id, 'cuenta');
   const listo = { cuentaVivienda: true, ahorrado: 10000000 };
-  assert.strictEqual(c.siguientePaso(base(listo), HOY).id, 'documentos');
-  assert.strictEqual(c.siguientePaso(base(Object.assign({ documentos: true }, listo)), HOY).id, 'preaprobacion');
+  // 11-nov: los datos y documentos son parte del paso de preaprobación, no una misión aparte.
+  assert.strictEqual(c.siguientePaso(base(listo), HOY).id, 'preaprobacion');
   assert.strictEqual(c.siguientePaso(base(Object.assign({ preaprobado: true }, listo)), HOY).id, 'elegir');
   // En grupo, para la preaprobación y el cupo hay que elegir antes.
   assert.strictEqual(c.siguientePaso(base({ grupo: true, cuentaVivienda: true, documentos: true }), HOY).id, 'elegir');

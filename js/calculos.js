@@ -1584,7 +1584,7 @@ function misiones(s, hoy) {
       { fecha: abierto ? FECHAS_IMPORTAN[0].fecha : null, requiere: ['cuenta', 'rsh'] });
     m('rsh', 'Inscríbete en el Registro Social de Hogares', 'DS1', 'pie', s.rsh || s.ds1Postulado);
   }
-  m('documentos', 'Completa tus datos y documentos', 'Preaprobación', 'preaprobacion', s.documentos || s.preaprobado);
+  // 11-nov: "Completa tus datos y documentos" ya no es misión: es el mismo paso de la preaprobación (Tus datos → Tus documentos).
   m('ahorro-auto', 'Activa el ahorro automático', 'Pie', 'pie', s.ahorroAutomatico);
   if (s.cuentaVivienda) m('bajo-llave', 'Guarda tu pie bajo llave', 'Protege', 'pie', s.bajoLlave);
   m('equipo', 'Suma a tu equipo', 'Ánimo', null, s.equipo);
@@ -1602,7 +1602,7 @@ function misiones(s, hoy) {
 }
 
 // Lo que necesita cada hito antes de poder hacerse (misiones).
-var REQUISITOS_HITO = { preaprobacion: ['documentos'], asegurar: ['elegir'], aprobacion: [] };
+var REQUISITOS_HITO = { preaprobacion: [], asegurar: ['elegir'], aprobacion: [] };
 
 // La tarjeta de Inicio: 1) lo que vence pronto · 2) lo que destraba el siguiente hito ·
 // 3) lo que más adelanta la fecha · 4) lo más rápido.

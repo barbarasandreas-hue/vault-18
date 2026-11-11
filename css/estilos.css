@@ -3476,3 +3476,22 @@ a.camino-es-tuyo { text-decoration: none; }
 .mision-ir-btn { background: transparent !important; color: #1D5699 !important; padding: 8px 0 8px 12px !important; font-size: 15px !important; }
 .mision-ir:hover strong { color: #1D5699; }
 .mision-ir:focus-visible { outline: 2px solid #1D5699; outline-offset: 2px; border-radius: 8px; }
+
+/* 11-nov (3): misiones alineadas en tres columnas fijas y título con más peso */
+.pasos-misiones-titulo { font-size: 18px !important; font-weight: 700 !important; text-transform: none !important; letter-spacing: 0 !important; color: #37474F !important; margin: 6px 0 0 !important; display: flex; justify-content: space-between; align-items: baseline; }
+.pasos-misiones-titulo span { font-size: 14px; font-weight: 700; color: #28652B; }
+.pasos-misiones-sub { margin: 2px 0 6px; font-size: 14px; color: #546E7A; }
+.mision-ir { display: grid !important; grid-template-columns: 24px minmax(0, 1fr) 52px; align-items: center; column-gap: 12px; width: 100%; padding: 12px 0 !important; }
+.mision-ir-estado { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #B0BEC5; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; }
+.mision-ir.hecha .mision-ir-estado { background: #28652B; border-color: #28652B; }
+.mision-ir-estado svg { width: 14px; height: 14px; color: #fff; fill: none; stroke: #fff; }
+.mision-ir-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mision-ir-texto small { font-size: 13px; color: #546E7A; }
+.mision-ir-texto .vence { color: #B20913; font-weight: 700; }
+.mision-ir-accion { justify-self: end; font-weight: 700; font-size: 15px; color: #1D5699; }
+.mision-ir.hecha .mision-ir-accion { color: #28652B; }
+.mision-ir.hecha strong { text-decoration: none !important; color: #546E7A; }
+.paso-empezar { justify-self: start; min-height: 48px !important; padding: 0 28px; }
+.paso-en-tarjeta .paso-elegido-cabeza { align-items: center; }
+.pasos-misiones h3.pasos-misiones-titulo { font-size: 18px !important; font-weight: 700 !important; text-transform: none !important; letter-spacing: 0 !important; color: #37474F !important; margin: 8px 0 0 !important; }
+.mision-ir-estado svg { width: 14px; height: 14px; fill: none; stroke: #FFFFFF; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
