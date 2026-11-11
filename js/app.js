@@ -5437,6 +5437,15 @@
   }
 
 
+  // 11-nov: cada misión del paso se puede apretar; "Ir" abre la pantalla para hacerla.
+  function filaMisionIr(x) {
+    return '<li><button type="button" class="fila mision-fila mision-ir' + (x.hecho ? ' hecha' : '') + '" data-mision="' + x.id + '" aria-haspopup="dialog">' +
+      (x.hecho ? icono('i-check', 'icono-grande mision-check') : '') +
+      '<span><strong>' + x.titulo + '</strong>' +
+        (x.fecha && !x.hecho ? '<small' + (diasEntre(hoyDemo(), x.fecha) <= 30 ? ' class="vence"' : '') + '>' + textoVence(x.fecha) + '</small>' : '') +
+        '<small class="mision-etiqueta">' + x.etiqueta + '</small></span>' +
+      (x.hecho ? '<span class="mision-lista">Lista</span>' : '<span class="mision-ir-btn" aria-hidden="true">Ir ›</span>') + '</button></li>';
+  }
   function renderTusPasos() {
     var cont = $('pasos-contenido');
     var s = fotoPasos();
@@ -5476,15 +5485,19 @@
         }).join('') + '</ol>' +
         (celebra ? '<div class="escalon-celebra" role="status"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#FFFFFF"/><path d="M6.5 12.5l3.6 3.6L17.5 8.8" fill="none" stroke="#28652B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
           '<span>¡Subiste un escalón!<small>Sigue así, ya vas en el paso ' + h.indice + '.</small></span></div>' : '') +
-        '<article class="pasos-detalle ' + sel.estado + '" aria-live="polite">' +
-          '<span class="pasos-detalle-ceja">Paso ' + (pasoElegido + 1) + SEP + ceja + '</span>' +
-          '<h2 class="pasos-detalle-titulo">' + sel.nombre + '</h2>' +
-          '<p>' + textoHito(sel.id, s.grupo) + '</p>' +
-          (sel.estado === 'actual' ? '<button type="button" class="btn btn-primario btn-bloque" data-hito="' + sel.id + '" aria-haspopup="dialog">' + (sel.accion || 'Empezar') + '</button>'
-            : sel.estado === 'hecho' ? '<p class="paso-elegido-hecho"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#28892B"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Ya lo hiciste</p>'
-            : '<p class="paso-elegido-despues">Se abre cuando termines el paso ' + h.indice + '.</p>') +
+        // 11-nov: el paso como antes (número al lado del título y el tiempo), y debajo sus misiones con "Ir".
+        '<article class="paso-elegido paso-en-tarjeta" aria-live="polite">' +
+          '<div class="paso-elegido-cabeza"><span class="paso-elegido-num ' + colorDe(sel, pasoElegido) + '" aria-hidden="true">' + (pasoElegido + 1) + '</span>' +
+            '<span><span class="paso-elegido-ceja' + (sel.estado === 'pendiente' ? ' despues' : '') + '">Paso ' + (pasoElegido + 1) + ' de ' + h.total + SEP + (sel.estado === 'hecho' ? 'Listo' : sel.estado === 'actual' ? 'Ahora' : 'Después') + '</span>' +
+            '<h3>' + sel.nombre + '</h3></span></div>' +
+          '<div class="paso-elegido-cuerpo"><span class="paso-elegido-tiempo"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#546E7A" stroke-width="2.4"/><path d="M12 7v5l3 2" fill="none" stroke="#546E7A" stroke-width="2.4" stroke-linecap="round"/></svg>' + sel.cuesta + '</span>' +
+            '<p>' + textoHito(sel.id, s.grupo) + '</p>' +
+            (sel.estado === 'actual' ? '<button type="button" class="btn btn-primario btn-bloque" data-hito="' + sel.id + '" aria-haspopup="dialog">' + (sel.accion || 'Empezar') + '</button>'
+              : sel.estado === 'hecho' ? '<p class="paso-elegido-hecho"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#28892B"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Ya lo hiciste</p>'
+              : '<p class="paso-elegido-despues">Se abre cuando termines el paso ' + h.indice + '.</p>') +
+          '</div>' +
           '<div class="pasos-misiones"><h3 id="titulo-misiones">Misiones de este paso</h3>' +
-            (delPaso.length ? '<ul class="lista-misiones">' + delPaso.map(filaMision).join('') + '</ul>' : '<p class="texto-apoyo"><small>Este paso no tiene misiones.</small></p>') +
+            (delPaso.length ? '<ul class="lista-misiones">' + delPaso.map(filaMisionIr).join('') + '</ul>' : '<p class="texto-apoyo"><small>Este paso no tiene misiones.</small></p>') +
           '</div>' +
         '</article>' +
         '<a class="enlace pasos-todas" href="#pasos/misiones">Ver todas las misiones ›</a>' +
