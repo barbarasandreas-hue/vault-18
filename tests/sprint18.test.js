@@ -16,10 +16,11 @@ test('Descuento de hoy: cupos tomados más el tuyo', () => {
   assert.strictEqual(c.unidadesHoy(mirador, 1, true), 7); // ya estás: no se cuenta dos veces
   assert.strictEqual(c.unidadesHoy(mirador, 9, true), 10); // nunca más que los cupos
   const r = c.resumenProyecto(mirador, datos.departamentosDe(mirador.id), 0, 0, 'vivir', { descuentoHoy: true, yaEstas: false });
-  assert.strictEqual(r.descuento, 0.03);
-  assert.strictEqual(r.escenario.precioUF, 2425);
-  assert.strictEqual(r.ahorro, 3079875);
-  assert.strictEqual(r.ahorroCompleto, 5133125); // el 5 % queda como posibilidad
+  // 11-nov: un solo descuento de 5 % desde 5 personas.
+  assert.strictEqual(r.descuento, 0.05);
+  assert.strictEqual(r.escenario.precioUF, 2375);
+  assert.strictEqual(r.ahorro, 5133125);
+  assert.strictEqual(r.ahorroCompleto, 5133125);
   assert.strictEqual(r.descuentoCompleto, 0.05);
 });
 

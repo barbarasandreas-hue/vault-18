@@ -925,7 +925,7 @@
     'terminado': { termino: 'Departamento terminado', pregunta: '¿Qué es un departamento terminado?',
       texto: 'Un departamento nuevo ya construido. Lo compras solo, sin grupo, y lo recibes al firmar.' },
     'compra-conjunto': { termino: 'Compra en grupo', pregunta: '¿Qué es la compra en grupo?',
-      texto: 'Varias personas compran juntas en un proyecto y todas pagan menos: 3 % desde 5 unidades y 5 % desde 10.' },
+      texto: 'Varias personas compran juntas en un proyecto y todas pagan 5 % menos cuando el grupo llega a 5 personas.' },
     'comprador-respaldo': { termino: 'Comprador de respaldo', pregunta: '¿Qué es el comprador de respaldo?',
       texto: 'Si el comprador se baja antes de escriturar, puedes tomar su lugar y comprar ese departamento.' },
     'salida-sin-multa': { termino: 'Salida sin multa', pregunta: '¿Cuándo puedo salir sin multa?',
@@ -2394,7 +2394,7 @@
     var caminoT = sufijo && CAMINOS[sufijo.slice(1)];
     var solo = p.tipo === 'conjunto' && !!caminoT && !caminoT.grupo;
     var d = departamentosDe(p.id)[0];
-    var completo = r.ahorroCompleto > r.ahorro ? formatoRedondeado(r.ahorroCompleto) + ' si se completa' : '';
+    var completo = r.ahorroCompleto > r.ahorro ? formatoRedondeado(r.ahorroCompleto) + ' si llegan a 5' : '';
     var conIva = p.tipo === 'venta' && estado.modo === 'vivir' && piezasValidas(piezasOn()).iva;
     var grupoTxt = p.tipo === 'conjunto' ? '<span class="tp-grupo">' + icono('i-grupo') + '<strong>' + r.cuposTomados + ' de ' + p.cupos + '</strong> personas en el grupo</span>' : '';
     var etiqueta, cifra, lineas = [];
@@ -2418,7 +2418,7 @@
       if (r.ahorro > 0) lineas.push('Precio normal <s>' + formatoRedondeado(lista) + '</s>');
       lineas.push(r.ahorro > 0
         ? '<span class="tp-descuento">Descuento al unirte: ' + formatoRedondeado(r.ahorro) + ' (' + pctDe(r.ahorro) + ')</span>'
-        : '<span class="tp-descuento">Si el grupo se completa: ' + formatoRedondeado(r.ahorroCompleto) + ' de descuento (' + pctDe(r.ahorroCompleto) + ')</span>');
+        : '<span class="tp-descuento">Si el grupo llega a 5 personas: ' + formatoRedondeado(r.ahorroCompleto) + ' de descuento (' + pctDe(r.ahorroCompleto) + ')</span>');
       // 11-nov: cuántas personas hay en el grupo, en su propia línea y con ícono.
       lineas.push(grupoTxt);
       if (compacta) lineas.push('Cierra el ' + fechaCorta(p.cierre));
@@ -3070,7 +3070,7 @@
         '<ul class="datos-inversion">' +
           '<li><span>Gastos al firmar</span><strong>' + (vivirAqui ? formatoRedondeado(pd.gastos) : formatoPesos(e.gastos)) + '</strong></li>' +
           (vivirAqui ? '' : '<li><span>Juntas antes de firmar</span><strong>' + formatoPesos(e.alEscriturar) + '</strong></li>') +
-          (vivirAqui && enGrupo && r.ahorroCompleto > r.ahorro ? '<li><span>Si el grupo se completa, ahorras</span><strong>' + formatoRedondeado(r.ahorroCompleto) + '</strong></li>' : '') +
+          (vivirAqui && enGrupo && r.ahorroCompleto > r.ahorro ? '<li><span>Si el grupo llega a 5 personas, ahorras</span><strong>' + formatoRedondeado(r.ahorroCompleto) + '</strong></li>' : '') +
         '</ul>')) +
 
       (p.tipo === 'venta'
@@ -3102,7 +3102,7 @@
     if ($('btn-detalle-credito')) $('btn-detalle-credito').addEventListener('click', function () {
       abrirHojaContenido('Detalle del crédito', repartoCasa(partesPiezas(pd), formatoRedondeado) +
         '<ul class="datos-inversion"><li><span>Gastos al firmar</span><strong>' + formatoRedondeado(pd.gastos) + '</strong></li>' +
-        (enGrupo && r.ahorroCompleto > r.ahorro ? '<li><span>Si el grupo se completa, ahorras</span><strong>' + formatoRedondeado(r.ahorroCompleto) + '</strong></li>' : '') + '</ul>',
+        (enGrupo && r.ahorroCompleto > r.ahorro ? '<li><span>Si el grupo llega a 5 personas, ahorras</span><strong>' + formatoRedondeado(r.ahorroCompleto) + '</strong></li>' : '') + '</ul>',
         $('btn-detalle-credito'));
     });
     if ($('btn-agendar')) $('btn-agendar').addEventListener('click', function () {
@@ -6016,7 +6016,7 @@
   // S24-B2: la descripción larga de cada camino (Un camino), como en el canvas.
   var soloFavoritos = false;
   var DESCRIPCION_CAMINO = {
-    'grupo-vivir': 'Te unes con otras personas para comprar en un mismo edificio en obra, pero cada uno con su propio departamento, su propio crédito y su propia escritura. Como compran varios, la inmobiliaria les baja el precio entre 3 y 5' + NBSP + '%: más descuento mientras más se unan.',
+    'grupo-vivir': 'Te unes con otras personas para comprar en un mismo edificio en obra, pero cada uno con su propio departamento, su propio crédito y su propia escritura. Como compran varios, la inmobiliaria les baja el precio un 5' + NBSP + '% cuando el grupo llega a 5 personas.',
     'individual-vivir': 'Bci te presta hasta el 90' + NBSP + '% con la garantía del Estado. Tú juntas solo el 10' + NBSP + '% de pie y eliges un departamento nuevo.'
   };
   function chipsPiezas() {

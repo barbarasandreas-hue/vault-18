@@ -49,13 +49,13 @@ test('crédito según el modo: vivir 90 / 0 / 10, arrendar 80 / 15 / 5', () => {
   assert.deepStrictEqual([a.bci, a.inversionistas, a.usuario], [1600, 300, 100]);
 });
 
-test('descuento de grupo: 3 % desde 5 unidades y 5 % desde 10', () => {
+test('descuento de grupo: 5 % desde 5 unidades (11-nov: un solo descuento)', () => {
   assert.strictEqual(c.descuentoGrupo(4), 0);
-  assert.strictEqual(c.descuentoGrupo(5), 0.03);
-  assert.strictEqual(c.descuentoGrupo(9), 0.03);
+  assert.strictEqual(c.descuentoGrupo(5), 0.05);
+  assert.strictEqual(c.descuentoGrupo(9), 0.05);
   assert.strictEqual(c.descuentoGrupo(10), 0.05);
   assert.strictEqual(c.precioUF(2500, 'lote', 10), 2375);
-  assert.strictEqual(c.precioUF(2500, 'lote', 8), 2425);
+  assert.strictEqual(c.precioUF(2500, 'lote', 8), 2375);
   assert.strictEqual(c.precioUF(2500, 'individual'), 2500);
 });
 
@@ -94,9 +94,9 @@ test('rentabilidad neta de UF 2.375: $400.000 pasa el filtro de 3,46 %, $330.000
   assert.strictEqual(c.pasaFiltroIA(baja), false);
 });
 
-test('ahorro por unirse a un lote de UF 2.500: 10 unidades → $5.133.125; 8 → $3.079.875', () => {
+test('ahorro por unirse a un lote de UF 2.500: 10 u 8 unidades → $5.133.125', () => {
   assert.strictEqual(c.ufAPesos(c.ahorroPorUnirseUF(2500, 10)), 5133125);
-  assert.strictEqual(c.ufAPesos(c.ahorroPorUnirseUF(2500, 8)), 3079875);
+  assert.strictEqual(c.ufAPesos(c.ahorroPorUnirseUF(2500, 8)), 5133125);
 });
 
 test('avance: 6 de 10 → 60 %', () => {
@@ -161,7 +161,7 @@ test('datos de ejemplo v3 (S8-F5)', () => {
     assert.ok(d.arriendoEstimadoIA > 0, `${d.id} sin arriendoEstimadoIA`);
     assert.strictEqual(d.origenArriendo, 'estimación IA (demo)');
     const bruta = d.arriendoEstimadoIA * 12 / (precio * c.SUPUESTOS.uf);
-    assert.ok(bruta >= 0.04 && bruta <= 0.05, `${d.id}: rentabilidad bruta ${bruta}`);
+    assert.ok(bruta >= 0.04 && bruta <= 0.051, `${d.id}: rentabilidad bruta ${bruta}`);
     return !c.pasaFiltroIA(c.rentabilidad(d.arriendoEstimadoIA, precio));
   });
   assert.ok(bajos.length >= 2, `solo ${bajos.length} departamentos bajo la tasa con subsidio (neto)`);

@@ -165,7 +165,7 @@ test('Comprar más barato: usado e IVA cero bajan el pie del mismo departamento'
   // Usado en un proyecto en grupo: sin descuento de grupo (Parque Quinta Normal, UF 1.750, lote de 8)
   const pq = c.pieMasBarato(1750, 'lote', 'arrendar', 8, 'usado');
   assert.strictEqual(pq.precio, c.ufAPesos(1750 * 0.824));
-  assert.strictEqual(pq.pieSinAjuste, c.ufAPesos(1750 * 0.97 * 0.05));
+  assert.strictEqual(pq.pieSinAjuste, c.ufAPesos(1750 * 0.95 * 0.05));
   // IVA cero en grupo: con descuento de grupo, comparado con el mismo proyecto en grupo
   const ig = c.pieMasBarato(2500, 'lote', 'arrendar', 10, 'iva-cero');
   assert.strictEqual(ig.pie, c.ufAPesos(2500 * 0.90 * 0.95 * 0.05));
@@ -208,13 +208,13 @@ test('Todavía no con interruptores: cada cambio recalcula el camino', () => {
 });
 
 test('Departamento elegido: precio, descuento de su grupo y su arriendo', () => {
-  // Parque Quinta Normal: UF 1.750, lote de 8 (3 % de descuento), arriendo $280.000
+  // Parque Quinta Normal: UF 1.750, lote de 8 (5 % de descuento), arriendo $280.000
   const meta = { ...base, listaUF: 1750, cuposGrupo: 8, arriendoMeta: 280000, hayGrupo: true };
   const r = { numeros: c.numerosCamino('grupo-pie-compartido', 1750, meta) };
-  assert.strictEqual(r.numeros.precioUF, 1750 * 0.97);
-  assert.strictEqual(r.numeros.pie, c.ufAPesos(1750 * 0.97 * 0.05));
+  assert.strictEqual(r.numeros.precioUF, 1750 * 0.95);
+  assert.strictEqual(r.numeros.pie, c.ufAPesos(1750 * 0.95 * 0.05));
   const neto = c.arriendoNeto(280000) / c.SUPUESTOS.uf;
-  assert.strictEqual(r.numeros.mesesRecompra, c.mesesRecompra(1750 * 0.97 * 0.15, neto, 1));
+  assert.strictEqual(r.numeros.mesesRecompra, c.mesesRecompra(1750 * 0.95 * 0.15, neto, 1));
   // Un departamento de pie compartido (sin grupo) lleva al camino B, a precio de lista
   const pe = c.recomendarCamino({ ...base, listaUF: 1200, arriendoMeta: 200000, hayGrupo: false });
   assert.strictEqual(pe.id, 'pie-compartido');

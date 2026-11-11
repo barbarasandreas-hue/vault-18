@@ -34,10 +34,9 @@ var MODOS = {
 };
 function modoDe(modo) { return MODOS[modo] || MODOS.arrendar; }
 
-// Descuento de la compra en grupo: 3 % desde 5 unidades, 5 % desde 10.
+// Descuento de la compra en grupo: 5 % cuando el grupo llega a 5 personas (11-nov: un solo descuento).
 function descuentoGrupo(unidades) {
-  if (unidades >= 10) return 0.05;
-  if (unidades >= 5) return 0.03;
+  if (unidades >= 5) return 0.05;
   return 0;
 }
 
@@ -1052,7 +1051,7 @@ function registrarMes(r, pago) {
 // El descuento que muestra el proyecto supone que el grupo se completa; aquí se ve lo asegurado hoy.
 function cuposParaMasDescuento(tomados, cupos) {
   var asegurado = descuentoGrupo(tomados);
-  var escalones = [{ desde: 5, descuento: 0.03 }, { desde: 10, descuento: 0.05 }].filter(function (e) {
+  var escalones = [{ desde: 5, descuento: 0.05 }].filter(function (e) {
     return e.desde <= cupos && e.desde > tomados;
   });
   var siguiente = escalones[0] || null;
@@ -1095,7 +1094,7 @@ function totalGrupo(otros, cuotaPromedio, meses, tuAhorrado) {
 // S14-F2: si al pasar de "antes" a "despues" compradores el grupo cruza un escalón de descuento (5 o 10).
 // Devuelve { cupos, descuento } del escalón cruzado, o null.
 function escalonCruzado(antes, despues) {
-  var escalones = [{ cupos: 10, descuento: 0.05 }, { cupos: 5, descuento: 0.03 }];
+  var escalones = [{ cupos: 5, descuento: 0.05 }];
   for (var i = 0; i < escalones.length; i++) {
     if (antes < escalones[i].cupos && despues >= escalones[i].cupos) return escalones[i];
   }

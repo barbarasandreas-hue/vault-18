@@ -4,11 +4,10 @@ const assert = require('node:assert');
 const c = require('../js/calculos.js');
 
 test('Más cupos, más descuento: lo asegurado hoy y cuántos faltan', () => {
-  assert.deepStrictEqual(c.cuposParaMasDescuento(6, 10), { asegurado: 0.03, faltan: 4, descuentoSiguiente: 0.05 });
-  assert.deepStrictEqual(c.cuposParaMasDescuento(9, 10), { asegurado: 0.03, faltan: 1, descuentoSiguiente: 0.05 });
-  assert.deepStrictEqual(c.cuposParaMasDescuento(3, 10), { asegurado: 0, faltan: 2, descuentoSiguiente: 0.03 });
-  // Un lote de 8 no llega a 10: con 5 o más ya no hay otro escalón
-  assert.deepStrictEqual(c.cuposParaMasDescuento(5, 8), { asegurado: 0.03, faltan: 0, descuentoSiguiente: null });
+  // 11-nov: un solo descuento de 5 % desde 5 personas.
+  assert.deepStrictEqual(c.cuposParaMasDescuento(6, 10), { asegurado: 0.05, faltan: 0, descuentoSiguiente: null });
+  assert.deepStrictEqual(c.cuposParaMasDescuento(3, 10), { asegurado: 0, faltan: 2, descuentoSiguiente: 0.05 });
+  assert.deepStrictEqual(c.cuposParaMasDescuento(5, 8), { asegurado: 0.05, faltan: 0, descuentoSiguiente: null });
   assert.deepStrictEqual(c.cuposParaMasDescuento(10, 10), { asegurado: 0.05, faltan: 0, descuentoSiguiente: null });
 });
 

@@ -11,8 +11,8 @@ test('Meta común del grupo: suma de lo que lleva cada uno', () => {
 });
 
 test('Escalón de descuento cruzado al unirse alguien', () => {
-  assert.deepStrictEqual(c.escalonCruzado(4, 5), { cupos: 5, descuento: 0.03 });
-  assert.deepStrictEqual(c.escalonCruzado(9, 10), { cupos: 10, descuento: 0.05 });
+  assert.deepStrictEqual(c.escalonCruzado(4, 5), { cupos: 5, descuento: 0.05 });
+  assert.strictEqual(c.escalonCruzado(9, 10), null);
   assert.strictEqual(c.escalonCruzado(5, 6), null);
   assert.strictEqual(c.escalonCruzado(2, 3), null);
 });
