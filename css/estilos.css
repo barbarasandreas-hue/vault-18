@@ -3360,3 +3360,41 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .camino-chip.punto-2::before { background: #E8B600; }
 .camino-chip.punto-3::before { background: #B20913; }
 .camino-chip[aria-current] { background: var(--gray-dark, #37474F); color: #fff; border-color: transparent; font-weight: 700; }
+
+/* 11-nov: el camino que sigues, en Tus pasos y antes de confirmarlo */
+.camino-pasos { display: flex; flex-direction: column; gap: 4px; margin: 0 0 16px; border-left: 4px solid #1D5699; }
+.camino-pasos.sin-elegir { border-left-color: #E8B600; }
+.camino-pasos-ceja { font-size: 13px; font-weight: 700; color: #1D5699; text-transform: uppercase; letter-spacing: .4px; }
+.camino-pasos.sin-elegir .camino-pasos-ceja { color: #546E7A; }
+.camino-pasos strong { font-size: 18px; color: #37474F; }
+.camino-pasos small { color: #546E7A; font-size: 14px; line-height: 1.4; }
+.camino-pasos-enlaces { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; align-items: center; }
+.camino-pasos-aviso { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; background: #D7EBD8; color: #1E4D21; font-weight: 700; }
+.camino-pasos-aviso svg { width: 20px; height: 20px; flex: none; }
+.pasos-previa { list-style: none; margin: 12px 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.pasos-previa li { display: flex; gap: 12px; align-items: flex-start; }
+.pasos-previa li > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.pasos-previa small { color: #546E7A; font-size: 14px; }
+.pasos-previa-num { flex: none; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #D4E3F5; color: #1D5699; font-weight: 700; font-size: 14px; }
+.pasos-previa li.hecho .pasos-previa-num { background: #28652B; color: #fff; }
+.pasos-previa li.hecho .pasos-previa-num svg { width: 16px; height: 16px; }
+.pasos-previa li.actual .pasos-previa-num { background: #1D5699; color: #fff; }
+a.camino-es-tuyo { text-decoration: none; }
+
+/* 11-nov: Ayudas que te acercan (informativa) */
+.ayudas-indice { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; margin: 0 0 12px; scrollbar-width: none; }
+.ayudas-indice .chip { flex: none; text-decoration: none; white-space: nowrap; }
+.ayuda-info { display: flex; flex-direction: column; gap: 10px; margin: 0 0 16px; scroll-margin-top: 16px; }
+.ayuda-info-cabeza { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ayuda-info-cabeza h2 { margin: 0; flex: 1 1 140px; }
+.ayuda-sigla { flex: none; min-width: 44px; height: 44px; padding: 0 6px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: #D4E3F5; color: #1D5699; font-weight: 700; font-size: 14px; box-sizing: border-box; }
+.ayuda-que { margin: 0; color: #37474F; line-height: 1.45; }
+.ayuda-datos { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.ayuda-datos div { display: flex; flex-direction: column; gap: 2px; padding-top: 8px; border-top: 1px solid #ECEFF1; }
+.ayuda-datos dt { font-size: 13px; font-weight: 700; color: #546E7A; }
+.ayuda-datos dd { margin: 0; font-size: 15px; color: #37474F; line-height: 1.4; }
+.ayuda-tu { display: flex; gap: 10px; margin: 4px 0 0; padding: 12px; border-radius: 12px; background: #F1F5FA; line-height: 1.4; }
+.ayuda-tu svg { width: 22px; height: 22px; flex: none; color: #1D5699; }
+.ayuda-tu span { display: flex; flex-direction: column; gap: 2px; }
+.chip-existe { background: #D7EBD8; color: #1E4D21; }
+.chips-que { margin: -4px 0 12px; font-size: 14px; }
