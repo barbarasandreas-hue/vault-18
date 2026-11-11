@@ -5492,7 +5492,7 @@
             '<h3>' + sel.nombre + '</h3></span></div>' +
           '<div class="paso-elegido-cuerpo"><span class="paso-elegido-tiempo"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#546E7A" stroke-width="2.4"/><path d="M12 7v5l3 2" fill="none" stroke="#546E7A" stroke-width="2.4" stroke-linecap="round"/></svg>' + sel.cuesta + '</span>' +
             '<p>' + textoHito(sel.id, s.grupo) + '</p>' +
-            (sel.estado === 'actual' ? '<button type="button" class="btn btn-primario btn-bloque" data-hito="' + sel.id + '" aria-haspopup="dialog">' + (sel.accion || 'Empezar') + '</button>'
+            (sel.estado === 'actual' ? '<button type="button" class="btn btn-primario btn-bloque" data-hito="' + sel.id + '" aria-haspopup="dialog">Empezar</button>'
               : sel.estado === 'hecho' ? '<p class="paso-elegido-hecho"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#28892B"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Ya lo hiciste</p>'
               : '<p class="paso-elegido-despues">Se abre cuando termines el paso ' + h.indice + '.</p>') +
           '</div>' +
