@@ -84,6 +84,7 @@ Fuente: brief común v3. Primer Peldaño **no inventa un crédito**: traduce el 
 - Interfaz en español de Chile. Usar "dinero", nunca "plata".
 - Escribir siempre "departamento" completo, nunca "depto." ni "dpto.".
 - Un nombre por crédito (9-nov): "Crédito con garantía del Estado" (vivir, 90 %), "Crédito al 80 %" (invertir) y "Crédito para usados" (80 %, sin subsidio; solo en modo vivir: para invertir, los usados van dentro del Crédito al 80 %, que es el mismo crédito). No usar "crédito tradicional", "crédito de siempre" ni "crédito con FOGAES" en pantalla.
+- Explorar tiene arriba el selector "Para vivir / Para arrendar" (11-nov, `cambiarModoExplorar`). Cada modo recuerda su camino elegido (`caminoPorModo`), así cambiar y volver no lo borra.
 - Todo "Paso X de 6" sigue la escalera de Tus pasos (`pasoEscalera` en `js/app.js`).
 - Misiones por paso (10-nov, `misionesPorPaso`): en Tus pasos se ven las misiones del paso elegido; cada misión va en el paso al que ayuda (`ayudaA`) y las que no son de un paso, en el paso de ahora. "Ver todas" lleva a `#pasos/misiones`, con todas separadas por paso y las fechas que importan.
 - Inicio (10-nov): el edificio que se construye con tu pie (`tarjetaObra(true)`) va dentro de la sección azul del plazo, en vez del edificio con la persona en su ventana. Con "Todavía no" (sin sección azul), va como tarjeta arriba.

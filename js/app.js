@@ -72,13 +72,13 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
-    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {}, visitaVersion: 2, vecinos: {}, trabajo: '', arriendoElegido: null, mesContrato: null, visitas: {} };
+    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {}, visitaVersion: 2, vecinos: {}, trabajo: '', arriendoElegido: null, mesContrato: null, visitas: {}, caminoPorModo: {} };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -340,6 +340,10 @@
       estado.construido = Number.isInteger(g.construido) ? g.construido : null;
       // 9-nov: en qué grupos quiere conocer a sus vecinos (solo para vivir, por elección propia).
       estado.trabajo = typeof g.trabajo === 'string' ? g.trabajo.slice(0, 120) : '';
+      estado.caminoPorModo = {};
+      if (g.caminoPorModo && typeof g.caminoPorModo === 'object') ['vivir', 'arrendar'].forEach(function (m) {
+        if (typeof g.caminoPorModo[m] === 'string' && typeof CAMINOS !== 'undefined' && CAMINOS[g.caminoPorModo[m]]) estado.caminoPorModo[m] = g.caminoPorModo[m];
+      });
       // 10-nov: visitas agendadas por departamento ({ fecha, hora, fue }).
       estado.visitas = {};
       if (g.visitas && typeof g.visitas === 'object') Object.keys(g.visitas).forEach(function (id) {
@@ -5675,6 +5679,23 @@
     }
     return { ids: ids, sel: sel };
   }
+  // 11-nov: cambiar entre vivir y arrendar desde Explorar. Cada modo recuerda su camino, así volver no lo borra.
+  function cambiarModoExplorar(modo) {
+    if (modo === estado.modo || (modo !== 'vivir' && modo !== 'arrendar')) return;
+    estado.caminoPorModo = Object.assign({}, estado.caminoPorModo);
+    estado.caminoPorModo[estado.modo] = estado.caminoElegido;
+    var guardado = estado.caminoPorModo[modo];
+    estado.modo = modo;
+    estado.caminoElegido = guardado && CAMINOS[guardado] && CAMINOS[guardado].modo === modo ? guardado : null;
+    guardarEstado();
+    recalcularPostulacion();
+    mostrar();
+    toast(modo === 'vivir' ? 'Ahora ves caminos para vivir.' : 'Ahora ves caminos para arrendar.');
+    var r = document.getElementById('explorar-' + modo); if (r) r.focus();
+  }
+  document.addEventListener('change', function (ev) {
+    if (ev.target && ev.target.name === 'explorar-modo') cambiarModoExplorar(ev.target.value);
+  });
   function renderExplorar() {
     var cont = $('caminos-contenido');
     if (!ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return sinSueldos(cont, '¿Qué quieres explorar?', 'titulo-caminos');
@@ -5691,6 +5712,11 @@
     cont.innerHTML =
       '<header class="encabezado"><img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24"><h1 id="titulo-caminos" class="h2">¿Qué quieres explorar?</h1>' +
         '<p class="texto-apoyo">Tienes ' + plural(ids.length, 'camino', 'caminos') + ' para llegar a tu departamento</p></header>' +
+      // 11-nov: en Explorar se puede cambiar si el departamento es para vivir o para arrendar.
+      '<fieldset class="selector explorar-modo"><legend class="oculto-visual">¿Para qué es el departamento?</legend><div class="selector-opciones">' +
+        '<input type="radio" name="explorar-modo" id="explorar-vivir" value="vivir"' + (estado.modo === 'vivir' ? ' checked' : '') + '><label for="explorar-vivir">Para vivir</label>' +
+        '<input type="radio" name="explorar-modo" id="explorar-arrendar" value="arrendar"' + (estado.modo === 'arrendar' ? ' checked' : '') + '><label for="explorar-arrendar">Para arrendar</label>' +
+      '</div></fieldset>' +
       '<ul class="caminos-botones">' + ids.map(function (id, i) {
         var usados = id === 'usados';
         var color = COLOR_EXPLORAR[id] !== undefined ? COLOR_EXPLORAR[id] : i % 3;

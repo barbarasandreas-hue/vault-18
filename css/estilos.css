@@ -3288,3 +3288,5 @@ details.visita[open] > summary { margin-bottom: 6px; }
 @keyframes grua-cable { 0%, 30%, 100% { transform: scaleY(1); } 50%, 60% { transform: scaleY(4); } 70% { transform: scaleY(1); } }
 @keyframes grua-viga { 0%, 30%, 100% { transform: translateY(0); } 50%, 60% { transform: translateY(36px); } 70% { transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .cn-grua-carro, .cn-grua .cn-grua-cable, .cn-grua .cn-grua-viga { animation: none; } }
+/* 11-nov: vivir o arrendar, en Explorar. */
+.explorar-modo { margin: 12px 0 4px; border: 0; padding: 0; }
