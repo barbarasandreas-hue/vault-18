@@ -5475,7 +5475,7 @@
         (estado.modo === 'vivir' ? '' : '<a class="enlace" href="#explorar/cambia">Ver qué lo cambia</a>') + '</span></p>' + (esArriendo() ? '<section class="tarjeta bloque meta-mes">' + salidaArriendoHtml(arriendoActual().u) + '</section>' : estado.modo === 'vivir' ? salidasHtml() : '') : '') +
       '<section class="tarjeta pasos-unica" aria-labelledby="titulo-pasos">' +
         filaCaminoPasos() +
-        '<div class="pasos-avance"><span>' + (h.terminado ? 'Llegaste: <strong>es tuyo</strong>' : 'Paso <strong>' + h.indice + ' de ' + h.total + '</strong>') + '</span><span class="pasos-listos">' + listos + ' de ' + h.total + ' listos</span></div>' +
+        '<div class="pasos-avance"><span>' + (h.terminado ? 'Llegaste: <strong>es tuyo</strong>' : 'Tu escalera') + '</span><span class="pasos-listos">' + listos + ' de ' + h.total + ' listos</span></div>' +
         '<ol class="escalones" aria-label="Tu escalera">' + h.hitos.map(function (x, i) {
           return '<li class="' + x.estado + '">' +
             (x.estado === 'actual' ? avatarSVG(estado.avatar, 40, 'escalon-av' + (celebra ? ' sube' : '')) : '') +

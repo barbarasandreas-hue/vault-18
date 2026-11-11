@@ -3462,3 +3462,17 @@ a.camino-es-tuyo { text-decoration: none; }
 .mision-ir .mision-ir-btn { flex: none !important; width: auto !important; }
 .mision-ir > span:first-of-type { min-width: 0; }
 .paso-elegido-ceja.despues { display: block; margin: 0; padding: 0; gap: 0; }
+
+/* 11-nov (revisión de diseño): menos objetos dentro de la tarjeta única */
+.pasos-avance { font-weight: 700; }
+.paso-en-tarjeta .paso-elegido-num { width: 40px; height: 40px; border-radius: 12px; font-size: 20px; }
+.paso-en-tarjeta h3 { font-size: 20px; }
+.paso-en-tarjeta .paso-elegido-cuerpo p { font-size: 15px; }
+.paso-en-tarjeta .pasos-misiones { border-top: 0; padding-top: 0; }
+.pasos-misiones h3 { font-size: 12px !important; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #546E7A; margin: 0 0 2px !important; }
+.pasos-misiones .lista-misiones { gap: 0 !important; }
+.pasos-misiones .lista-misiones li + li .mision-ir { border-top: 1px solid #ECEFF1; }
+.mision-ir { background: transparent !important; border-radius: 0; padding: 12px 0; min-height: 56px; }
+.mision-ir-btn { background: transparent !important; color: #1D5699 !important; padding: 8px 0 8px 12px !important; font-size: 15px !important; }
+.mision-ir:hover strong { color: #1D5699; }
+.mision-ir:focus-visible { outline: 2px solid #1D5699; outline-offset: 2px; border-radius: 8px; }
