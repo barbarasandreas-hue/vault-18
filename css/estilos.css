@@ -3338,3 +3338,8 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .grupo-visita span { display: grid; gap: 2px; }
 .grupo-visita small { font-size: 13px; color: var(--gray-dark); }
 .grupo-visita .btn { grid-column: 1 / -1; width: 100%; }
+
+/* 11-nov: personas en el grupo en las tarjetas de departamentos */
+.tp-grupo{display:inline-flex;align-items:center;gap:6px;color:var(--texto,#37474F)}
+.tp-grupo svg{width:18px;height:18px;flex:none;color:#28652B}
+.tp-grupo strong{font-weight:700}

@@ -2391,7 +2391,7 @@
     var d = departamentosDe(p.id)[0];
     var completo = r.ahorroCompleto > r.ahorro ? formatoRedondeado(r.ahorroCompleto) + ' si se completa' : '';
     var conIva = p.tipo === 'venta' && estado.modo === 'vivir' && piezasValidas(piezasOn()).iva;
-    var grupoTxt = p.tipo === 'conjunto' ? r.cuposTomados + ' de ' + p.cupos : '';
+    var grupoTxt = p.tipo === 'conjunto' ? '<span class="tp-grupo">' + icono('i-grupo') + '<strong>' + r.cuposTomados + ' de ' + p.cupos + '</strong> personas en el grupo</span>' : '';
     var etiqueta, cifra, lineas = [];
     if (solo) {
       etiqueta = 'Precio del departamento';
@@ -2406,8 +2406,10 @@
     } else {
       etiqueta = r.ahorro > 0 ? 'Ahorras al unirte' : 'Si el grupo se completa';
       cifra = formatoRedondeado(r.ahorro > 0 ? r.ahorro : r.ahorroCompleto);
-      if (compacta) lineas.push(grupoTxt + ' en el grupo' + SEP + 'cierra el ' + fechaCorta(p.cierre));
-      else { lineas.push((r.ahorro > 0 && completo ? completo + SEP : '') + grupoTxt); lineas.push('Cierra el ' + formatoFecha(p.cierre)); }
+      // 11-nov: cuántas personas hay en el grupo, en su propia línea y con ícono.
+      lineas.push(grupoTxt);
+      if (compacta) lineas.push('Cierra el ' + fechaCorta(p.cierre));
+      else { if (r.ahorro > 0 && completo) lineas.push(completo); lineas.push('Cierra el ' + formatoFecha(p.cierre)); }
     }
     var foto = fotoEdificio(p);
     var chipTipo = solo ? ['azul', 'En obra'] : p.tipo === 'conjunto' ? ['azul', 'Compra en grupo'] : p.tipo === 'venta' ? ['verde', 'Terminado' + (conIva ? SEP + 'sin IVA' : '')] : ['amarillo', NOMBRE_TIPO[p.tipo]];
