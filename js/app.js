@@ -100,7 +100,7 @@
   var AV_NOMBRE_PELO = { corto: 'Corto', largo: 'Largo', 'moño': 'Moño', rizado: 'Rizado', rapado: 'Rapado', ondulado: 'Ondulado' };
   var AV_NOMBRE_ACC = { lentes: 'Lentes', audifonos: 'Audífonos', mochila: 'Mochila', gorro: 'Gorro', planta: 'Planta' };
   var AV_OSCURO = '#263238';
-  var NOMBRE_RELACION = { pareja: 'Tu pareja', 'mamá': 'Tu mamá', 'papá': 'Tu papá', hermana: 'Tu hermana', hermano: 'Tu hermano',
+  var NOMBRE_RELACION = { pareja: 'Tu pareja', hija: 'Tu hija', hijo: 'Tu hijo', 'bebé': 'Tu bebé', 'mamá': 'Tu mamá', 'papá': 'Tu papá', hermana: 'Tu hermana', hermano: 'Tu hermano',
     abuela: 'Tu abuela', abuelo: 'Tu abuelo', 'tía': 'Tu tía', 'tío': 'Tu tío', amiga: 'Tu amiga', amigo: 'Tu amigo', mascota: 'Tu mascota' };
 
   function avatarPelo(t, c) {
@@ -160,7 +160,22 @@
     return '<svg class="' + (clase || 'avatar-svg') + '" viewBox="-6 63 42 42" width="' + tam + '" height="' + tam + '" aria-hidden="true" focusable="false">' +
       mascotaFigura(especie === 'gato' ? 'gato' : 'perro') + '</svg>';
   }
+  // 11-nov: un bebé (cabeza grande, cuerpo chico con su ropita, un mechón y gorro opcional).
+  function bebeSVG(a, tam, clase) {
+    a = a || {};
+    var col = avColores(a);
+    var gorro = (a.accesorios || []).indexOf('gorro') !== -1;
+    return '<svg class="' + (clase || 'avatar-svg') + '" viewBox="0 0 100 100" width="' + tam + '" height="' + tam + '" aria-hidden="true" focusable="false">' +
+      '<path d="M30 100Q30 78 50 76Q70 78 70 100Z" fill="' + col.ropa + '"/>' +
+      '<path d="M42 82h16" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity=".6"/>' +
+      '<circle cx="50" cy="52" r="23" fill="' + col.piel + '"/>' +
+      '<circle cx="27" cy="54" r="4" fill="' + col.piel + '"/><circle cx="73" cy="54" r="4" fill="' + col.piel + '"/>' +
+      (gorro ? '<path d="M27 48Q27 24 50 24Q73 24 73 48Z" fill="#FFE300"/><rect x="25" y="44" width="50" height="7" rx="3.5" fill="#2772CC"/><circle cx="50" cy="22" r="5" fill="#2772CC"/>'
+        : '<path d="M46 30q2-9 9-6q-6 1-5 7" fill="none" stroke="' + col.pelo + '" stroke-width="3.5" stroke-linecap="round"/>') +
+      '</svg>';
+  }
   function avatarMiembro(m, tam, clase) {
+    if (m.relacion === 'bebé') return bebeSVG(m.avatar, tam, clase);
     return m.relacion === 'mascota' ? mascotaSVG(m.avatar && m.avatar.mascota, tam, clase) : avatarSVG(m.avatar, tam, clase);
   }
   // El personaje de la escalera, con los colores y el peinado del avatar.
@@ -187,7 +202,7 @@
   // Quienes viven con la usuaria (según "¿Con quién vas a vivir?").
   function companeros() {
     if (estado.conQuien === 'pareja') return miembrosCon(['pareja']).slice(0, 1);
-    if (estado.conQuien === 'familia') return miembrosCon(['pareja', 'mamá', 'papá', 'hermana', 'hermano', 'abuela', 'abuelo', 'tía', 'tío']).slice(0, 3);
+    if (estado.conQuien === 'familia') return miembrosCon(['pareja', 'hija', 'hijo', 'bebé', 'mamá', 'papá', 'hermana', 'hermano', 'abuela', 'abuelo', 'tía', 'tío']).slice(0, 3);
     return [];
   }
   // La escena: la usuaria y quienes viven con ella (la mascota va en su avatar).
@@ -220,6 +235,10 @@
     };
     function opciones() {
       if (relacion === 'mascota') return grupo('Mascota', boton('mascota', 'perro', 'Perro') + boton('mascota', 'gato', 'Gato'));
+      if (relacion === 'bebé') return grupo('Tono de piel', AV_PIEL.map(function (c, i) { return boton('piel', i, 'Tono ' + (i + 1), c); }).join('')) +
+        grupo('Color de pelo', AV_COLOR_PELO.map(function (c, i) { return boton('colorPelo', i, c[1], c[0]); }).join('')) +
+        grupo('Ropita', AV_ROPA.map(function (c, i) { return boton('ropa', i, c[1], c[0]); }).join('')) +
+        grupo('Accesorios', boton('accesorios', 'gorro', 'Gorro'));
       return grupo('Tono de piel', AV_PIEL.map(function (c, i) { return boton('piel', i, 'Tono ' + (i + 1), c); }).join('')) +
         grupo('Pelo', AVATAR_PELOS.map(function (p) { return boton('pelo', p, AV_NOMBRE_PELO[p]); }).join('')) +
         grupo('Color de pelo', AV_COLOR_PELO.map(function (c, i) { return boton('colorPelo', i, c[1], c[0]); }).join('')) +
@@ -227,7 +246,7 @@
         grupo('Accesorios', AVATAR_ACCESORIOS.map(function (x) { return boton('accesorios', x, AV_NOMBRE_ACC[x]); }).join('')) +
         (op.elegirRelacion || relacion ? '' : grupo('Mascota', boton('mascota', '', 'Sin mascota') + boton('mascota', 'perro', 'Perro') + boton('mascota', 'gato', 'Gato')));
     }
-    function vista() { return relacion === 'mascota' ? mascotaSVG(a.mascota || 'perro', 132) : avatarSVG(a, 132); }
+    function vista() { return relacion === 'mascota' ? mascotaSVG(a.mascota || 'perro', 132) : relacion === 'bebé' ? bebeSVG(a, 132) : avatarSVG(a, 132); }
     var html = '<div class="creador">' +
       (op.elegirRelacion ? '<div class="campo"><label for="creador-relacion">¿Quién es?</label><select id="creador-relacion" class="campo-select">' +
         RELACIONES_EQUIPO.map(function (r) { return '<option value="' + r + '"' + (r === relacion ? ' selected' : '') + '>' + NOMBRE_RELACION[r] + '</option>'; }).join('') +
@@ -275,7 +294,7 @@
   }
   // Agregar a alguien a Tu equipo (relación + avatar). La pareja nunca trae un avatar sugerido.
   function agregarAlEquipo(boton, relacion, despues, inicial) {
-    abrirCreador({ titulo: relacion === 'pareja' ? 'Tu pareja' : 'Agregar a alguien', relacion: relacion || inicial, elegirRelacion: !relacion, boton: boton,
+    abrirCreador({ titulo: relacion === 'pareja' ? 'Tu pareja' : relacion === 'bebé' ? 'Tu bebé' : 'Agregar a alguien', relacion: relacion || inicial, elegirRelacion: !relacion, boton: boton,
       alGuardar: function (av, rel) {
         estado.equipo = agregarMiembro(estado.equipo, rel, av);
         guardarEstado();
@@ -5828,7 +5847,7 @@
     documentos: ['Liquidaciones de sueldo, cotizaciones y carnet. Si eres cliente Bci, ya los tenemos.', 'Completar'],
     'bajo-llave': ['Para sacar dinero de tu pie avisas 30 días antes. Así no se gasta.', 'Guardar bajo llave'],
     'ahorro-auto': ['Bci pasa tu cuota a tu cuenta de vivienda el día de pago.', 'Activar'],
-    equipo: ['Suma a tu pareja o familia para que te acompañen.', null],
+    equipo: ['Suma a tu pareja, tu familia o tu bebé para que te acompañen.', null],
     elegir: ['Mira tus caminos y elige un departamento.', null]
   };
   var MISION_CLAVE = { ds1: 'ds1Postulado', rsh: 'rsh', documentos: 'documentos', 'bajo-llave': 'bajoLlave' };
@@ -5841,7 +5860,7 @@
     var t = MISIONES_TEXTO[id];
     var falta = id === 'ds1' && !x.hecho ? (!s.cuentaVivienda ? 'tu cuenta de vivienda' : (!s.rsh ? 'el Registro Social de Hogares' : null)) : null;
     var accion = x.hecho ? '' :
-      id === 'equipo' ? enlaceHoja('#perfil', 'Ir a Tu equipo') :
+      id === 'equipo' ? enlaceHoja('#perfil/equipo', 'Ir a Tu equipo') :
       id === 'elegir' ? enlaceHoja(esArriendo() ? '#explorar/arriendo-opcion' : estado.caminoElegido ? '#camino/elegir' : '#explorar', estado.caminoElegido ? 'Elegir departamento' : 'Explorar caminos') :
       botonEnHoja('btn-mision-accion', t[1]);
     abrirHojaContenido(x.titulo + (x.hecho ? ' ' + icono('i-check', 'hoja-check') : ''),
@@ -7594,6 +7613,40 @@
   function renderPerfil(sub) {
     var c = $('perfil-contenido');
     var volver = '<a href="#perfil" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Perfil</a>';
+    // 11-nov: Tu avatar y tu equipo: cambiar tu avatar, agregar personas o un bebé, y quitar a alguien.
+    if (sub === 'equipo') {
+      c.innerHTML = volver +
+        '<header class="encabezado"><h1 class="h2" id="titulo-perfil-equipo">Tu equipo</h1>' +
+          '<p class="texto-apoyo">Las personas que te acompañan en tu camino. Te animan cuando avanzas y pueden aportar a tu pie.</p></header>' +
+        '<ul class="tarjeta equipo-filas" aria-labelledby="titulo-perfil-equipo">' +
+          '<li>' + avatarSVG(estado.avatar, 52, 'equipo-fila-av') + '<span><strong>Tú</strong><small>' + (estado.avatar ? 'Tu avatar' : 'Aún no creas tu avatar') + '</small></span>' +
+            '<button type="button" class="enlace" id="btn-equipo-avatar" aria-haspopup="dialog">' + (estado.avatar ? 'Cambiar' : 'Crear') + '</button></li>' +
+          estado.equipo.map(function (m) {
+            var papel = papelEnEquipo(m);
+            return '<li>' + avatarMiembro(m, 52, 'equipo-fila-av') + '<span><strong>' + NOMBRE_RELACION[m.relacion] + '</strong>' + (papel ? '<small>' + papel + '</small>' : '') + '</span>' +
+              '<button type="button" class="enlace equipo-quitar" data-quitar="' + esc(m.id) + '" aria-label="Quitar a ' + NOMBRE_RELACION[m.relacion].toLowerCase() + '">Quitar</button></li>';
+          }).join('') +
+        '</ul>' +
+        (estado.equipo.length ? '' : '<p class="texto-apoyo texto-centro">Todavía no sumas a nadie.</p>') +
+        '<div class="acciones equipo-acciones">' +
+          '<button type="button" class="btn btn-primario btn-bloque" id="btn-equipo-persona" aria-haspopup="dialog">Agregar a una persona</button>' +
+          '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-equipo-bebe" aria-haspopup="dialog">Agregar a un bebé</button>' +
+        '</div>';
+      var otraVez = function () { renderPerfil('equipo'); };
+      $('btn-equipo-avatar').addEventListener('click', function () { editarMiAvatar($('btn-equipo-avatar'), otraVez); });
+      $('btn-equipo-persona').addEventListener('click', function () { agregarAlEquipo($('btn-equipo-persona'), null, otraVez, 'pareja'); });
+      $('btn-equipo-bebe').addEventListener('click', function () { agregarAlEquipo($('btn-equipo-bebe'), 'bebé', otraVez); });
+      c.querySelectorAll('[data-quitar]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var m = estado.equipo.filter(function (x) { return x.id === b.dataset.quitar; })[0];
+          estado.equipo = quitarMiembro(estado.equipo, b.dataset.quitar);
+          guardarEstado();
+          otraVez();
+          if (m) toast(NOMBRE_RELACION[m.relacion] + ' salió de tu equipo.');
+        });
+      });
+      return;
+    }
     if (sub === 'avisos') {
       c.innerHTML = volver + '<section class="tarjeta bloque" aria-labelledby="titulo-avisos-perfil">' +
         '<h2 class="h4" id="titulo-avisos-perfil">Avisos</h2>' +
@@ -7626,9 +7679,9 @@
     };
     c.innerHTML =
       '<ul class="filas tarjeta">' +
-        '<li><button type="button" class="fila fila-avatar" id="btn-perfil-avatar" aria-haspopup="dialog">' + avatarSVG(estado.avatar, 48, 'fila-av') +
+        '<li><a class="fila fila-avatar" href="#perfil/equipo">' + avatarSVG(estado.avatar, 48, 'fila-av') +
           '<span><strong>Tu avatar y tu equipo</strong><small>' + (estado.equipo.length ? textoEquipoPerfil() : (estado.avatar ? 'Cambiar' : 'Créalo')) + '</small></span>' +
-          '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button></li>' +
+          '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>' +
         fila('b', '', 'i-persona', 'Mis datos', (estado.modo === 'vivir' ? 'Para vivir' : 'Para arrendar') + (ingreso ? SEP + formatoPesos(ingreso) + ' al mes' : ''), 'btn-mis-datos') +
         fila('a', '#perfil/avisos', 'i-campana', 'Avisos', activos + ' de ' + TIPOS_AVISO.length + ' activos') +
         fila('a', '#inversiones', 'i-sube', 'Invertir en el pie de otros', estado.inversiones.length ? plural(estado.inversiones.length, 'inversión', 'inversiones') : '6' + NBSP + '% al año en UF') +
@@ -7645,7 +7698,6 @@
         '</div>' +
       '</div>';
     $('btn-mis-datos').addEventListener('click', function () { abrirMisDatos($('btn-mis-datos')); });
-    $('btn-perfil-avatar').addEventListener('click', function () { editarMiAvatar($('btn-perfil-avatar')); });
     var confirmar = $('confirmar-reinicio');
     $('btn-reiniciar').addEventListener('click', function () {
       confirmar.hidden = false;

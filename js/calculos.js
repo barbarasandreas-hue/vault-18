@@ -1241,7 +1241,8 @@ function avisosDelMes(c) {
 var AVATAR_PELOS = ['corto', 'largo', 'moño', 'rizado', 'rapado', 'ondulado'];
 var AVATAR_ACCESORIOS = ['lentes', 'audifonos', 'mochila', 'gorro', 'planta'];
 // Relaciones de Tu equipo. Se pueden repetir (dos mamás, dos papás…). La pareja es siempre "tu pareja".
-var RELACIONES_EQUIPO = ['pareja', 'mamá', 'papá', 'hermana', 'hermano', 'abuela', 'abuelo', 'tía', 'tío', 'amiga', 'amigo', 'mascota'];
+// 11-nov: también hijas, hijos y bebés.
+var RELACIONES_EQUIPO = ['pareja', 'hija', 'hijo', 'bebé', 'mamá', 'papá', 'hermana', 'hermano', 'abuela', 'abuelo', 'tía', 'tío', 'amiga', 'amigo', 'mascota'];
 var MAXIMO_EQUIPO = 12;
 
 // Deja solo lo que el creador ofrece; lo que no se eligió queda en null (se dibuja neutro).
@@ -1264,6 +1265,11 @@ function agregarMiembro(equipo, relacion, avatar) {
   if (RELACIONES_EQUIPO.indexOf(relacion) === -1 || lista.length >= MAXIMO_EQUIPO) return lista;
   var siguiente = lista.reduce(function (m, x) { return Math.max(m, Number(String(x.id).replace(/\D/g, '')) || 0); }, 0) + 1;
   return lista.concat([{ id: 'm' + siguiente, relacion: relacion, avatar: normalizarAvatar(avatar) }]);
+}
+
+// 11-nov: saca a alguien de Tu equipo por su id. Devuelve una lista nueva.
+function quitarMiembro(equipo, id) {
+  return (Array.isArray(equipo) ? equipo : []).filter(function (x) { return x.id !== id; });
 }
 
 // Cuántas personas y mascotas acompañan a la usuaria (sin contarla a ella).
@@ -1929,6 +1935,7 @@ if (typeof module !== 'undefined') module.exports = {
   RELACIONES_EQUIPO: RELACIONES_EQUIPO,
   normalizarAvatar: normalizarAvatar,
   agregarMiembro: agregarMiembro,
+  quitarMiembro: quitarMiembro,
   contarEquipo: contarEquipo,
   posicionCarrera: posicionCarrera,
   mesesEntre: mesesEntre,

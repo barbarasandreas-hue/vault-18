@@ -3495,3 +3495,14 @@ a.camino-es-tuyo { text-decoration: none; }
 .paso-en-tarjeta .paso-elegido-cabeza { align-items: center; }
 .pasos-misiones h3.pasos-misiones-titulo { font-size: 18px !important; font-weight: 700 !important; text-transform: none !important; letter-spacing: 0 !important; color: #37474F !important; margin: 8px 0 0 !important; }
 .mision-ir-estado svg { width: 14px; height: 14px; fill: none; stroke: #FFFFFF; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* 11-nov: Tu equipo en Perfil */
+.equipo-filas { list-style: none; margin: 0 0 12px; padding: 4px 16px; }
+.equipo-filas li { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; column-gap: 12px; padding: 10px 0; }
+.equipo-filas li + li { border-top: 1px solid #ECEFF1; }
+.equipo-filas li > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.equipo-filas small { color: #546E7A; font-size: 13px; }
+.equipo-filas .enlace { font-weight: 700; padding: 10px 0 10px 8px; }
+.equipo-quitar { color: #B20913 !important; }
+.equipo-fila-av { border-radius: 50%; background: #D4E3F5; }
+.equipo-acciones { display: grid; gap: 10px; }
