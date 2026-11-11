@@ -72,13 +72,13 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo', 'presentacion', 'muro', 'visitaGrupo'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
     otrasCuotas: null, contrato: 'indefinido',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
-    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {}, visitaVersion: 2, vecinos: {}, trabajo: '', arriendoElegido: null, mesContrato: null, visitas: {}, caminoPorModo: {} };
+    avisosApagados: {}, cuotaAutomatica: false, parejaInvitada: false, regalos: [], listaRegalos: null, unidosGrupo: {}, avisosVistos: null, avatar: null, conQuien: null, modoElegido: false, quiereInvertir: false, ultimaVisita: null, novedades: [], pasos: {}, animosDados: null, animos: [], construido: null, favoritos: [], visita: {}, visitaVersion: 2, vecinos: {}, trabajo: '', arriendoElegido: null, mesContrato: null, visitas: {}, caminoPorModo: {}, presentacion: null, muro: {}, visitaGrupo: {} };
 
   function montoValido(n) { return typeof n === 'number' && isFinite(n) && n >= 0 ? n : null; }
 
@@ -340,6 +340,15 @@
       estado.construido = Number.isInteger(g.construido) ? g.construido : null;
       // 9-nov: en qué grupos quiere conocer a sus vecinos (solo para vivir, por elección propia).
       estado.trabajo = typeof g.trabajo === 'string' ? g.trabajo.slice(0, 120) : '';
+      // 11-nov (test): confianza en el grupo. Tu presentación, tus saludos en el muro y la visita en grupo (simulado).
+      estado.presentacion = g.presentacion && typeof g.presentacion === 'object' ? {
+        trabajo: String(g.presentacion.trabajo || '').slice(0, 40), hogar: String(g.presentacion.hogar || '').slice(0, 40), motivo: String(g.presentacion.motivo || '').slice(0, 60) } : null;
+      estado.muro = {};
+      if (g.muro && typeof g.muro === 'object') Object.keys(g.muro).forEach(function (id) {
+        if (buscarProyecto(id) && Array.isArray(g.muro[id])) estado.muro[id] = g.muro[id].filter(function (m) { return typeof m === 'string'; }).map(function (m) { return m.slice(0, 140); }).slice(-10);
+      });
+      estado.visitaGrupo = {};
+      if (g.visitaGrupo && typeof g.visitaGrupo === 'object') Object.keys(g.visitaGrupo).forEach(function (id) { if (buscarProyecto(id) && g.visitaGrupo[id] === true) estado.visitaGrupo[id] = true; });
       estado.caminoPorModo = {};
       if (g.caminoPorModo && typeof g.caminoPorModo === 'object') ['vivir', 'arrendar'].forEach(function (m) {
         if (typeof g.caminoPorModo[m] === 'string' && typeof CAMINOS !== 'undefined' && CAMINOS[g.caminoPorModo[m]]) estado.caminoPorModo[m] = g.caminoPorModo[m];
@@ -683,6 +692,142 @@
         '<li>Tu pie está en tu propia cuenta en Bci y tu crédito es solo tuyo: nunca pagas la parte de otra persona.</li>' +
       '</ul></details>';
   }
+  // ---------- 11-nov (test): conoce a tu grupo ----------
+  // Una usuaria no compraría en grupo sin saber quiénes son. Sin nombres ni datos (CLAUDE.md): Bci responde por cada uno
+  // (todos preaprobados), cifras del grupo, presentaciones opcionales, un muro moderado, una visita a la obra y una meta del mes.
+  var PRESENTACIONES = [
+    { trabajo: 'Enfermería', hogar: 'Con su pareja', motivo: 'Le queda cerca del hospital donde trabaja' },
+    { trabajo: 'Contabilidad', hogar: 'Con su perro', motivo: 'El metro a dos cuadras' },
+    { trabajo: 'Docencia', hogar: 'Con su hija', motivo: 'Hay colegios y plazas cerca' },
+    { trabajo: 'Gastronomía', hogar: 'Con su pareja y su gato', motivo: 'Le gustan las ferias del barrio' },
+    { trabajo: 'Estudia y trabaja', hogar: 'Hogar de una persona', motivo: 'Le queda cerca de su universidad' },
+    { trabajo: 'Ingeniería', hogar: 'Con su mamá', motivo: 'Su familia vive en la comuna' },
+    { trabajo: 'Diseño', hogar: 'Con amistades', motivo: 'Edificio nuevo y buen precio' }
+  ];
+  var MURO_BASE = ['¡Hola! Feliz de ser parte del grupo. Este mes ya pagué mi cuota.', '¿Alguien más va a la visita de la obra? Me gustaría conocerles.', 'Pregunté en Bci y el cierre sigue en la fecha. ¡Vamos bien!'];
+  var OPCIONES_PRESENTACION = {
+    trabajo: ['Salud', 'Educación', 'Comercio', 'Tecnología', 'Construcción', 'Estudio', 'Otra cosa'],
+    hogar: ['Hogar de una persona', 'Con mi pareja', 'Con mi familia', 'Con mi mascota', 'Con amistades'],
+    motivo: ['El metro y la locomoción', 'Está cerca de mi trabajo', 'Mi familia vive cerca', 'El precio', 'Es un barrio que me gusta']
+  };
+  function semillaDe(id) { var n = 0; for (var i = 0; i < id.length; i++) n = (n * 31 + id.charCodeAt(i)) % 997; return n; }
+  function proximoSabado(semanas) {
+    var h = new Date(), base = Date.UTC(h.getFullYear(), h.getMonth(), h.getDate()), dia = new Date(base).getUTCDay();
+    return new Date(base + ((((6 - dia + 7) % 7) || 7) + 7 * (semanas || 0)) * 864e5).toISOString().slice(0, 10);
+  }
+  function conoceTuGrupo(p, r) {
+    var g = p.grupo || {};
+    var otros = Math.max(0, r.cuposTomados - (esMiProyecto(p) ? 1 : 0));
+    var semilla = semillaDe(p.id);
+    var conPresentacion = Math.min(otros, Math.max(1, Math.round(otros * 0.7)));
+    var ultimo = (estado.historialMeses || []).slice(-1)[0];
+    var pagaron = Math.min(r.cuposTomados, (g.pagaronMes || 0) + (esMiProyecto(p) && ultimo === 'pago' ? 1 : 0));
+    var pct = r.cuposTomados ? Math.round(pagaron / r.cuposTomados * 100) : 0;
+    var tarjetas = '';
+    for (var i = 0; i < conPresentacion; i++) {
+      var x = PRESENTACIONES[(semilla + i) % PRESENTACIONES.length], a = AVATARES_REGALO[(semilla + i) % AVATARES_REGALO.length];
+      tarjetas += '<li class="presentacion"><span class="presentacion-av" style="--fondo:' + a.fondo + '">' + avatarSVG(a.av, 44) + '</span>' +
+        '<strong>' + x.trabajo + '</strong><small>' + x.hogar + '</small><small class="presentacion-motivo">“' + x.motivo + '”</small>' +
+        '<span class="presentacion-ok">' + icono('i-check') + 'Preaprobado por Bci</span></li>';
+    }
+    var yo = estado.presentacion;
+    var mios = estado.muro[p.id] || [];
+    var mensajes = MURO_BASE.map(function (t, k) {
+      var a = AVATARES_REGALO[(semilla + k) % AVATARES_REGALO.length];
+      return '<li><span class="muro-av" style="--fondo:' + a.fondo + '">' + avatarSVG(a.av, 32) + '</span><span><small>' + PRESENTACIONES[(semilla + k) % PRESENTACIONES.length].trabajo + SEP + 'hace ' + plural(k + 1, 'día', 'días') + '</small>' + t + '</span></li>';
+    }).join('') + mios.map(function (t) {
+      return '<li class="muro-tuyo"><span class="muro-av">' + avatarSVG(estado.avatar, 32) + '</span><span><small>Tú' + SEP + 'ahora</small>' + esc(t) + '</span></li>';
+    }).join('');
+    var vas = !!estado.visitaGrupo[p.id];
+    var vanVisita = Math.max(2, Math.round(otros * 0.5)) + (vas ? 1 : 0);
+    var fechaVisita = proximoSabado(1);
+    return '<section class="tarjeta bloque conoce-grupo" aria-labelledby="titulo-conoce-' + esc(p.id) + '">' +
+      '<h2 class="h4" id="titulo-conoce-' + esc(p.id) + '">Conoce a tu grupo</h2>' +
+      // Capa 1: Bci responde por cada uno.
+      '<div class="grupo-sello">' + icono('i-escudo') + '<span><strong>Todos están preaprobados por Bci</strong>' +
+        '<small>Bci revisó el historial de crédito de cada uno. Tú ves el resultado, no sus datos.</small></span></div>' +
+      '<ul class="grupo-cifras">' +
+        '<li><strong>' + r.cuposTomados + ' de ' + r.cupos + '</strong><small>se unieron</small></li>' +
+        '<li><strong>' + plural(g.mesesAhorrando || 1, 'mes', 'meses') + '</strong><small>ahorrando juntos</small></li>' +
+        '<li><strong>' + formatoRedondeado(g.cuotaPromedio || 0) + '</strong><small>cuota promedio</small></li>' +
+      '</ul>' +
+      // Meta del mes del grupo.
+      '<div class="grupo-meta"><p><span>Meta de ' + MESES[Number(hoyDemo().split('-')[1]) - 1] + ': que todos paguen su cuota</span><strong>' + pagaron + ' de ' + r.cuposTomados + '</strong></p>' +
+        '<span class="grupo-meta-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="Meta del grupo"><i style="width:' + pct + '%"></i></span></div>' +
+      // Capa 3: presentaciones opcionales.
+      '<h3 class="h5 grupo-sub">Quiénes son</h3>' +
+      '<p class="texto-apoyo"><small>' + plural(conPresentacion, 'persona se presentó', 'personas se presentaron') + '. Sin nombres ni datos: solo lo que cada uno quiso contar.</small></p>' +
+      '<ul class="presentaciones">' + tarjetas +
+        '<li class="presentacion presentacion-tuya"><span class="presentacion-av">' + avatarSVG(estado.avatar, 44) + '</span>' +
+          (yo ? '<strong>' + esc(yo.trabajo) + '</strong><small>' + esc(yo.hogar) + '</small><small class="presentacion-motivo">“' + esc(yo.motivo) + '”</small>' : '<strong>Tú</strong><small>Preséntate si quieres</small>') +
+          '<button type="button" class="enlace" data-presentarme="' + esc(p.id) + '" aria-haspopup="dialog">' + (yo ? 'Editar' : 'Presentarme') + '</button></li>' +
+      '</ul>' +
+      // Muro moderado.
+      '<h3 class="h5 grupo-sub">Muro del grupo</h3>' +
+      '<ul class="muro">' + mensajes + '</ul>' +
+      '<form class="muro-form" data-muro="' + esc(p.id) + '"><label class="oculto-visual" for="muro-' + esc(p.id) + '">Escribe un saludo</label>' +
+        '<input id="muro-' + esc(p.id) + '" class="campo-texto" maxlength="140" placeholder="Escribe un saludo…" autocomplete="off">' +
+        '<button type="submit" class="btn btn-secundario-dark btn-sm">Enviar</button></form>' +
+      '<p class="vecinos-nota"><small>Lo modera Bci. Nadie ve tu teléfono, tu sueldo ni tus pagos.</small></p>' +
+      // Visita a la obra en grupo.
+      '<div class="grupo-visita">' + icono('i-calendario', 'icono-grande') + '<span><strong>Visita a la obra en grupo</strong>' +
+        '<small>' + textoVisita({ fecha: fechaVisita, hora: '11:00' }) + '</small><small>' + plural(vanVisita, 'persona va', 'personas van') + '</small></span>' +
+        '<button type="button" class="btn btn-sm ' + (vas ? 'btn-terciario' : 'btn-primario') + '" data-visita-grupo="' + esc(p.id) + '">' + (vas ? 'Ya no voy' : 'Me sumo') + '</button></div>' +
+    '</section>';
+  }
+  document.addEventListener('click', function (ev) {
+    var v = ev.target.closest('[data-visita-grupo]');
+    if (v) {
+      var id = v.dataset.visitaGrupo;
+      estado.visitaGrupo = Object.assign({}, estado.visitaGrupo);
+      if (estado.visitaGrupo[id]) delete estado.visitaGrupo[id]; else estado.visitaGrupo[id] = true;
+      guardarEstado();
+      var y = window.scrollY; mostrar(); window.scrollTo(0, y);
+      toast(estado.visitaGrupo[id] ? 'Te sumaste a la visita (simulado).' : 'Ya no vas a la visita.');
+      return;
+    }
+    var b = ev.target.closest('[data-presentarme]');
+    if (!b) return;
+    var opciones = function (campo, titulo) {
+      var actual = estado.presentacion ? estado.presentacion[campo] : null;
+      return '<fieldset class="escala"><legend>' + titulo + '</legend><div class="escala-opciones escala-envuelve">' +
+        OPCIONES_PRESENTACION[campo].map(function (o, k) {
+          return '<input type="radio" name="pres-' + campo + '" id="pres-' + campo + '-' + k + '" value="' + o + '"' + (o === actual ? ' checked' : '') + '><label for="pres-' + campo + '-' + k + '">' + o + '</label>';
+        }).join('') + '</div></fieldset>';
+    };
+    abrirHojaContenido('Tu presentación',
+      '<p class="texto-apoyo">Lo ve solo tu grupo, sin tu nombre. Puedes borrarla cuando quieras.</p>' +
+      opciones('trabajo', '¿A qué te dedicas?') + opciones('hogar', '¿Con quién vas a vivir?') + opciones('motivo', '¿Por qué elegiste este edificio?') +
+      '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-guardar-pres">Guardar</button>' +
+      (estado.presentacion ? '<button type="button" class="btn btn-terciario btn-bloque" id="btn-borrar-pres">Borrar mi presentación</button>' : '') + '</div>',
+      b, function () {
+        $('btn-guardar-pres').addEventListener('click', function () {
+          var leer = function (c) { var x = document.querySelector('input[name="pres-' + c + '"]:checked'); return x ? x.value : ''; };
+          var pres = { trabajo: leer('trabajo'), hogar: leer('hogar'), motivo: leer('motivo') };
+          if (!pres.trabajo && !pres.hogar && !pres.motivo) { toast('Elige al menos una cosa para contar.'); return; }
+          estado.presentacion = pres; guardarEstado();
+          cerrarHoja(false); var y = window.scrollY; mostrar(); window.scrollTo(0, y);
+          toast('Tu grupo ya puede verte (simulado).');
+        });
+        if ($('btn-borrar-pres')) $('btn-borrar-pres').addEventListener('click', function () {
+          estado.presentacion = null; guardarEstado();
+          cerrarHoja(false); var y = window.scrollY; mostrar(); window.scrollTo(0, y);
+          toast('Borraste tu presentación.');
+        });
+      });
+  });
+  document.addEventListener('submit', function (ev) {
+    var f = ev.target.closest && ev.target.closest('[data-muro]');
+    if (!f) return;
+    ev.preventDefault();
+    var id = f.dataset.muro, input = f.querySelector('input'), texto = (input.value || '').trim().slice(0, 140);
+    if (!texto) { input.focus(); return; }
+    estado.muro = Object.assign({}, estado.muro);
+    estado.muro[id] = (estado.muro[id] || []).concat([texto]).slice(-10);
+    guardarEstado();
+    var y = window.scrollY; mostrar(); window.scrollTo(0, y);
+    toast('Saludo publicado en el muro (simulado).');
+  });
   // 9-nov: Tus vecinos. Solo para vivir y por elección propia. Sin nombres (CLAUDE.md): solo la cifra y avatares sin nombre.
   function tusVecinos(p, r) {
     if (estado.modo !== 'vivir') return '';
@@ -2846,7 +2991,7 @@
         '<p class="frase-cierre">' + frase + '</p>' +
       '</div>';
     if (conjunto && bloqueGrupo) bloqueGrupo = bloqueGrupo.replace('<div class="tarjeta bloque">', '<div class="tarjeta bloque grupo-detalle"><h2 class="grupo-detalle-titulo">Tu grupo de compra</h2>')
-      .replace(/<\/div>$/, siAlguienSeVa(p) + '</div>');
+      .replace(/<\/div>$/, siAlguienSeVa(p) + '</div>') + conoceTuGrupo(p, r);
     contenedor.innerHTML =
       // S25: como el canvas: título, el tipo en un chip y la ficha.
       '<header class="detalle-cabecera">' + (ctx !== 'inversiones' ? botonFavorito(p) : '') +
