@@ -152,7 +152,7 @@ test('datos de ejemplo v3 (S8-F5)', () => {
   const financiamiento = datos.PROYECTOS.filter((p) => p.tipo === 'financiamiento');
   assert.ok(conjunto.length >= 2 && financiamiento.length >= 2);
   assert.ok(datos.DEPARTAMENTOS.length >= 10);
-  const comunas = ['Independencia', 'Quinta Normal', 'Recoleta', 'Estación Central'];
+  const comunas = ['Independencia', 'Quinta Normal', 'Recoleta', 'Estación Central', 'Ñuñoa', 'Santiago', 'San Miguel', 'Macul', 'La Florida'];
   for (const p of datos.PROYECTOS) assert.ok(comunas.includes(p.comuna), `${p.id} en ${p.comuna}`);
   const bajos = datos.DEPARTAMENTOS.filter((d) => {
     const p = datos.buscarProyecto(d.proyectoId);

@@ -840,7 +840,9 @@ var RANGOS_PRECIO = [
   { id: 'hasta-1500', desde: 1000, hasta: 1500 },
   { id: '1500-2000', desde: 1500, hasta: 2000 },
   { id: '2000-2500', desde: 2000, hasta: 2500 },
-  { id: '2500-3000', desde: 2500, hasta: 3000 }
+  { id: '2500-3000', desde: 2500, hasta: 3000 },
+  // 11-nov: departamentos más caros (hasta UF 4.000, el tope del DS1).
+  { id: '3000-4000', desde: 3000, hasta: 4000 }
 ];
 function buscarRango(id) {
   for (var i = 0; i < RANGOS_PRECIO.length; i++) if (RANGOS_PRECIO[i].id === id) return RANGOS_PRECIO[i];

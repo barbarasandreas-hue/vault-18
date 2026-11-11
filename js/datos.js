@@ -2,6 +2,7 @@
 // Los proyectos llevan nombre de edificio, nunca de personas.
 // Comunas donde el arriendo de un departamento chico rinde 4,5 % o más bruto (Transsa, 2025):
 // Independencia, Quinta Normal, Recoleta y Estación Central.
+// 11-nov: y otras zonas para vivir, más caras: Ñuñoa, Santiago, San Miguel, Macul y La Florida.
 
 // Fecha de referencia de la demo: los días para el cierre se cuentan desde aquí,
 // para que los números no cambien según el día en que se muestre la app.
@@ -74,7 +75,31 @@ var PROYECTOS = [
   { id: 'esquina-quinta', fachada: { color: 'green-normal', pisos: 4 }, clienteBci: false, nombre: 'Edificio Esquina Quinta Normal', comuna: 'Quinta Normal', tipo: 'financiamiento',
     cupos: 1, cuposTomados: 0, ufFinanciadas: 144, inversionistas: 7, cierre: '2027-02-15' },
   { id: 'vista-andes-independencia', fachada: { color: 'gray-dark', pisos: 7 }, clienteBci: true, nombre: 'Edificio Vista Andes', comuna: 'Independencia', tipo: 'financiamiento',
-    cupos: 1, cuposTomados: 0, ufFinanciadas: 132, inversionistas: 6, cierre: '2027-03-31' }
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 132, inversionistas: 6, cierre: '2027-03-31' },
+  // 11-nov: más zonas y precios más altos (UF 2.100 a 4.000). Precio por m² según NielsenIQ-GfK 2024:
+  // Ñuñoa ≈ UF 89, Santiago ≈ UF 84, Macul ≈ UF 73, La Florida ≈ UF 72, San Miguel ≈ UF 71.
+  { id: 'plaza-nunoa', fachada: { color: 'blue-dark', pisos: 8 }, clienteBci: true, grupo: { cuotaPromedio: 980000, mesesAhorrando: 3, unidoHaceDias: 2, pagaronMes: 5 }, etapaObra: 1, entregaEstimada: '2028-02-28', nombre: 'Edificio Plaza Ñuñoa', comuna: 'Ñuñoa', tipo: 'conjunto',
+    cupos: 10, cuposTomados: 6, ufFinanciadas: 0, cierre: '2027-02-15' },
+  { id: 'parque-nunoa', recepcionDefinitiva: '2026-09-15', fachada: { color: 'green-dark', pisos: 7 }, clienteBci: false, etapaObra: 4, nombre: 'Edificio Parque Juan XXIII', comuna: 'Ñuñoa', tipo: 'venta',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
+  { id: 'santa-lucia-centro', fachada: { color: 'gray-semidark', pisos: 12 }, clienteBci: true, grupo: { cuotaPromedio: 640000, mesesAhorrando: 4, unidoHaceDias: 1, pagaronMes: 6 }, etapaObra: 2, entregaEstimada: '2027-10-31', nombre: 'Edificio Mirador Santa Lucía', comuna: 'Santiago', tipo: 'conjunto',
+    cupos: 10, cuposTomados: 7, ufFinanciadas: 0, cierre: '2027-01-20' },
+  { id: 'alameda-centro', recepcionDefinitiva: '2026-05-20', fachada: { color: 'blue-normal', pisos: 14 }, clienteBci: true, etapaObra: 4, nombre: 'Edificio Alameda Centro', comuna: 'Santiago', tipo: 'venta',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
+  { id: 'barrio-brasil', fachada: { color: 'gray-dark', pisos: 9 }, clienteBci: false, nombre: 'Edificio Barrio Brasil', comuna: 'Santiago', tipo: 'financiamiento',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 150, inversionistas: 8, cierre: '2027-02-05' },
+  { id: 'gran-avenida-sm', fachada: { color: 'blue-80', pisos: 10 }, clienteBci: false, grupo: { cuotaPromedio: 820000, mesesAhorrando: 2, unidoHaceDias: 4, pagaronMes: 3 }, etapaObra: 0, entregaEstimada: '2028-05-31', nombre: 'Edificio Gran Avenida', comuna: 'San Miguel', tipo: 'conjunto',
+    cupos: 8, cuposTomados: 4, ufFinanciadas: 0, cierre: '2027-03-10' },
+  { id: 'llano-sm', recepcionDefinitiva: '2026-10-30', fachada: { color: 'green-normal', pisos: 8 }, clienteBci: true, etapaObra: 4, nombre: 'Edificio El Llano', comuna: 'San Miguel', tipo: 'venta',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
+  { id: 'quilin-macul', fachada: { color: 'green-dark', pisos: 9 }, clienteBci: true, grupo: { cuotaPromedio: 760000, mesesAhorrando: 5, unidoHaceDias: 3, pagaronMes: 7 }, etapaObra: 2, entregaEstimada: '2027-08-31', nombre: 'Edificio Parque Quilín', comuna: 'Macul', tipo: 'conjunto',
+    cupos: 10, cuposTomados: 8, ufFinanciadas: 0, cierre: '2026-12-30' },
+  { id: 'campus-macul', recepcionDefinitiva: '2026-04-10', fachada: { color: 'blue-dark', pisos: 6 }, clienteBci: false, etapaObra: 4, nombre: 'Edificio Campus Macul', comuna: 'Macul', tipo: 'venta',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
+  { id: 'vicuna-florida', fachada: { color: 'gray-semidark', pisos: 11 }, clienteBci: false, grupo: { cuotaPromedio: 840000, mesesAhorrando: 3, unidoHaceDias: 5, pagaronMes: 4 }, etapaObra: 1, entregaEstimada: '2028-01-31', nombre: 'Edificio Vicuña Mackenna Sur', comuna: 'La Florida', tipo: 'conjunto',
+    cupos: 10, cuposTomados: 5, ufFinanciadas: 0, cierre: '2027-02-28' },
+  { id: 'plaza-florida', fachada: { color: 'blue-normal', pisos: 7 }, clienteBci: true, nombre: 'Edificio Plaza La Florida', comuna: 'La Florida', tipo: 'financiamiento',
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 210, inversionistas: 10, cierre: '2027-01-15' }
 ];
 
 // Departamentos disponibles de cada proyecto (los que aún no tienen comprador).
@@ -121,7 +146,24 @@ var DEPARTAMENTOS = [
   { id: 'lb-503', proyectoId: 'boldos-quinta', comuna: 'Quinta Normal', piso: 5, m2: 44, dormitorios: 2, banos: 1, listaUF: 2100, arriendoEstimadoIA: 340000, origenArriendo: ORIGEN_ARRIENDO },
   { id: 'rr-402', proyectoId: 'ribera-recoleta', comuna: 'Recoleta', piso: 4, m2: 24, dormitorios: 0, banos: 1, listaUF: 1250, arriendoEstimadoIA: 210000, origenArriendo: ORIGEN_ARRIENDO },
   { id: 'eq-302', proyectoId: 'esquina-quinta', comuna: 'Quinta Normal', piso: 3, m2: 34, dormitorios: 1, banos: 1, listaUF: 1600, arriendoEstimadoIA: 265000, origenArriendo: ORIGEN_ARRIENDO },
-  { id: 'va-605', proyectoId: 'vista-andes-independencia', comuna: 'Independencia', piso: 6, m2: 46, dormitorios: 2, banos: 1, listaUF: 2200, arriendoEstimadoIA: 365000, origenArriendo: ORIGEN_ARRIENDO }
+  { id: 'va-605', proyectoId: 'vista-andes-independencia', comuna: 'Independencia', piso: 6, m2: 46, dormitorios: 2, banos: 1, listaUF: 2200, arriendoEstimadoIA: 365000, origenArriendo: ORIGEN_ARRIENDO },
+  // 11-nov: departamentos de las zonas nuevas (arriendo estimado ≈ 4,4 % bruto al año).
+  { id: 'pn-403', proyectoId: 'plaza-nunoa', comuna: 'Ñuñoa', piso: 4, m2: 36, dormitorios: 1, banos: 1, listaUF: 3200, arriendoEstimadoIA: 480000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'pn-807', proyectoId: 'plaza-nunoa', comuna: 'Ñuñoa', piso: 8, m2: 45, dormitorios: 2, banos: 1, listaUF: 4000, arriendoEstimadoIA: 600000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'pj-502', proyectoId: 'parque-nunoa', comuna: 'Ñuñoa', piso: 5, m2: 38, dormitorios: 1, banos: 1, listaUF: 3380, arriendoEstimadoIA: 510000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'sl-904', proyectoId: 'santa-lucia-centro', comuna: 'Santiago', piso: 9, m2: 26, dormitorios: 0, banos: 1, listaUF: 2180, arriendoEstimadoIA: 330000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'sl-1106', proyectoId: 'santa-lucia-centro', comuna: 'Santiago', piso: 11, m2: 34, dormitorios: 1, banos: 1, listaUF: 2860, arriendoEstimadoIA: 430000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ac-1201', proyectoId: 'alameda-centro', comuna: 'Santiago', piso: 12, m2: 32, dormitorios: 1, banos: 1, listaUF: 2690, arriendoEstimadoIA: 405000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'bb-603', proyectoId: 'barrio-brasil', comuna: 'Santiago', piso: 6, m2: 25, dormitorios: 0, banos: 1, listaUF: 2100, arriendoEstimadoIA: 315000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ga-305', proyectoId: 'gran-avenida-sm', comuna: 'San Miguel', piso: 3, m2: 40, dormitorios: 1, banos: 1, listaUF: 2840, arriendoEstimadoIA: 430000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'ga-902', proyectoId: 'gran-avenida-sm', comuna: 'San Miguel', piso: 9, m2: 52, dormitorios: 2, banos: 2, listaUF: 3690, arriendoEstimadoIA: 555000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'll-704', proyectoId: 'llano-sm', comuna: 'San Miguel', piso: 7, m2: 50, dormitorios: 2, banos: 2, listaUF: 3550, arriendoEstimadoIA: 535000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'pq-506', proyectoId: 'quilin-macul', comuna: 'Macul', piso: 5, m2: 38, dormitorios: 1, banos: 1, listaUF: 2770, arriendoEstimadoIA: 415000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'pq-801', proyectoId: 'quilin-macul', comuna: 'Macul', piso: 8, m2: 48, dormitorios: 2, banos: 2, listaUF: 3500, arriendoEstimadoIA: 525000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'cm-402', proyectoId: 'campus-macul', comuna: 'Macul', piso: 4, m2: 40, dormitorios: 1, banos: 1, listaUF: 2920, arriendoEstimadoIA: 440000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'vm-605', proyectoId: 'vicuna-florida', comuna: 'La Florida', piso: 6, m2: 50, dormitorios: 2, banos: 2, listaUF: 3600, arriendoEstimadoIA: 540000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'vm-1003', proyectoId: 'vicuna-florida', comuna: 'La Florida', piso: 10, m2: 55, dormitorios: 2, banos: 2, listaUF: 3960, arriendoEstimadoIA: 595000, origenArriendo: ORIGEN_ARRIENDO },
+  { id: 'pf-301', proyectoId: 'plaza-florida', comuna: 'La Florida', piso: 3, m2: 42, dormitorios: 1, banos: 1, listaUF: 3020, arriendoEstimadoIA: 455000, origenArriendo: ORIGEN_ARRIENDO }
 ];
 
 // S22-F4: departamentos usados de ejemplo para el crédito de siempre (Bci presta el 80 %, sin subsidio a la tasa,
@@ -164,7 +206,12 @@ var BARRIOS = {
   'Independencia': { metro: 'Línea 3: Hospitales y Plaza Chacabuco', salud: 'Hospital Clínico de la U. de Chile y Hospital San José', verde: 'Plaza Chacabuco', vida: 'La Vega Central y Patronato, a pocas cuadras' },
   'Recoleta': { metro: 'Línea 2: Cerro Blanco, Cementerios y Einstein', salud: 'Clínica Dávila', verde: 'Cerro Blanco y el Parque Metropolitano', vida: 'Barrio Patronato y La Vega Central' },
   'Estación Central': { metro: 'Línea 1: Estación Central y Universidad de Santiago; trenes en la estación', salud: 'Centros de salud de la comuna', verde: 'Parque Quinta Normal, cerca', vida: 'Universidad de Santiago y comercio de Alameda' },
-  'Quinta Normal': { metro: 'Línea 5: Gruta de Lourdes, Blanqueado y Quinta Normal', salud: 'Centros de salud de la comuna', verde: 'Parque Quinta Normal', vida: 'Museos del parque y ferias libres' }
+  'Quinta Normal': { metro: 'Línea 5: Gruta de Lourdes, Blanqueado y Quinta Normal', salud: 'Centros de salud de la comuna', verde: 'Parque Quinta Normal', vida: 'Museos del parque y ferias libres' },
+  'Ñuñoa': { metro: 'Líneas 3 y 6: Plaza Egaña, Ñuñoa y Estadio Nacional', salud: 'Centros de salud de la comuna', verde: 'Parque Juan XXIII', vida: 'Plaza Ñuñoa, cafés y teatros' },
+  'Santiago': { metro: 'Líneas 1, 2, 3 y 5: varias estaciones en el centro', salud: 'Posta Central y Hospital San Borja Arriarán', verde: 'Cerro Santa Lucía y Parque Forestal', vida: 'Barrio Lastarria, Barrio Brasil y comercio del centro' },
+  'San Miguel': { metro: 'Línea 2: El Llano, San Miguel y Lo Vial', salud: 'Hospital Barros Luco', verde: 'Parque El Llano Subercaseaux', vida: 'Gran Avenida y el Museo a Cielo Abierto' },
+  'Macul': { metro: 'Línea 4: Macul y Quilín; Línea 6: Los Presidentes', salud: 'Centros de salud de la comuna', verde: 'Parque Macul y Cerro San Cristóbal a la vista', vida: 'Campus de universidades y Mall Florida Center, cerca' },
+  'La Florida': { metro: 'Línea 4: Vicuña Mackenna, Vicente Valdés y Mirador', salud: 'Hospital Clínico La Florida', verde: 'Parque Mirador Azul', vida: 'Mall Plaza Vespucio y Florida Center' }
 };
 
 if (typeof module !== 'undefined') module.exports = {
