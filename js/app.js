@@ -2944,7 +2944,7 @@
       var pdG = plazoDepartamento(p);
       var menos = ufAPesos(pd.precioUF - pdG.precioUF), antes = (pd.meses || 0) - (pdG.meses || 0);
       if (menos > 0) grupoPosible = '<a class="tarjeta fila grupo-posible" href="#camino/proyecto/' + esc(p.id) + '/grupo-vivir">' + icono('i-grupo', 'icono-grande') +
-        '<span><strong>Si te unes a su grupo</strong><small>Podrías pagar ' + formatoRedondeado(menos) + ' menos' + (antes > 0 ? ' y llegar ' + plural(antes, 'mes', 'meses') + ' antes' : '') + '</small></span>' +
+        '<span><strong>Si te unes a su grupo</strong><small>' + r.cuposTomados + ' de ' + r.cupos + ' personas ya se unieron. Podrías pagar ' + formatoRedondeado(menos) + ' menos' + (antes > 0 ? ' y llegar ' + plural(antes, 'mes', 'meses') + ' antes' : '') + '</small></span>' +
         '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>';
     }
     var invertiste = invertidoEn(p.id) > 0;
@@ -2987,7 +2987,8 @@
     }
 
     // 9-nov: en compra en grupo, cuántos se unieron va arriba, bajo las fotos.
-    var bloqueGrupo = p.tipo === 'venta' || caminoSinGrupo || solo || conjunto && ctx !== 'inversiones' && estado.caminoElegido && CAMINOS[estado.caminoElegido] && !CAMINOS[estado.caminoElegido].grupo ? '' : '<div class="tarjeta bloque">' +
+    // 11-nov: el grupo se muestra siempre que el precio sea con grupo (antes se ocultaba si tu camino elegido era otro).
+    var bloqueGrupo = p.tipo === 'venta' || caminoSinGrupo || solo ? '' : '<div class="tarjeta bloque">' +
         (p.tipo === 'conjunto' ? grupoConEdificio(p, r) : avanceDe(p, r)) +
         '<p class="cierre">Cierra el ' + formatoFecha(p.cierre) + '</p>' +
         '<p class="frase-cierre">' + frase + '</p>' +
