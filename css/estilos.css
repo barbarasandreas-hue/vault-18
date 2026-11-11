@@ -3417,3 +3417,29 @@ a.camino-es-tuyo { text-decoration: none; }
 .hoja-camino small { color: #546E7A; font-size: 14px; line-height: 1.35; }
 .hoja-camino[aria-current] { background: #F1F5FA; }
 .hoja-camino .flecha-derecha { width: 20px; height: 20px; flex: none; }
+
+/* 11-nov: Tus pasos en una sola sección */
+.pasos-unica { display: flex; flex-direction: column; gap: 14px; padding: 16px; }
+.pasos-camino { display: flex; align-items: center; gap: 12px; }
+.pasos-camino-av { flex: none; border-radius: 50%; background: #D4E3F5; }
+.pasos-camino > span { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pasos-camino small { font-size: 13px; color: #546E7A; }
+.pasos-camino strong { font-size: 17px; color: #37474F; }
+.pasos-camino .enlace { font-weight: 700; font-size: 14px; padding: 12px 0; text-decoration: none; }
+.pasos-avance { display: flex; justify-content: space-between; font-size: 14px; border-top: 1px solid #ECEFF1; padding-top: 12px; }
+.pasos-listos { color: #28652B; font-weight: 700; }
+.pasos-unica .escalones { margin: 0; }
+.pasos-detalle { display: flex; flex-direction: column; gap: 8px; background: #F1F5FA; border-radius: 12px; padding: 14px; }
+.pasos-detalle.hecho { background: #EEF6EE; }
+.pasos-detalle.pendiente { background: #F4F6F7; }
+.pasos-detalle-ceja { font-size: 12px; font-weight: 700; color: #1D5699; letter-spacing: .4px; text-transform: uppercase; }
+.pasos-detalle.pendiente .pasos-detalle-ceja { color: #546E7A; }
+.pasos-detalle.hecho .pasos-detalle-ceja { color: #28652B; }
+.pasos-detalle-titulo { margin: 0; font-size: 20px; font-weight: 700; color: #37474F; }
+.pasos-detalle > p { margin: 0; font-size: 15px; line-height: 1.45; }
+.pasos-misiones { border-top: 1px solid #DCE3E7; padding-top: 10px; margin-top: 4px; }
+.pasos-misiones h3 { margin: 0 0 6px; font-size: 14px; color: #546E7A; }
+.pasos-misiones .lista-misiones { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.pasos-misiones .mision-fila { background: #FFFFFF; border-radius: 10px; }
+.pasos-todas { text-align: center; font-weight: 700; padding: 6px 0; text-decoration: none; }
+.pasos-detalle .btn { font-size: 15px; padding: 12px 16px; min-height: 48px; }

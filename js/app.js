@@ -5420,18 +5420,22 @@
     if (estado.caminoElegido && CAMINOS[estado.caminoElegido]) return estado.caminoElegido;
     return null;
   }
-  function tarjetaCaminoPasos() {
+  function avisoCaminoPasos() {
+    var aviso = caminoRecien ? '<p class="camino-pasos-aviso" role="status">' + icono('i-check') + 'Listo: estos son tus pasos con ' + primeraMinuscula(CAMINOS[caminoRecien].corto) + '.</p>' : '';
+    caminoRecien = null;
+    return aviso;
+  }
+  function filaCaminoPasos() {
     var id = idCaminoPasos();
     var sugerido = null;
     if (!id) { try { sugerido = recomendarCamino(perfilActual()).id; } catch (e) { sugerido = null; } }
     var cid = id || sugerido;
     var nombre = cid && CAMINOS[cid] ? CAMINOS[cid].corto : 'Elige cómo comprar';
-    var aviso = caminoRecien ? '<p class="camino-pasos-aviso" role="status">' + icono('i-check') + 'Listo: estos son tus pasos con ' + primeraMinuscula(CAMINOS[caminoRecien].corto) + '.</p>' : '';
-    caminoRecien = null;
-    return aviso + '<a class="tarjeta camino-pasos' + (id ? '' : ' sin-elegir') + '" href="#explorar">' +
-        '<span><small>' + (id ? 'Tu camino' : 'Camino sugerido' + SEP + 'aún no eliges') + '</small><strong>' + nombre + '</strong></span>' +
-        '<span class="camino-pasos-cambiar">' + (id ? 'Cambiar' : 'Elegir') + ' ›</span></a>';
+    return '<div class="pasos-camino">' + avatarSVG(estado.avatar, 48, 'pasos-camino-av') +
+      '<span><small>' + (id ? 'Tu camino' : 'Camino sugerido' + SEP + 'aún no eliges') + '</small><strong>' + nombre + '</strong></span>' +
+      '<a class="enlace" href="#explorar">' + (id ? 'Cambiar' : 'Elegir') + ' ›</a></div>';
   }
+
 
   function renderTusPasos() {
     var cont = $('pasos-contenido');
@@ -5451,41 +5455,39 @@
     var delPaso = misionesPorPaso(h, ms)[pasoElegido].slice().sort(function (a, b) { return a.hecho - b.hecho; });
     // 9-nov (colores): el color dice el estado: verde oscuro hecho, azul ahora, gris falta.
     var colorDe = function (x) { return x.estado === 'hecho' ? 'esc-hecho' : x.estado === 'actual' ? 'esc-ahora' : 'esc-falta'; };
+    var puerta = '<svg class="escalon-puerta" width="38" height="53" viewBox="0 0 30 42" aria-hidden="true"><rect x="2" y="2" width="26" height="38" rx="2" fill="#37474F"/><rect x="5" y="5" width="20" height="35" fill="#2772CC"/><rect x="8" y="8" width="14" height="11" rx="1" fill="none" stroke="#D4E3F5" stroke-width="1.6"/><rect x="8" y="22" width="14" height="14" rx="1" fill="none" stroke="#D4E3F5" stroke-width="1.6"/><circle cx="21.5" cy="21" r="2" fill="#FFE300"/><rect x="0" y="39" width="30" height="3" rx="1" fill="#546E7A"/></svg>';
+    var ceja = sel.estado === 'hecho' ? 'Listo' : sel.estado === 'actual' ? 'Ahora' + SEP + sel.cuesta : 'Después' + SEP + sel.cuesta;
+    // 11-nov (rediseño): Tus pasos es una sola sección: tu camino, la escalera y el paso elegido con sus misiones.
     cont.innerHTML =
       '<header class="encabezado"><img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24">' +
-        '<h1 id="titulo-pasos" class="h2">Tus pasos</h1>' +
-        '<p class="texto-apoyo">' + (h.terminado ? 'Llegaste: es tuyo' : 'Vas en el paso ' + h.indice + ' de ' + h.total + SEP + h.nombre) + '</p></header>' +
-      tarjetaCaminoPasos() +
+        '<h1 id="titulo-pasos" class="h2">Tus pasos</h1></header>' +
+      avisoCaminoPasos() +
       (todaviaNo ? '<p class="tarjeta compacta aviso-todavia">' + icono('i-pronto') + '<span><strong>Todavía no</strong> ' +
         (estado.modo === 'vivir' ? '' : '<a class="enlace" href="#explorar/cambia">Ver qué lo cambia</a>') + '</span></p>' + (esArriendo() ? '<section class="tarjeta bloque meta-mes">' + salidaArriendoHtml(arriendoActual().u) + '</section>' : estado.modo === 'vivir' ? salidasHtml() : '') : '') +
-      '<section aria-labelledby="titulo-hitos" class="tarjeta escalones-tarjeta">' +
-        '<div class="escalones-cabeza"><h2 id="titulo-hitos">Tu escalera</h2><span>' + listos + ' de ' + h.total + ' listos</span></div>' +
-        '<p class="escalones-leyenda" aria-hidden="true"><span><i class="esc-hecho"></i>Hecho</span><span><i class="esc-ahora"></i>Ahora</span><span><i class="esc-falta"></i>Falta</span></p>' +
-        '<ol class="escalones" aria-label="Tus pasos">' + h.hitos.map(function (x, i) {
+      '<section class="tarjeta pasos-unica" aria-labelledby="titulo-pasos">' +
+        filaCaminoPasos() +
+        '<div class="pasos-avance"><span>' + (h.terminado ? 'Llegaste: <strong>es tuyo</strong>' : 'Paso <strong>' + h.indice + ' de ' + h.total + '</strong>') + '</span><span class="pasos-listos">' + listos + ' de ' + h.total + ' listos</span></div>' +
+        '<ol class="escalones" aria-label="Tu escalera">' + h.hitos.map(function (x, i) {
           return '<li class="' + x.estado + '">' +
             (x.estado === 'actual' ? avatarSVG(estado.avatar, 40, 'escalon-av' + (celebra ? ' sube' : '')) : '') +
-            (i === h.total - 1 && x.estado !== 'actual' ? '<svg class="escalon-puerta" width="38" height="53" viewBox="0 0 30 42" aria-hidden="true"><rect x="2" y="2" width="26" height="38" rx="2" fill="#37474F"/><rect x="5" y="5" width="20" height="35" fill="#2772CC"/><rect x="8" y="8" width="14" height="11" rx="1" fill="none" stroke="#D4E3F5" stroke-width="1.6"/><rect x="8" y="22" width="14" height="14" rx="1" fill="none" stroke="#D4E3F5" stroke-width="1.6"/><circle cx="21.5" cy="21" r="2" fill="#FFE300"/><rect x="0" y="39" width="30" height="3" rx="1" fill="#546E7A"/></svg>' : '') +
+            (i === h.total - 1 && x.estado !== 'actual' ? puerta : '') +
             '<button type="button" class="escalon ' + colorDe(x, i) + '" data-paso="' + i + '" aria-pressed="' + (i === pasoElegido) + '" style="height:' + (44 + i * 16) + 'px" aria-label="Paso ' + (i + 1) + ': ' + x.nombre + ', ' + (x.estado === 'hecho' ? 'listo' : x.estado === 'actual' ? 'ahora, ' + x.cuesta : 'después') + '">' + (x.estado === 'hecho' ? '✓' : i + 1) + '</button>' +
             '<span class="escalon-nombre">' + (CORTO_HITO[x.id] || x.nombre) + '</span></li>';
         }).join('') + '</ol>' +
-        '<div class="escalones-barra" aria-hidden="true">' + h.hitos.map(function (x) { return '<i class="' + x.estado + '"></i>'; }).join('') + '</div>' +
-      '</section>' +
-      (celebra ? '<div class="escalon-celebra" role="status"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#FFFFFF"/><path d="M6.5 12.5l3.6 3.6L17.5 8.8" fill="none" stroke="#28652B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
-        '<span>¡Subiste un escalón!<small>Sigue así, ya vas en el paso ' + h.indice + '.</small></span></div>' : '') +
-      '<article class="tarjeta paso-elegido" aria-live="polite">' +
-        '<div class="paso-elegido-cabeza"><span class="paso-elegido-num ' + colorDe(sel, pasoElegido) + '" aria-hidden="true">' + (pasoElegido + 1) + '</span>' +
-          '<span><span class="paso-elegido-ceja' + (sel.estado === 'pendiente' ? ' despues' : '') + '">Paso ' + (pasoElegido + 1) + ' de ' + h.total + SEP + (sel.estado === 'hecho' ? 'Listo' : sel.estado === 'actual' ? 'Ahora' : 'Después') + '</span>' +
-          '<h3>' + sel.nombre + '</h3></span></div>' +
-        '<div class="paso-elegido-cuerpo"><span class="paso-elegido-tiempo"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#546E7A" stroke-width="2.4"/><path d="M12 7v5l3 2" fill="none" stroke="#546E7A" stroke-width="2.4" stroke-linecap="round"/></svg>' + sel.cuesta + '</span>' +
+        (celebra ? '<div class="escalon-celebra" role="status"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#FFFFFF"/><path d="M6.5 12.5l3.6 3.6L17.5 8.8" fill="none" stroke="#28652B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          '<span>¡Subiste un escalón!<small>Sigue así, ya vas en el paso ' + h.indice + '.</small></span></div>' : '') +
+        '<article class="pasos-detalle ' + sel.estado + '" aria-live="polite">' +
+          '<span class="pasos-detalle-ceja">Paso ' + (pasoElegido + 1) + SEP + ceja + '</span>' +
+          '<h2 class="pasos-detalle-titulo">' + sel.nombre + '</h2>' +
           '<p>' + textoHito(sel.id, s.grupo) + '</p>' +
-          (sel.estado === 'actual' ? '<button type="button" class="btn btn-primario btn-bloque" data-hito="' + sel.id + '" aria-haspopup="dialog">Empezar</button>'
+          (sel.estado === 'actual' ? '<button type="button" class="btn btn-primario btn-bloque" data-hito="' + sel.id + '" aria-haspopup="dialog">' + (sel.accion || 'Empezar') + '</button>'
             : sel.estado === 'hecho' ? '<p class="paso-elegido-hecho"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#28892B"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Ya lo hiciste</p>'
             : '<p class="paso-elegido-despues">Se abre cuando termines el paso ' + h.indice + '.</p>') +
-        '</div></article>' +
-      '<section aria-labelledby="titulo-misiones" class="misiones-canvas">' +
-        '<div class="misiones-cabeza"><h2 class="h3" id="titulo-misiones">Misiones del paso ' + (pasoElegido + 1) + '</h2><a class="enlace" href="#pasos/misiones">Ver todas ›</a></div>' +
-        (delPaso.length ? '<ul class="misiones-tarjetas">' + delPaso.map(function (x, k) { return x.hecho ? filaMision(x) : tarjetaMision(x, k); }).join('') + '</ul>'
-          : '<p class="tarjeta compacta">Este paso no tiene misiones.</p>') +
+          '<div class="pasos-misiones"><h3 id="titulo-misiones">Misiones de este paso</h3>' +
+            (delPaso.length ? '<ul class="lista-misiones">' + delPaso.map(filaMision).join('') + '</ul>' : '<p class="texto-apoyo"><small>Este paso no tiene misiones.</small></p>') +
+          '</div>' +
+        '</article>' +
+        '<a class="enlace pasos-todas" href="#pasos/misiones">Ver todas las misiones ›</a>' +
       '</section>';
     cont.querySelectorAll('[data-paso]').forEach(function (b) {
       b.addEventListener('click', function () { pasoElegido = Number(b.dataset.paso); renderTusPasos(); cont.querySelector('[data-paso="' + pasoElegido + '"]').focus(); });
