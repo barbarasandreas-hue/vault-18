@@ -2409,8 +2409,16 @@
       lineas.push((p.tipo === 'financiamiento' ? porcentajeEntero(r.avanceFinanciamiento) + NBSP + '% del pie reunido' + SEP : '') +
         (p.cierre ? 'Cierra el ' + formatoFecha(p.cierre) : 'Terminado' + SEP + 'lo recibes al firmar'));
     } else {
-      etiqueta = r.ahorro > 0 ? 'Ahorras al unirte' : 'Si el grupo se completa';
-      cifra = formatoRedondeado(r.ahorro > 0 ? r.ahorro : r.ahorroCompleto);
+      // 11-nov: el precio total con el descuento del grupo, y cuánto te descuentan al unirte.
+      var conDesc = estado.modo === 'vivir' ? ufAPesos(plazoDepartamento(p).precioUF) : r.escenario.precio;
+      var lista = conDesc + r.ahorro;
+      var pctDe = function (x) { return lista ? Math.round(x / lista * 100) + NBSP + '%' : ''; };
+      etiqueta = r.ahorro > 0 ? 'Precio con descuento del grupo' : 'Precio del departamento';
+      cifra = formatoRedondeado(conDesc);
+      if (r.ahorro > 0) lineas.push('Precio normal <s>' + formatoRedondeado(lista) + '</s>');
+      lineas.push(r.ahorro > 0
+        ? '<span class="tp-descuento">Descuento al unirte: ' + formatoRedondeado(r.ahorro) + ' (' + pctDe(r.ahorro) + ')</span>'
+        : '<span class="tp-descuento">Si el grupo se completa: ' + formatoRedondeado(r.ahorroCompleto) + ' de descuento (' + pctDe(r.ahorroCompleto) + ')</span>');
       // 11-nov: cuántas personas hay en el grupo, en su propia línea y con ícono.
       lineas.push(grupoTxt);
       if (compacta) lineas.push('Cierra el ' + fechaCorta(p.cierre));

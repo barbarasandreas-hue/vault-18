@@ -3343,3 +3343,7 @@ details.visita[open] > summary { margin-bottom: 6px; }
 .tp-grupo{display:inline-flex;align-items:center;gap:6px;color:var(--texto,#37474F)}
 .tp-grupo svg{width:18px;height:18px;flex:none;color:#28652B}
 .tp-grupo strong{font-weight:700}
+
+/* 11-nov: descuento del grupo en las tarjetas */
+.tp-descuento{color:#28652B;font-weight:700}
+.tp-linea s{color:#546E7A}
