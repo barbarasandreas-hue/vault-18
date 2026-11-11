@@ -671,7 +671,7 @@ var CAMINOS = {
 function razonTodaviaNo(perfil, dividendo) {
   var s = sostenible(perfil, dividendo);
   if (!s || s.cumple) return null;
-  return !s.cumpleCarga ? 'La cuota pasa tu límite' : 'Te quedaría poco para vivir';
+  return !s.cumpleCarga ? 'La cuota pasa tu límite' : 'Te quedaría poco para tus gastos del mes';
 }
 
 // Los caminos de cada modo, en el orden en que se muestran.
@@ -935,7 +935,7 @@ function arriendoOpcion(listaUF, arriendoBruto, perfil) {
     dividendo: dividendo, dividendoPeor: dividendoPeor,
     alcanzaArriendo: alcanzaArriendo, alcanzaCredito: alcanzaCredito, dentroDelPlazo: dentroDelPlazo,
     cumple: puedeEntrar && alcanzaArriendo && alcanzaCredito && dentroDelPlazo,
-    razon: !puedeEntrar ? 'Necesitas el 5 % para entrar' : !alcanzaArriendo ? 'Te quedaría poco para vivir'
+    razon: !puedeEntrar ? 'Necesitas el 5 % para entrar' : !alcanzaArriendo ? 'Te quedaría poco para tus gastos del mes'
       : !dentroDelPlazo ? 'No juntas tu pie en 5 años' : !alcanzaCredito ? 'Al comprar, la cuota pasa tu límite' : null
   };
 }
@@ -1658,7 +1658,7 @@ function capasProteccion(s) {
   if (s.grupo) capa('bloqueada', 'Cuenta bloqueada', 'Nadie lo saca hasta la escritura', true, true);
   else if (s.enVerde) capa('poliza', 'Póliza de la inmobiliaria', 'Si no entrega, recuperas lo pagado', true);
   if (s.grupo) capa('salida', 'Salida sin multa', 'Si Bci no aprueba, vuelve entero', true, true);
-  capa('mes-malo', 'Un mes malo', 'Lo ahorrado no se pierde', true);
+  capa('mes-malo', 'Si un mes no puedes pagar', 'Lo que llevas no se pierde. También puedes depositar menos.', true);
   return capas;
 }
 
@@ -1724,10 +1724,9 @@ function animosNuevos(hechos, dados, equipo) {
 // ---------- S22-F3: regalo de pie por enlace ----------
 // El mensaje dice la meta y lo que falta sin montos exactos ni datos personales: porcentaje y meses.
 function mensajeRegalo(o) {
-  var pct = Math.max(0, Math.min(100, Math.round(o.pct || 0)));
-  var falta = o.mesesFaltan > 0 ? ' y me faltan unos ' + (o.mesesFaltan === 1 ? '1 mes' : o.mesesFaltan + ' meses') : '';
+  // 11-nov (test): el mensaje no dice cuánto llevas del pie (ni % ni meses); la persona lo puede editar en la app.
   var antes = { 'Cumpleaños': 'Para mi cumpleaños', 'Navidad': 'Para esta Navidad', 'Titulación': 'Para mi titulación' }[o.ocasion];
-  return (antes ? antes + ': e' : 'E') + 'stoy juntando el pie para mi primer departamento. Llevo el ' + pct + ' %' + falta + '. ' +
+  return (antes ? antes + ': e' : 'E') + 'stoy juntando el pie para mi primer departamento. ' +
     'Si quieres ayudarme, puedes aportar aquí: ' + o.enlace;
 }
 // El enlace lleva un código al azar, nunca el nombre, el RUT, el sueldo ni el saldo.

@@ -65,7 +65,7 @@ test('Arriendo con opción de compra: entras con 5 %, compras al 80 % sin subsid
   assert.strictEqual(c.arriendoOpcion(2200, 360000, Object.assign({}, perfil, { ahorroActual: 0, ahorroMensual: 0 })).razon, 'Necesitas el 5 % para entrar');
   // Con un sueldo bajo, la mensualidad no deja el 40 % para vivir.
   const bajo = c.arriendoOpcion(2200, 360000, { modo: 'vivir', sueldoPropio: 900000, sueldoPareja: 0, otrasCuotas: 0, ahorroActual: 5000000 });
-  assert.strictEqual(bajo.razon, 'Te quedaría poco para vivir');
+  assert.strictEqual(bajo.razon, 'Te quedaría poco para tus gastos del mes');
   // Si te vas: recuperas tu ahorro inicial y el 50 % de tus aportes; si Bci no aprueba, todo.
   assert.strictEqual(c.devolucionArriendo(4500000, 10000000, 'te-vas'), 9500000);
   assert.strictEqual(c.devolucionArriendo(4500000, 10000000, 'credito'), 14500000);

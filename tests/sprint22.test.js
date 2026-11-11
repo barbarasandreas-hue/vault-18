@@ -77,8 +77,7 @@ test('S22-F3: el mensaje del regalo no expone montos ni datos personales', () =>
   assert.strictEqual(c.enlaceRegalo('ab/../1 2;x'), 'https://primerpeldano.cl/regalo/ab12x');
   const m = c.mensajeRegalo({ ocasion: 'Cumpleaños', pct: 42.4, mesesFaltan: 14, enlace });
   assert.match(m, /^Para mi cumpleaños: estoy/);
-  assert.match(m, /42 %/);
-  assert.match(m, /14 meses/);
+  assert.doesNotMatch(m, /%|meses/);
   assert.doesNotMatch(m, /\$|UF|millones|RUT/);
   assert.ok(m.endsWith(enlace));
   assert.doesNotMatch(c.mensajeRegalo({ ocasion: 'Otra ocasión', pct: 100, mesesFaltan: 0, enlace }), /faltan/);

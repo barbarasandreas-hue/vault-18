@@ -765,7 +765,7 @@
     'pie': { termino: 'Pie', pregunta: '¿Qué es el pie?',
       texto: 'Es la parte del precio que pones tú al comprar: 10 % si es para vivir, 5 % si es para arrendar, más los gastos de escritura.' },
     'tu-limite': { termino: 'Tu límite', pregunta: '¿Cuál es el límite?',
-      texto: 'Lo que pagas al mes no puede pasar de 25 % de lo que ganan tú y tu pareja, y te tiene que quedar al menos 40 % para vivir.' },
+      texto: 'Lo que pagas al mes no puede pasar de 25 % de lo que ganan tú y tu pareja, y te tiene que quedar al menos 40 % para tus gastos del mes (comida, transporte, cuentas).' },
     'carga': { termino: 'Carga', pregunta: '¿Qué es la carga?',
       texto: 'Es la parte de lo que ganan tú y tu pareja que se va cada mes en el dividendo. Bci pide que no pase de 25 %.' },
     'participacion': { termino: 'Participación', pregunta: '¿Qué es la participación de los inversionistas?',
@@ -1056,6 +1056,14 @@
       '<div class="accion">' +
         '<a href="#camino/' + rutaPasoActual() + '" class="btn btn-primario btn-lg btn-bloque">' + x.accion + '</a>' +
       '</div>' +
+      // 11-nov (test): al terminar, Inicio no queda vacío: qué puedes hacer ahora.
+      (x.paso >= 4 ? '<section class="tarjeta bloque que-sigue" aria-labelledby="titulo-que-sigue">' +
+        '<h2 class="h4" id="titulo-que-sigue">¿Qué sigue?</h2>' +
+        '<ul class="filas">' +
+          '<li><a class="fila" href="#camino/dueno">' + icono('i-casa', 'icono-grande') + '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>' +
+          '<li><a class="fila" href="#explorar">' + icono('i-sube', 'icono-grande') + '<span><strong>Comprar otro para arrendar</strong><small>En Explorar, elige "Para arrendar"</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>' +
+          '<li><a class="fila" href="#inversiones">' + icono('i-inversionistas', 'icono-grande') + '<span><strong>Invierte en el pie de otra persona</strong><small>Desde ' + formatoRedondeado(ufAPesos(INVERSION_MINIMA_UF)) + ', con renta de 6' + NBSP + '% al año</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>' +
+        '</ul></section>' : '') +
       (avisos.length
         ? '<section class="tarjeta bloque avisos" aria-labelledby="titulo-avisos">' +
             '<h2 class="h5" id="titulo-avisos">Avisos</h2>' +
@@ -1201,9 +1209,6 @@
         return '<button type="button" class="chip-opcion" role="radio" aria-checked="' + (estado.conQuien === v) + '" data-quien="' + v + '">' + texto + '</button>';
       };
       c.innerHTML = cabeza(estado.conQuien === 'solo' ? '¿Cuánto ganas?' : '¿Cuánto ganan?') +
-        // Comentario 9-nov: aquí también se crea tu avatar.
-        '<div class="pregunta-avatar"><span class="pregunta-escena" aria-hidden="true">' + escena(64, 'escena-av') + '</span>' +
-          '<button type="button" class="btn btn-secundario-dark btn-sm" id="btn-crear-avatar" aria-haspopup="dialog">' + (estado.avatar ? 'Cambiar mi avatar' : 'Crea tu avatar') + '</button></div>' +
         '<div class="con-quien">' +
           '<p class="etiqueta" id="titulo-con-quien">¿Con quién vas a vivir?</p>' +
           '<div class="chips-opcion" role="radiogroup" aria-labelledby="titulo-con-quien">' +
@@ -1219,6 +1224,10 @@
               '<p class="texto-apoyo campo-nota"><small>Si compra contigo como codeudor, su sueldo se suma al de tu hogar.</small></p>' : '') +
           campoDinero('q-otras', 'Deudas estimadas al mes', estado.otrasCuotas) +
         '</div>' +
+        // 11-nov (test): el avatar va al final de esta pregunta, después de con quién y los sueldos (antes cortaba la pregunta).
+        '<div class="pregunta-avatar"><span class="pregunta-escena" aria-hidden="true">' + escena(64, 'escena-av') + '</span>' +
+          '<span class="pregunta-avatar-texto"><small>Opcional</small>' +
+          '<button type="button" class="btn btn-secundario-dark btn-sm" id="btn-crear-avatar" aria-haspopup="dialog">' + (estado.avatar ? 'Cambiar mi avatar' : 'Crea tu avatar') + '</button></span></div>' +
         '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-siguiente">Siguiente</button></div>' +
         atras;
       if (estado.conQuien === 'solo') { estado.sueldoPareja = null; guardarEstado(); }
@@ -1314,15 +1323,30 @@
     var c = $('inicio-principal');
     var conteos = RANGOS_PRECIO.map(function (rg) { return departamentosEnRango(rg).length; });
     var conteoIgual = conteos.every(function (x) { return x === conteos[0]; });
+    // 11-nov (test): se veía como una pregunta a ciegas; ahora cada rango muestra una foto y qué departamentos hay.
+    var queHay = function (rg) {
+      var ds = departamentosEnRango(rg).map(function (p) { return departamentosDe(p.id)[0]; });
+      if (!ds.length) return '';
+      var dor = ds.map(function (d) { return d.dormitorios; }), m2 = ds.map(function (d) { return d.m2; });
+      var nombreD = function (n) { return n === 0 ? 'Estudio' : n === 1 ? '1 dormitorio' : n + ' dormitorios'; };
+      var a = Math.min.apply(null, dor), b = Math.max.apply(null, dor);
+      return (a === b ? nombreD(a) : nombreD(a) + ' a ' + nombreD(b).replace(/^Estudio$/, 'estudio')) + SEP + Math.min.apply(null, m2) + ' a ' + Math.max.apply(null, m2) + NBSP + 'm²';
+    };
+    var fotoRango = function (rg) {
+      var ps = departamentosEnRango(rg);
+      for (var k = 0; k < ps.length; k++) { var f = fotoEdificio(ps[k]); if (f) return '<img class="opcion-foto" src="' + f + '" alt="" width="64" height="48" loading="lazy">'; }
+      return icono('i-casa', 'icono-grande');
+    };
     c.innerHTML = cabeza +
+      '<p class="texto-apoyo pregunta-ayuda">Elige un rango de precio. Te mostramos qué hay en cada uno; después ves cada departamento con fotos en Explorar.</p>' +
       '<ul class="opciones-departamento" role="radiogroup" aria-labelledby="titulo-inicio">' + RANGOS_PRECIO.map(function (rg, i) {
         var n = conteos[i];
         var alcanza = cap !== null && rg.desde <= cap;
         return '<li><button type="button" class="opcion-departamento" role="radio" aria-checked="' + (estado.rangoPrecio === rg.id) + '" data-rango="' + rg.id + '"' +
           (n === 0 ? ' aria-disabled="true" disabled' : '') + '>' +
-          icono('i-casa', 'icono-grande') +
-          '<span class="opcion-texto"><strong>' + textoRango(rg) + '</strong>' +
-            '<small>' + (rg.id === 'hasta-1500' ? 'Hasta ' + millones(rg.hasta) : millones(rg.desde).replace(' millones', '') + ' a ' + millones(rg.hasta)) + '</small>' +
+          fotoRango(rg) +
+          '<span class="opcion-texto"><strong>' + (rg.id === 'hasta-1500' ? 'Hasta ' + millones(rg.hasta) : millones(rg.desde).replace(' millones', '') + ' a ' + millones(rg.hasta)) + '</strong>' +
+            '<small>' + textoRango(rg) + (queHay(rg) ? SEP + queHay(rg) : '') + '</small>' +
             ((n === 0 || !conteoIgual || !alcanza) ? '<span class="chip-fila">' +
               (n === 0 || !conteoIgual ? '<span class="chip chip-propuesta">' + (n === 0 ? 'Sin departamentos hoy' : plural(n, 'departamento', 'departamentos')) + '</span>' : '') +
               (n > 0 && !alcanza ? ' <span class="chip chip-no-alcanza">No te alcanza hoy</span>' : '') + '</span>' : '') + '</span>' +
@@ -1641,7 +1665,7 @@
             '<span class="noche-aprox" id="plazo-aprox">' + aproxRango(x.desde.meses, x.hasta.meses) + '</span>' +
             '<span class="oculto-visual" id="llaves-fecha">' + textoLlavesRango(x) + '</span>' +
             '<span class="freno-llaves" id="freno-llaves">' + FRENO[x.hasta.freno] + '</span>' +
-            (techoJusto ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(x.deptos.hasta.listaUF) + ' te dejan poco para vivir.</p>' : '') +
+            (techoJusto ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(x.deptos.hasta.listaUF) + ' te dejarían poco para tus gastos del mes.</p>' : '') +
             // S25: el edificio del canvas: 4 columnas y tu ventana de 2 × 2.
             tarjetaObra(true) +
           '</section>') +
@@ -1924,7 +1948,7 @@
           '<strong class="numero noche-plazo" id="numero-plazo" aria-live="polite"></strong>' +
           '<span class="noche-aprox" id="plazo-aprox"></span>' +
           '<p class="noche-sub">' + subtitulo + '</p>' +
-          (r.todaviaNo && !eligio ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(rango.hasta) + ' te dejan poco para vivir.</p>' : '') +
+          (r.todaviaNo && !eligio ? '<p class="noche-aviso">' + icono('i-alerta') + 'Los de ' + formatoUF(rango.hasta) + ' te dejarían poco para tus gastos del mes.</p>' : '') +
           tarjetaObra(true) +
           // Comentario 9-nov: tu pie arriba, dentro del azul, como en el canvas.
         '</section>' +
@@ -2251,7 +2275,7 @@
       lineas.map(function (l) { return '<p class="tp-linea">' + l + '</p>'; }).join('') +
       lineaMasBarato(p, r, d) +
       (estado.modo === 'vivir' && estado.preguntasListas && paraVivir(p) && razonJusto(plazoDepartamento(p, null, solo))
-        ? '<p class="texto-apoyo aviso-justo">' + icono('i-alerta') + 'Te queda poco para vivir</p>' : '') +
+        ? '<p class="texto-apoyo aviso-justo">' + icono('i-alerta') + 'Te quedaría poco para tus gastos del mes</p>' : '') +
       (compacta ? '' : '<span class="tp-ver">Ver proyecto ›</span>') +
       '</a>' + botonFavorito(p) + '</li>';
   }
@@ -2717,6 +2741,11 @@
       });
   }
 
+  // 11-nov (test): si ya te preaprobaron en Tus pasos, al elegir departamento no se repite: se salta a revisar que alcance.
+  function irAPostular() {
+    if (estado.pasos.preaprobado) { guardarSubpaso('resultado'); location.hash = '#camino/postular/resultado'; }
+    else location.hash = '#camino/postular/datos';
+  }
   function renderDetalle(id, ctx, caminoVista) {
     ctx = ctx || 'departamentos';
     $('detalle-volver').setAttribute('href', caminoVista ? '#explorar/' + caminoVista : VOLVER_DETALLE[ctx][0]);
@@ -2848,7 +2877,7 @@
           '</ul>' +
           grupoPosible +
           '<a class="tarjeta dueno-card" href="#camino/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
-            '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para vivir</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
+            '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para tus gastos</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
           barrioHtml(p) +
           '<p class="llega-sello detalle-sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>'
         : '<div class="tarjeta protagonista">' +
@@ -2916,7 +2945,7 @@
       botonComprar.addEventListener('click', function () {
         conCarga(botonComprar, function () {
           guardarCompra(solo ? { proyectoId: p.id, departamentoId: d.id, paso: 1, sinGrupo: true } : { proyectoId: p.id, departamentoId: d.id, paso: 1 });
-          location.hash = '#camino/postular/datos';
+          irAPostular();
         });
       });
     }
@@ -2925,7 +2954,7 @@
       botonCambiar.addEventListener('click', function () {
         conCarga(botonCambiar, function () {
           guardarCompra(solo ? { proyectoId: p.id, departamentoId: d.id, paso: 1, sinGrupo: true } : { proyectoId: p.id, departamentoId: d.id, paso: 1 });
-          location.hash = '#camino/postular/datos';
+          irAPostular();
         });
       });
     }
@@ -2949,7 +2978,7 @@
             estado.caminoElegido = caminoParaProyecto(p);
             guardarEstado();
             guardarCompra(solo ? { proyectoId: p.id, departamentoId: d.id, paso: 1, sinGrupo: true } : { proyectoId: p.id, departamentoId: d.id, paso: 1 });
-            location.hash = '#camino/postular/datos';
+            irAPostular();
           });
         });
     });
@@ -3679,7 +3708,9 @@
         (alcanza
           ? '<section class="preaprobado-heroe"><span class="pp-papel p1" aria-hidden="true"></span><span class="pp-papel p2" aria-hidden="true"></span><span class="pp-papel p3" aria-hidden="true"></span><span class="pp-papel p4" aria-hidden="true"></span><span class="pp-papel p5" aria-hidden="true"></span>' +
               '<span class="pp-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-8.5"/></svg></span>' +
-              '<h3>¡Bci te preaprobó!</h3><p>Te podría prestar hasta</p>' +
+              (estado.pasos.preaprobado
+                ? '<h3>Tu preaprobación alcanza</h3><p>Es la misma que ya tenías: no la pides de nuevo. Te podría prestar hasta</p>'
+                : '<h3>¡Bci te preaprobó!</h3><p>Te podría prestar hasta</p>') +
               '<strong>' + formatoRedondeado(ufAPesos(r.creditoUF)) + '</strong>' +
               '<span class="pp-chip">' + formatoUF(r.creditoUF) + SEP + 'simulado</span></section>' +
             '<section class="tarjeta pp-rango"><p class="pp-rango-titulo">' + icono('i-ok') + (rg ? 'Alcanza para tu rango' : 'Alcanza para este departamento') + '</p>' +
@@ -4284,9 +4315,11 @@
     var n = 1;
     return '<section class="tarjeta bloque" aria-labelledby="btn-arrepiento">' +
       '<button type="button" class="enlace desplegar" id="btn-arrepiento" aria-expanded="false" aria-controls="arrepiento">' +
-        '¿Y si me arrepiento?<svg aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
+        '¿Y si quiero vender?<svg aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
+      // 11-nov (test): primero la respuesta directa; el detalle, después.
+      '<p class="arrepiento-directo">Si vendes hoy, te quedan <strong>' + formatoPesos(v.usuario) + '</strong></p>' +
       '<div id="arrepiento" hidden>' +
-        '<p class="texto-apoyo">Si vendes este mes en ' + formatoPesos(v.valor) + ':</p>' +
+        '<p class="texto-apoyo">Así se reparte si vendes este mes en ' + formatoPesos(v.valor) + ':</p>' +
         '<ol class="cascada">' +
           pasoCascada(n++, 'Bci', 'Lo que queda del crédito', formatoPesos(v.bci)) +
           (v.inversionistas > 0 ? pasoCascada(n++, 'Inversionistas', 'Según su parte', formatoPesos(v.inversionistas)) : '') +
@@ -4960,13 +4993,13 @@
     var etiqueta = tramos.map(function (t) { return t.nombre + ' ' + Math.round(100 * t.monto / total) + ' %'; }).join(', ');
     return '<section class="tarjeta bloque tu-mes" id="tu-mes" aria-labelledby="titulo-tu-mes">' +
       '<h2 class="h4" id="titulo-tu-mes">Tu mes</h2>' +
-      '<p class="etiqueta">Te quedan para vivir</p>' +
+      '<p class="etiqueta">Te queda para tus gastos del mes</p>' +
       '<strong class="numero display-3' + (alerta ? ' numero-alerta' : '') + '">' + formatoPesos(m.queda) + '</strong>' +
       '<div class="barra-mes" role="img" aria-label="De su ingreso: ' + etiqueta + '. Mínimo para vivir: 40 %.">' +
         tramos.map(function (t) {
           return '<span class="tramo tramo-' + t.clave + (alerta && t.clave === 'queda' ? ' tramo-alerta' : '') + '" style="flex-basis:' + (100 * t.monto / total).toFixed(2) + '%"></span>';
         }).join('') +
-        '<span class="marca-40" aria-hidden="true"><span>40 % para vivir</span></span>' +
+        '<span class="marca-40" aria-hidden="true"><span>Mínimo 40 % para gastos</span></span>' +
       '</div>' +
       (alerta ? '<p class="aviso aviso-alerta aviso-icono">' + icono('i-alerta') + '<span><strong>Ojo:</strong> ' + motivoNoConviene(n.evaluacion) + '</span></p>' : '') +
       '<ul class="leyenda-mes">' + tramos.map(function (t) {
@@ -5171,6 +5204,10 @@
     var nuevaDesde = antes === null || antes > o.listas ? o.listas : antes;
     if (antes !== o.listas) { estado.construido = o.listas; guardarEstado(); }
     var terminado = o.etapa === 'listo';
+    // 11-nov (test): la viga baja solo hasta el techo de lo que va construido (antes atravesaba el edificio).
+    var arriba = Math.max(o.listas - 1, o.parcial > 0 ? o.listas : 0);
+    var techoY = arriba < 1 ? 124 : 124 - (Math.floor((arriba - 1) / 7) + 1) * ALTO_PISO;
+    var baja = Math.max(0, Math.round(techoY - 50));
     var grua = o.etapa !== 'terreno' && !terminado
       // 10-nov: grúa torre (mástil reticulado, pluma, contrapeso y una viga colgando) para que no parezca el juego del ahorcado.
       ? '<g class="cn-grua">' +
@@ -5181,7 +5218,7 @@
           '<rect class="cn-grua-cabina" x="211" y="27" width="8" height="7" rx="1"/>' +
           '<rect class="cn-grua-peso" x="214" y="21" width="10" height="9" rx="1"/>' +
           // 10-nov: la grúa trabaja: el carro corre por la pluma y baja la viga hacia el edificio, y vuelve a subir.
-          '<g class="cn-grua-carro"><rect class="cn-grua-trolley" x="157" y="25" width="8" height="3" rx="1"/>' +
+          '<g class="cn-grua-carro" style="--baja:' + baja + 'px;--escala:' + ((12 + baja) / 12).toFixed(2) + '"><rect class="cn-grua-trolley" x="157" y="25" width="8" height="3" rx="1"/>' +
             '<path class="cn-grua-cable" d="M161 28v12"/>' +
             '<rect class="cn-grua-viga" x="150" y="40" width="22" height="4" rx="1"/></g>' +
         '</g>' : '';
@@ -5274,7 +5311,7 @@
     pie: 'Lo juntas cada mes en tu cuenta de vivienda.',
     preaprobacion: 'Bci revisa tus sueldos y te dice cuánto te presta.',
     asegurar: 'Eliges tu departamento, lo reservas y firmas la promesa.',
-    aprobacion: 'Bci revisa todo y confirma tu crédito.',
+    aprobacion: 'Con tu departamento elegido, Bci lo tasa y confirma el crédito. Usa tu misma preaprobación: no envías nada de nuevo.',
     'es-tuyo': 'Tasación, seguros, escritura y llaves, en un solo momento.',
     entrada: 'Juntas el 5' + NBSP + '% en tu cuenta de vivienda para entrar.',
     contrato: 'Firmas el contrato con el precio fijo en UF y te mudas.'
@@ -5421,6 +5458,9 @@
     }).reverse().join('') + '</ul>';
   }
   // 9-nov: con el arriendo con opción firmado, la cuota de Tu pie es el aporte de la mensualidad.
+  // 11-nov (test): este mes se puede depositar más o menos que la cuota sugerida.
+  var montoMesElegido = null, ultimoPagoMonto = null;
+  function montoMes() { return montoMesElegido !== null ? montoMesElegido : (cuotaMes() || 0); }
   function cuotaMes() { return esArriendo() && estado.pasos.contratoArriendo ? arriendoActual().a.aporte : estado.ahorroMensual; }
   function capaIcono(activa) {
     return activa
@@ -5472,12 +5512,14 @@
           (racha > 0 ? plural(racha, 'mes seguido', 'meses seguidos') : 'Tu racha empieza este mes') + '</span>' : '') +
       '</section>' +
       '<section class="tarjeta pie-cuota-mes" aria-labelledby="titulo-cuota-mes">' +
-        '<p class="pie-cuota-fila"><span id="titulo-cuota-mes">Cuota de ' + MESES[Number(hoyDemo().split('-')[1]) - 1] + '</span><strong class="numero">' + formatoRedondeado(cuotaMes() || 0) + '</strong></p>' +
+        '<p class="pie-cuota-fila"><span id="titulo-cuota-mes">' + (pieLogro ? 'Depositaste' : (montoMesElegido !== null ? 'Depositas en ' : 'Cuota de ') + MESES[Number(hoyDemo().split('-')[1]) - 1]) + '</span><strong class="numero">' + formatoRedondeado(pieLogro && ultimoPagoMonto !== null ? ultimoPagoMonto : montoMes()) + '</strong></p>' +
+        (listo || pieLogro ? '' : '<p class="pie-cuota-cambiar">' + (montoMesElegido !== null && montoMesElegido !== (cuotaMes() || 0) ? '<small>Sugerida: ' + formatoRedondeado(cuotaMes() || 0) + '</small>' : '') +
+          '<button type="button" class="enlace" id="btn-cambiar-monto" aria-haspopup="dialog">Depositar otro monto este mes</button></p>') +
         (listo
           ? '<a class="btn btn-primario btn-lg btn-bloque" href="#pasos">Ver tu siguiente hito</a>'
           : pieLogro
             ? '<div class="pie-listo" role="status"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#28892B"/><path d="M6.5 12.5l3.6 3.6L17.5 8.8" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
-                '<span><strong>¡Listo! Sumaste ' + formatoRedondeado(cuotaMes() || 0) + '</strong><small>' + pieLogro + '</small></span></div>' +
+                '<span><strong>¡Listo! Sumaste ' + formatoRedondeado(ultimoPagoMonto !== null ? ultimoPagoMonto : cuotaMes() || 0) + '</strong><small>' + pieLogro + '</small></span></div>' +
               '<button type="button" class="enlace pie-otro-mes" id="btn-otro-mes">Simular el mes siguiente</button>'
             : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-pagar-cuota">Pagar mi cuota</button>') +
       '</section>' +
@@ -5487,7 +5529,7 @@
         // 9-nov (colores): check verde si la capa está activa; candado gris si no.
         '<div>' + capaIcono(s.bajoLlave) + '<span><strong>Separado y bajo llave</strong><small>' + (s.bajoLlave ? 'Avisas 30 días antes de sacar' : 'Actívalo con el lápiz, en Tu cuota') + '</small></span></div>' +
         '<div>' + capaIcono(true) + '<span><strong>En UF</strong><small>No lo come la inflación</small></span></div>' +
-        '<div>' + capaIcono(true) + '<span><strong>Un mes malo</strong><small>Lo ahorrado no se pierde</small></span></div>' +
+        '<div>' + capaIcono(true) + '<span><strong>Si un mes no puedes pagar</strong><small>Lo que llevas no se pierde. También puedes depositar menos.</small></span></div>' +
       '</section>';
     $('btn-pedir-regalo').addEventListener('click', function () { abrirPedirRegalo($('btn-pedir-regalo')); });
     $('btn-movimientos').addEventListener('click', function () {
@@ -5496,7 +5538,7 @@
     var pagar = function (pago) {
       if (!estado.ahorroIniciado) { estado.ahorrado = Math.min(meta, estado.ahorroActual || 0); estado.ahorroIniciado = true; }
       var antes = hitosAlcanzados(estado.ahorrado, meta);
-      if (pago) estado.ahorrado = sumarMes(estado.ahorrado, cuotaMes(), meta);
+      if (pago) { ultimoPagoMonto = montoMes(); estado.ahorrado = sumarMes(estado.ahorrado, ultimoPagoMonto, meta); montoMesElegido = null; }
       var r = registrarMes({ mes: estado.mesAhorro, racha: estado.racha, ultimoProtector: estado.ultimoProtector }, pago);
       estado.mesAhorro = r.mes; estado.racha = r.racha; estado.ultimoProtector = r.ultimoProtector;
       estado.historialMeses = (estado.historialMeses || []).concat([r.resultado]).slice(-6);
@@ -5513,8 +5555,30 @@
       if ($('btn-otro-mes')) $('btn-otro-mes').focus({ preventScroll: true });
     };
     if ($('btn-pagar-cuota')) $('btn-pagar-cuota').addEventListener('click', function () {
-      if (!(cuotaMes() > 0)) { abrirMisDatos($('btn-pagar-cuota')); return; }
+      if (!(montoMes() > 0)) { abrirMisDatos($('btn-pagar-cuota')); return; }
       pagar(true);
+    });
+    if ($('btn-cambiar-monto')) $('btn-cambiar-monto').addEventListener('click', function () {
+      var sug = cuotaMes() || 0;
+      abrirHojaContenido('Este mes',
+        '<p class="texto-apoyo">Te sugerimos ' + formatoRedondeado(sug) + ', lo que dijiste que puedes juntar al mes. Este mes puedes poner más o menos.</p>' +
+        '<form id="form-monto-mes" novalidate>' + campoDinero('monto-mes', '¿Cuánto depositas este mes?', montoMes()) +
+        '<div class="acciones"><button type="submit" class="btn btn-primario btn-bloque">Usar este monto</button>' +
+        (montoMesElegido !== null ? '<button type="button" class="btn btn-terciario btn-bloque" id="btn-monto-sugerido">Volver a la sugerida</button>' : '') + '</div></form>',
+        $('btn-cambiar-monto'), function () {
+          $('monto-mes').addEventListener('input', function () { formatearCampo($('monto-mes')); });
+          $('form-monto-mes').addEventListener('submit', function (ev) {
+            ev.preventDefault();
+            var m = leerMonto($('monto-mes').value);
+            if (!(m > 0)) { temblar($('monto-mes')); $('monto-mes').focus(); return; }
+            montoMesElegido = m === sug ? null : m;
+            var y = window.scrollY; cerrarHoja(false); renderTuPie(); window.scrollTo(0, y);
+            if ($('btn-pagar-cuota')) $('btn-pagar-cuota').focus({ preventScroll: true });
+          });
+          if ($('btn-monto-sugerido')) $('btn-monto-sugerido').addEventListener('click', function () {
+            montoMesElegido = null; var y = window.scrollY; cerrarHoja(false); renderTuPie(); window.scrollTo(0, y);
+          });
+        });
     });
     if ($('btn-otro-mes')) $('btn-otro-mes').addEventListener('click', function () {
       var y = window.scrollY;
@@ -5962,10 +6026,10 @@
         '<p><span>Tu arriendo hoy</span><strong>' + formatoPesos(estado.arriendoActual) + '</strong></p><span class="dueno-mini amarillo" aria-hidden="true"><i style="width:' + Math.min(100, estado.arriendoActual / Math.max(m.total, estado.arriendoActual) * 100).toFixed(1) + '%"></i></span>' +
         '<p><span>Como dueño</span><strong>' + formatoPesos(m.total) + '</strong></p><span class="dueno-mini azul" aria-hidden="true"><i style="width:' + Math.min(100, m.total / Math.max(m.total, estado.arriendoActual) * 100).toFixed(1) + '%"></i></span>' +
         '<p class="dueno-nota">La diferencia: el dividendo va a algo que es tuyo; el arriendo, no.</p></section>' : '') +
-      (pctVive !== null ? '<section class="tarjeta dueno-vivir dueno-' + nivel + '" aria-labelledby="dueno-queda"><h2 id="dueno-queda">Te queda para vivir</h2>' +
+      (pctVive !== null ? '<section class="tarjeta dueno-vivir dueno-' + nivel + '" aria-labelledby="dueno-queda"><h2 id="dueno-queda">Te queda para tus gastos del mes</h2>' +
         '<strong>' + formatoPesos(Math.max(0, m.teQueda)) + '</strong>' +
         '<span class="carga-chip ' + nivel + '">' + (nivel === 'holgado' ? 'Holgado' : nivel === 'limite' ? 'Justo' : 'Poco') + '</span>' +
-        '<p class="dueno-nota">De ' + formatoPesos(ingreso) + ' al mes' + ((estado.otrasCuotas || 0) > 0 ? ', después de tus deudas' : '') + '. Para comida, transporte, cuentas y ahorro.</p></section>' : '') +
+        '<p class="dueno-nota">Lo que te sobra de tus ' + formatoPesos(ingreso) + ' al mes después de pagar tu departamento' + ((estado.otrasCuotas || 0) > 0 ? ' y tus deudas' : '') + ': para comida, transporte, cuentas y ahorro.</p></section>' : '') +
       '<section class="tarjeta dueno-vez" aria-labelledby="dueno-vez"><h2 id="dueno-vez">Gastos de compra</h2><p class="dueno-vez-sub">Una sola vez</p>' +
         '<p><span><strong>Gastos al firmar</strong><small>Notaría, tasación, estudio de títulos e inscripción</small></span><strong>' + formatoRedondeado(m.alFirmar) + '</strong></p>' +
         '<p><span><strong>Mudanza</strong><small>Estimado dentro de Santiago</small></span><strong>' + formatoRedondeado(m.mudanza) + '</strong></p>' +
@@ -6358,7 +6422,7 @@
           return '<li' + (i === linea.length - 1 ? ' class="final"' : '') + '><span class="arriendo-cuando">' + x[0] + '</span><span>' + x[1] + '</span></li>';
         }).join('') + '</ol>' +
         '<p class="texto-apoyo"><small>Mientras arriendas, el departamento es del socio. Es tuyo al firmar la escritura. Bci presta el 80' + NBSP + '% sin subsidio a la tasa (segunda venta).</small></p></section>' +
-      plegable('arriendo-arrepiento', '¿Y si me arrepiento?', 'Recuperas parte de tu pie', siMeArrepientoArriendo()) +
+      plegable('arriendo-arrepiento', '¿Y si al final no compro?', 'Recuperas tu ahorro y la mitad de tus aportes', siMeArrepientoArriendo()) +
       barrioHtml(u) +
       '<p class="llega-sello detalle-sello">' + icono('i-escudo') + 'Calculado sin plusvalía</p>' +
       (esArriendo() && estado.arriendoElegido === u.id
@@ -7084,20 +7148,26 @@
             return '<input type="radio" name="ocasion-regalo" id="ocasion-regalo-' + k + '" value="' + o + '"' + (o === estado.listaRegalos.ocasion ? ' checked' : '') + '>' +
               '<label for="ocasion-regalo-' + k + '">' + o + '</label>';
           }).join('') + '</div></fieldset>' +
-        '<p class="etiqueta">Tu mensaje</p><blockquote class="mensaje-regalo" id="mensaje-regalo">' + esc(textoMensajeRegalo()) + '</blockquote>' +
-        '<p class="texto-apoyo"><small>Sin montos ni datos tuyos: solo cuánto llevas en % y los meses que faltan.</small></p>' +
+        // 11-nov (test): el mensaje se puede editar y no dice cuánto llevas del pie.
+        '<div class="campo"><label for="mensaje-regalo">Tu mensaje (puedes cambiarlo)</label>' +
+          '<textarea id="mensaje-regalo" class="campo-texto mensaje-regalo" rows="5" maxlength="400">' + esc(estado.listaRegalos.mensaje || textoMensajeRegalo()) + '</textarea></div>' +
+        '<p class="texto-apoyo"><small>Sin montos ni cuánto llevas: solo tu mensaje y el enlace.</small></p>' +
         '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-compartir-regalo">Compartir enlace</button>' +
         '<a class="btn btn-terciario btn-bloque" href="#regalo">Ver como familia</a></div>';
     };
     abrirHojaContenido('Regalo para tu pie', dibujar(), boton, function (hoja) {
       hoja.querySelectorAll('input[name="ocasion-regalo"]').forEach(function (r) {
         r.addEventListener('change', function () {
-          estado.listaRegalos.ocasion = r.value; guardarEstado();
-          $('mensaje-regalo').textContent = textoMensajeRegalo();
+          estado.listaRegalos.ocasion = r.value; estado.listaRegalos.mensaje = null; guardarEstado();
+          $('mensaje-regalo').value = textoMensajeRegalo();
         });
       });
+      $('mensaje-regalo').addEventListener('input', function () {
+        estado.listaRegalos.mensaje = $('mensaje-regalo').value.slice(0, 400); guardarEstado();
+      });
       $('btn-compartir-regalo').addEventListener('click', function () {
-        var texto = textoMensajeRegalo();
+        var texto = ($('mensaje-regalo').value || '').trim() || textoMensajeRegalo();
+        if (texto.indexOf(enlaceRegalo(codigoRegalo())) === -1) texto += ' ' + enlaceRegalo(codigoRegalo());
         if (navigator.share) { navigator.share({ text: texto }).catch(function () {}); return; }
         try { navigator.clipboard.writeText(texto); } catch (e) { /* sin portapapeles */ }
         toast('Mensaje copiado (simulado).');
@@ -7125,7 +7195,9 @@
     var lista = estado.listaRegalos;
 
     var esPadre = function (r) { return ['mamá', 'papá', 'abuela', 'abuelo'].indexOf(r) !== -1; };
-    var sel = { monto: 2, avatar: 0, relacion: RELACIONES[0], mensaje: '' };
+    var sel = { monto: 2, avatar: 0, relacion: RELACIONES[0], mensaje: '', otro: null };
+    // 11-nov (test): además de los montos sugeridos, la familia puede escribir otro.
+    var montoElegido = function () { return sel.monto === MONTOS_REGALO.length ? (sel.otro || 0) : MONTOS_REGALO[sel.monto]; };
     var cumple = /umple/.test(lista.ocasion);
     // S24-B4: igual que el canvas: tarjeta de regalo, montos con nombre, avatar y cómo le llega el aviso.
     cont.innerHTML = volver +
@@ -7140,13 +7212,14 @@
       '<div id="regalo-cuerpo"></div>';
 
     function pintar() {
-      var monto = MONTOS_REGALO[sel.monto];
+      var monto = montoElegido();
       $('regalo-cuerpo').innerHTML =
         '<section class="tarjeta bloque regalo-aporte" aria-labelledby="titulo-tu-aporte">' +
           '<h2 class="h4" id="titulo-tu-aporte">Elige tu aporte</h2>' +
           '<div class="regalo-montos" role="radiogroup" aria-label="Monto">' + MONTOS_REGALO.map(function (m, k) {
             return '<button type="button" role="radio" aria-checked="' + (k === sel.monto) + '" data-monto="' + k + '"><strong>' + formatoPesos(m) + '</strong><small>' + NOMBRE_MONTO[k] + '</small></button>';
-          }).join('') + '</div>' +
+          }).join('') + '<button type="button" role="radio" aria-checked="' + (sel.monto === MONTOS_REGALO.length) + '" data-monto="' + MONTOS_REGALO.length + '"><strong>Otro</strong><small>Tú eliges</small></button></div>' +
+          (sel.monto === MONTOS_REGALO.length ? campoDinero('regalo-otro', '¿Cuánto quieres aportar?', sel.otro) : '') +
           '<p class="regalo-cerca" aria-live="polite">' + icono('i-corazon') + '<span>Cada aporte le deja más cerca de sus llaves.</span></p>' +
           '<div class="campo"><label for="regalo-relacion">Eres su</label>' +
             '<span class="regalo-select"><select id="regalo-relacion" class="campo-select">' + RELACIONES.map(function (r) { return '<option' + (r === sel.relacion ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select>' +
@@ -7177,6 +7250,13 @@
         sel.mensaje = $('regalo-mensaje').value.slice(0, 140);
         $('regalo-aviso-texto').textContent = sel.mensaje ? '“' + sel.mensaje + '”' : 'Toca para verlo y darle las gracias.';
       });
+      if ($('regalo-otro')) $('regalo-otro').addEventListener('input', function () {
+        sel.otro = formatearCampo($('regalo-otro'));
+        var m = montoElegido();
+        $('btn-aportar').textContent = m > 0 ? 'Aportar ' + formatoPesos(m) : 'Escribe un monto';
+        $('btn-aportar').disabled = !(m > 0);
+      });
+      if (!(monto > 0)) { $('btn-aportar').textContent = 'Escribe un monto'; $('btn-aportar').disabled = true; }
       $('btn-aportar').addEventListener('click', aportar);
     }
 
@@ -7184,7 +7264,7 @@
       // El regalo suma una vez: el botón se apaga al tocarlo.
       if ($('btn-aportar').disabled) return;
       $('btn-aportar').disabled = true;
-      var monto = MONTOS_REGALO[sel.monto];
+      var monto = montoElegido();
       var regalo = { relacion: sel.relacion, monto: monto, mensaje: sel.mensaje.trim(), avatar: AVATARES_REGALO[sel.avatar].av };
       estado.regalos = estado.regalos.concat([regalo]);
       // Quien aporta queda en Tu equipo.
