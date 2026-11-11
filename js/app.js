@@ -717,6 +717,8 @@
   }
   function conoceTuGrupo(p, r) {
     var g = p.grupo || {};
+    // 11-nov: antes de unirte ves quiénes son; el muro, tu presentación y la visita llegan al unirte.
+    var miembro = esMiProyecto(p);
     var otros = Math.max(0, r.cuposTomados - (esMiProyecto(p) ? 1 : 0));
     var semilla = semillaDe(p.id);
     var conPresentacion = Math.min(otros, Math.max(1, Math.round(otros * 0.7)));
@@ -742,7 +744,7 @@
     var vanVisita = Math.max(2, Math.round(otros * 0.5)) + (vas ? 1 : 0);
     var fechaVisita = proximoSabado(1);
     return '<section class="tarjeta bloque conoce-grupo" aria-labelledby="titulo-conoce-' + esc(p.id) + '">' +
-      '<h2 class="h4" id="titulo-conoce-' + esc(p.id) + '">Conoce a tu grupo</h2>' +
+      '<h2 class="h4" id="titulo-conoce-' + esc(p.id) + '">' + (miembro ? 'Conoce a tu grupo' : 'Conoce al grupo') + '</h2>' +
       // Capa 1: Bci responde por cada uno.
       '<div class="grupo-sello">' + icono('i-escudo') + '<span><strong>Todos están preaprobados por Bci</strong>' +
         '<small>Bci revisó el historial de crédito de cada uno.</small></span></div>' +
@@ -758,10 +760,12 @@
       '<h3 class="h5 grupo-sub">Quiénes son</h3>' +
       '<p class="texto-apoyo"><small>' + plural(conPresentacion, 'persona se presentó', 'personas se presentaron') + '. Sin nombres ni datos: solo lo que cada uno quiso contar.</small></p>' +
       '<ul class="presentaciones">' + tarjetas +
+      (miembro ?
         '<li class="presentacion presentacion-tuya"><span class="presentacion-av">' + avatarSVG(estado.avatar, 44) + '</span>' +
           (yo ? '<strong>' + esc(yo.trabajo) + '</strong><small>' + esc(yo.hogar) + '</small><small class="presentacion-motivo">“' + esc(yo.motivo) + '”</small>' : '<strong>Tú</strong><small>Preséntate si quieres</small>') +
-          '<button type="button" class="enlace" data-presentarme="' + esc(p.id) + '" aria-haspopup="dialog">' + (yo ? 'Editar' : 'Presentarme') + '</button></li>' +
+          '<button type="button" class="enlace" data-presentarme="' + esc(p.id) + '" aria-haspopup="dialog">' + (yo ? 'Editar' : 'Presentarme') + '</button></li>' : '') +
       '</ul>' +
+      (!miembro ? '<p class="vecinos-nota"><small>Al unirte podrás presentarte, escribir en el muro del grupo y sumarte a la visita a la obra.</small></p>' : '' +
       // Muro moderado.
       '<h3 class="h5 grupo-sub">Muro del grupo</h3>' +
       '<ul class="muro">' + mensajes + '</ul>' +
@@ -773,6 +777,7 @@
       '<div class="grupo-visita">' + icono('i-calendario', 'icono-grande') + '<span><strong>Visita a la obra en grupo</strong>' +
         '<small>' + textoVisita({ fecha: fechaVisita, hora: '11:00' }) + '</small><small>' + plural(vanVisita, 'persona va', 'personas van') + '</small></span>' +
         '<button type="button" class="btn btn-sm ' + (vas ? 'btn-terciario' : 'btn-primario') + '" data-visita-grupo="' + esc(p.id) + '">' + (vas ? 'Ya no voy' : 'Me sumo') + '</button></div>' +
+      '') +
     '</section>';
   }
   document.addEventListener('click', function (ev) {
