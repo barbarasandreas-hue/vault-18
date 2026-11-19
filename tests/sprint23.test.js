@@ -7,8 +7,9 @@ const base = (extra) => Object.assign({ grupo: false, numeros: false, cuentaVivi
 
 test('S23-B: cada hito hecho suma una etapa; al final es tuyo', () => {
   assert.strictEqual(c.etapaConstruccion(c.hitoActual(base())), 0);
-  assert.strictEqual(c.etapaConstruccion(c.hitoActual(base({ numeros: true }))), 1);
-  assert.strictEqual(c.etapaConstruccion(c.hitoActual(base({ numeros: true, cuentaVivienda: true }))), 2);
+  // S32-B1: los primeros pasos son elegir camino y departamento.
+  assert.strictEqual(c.etapaConstruccion(c.hitoActual(base({ caminoElegido: true }))), 1);
+  assert.strictEqual(c.etapaConstruccion(c.hitoActual(base({ caminoElegido: true, eligio: true }))), 2);
   const fin = c.etapaConstruccion(c.hitoActual(base({ esTuyo: true })));
   assert.strictEqual(fin, 6);
   assert.strictEqual(c.ETAPAS_CONSTRUCCION[fin], 'Es tuyo');

@@ -633,6 +633,70 @@ function preaprobacion(sueldoPropio, sueldoPareja, otrasCuotas, tasa) {
   };
 }
 
+// ---------- S31-A: ¿Listo para el banco? ----------
+// Antigüedad mínima según los requisitos publicados por Bci (bci.cl, crédito hipotecario, nov-2026):
+// 3 meses para dependientes con contrato, 1 año para independientes.
+var ANTIGUEDAD_MIN_MESES = { 'indefinido': 3, 'plazo-fijo': 3, 'independiente': 12 };
+// p: { contrato, mesesTrabajo, deudasAtrasadas, sueldoPropio, sueldoPareja, otrasCuotas }.
+// creditoNecesarioUF (opcional): lo que habría que pedir para el rango elegido.
+// Cada punto: { id, estado: 'ok' | 'ojo' | 'falta' | 'pendiente', titulo, detalle, cumpleEnMeses }.
+function listoParaBanco(p, creditoNecesarioUF) {
+  p = p || {};
+  var items = [];
+  var pre = preaprobacion(p.sueldoPropio, p.sueldoPareja, p.otrasCuotas);
+  var uf = SUPUESTOS.uf;
+  if (!pre) items.push({ id: 'renta', estado: 'pendiente', titulo: 'Tu sueldo', detalle: 'Cuéntanos cuánto ganas.' });
+  else if (pre.motivo === 'renta') items.push({ id: 'renta', estado: 'falta', titulo: 'Tu sueldo',
+    detalle: 'Bci pide UF ' + RENTA_MINIMA_TITULAR_UF + ' (unos $' + Math.round(RENTA_MINIMA_TITULAR_UF * uf / 1000) + ' mil). Suma el sueldo de alguien.' });
+  else items.push({ id: 'renta', estado: 'ok', titulo: 'Tu sueldo', detalle: 'Cumple el mínimo de Bci.' });
+
+  if (pre && pre.motivo === 'carga') items.push({ id: 'carga', estado: 'falta', titulo: 'Tus deudas', detalle: 'Con tus cuotas de hoy no cabe un dividendo. Baja tus deudas.' });
+  else if (pre && pre.cumple && creditoNecesarioUF > 0 && pre.creditoUF + 1e-9 < creditoNecesarioUF)
+    items.push({ id: 'carga', estado: 'ojo', titulo: 'Tu dividendo',
+      detalle: 'Bci te prestaría UF ' + Math.round(pre.creditoUF).toLocaleString('es-CL') + '; para tu rango necesitas UF ' + Math.round(creditoNecesarioUF).toLocaleString('es-CL') + '.' });
+  else if (pre && pre.cumple) items.push({ id: 'carga', estado: 'ok', titulo: 'Tu dividendo', detalle: 'Cabe en tu sueldo.' });
+
+  var min = ANTIGUEDAD_MIN_MESES[p.contrato] || ANTIGUEDAD_MIN_MESES.indefinido;
+  var m = p.mesesTrabajo;
+  if (m === null || m === undefined || !(m >= 0)) items.push({ id: 'trabajo', estado: 'pendiente', titulo: 'Tu trabajo', detalle: 'Cuéntanos tu contrato y hace cuánto trabajas.' });
+  else if (m < min) items.push({ id: 'trabajo', estado: 'falta', titulo: 'Tu antigüedad', cumpleEnMeses: min - m,
+    detalle: (p.contrato === 'independiente' ? 'Independiente: 1 año de boletas. ' : 'Bci pide ' + min + ' meses. ') + 'Cumples en ' + (min - m) + (min - m === 1 ? ' mes.' : ' meses.') });
+  else if (p.contrato === 'plazo-fijo') items.push({ id: 'trabajo', estado: 'ojo', titulo: 'Tu contrato', detalle: 'Cumples en Bci; otros bancos piden indefinido.' });
+  else items.push({ id: 'trabajo', estado: 'ok', titulo: 'Tu antigüedad', detalle: 'Cumple lo que pide Bci.' });
+
+  if (p.deudasAtrasadas === true) items.push({ id: 'historial', estado: 'falta', titulo: 'Tu historial', detalle: 'Ponte al día antes de pedir: el banco lo revisa.' });
+  else if (p.deudasAtrasadas === false) items.push({ id: 'historial', estado: 'ok', titulo: 'Tu historial', detalle: 'Sin deudas atrasadas.' });
+  else items.push({ id: 'historial', estado: 'pendiente', titulo: 'Tu historial', detalle: '¿Tienes deudas atrasadas?' });
+
+  var falta = items.filter(function (x) { return x.estado === 'falta'; }).length;
+  var pendiente = items.filter(function (x) { return x.estado === 'pendiente'; }).length;
+  var espera = items.reduce(function (a, x) { return Math.max(a, x.cumpleEnMeses || 0); }, 0);
+  return { items: items, listo: falta === 0 && pendiente === 0, falta: falta, pendiente: pendiente, cumpleEnMeses: espera || null };
+}
+
+// ---------- S31-B: del sí del banco a las llaves ----------
+// Orden real de la compra con crédito. Plazos: tasación 5 a 7 días hábiles y estudio de títulos 10 a 15
+// (Rankia y Monedario, 2026); en total, 60 a 90 días de la solicitud a la inscripción (Monedario, 2026).
+var DE_SI_A_LLAVES = [
+  { id: 'promesa', titulo: 'Reserva y promesa', quien: 'Tú y la inmobiliaria', plazo: '', texto: 'Firmas la promesa ante notario.' },
+  { id: 'tasacion', titulo: 'Tasación', quien: 'Bci', plazo: '5 a 7 días hábiles', texto: 'Bci presta sobre el menor: precio o tasación.' },
+  { id: 'titulos', titulo: 'Estudio de títulos', quien: 'Abogados de Bci', plazo: '10 a 15 días hábiles', texto: 'Revisan que el departamento esté en regla.' },
+  { id: 'aprobacion', titulo: 'Aprobación final', quien: 'Bci', plazo: '', texto: 'Bci confirma tu crédito y redacta la escritura.' },
+  { id: 'firma', titulo: 'Firma de la escritura', quien: 'Tú, la inmobiliaria y Bci', plazo: '1 día', texto: 'En la notaría: compraventa e hipoteca.' },
+  { id: 'inscripcion', titulo: 'Inscripción en el Conservador', quien: 'Notaría y Bci', plazo: '', texto: 'Desde aquí es tuyo. Bci le paga a la inmobiliaria.' },
+  { id: 'llaves', titulo: 'Entrega de llaves', quien: 'La inmobiliaria', plazo: '', texto: 'Si está en obra, al terminarla.' }
+];
+var TOTAL_SI_A_LLAVES = '2 a 3 meses';
+// Dónde va la compra según los hitos: devuelve el índice del paso actual en DE_SI_A_LLAVES.
+function pasoSiALlaves(s) {
+  s = s || {};
+  if (s.esTuyo) return DE_SI_A_LLAVES.length;
+  if (s.firmando) return 4;
+  if (s.aprobado) return 4;
+  if (s.asegurado) return 1;
+  return 0;
+}
+
 // ---------- Sprint 9: Tu mes real, Tus caminos y Todavía no ----------
 
 // Departamento de referencia (CLAUDE.md) y supuestos de diseño de los caminos.
@@ -651,6 +715,9 @@ var CAMINOS = {
     credito: 0.90, usuario: 0.10, inversionistas: 0, existeHoy: false },
   'individual-vivir': { nombre: 'Crédito con garantía del Estado', corto: 'Crédito con garantía del Estado', modo: 'vivir', grupo: false,
     credito: 0.90, usuario: 0.10, inversionistas: 0, existeHoy: true },
+  // S32-B4: el crédito tradicional (80 %) es un camino para vivir; es el que sirve para usados.
+  'usados': { nombre: 'Crédito tradicional', corto: 'Crédito tradicional', modo: 'vivir', grupo: false, tradicional: true,
+    credito: 0.80, usuario: 0.20, inversionistas: 0, existeHoy: true },
   'grupo-pie-compartido': { nombre: 'Grupo y pie compartido', corto: 'Grupo y pie compartido', modo: 'arrendar', grupo: true,
     credito: 0.80, usuario: 0.05, inversionistas: 0.15, existeHoy: false },
   'pie-compartido': { nombre: 'Pie compartido', corto: 'Pie compartido', modo: 'arrendar', grupo: false,
@@ -1368,7 +1435,7 @@ var PIEZAS_VIVIR = {
   grupo: { nombre: 'Descuento en grupo', grupo: 'menos', existeHoy: false,
     cond: '5 % menos. Solo edificios en obra. Tu pie va a una cuenta Bci bloqueada.' },
   subsidio: { nombre: 'Subsidio del Estado', grupo: 'menos', existeHoy: true,
-    cond: 'Hasta UF 4.000, sin otra vivienda. Cuenta de vivienda con UF 80 a 200 y Registro Social de Hogares.' },
+    cond: 'Hasta UF 4.000, sin otra vivienda. Cuenta de vivienda con UF 30 a 200 y Registro Social de Hogares.' },
   iva: { nombre: 'Sin IVA', grupo: 'menos', existeHoy: true,
     cond: 'Solo terminados antes del 17 de octubre de 2026. Firma la promesa hasta noviembre de 2027.' },
   regalo: { nombre: 'Regalo de tu familia', grupo: 'ayuda', existeHoy: false,
@@ -1382,11 +1449,16 @@ var ORDEN_PIEZAS = ['grupo', 'subsidio', 'iva', 'regalo', 'respaldo'];
 // Res. Ex. 1.649 del Minvu, 29-oct-2026 (tramo 4). rentaMax: ingreso neto mensual del núcleo por número
 // de integrantes (1, 2, 3, 4 o más); solo se exige a quien está sobre el 90 % del Registro Social de Hogares.
 var DS1 = {
+  // S31-D: tramos 1 y 2 (guía DS1 compra del Minvu y ChileAtiende, 2026): solo con Registro Social hasta 60 % y 80 %.
+  tramo1: { hastaUF: 1100, ahorroUF: 30, mesesCuenta: 12, montoUF: 600, rshMax: 60 },
+  tramo2: { hastaUF: 1600, ahorroUF: 40, mesesCuenta: 12, rshMax: 80 },
   tramo3: { hastaUF: 2200, ahorroUF: 80, mesesCuenta: 12, rentaMax: [1992086, 2788921, 3107655, 3426388] },
   tramo4: { hastaUF: 4000, ahorroUF: 200, mesesCuenta: 0, montoUF: 410, rentaMax: [2673511, 3496130, 3825177, 4154225] }
 };
 // Tramo 3: 850 − 0,375 × precio, entre UF 250 y 400 (de UF 1.600 a 2.200 son UF 250).
 function montoDS1Tramo3(precioUF) { return Math.min(400, Math.max(250, 850 - 0.375 * precioUF)); }
+// S31-D: tramo 2, de UF 550 a 250 según el precio (misma pendiente de la tabla Minvu, zona regular).
+function montoDS1Tramo2(precioUF) { return Math.min(550, Math.max(250, 850 - 0.375 * precioUF)); }
 // El DS1 para un precio (sin el subsidio) y un perfil: { tramo, montoUF, ahorroUF, mesesCuenta } o { bloqueo }.
 // perfil.rshSobre90: false si la persona dice estar en el 90 % del Registro Social (sin tope de sueldo);
 // sin respuesta se aplica el tope, que es el caso más común de un joven profesional.
@@ -1394,6 +1466,12 @@ function ds1Para(precioUF, perfil) {
   if (perfil && perfil.modo === 'arrendar')
     return { bloqueo: { razon: 'Para invertir', como: 'El DS1 exige no tener otra vivienda: no sirve para comprar y arrendar.' } };
   if (precioUF > DS1.tramo4.hastaUF + 1e-9) return { bloqueo: { razon: 'Sobre UF 4.000', como: 'Elige uno de hasta UF 4.000.' } };
+  // S31-D: con el tramo del Registro Social (perfil.rshTramo: 40 a 100), los tramos 1 y 2 dan más subsidio.
+  var rsh = perfil && perfil.rshTramo;
+  if (rsh && rsh <= DS1.tramo1.rshMax && precioUF <= DS1.tramo1.hastaUF + 1e-9)
+    return { tramo: 1, montoUF: DS1.tramo1.montoUF, ahorroUF: DS1.tramo1.ahorroUF, mesesCuenta: DS1.tramo1.mesesCuenta };
+  if (rsh && rsh <= DS1.tramo2.rshMax && precioUF <= DS1.tramo2.hastaUF + 1e-9)
+    return { tramo: 2, montoUF: montoDS1Tramo2(precioUF), ahorroUF: DS1.tramo2.ahorroUF, mesesCuenta: DS1.tramo2.mesesCuenta };
   var tramo = precioUF <= DS1.tramo3.hastaUF + 1e-9 ? 3 : 4;
   var t = tramo === 3 ? DS1.tramo3 : DS1.tramo4;
   var ingreso = perfil ? (perfil.sueldoPropio || 0) + (perfil.sueldoPareja || 0) : 0;
@@ -1503,19 +1581,24 @@ function mejorPieza(perfil, on, depto, hoyISO) {
 // Funciones puras: reciben una foto del estado (s) que arma app.js:
 // { grupo, numeros, cuentaVivienda, ahorrado, meta, preaprobado, asegurado, esTuyo,
 //   ds1: null | { montoUF }, rsh, ds1Postulado, documentos, bajoLlave, ahorroAutomatico, equipo, eligio, cuotaPendiente }
+// S32-B1 (19-nov): los pasos se arman según el camino. "Tus números" ya no es paso (son obligatorios al entrar)
+// y la cuenta de vivienda es la primera acción de "Juntar el pie". Sin camino: elegirlo y tus llaves.
 var HITOS_CAMINO = {
-  individual: ['numeros', 'cuenta', 'pie', 'preaprobacion', 'asegurar', 'es-tuyo'],
-  grupo: ['numeros', 'cuenta', 'preaprobacion', 'pie', 'aprobacion', 'es-tuyo'],
+  individual: ['camino', 'depto', 'pie', 'preaprobacion', 'asegurar', 'es-tuyo'],
+  grupo: ['camino', 'depto', 'preaprobacion', 'pie', 'aprobacion', 'es-tuyo'],
   // 9-nov: arriendo con opción de compra. Entras con el 5 % (en tu cuenta de vivienda), firmas y te mudas,
   // juntas tu pie con el aporte, pides tu crédito y firmas la escritura.
-  arriendo: ['numeros', 'entrada', 'contrato', 'pie', 'preaprobacion', 'es-tuyo']
+  arriendo: ['camino', 'depto', 'entrada', 'contrato', 'pie', 'preaprobacion', 'es-tuyo'],
+  sinCamino: ['camino', 'es-tuyo']
 };
 var HITOS = {
+  camino: { nombre: '¿Cómo compras?', accion: 'Compara y elige tu camino', gana: 'Tus pasos se arman', cuesta: '5 minutos' },
+  depto: { nombre: 'Tu departamento', accion: 'Elige tu departamento', gana: 'Tu fecha se calcula con él', cuesta: '10 minutos' },
   numeros: { nombre: 'Tus números', accion: 'Cuéntanos tus números', gana: 'Sabes cuándo llegas', cuesta: '2 minutos' },
   cuenta: { nombre: 'Tu cuenta de vivienda', accion: 'Abre tu cuenta de vivienda', gana: 'Tu pie crece en UF', cuesta: '5 minutos' },
   pie: { nombre: 'Juntar tu pie', accion: 'Mira tu pie', gana: 'Llegas a tu meta', cuesta: 'Cada mes' },
   preaprobacion: { nombre: 'Preaprobación Bci', accion: 'Pide tu preaprobación', gana: 'Sabes cuánto te presta Bci', cuesta: '10 minutos' },
-  asegurar: { nombre: 'Asegurar tu departamento', accion: 'Elige tu departamento', gana: 'Reservas tu departamento', cuesta: '15 minutos' },
+  asegurar: { nombre: 'Asegurar tu departamento', accion: 'Reserva y firma la promesa', gana: 'Tu departamento queda reservado', cuesta: '15 minutos' },
   aprobacion: { nombre: 'Aprobación final', accion: 'Revisa tu aprobación', gana: 'Bci confirma tu crédito', cuesta: '15 minutos' },
   'es-tuyo': { nombre: 'Es tuyo', accion: 'Prepara tu firma', gana: 'Recibes tus llaves', cuesta: '1 día' },
   entrada: { nombre: 'Juntar el 5 % para entrar', accion: 'Junta tu entrada', gana: 'Puedes firmar y mudarte', cuesta: 'Cada mes' },
@@ -1529,6 +1612,7 @@ var HITOS_ARRIENDO = {
 };
 // En grupo, el hito 3 también asegura tu cupo y el pie se paga en cuotas durante la obra.
 var HITOS_GRUPO = {
+  depto: { nombre: 'Tu edificio', accion: 'Elige tu edificio', gana: 'Te unes al grupo', cuesta: '10 minutos' },
   preaprobacion: { nombre: 'Preaprobación y tu cupo', accion: 'Pide tu preaprobación', gana: 'Aseguras tu cupo en el grupo' },
   pie: { nombre: 'Juntar tu pie en cuotas', gana: 'Pagas tu pie durante la obra' }
 };
@@ -1538,6 +1622,8 @@ function tipoHitos(s) { return s.arriendo ? 'arriendo' : s.grupo; }
 
 function hitoHecho(id, s) {
   switch (id) {
+    case 'camino': return !!s.caminoElegido;
+    case 'depto': return !!s.eligio;
     case 'numeros': return !!s.numeros;
     case 'cuenta': return !!s.cuentaVivienda;
     case 'pie': return s.meta > 0 && s.ahorrado >= s.meta;
@@ -1552,7 +1638,7 @@ function hitoHecho(id, s) {
 
 // El hito actual es el primero que falta. Devuelve { indice (1 a 6), id, nombre, total, terminado, hitos }.
 function hitoActual(s) {
-  var ids = HITOS_CAMINO[s.arriendo ? 'arriendo' : s.grupo ? 'grupo' : 'individual'];
+  var ids = HITOS_CAMINO[!s.caminoElegido && !s.eligio ? 'sinCamino' : s.arriendo ? 'arriendo' : s.grupo ? 'grupo' : 'individual'];
   var todo = !!s.esTuyo;
   var hechos = ids.map(function (id) { return todo || hitoHecho(id, s); });
   var i = hechos.indexOf(false);
@@ -1596,7 +1682,7 @@ function misiones(s, hoy) {
   m('ahorro-auto', 'Activa el ahorro automático', 'Pie', 'pie', s.ahorroAutomatico);
   if (s.cuentaVivienda) m('bajo-llave', 'Guarda tu pie bajo llave', 'Protege', 'pie', s.bajoLlave);
   m('equipo', 'Suma a tu equipo', 'Ánimo', null, s.equipo);
-  m('elegir', 'Elige tu camino y tu departamento', s.grupo ? 'Tu cupo' : 'Asegurar', s.grupo ? 'preaprobacion' : 'asegurar', s.eligio);
+  // S32-B1: elegir camino y departamento ya no son misiones: son los dos primeros pasos.
   var actual = hitoActual(s).id;
   var peso = function (x) {
     if (x.hecho) return 9;
@@ -1609,8 +1695,15 @@ function misiones(s, hoy) {
     .map(function (o) { return o.x; });
 }
 
+// S27-B1 (test del 12-nov): las misiones con fecha van aparte, de la que vence primero a la última.
+// Solo las pendientes y que no han vencido.
+function misionesConFecha(ms, hoy) {
+  return ms.filter(function (x) { return !x.hecho && x.fecha && (!hoy || diasHastaFecha(x.fecha, hoy) >= 0); })
+    .sort(function (a, b) { return a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0; });
+}
+
 // Lo que necesita cada hito antes de poder hacerse (misiones).
-var REQUISITOS_HITO = { preaprobacion: [], asegurar: ['elegir'], aprobacion: [] };
+var REQUISITOS_HITO = { preaprobacion: [], asegurar: [], aprobacion: [] };
 
 // La tarjeta de Inicio: 1) lo que vence pronto · 2) lo que destraba el siguiente hito ·
 // 3) lo que más adelanta la fecha · 4) lo más rápido.
@@ -1629,6 +1722,8 @@ function siguientePaso(s, hoy) {
     return Object.assign({ tipo: 'mision', id: x.id, titulo: x.titulo, gana: x.etiqueta, cuesta: CUESTA_MISION[x.id], plazo: plazo || x.fecha }, base);
   };
   if (h.terminado) return Object.assign({ tipo: 'listo', id: 'es-tuyo', titulo: 'Ya es tuyo', gana: null, cuesta: null, plazo: null }, base);
+  // S32-B3 (D8): sin camino, lo primero es elegirlo; lo que vence sigue arriba, en «Vence primero».
+  if (h.id === 'camino') return deHito('camino');
   // 1) Vence pronto: primero lo que la misión necesita.
   var pronto = pend.filter(function (x) { return x.fecha && hoy && diasHastaFecha(x.fecha, hoy) >= 0 && diasHastaFecha(x.fecha, hoy) <= DIAS_PRONTO; })[0];
   if (pronto) {
@@ -1640,7 +1735,7 @@ function siguientePaso(s, hoy) {
     return deMision(pronto);
   }
   // 2) Destraba el hito actual: sus requisitos y después el hito mismo.
-  var req = (REQUISITOS_HITO[h.id] || []).concat(s.grupo && h.id === 'preaprobacion' ? ['elegir'] : []);
+  var req = REQUISITOS_HITO[h.id] || [];
   for (var j = 0; j < req.length; j++) if (porId[req[j]] && !porId[req[j]].hecho) return deMision(porId[req[j]]);
   if (h.id !== 'pie') return deHito(h.id);
   // Juntar el pie es un hábito: el día de pago la tarjeta es la cuota.
@@ -1791,6 +1886,8 @@ function mesDueno(x) {
 
 if (typeof module !== 'undefined') module.exports = {
   mesDueno: mesDueno,
+  listoParaBanco: listoParaBanco, ANTIGUEDAD_MIN_MESES: ANTIGUEDAD_MIN_MESES,
+  DE_SI_A_LLAVES: DE_SI_A_LLAVES, TOTAL_SI_A_LLAVES: TOTAL_SI_A_LLAVES, pasoSiALlaves: pasoSiALlaves, montoDS1Tramo2: montoDS1Tramo2,
   ETAPAS_CONSTRUCCION: ETAPAS_CONSTRUCCION,
   PISOS_OBRA: PISOS_OBRA,
   PIEZAS_OBRA: PIEZAS_OBRA,
@@ -1814,6 +1911,7 @@ if (typeof module !== 'undefined') module.exports = {
   diasHastaFecha: diasHastaFecha,
   hitoActual: hitoActual,
   misiones: misiones,
+  misionesConFecha: misionesConFecha,
   siguientePaso: siguientePaso,
   LISTA_REFERENCIA_UF: LISTA_REFERENCIA_UF,
   MINIMO_PARA_VIVIR: MINIMO_PARA_VIVIR,

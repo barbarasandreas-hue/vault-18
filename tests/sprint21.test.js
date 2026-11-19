@@ -7,22 +7,27 @@ const HOY = new Date('2026-11-07T12:00:00');
 const base = (extra) => Object.assign({
   grupo: false, numeros: true, cuentaVivienda: false, ahorrado: 0, meta: 10000000, preaprobado: false,
   asegurado: false, esTuyo: false, ds1: null, rsh: false, ds1Postulado: false, documentos: false,
-  bajoLlave: false, ahorroAutomatico: false, equipo: false, eligio: false, cuotaPendiente: false
+  bajoLlave: false, ahorroAutomatico: false, equipo: false, eligio: true, cuotaPendiente: false, caminoElegido: true
 }, extra);
+// S32-B1: sin camino ni departamento.
+const inicio = (extra) => base(Object.assign({ caminoElegido: false, eligio: false }, extra));
 
-test('S21: seis hitos, en orden distinto según el camino', () => {
-  assert.deepStrictEqual(c.HITOS_CAMINO.individual, ['numeros', 'cuenta', 'pie', 'preaprobacion', 'asegurar', 'es-tuyo']);
-  assert.deepStrictEqual(c.HITOS_CAMINO.grupo, ['numeros', 'cuenta', 'preaprobacion', 'pie', 'aprobacion', 'es-tuyo']);
+test('S21 (S32-B1): seis hitos según el camino, desde elegir camino', () => {
+  assert.deepStrictEqual(c.HITOS_CAMINO.individual, ['camino', 'depto', 'pie', 'preaprobacion', 'asegurar', 'es-tuyo']);
+  assert.deepStrictEqual(c.HITOS_CAMINO.grupo, ['camino', 'depto', 'preaprobacion', 'pie', 'aprobacion', 'es-tuyo']);
+  assert.deepStrictEqual(c.HITOS_CAMINO.sinCamino, ['camino', 'es-tuyo']);
 });
 
 test('S21: hitoActual es el primero que falta', () => {
-  assert.strictEqual(c.hitoActual(base({ numeros: false })).id, 'numeros');
-  assert.strictEqual(c.hitoActual(base()).indice, 2);
+  assert.strictEqual(c.hitoActual(inicio()).id, 'camino');
+  assert.strictEqual(c.hitoActual(inicio()).total, 2);
+  assert.strictEqual(c.hitoActual(base({ eligio: false })).id, 'depto');
+  assert.strictEqual(c.hitoActual(base({ eligio: false })).indice, 2);
   const h = c.hitoActual(base({ cuentaVivienda: true, ahorrado: 4000000 }));
   assert.strictEqual(h.id, 'pie');
   assert.strictEqual(h.indice, 3);
   assert.deepStrictEqual(h.hitos.map((x) => x.estado), ['hecho', 'hecho', 'actual', 'pendiente', 'pendiente', 'pendiente']);
-  // En grupo, después de la cuenta viene la preaprobación (asegura el cupo), antes del pie.
+  // En grupo, después del edificio viene la preaprobación (asegura el cupo), antes del pie.
   assert.strictEqual(c.hitoActual(base({ grupo: true, cuentaVivienda: true })).id, 'preaprobacion');
   assert.strictEqual(c.hitoActual(base({ grupo: true, cuentaVivienda: true })).nombre, 'Preaprobación y tu cupo');
 });
@@ -59,13 +64,14 @@ test('S21: siguientePaso, 1) lo que vence pronto, con su requisito primero', () 
 });
 
 test('S21: siguientePaso, 2) destraba el hito actual', () => {
-  assert.strictEqual(c.siguientePaso(base(), HOY).id, 'cuenta');
+  assert.strictEqual(c.siguientePaso(inicio(), HOY).id, 'camino');
+  assert.strictEqual(c.siguientePaso(base({ eligio: false }), HOY).id, 'depto');
   const listo = { cuentaVivienda: true, ahorrado: 10000000 };
   // 11-nov: los datos y documentos son parte del paso de preaprobación, no una misión aparte.
   assert.strictEqual(c.siguientePaso(base(listo), HOY).id, 'preaprobacion');
-  assert.strictEqual(c.siguientePaso(base(Object.assign({ preaprobado: true }, listo)), HOY).id, 'elegir');
-  // En grupo, para la preaprobación y el cupo hay que elegir antes.
-  assert.strictEqual(c.siguientePaso(base({ grupo: true, cuentaVivienda: true, documentos: true }), HOY).id, 'elegir');
+  assert.strictEqual(c.siguientePaso(base(Object.assign({ preaprobado: true }, listo)), HOY).id, 'asegurar');
+  // En grupo, con el edificio elegido, sigue la preaprobación (tu cupo).
+  assert.strictEqual(c.siguientePaso(base({ grupo: true, cuentaVivienda: true, documentos: true }), HOY).id, 'preaprobacion');
 });
 
 test('S21: siguientePaso, 3) mientras juntas el pie: cuota el día de pago o lo que adelanta', () => {
@@ -78,8 +84,8 @@ test('S21: siguientePaso, 3) mientras juntas el pie: cuota el día de pago o lo 
 });
 
 test('S21: la tarjeta cambia al completar un paso', () => {
-  const a = c.siguientePaso(base(), HOY);
-  const b = c.siguientePaso(base({ cuentaVivienda: true }), HOY);
+  const a = c.siguientePaso(inicio(), HOY);
+  const b = c.siguientePaso(base({ eligio: false }), HOY);
   assert.notStrictEqual(a.id, b.id);
   assert.strictEqual(c.siguientePaso(base({ esTuyo: true }), HOY).tipo, 'listo');
 });

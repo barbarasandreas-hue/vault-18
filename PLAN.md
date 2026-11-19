@@ -922,6 +922,62 @@ Origen: pedido de Bárbara del 7-nov-2026 después de revisar dinámicas para la
 
 **Hecho (7-nov-2026)** en un commit. 197 pruebas pasan.
 
+## Sprint 27 · Mejoras del test con usuarios
+Origen: test de usabilidad del 10 al 12-nov-2026 (5 participantes, todos con la versión publicada en GitHub Pages, commit 551043a). Informe: Claude Doc "Primer Peldaño · Informe del test de usabilidad". Plan pasado por las skills ui-ux-pro-max, web-design-guidelines e interaccion-bci-vanilla.
+
+La versión publicada se queda como está hasta mostrarla a los profesores: este sprint queda solo en este computador (sin `git push`).
+
+- **S27-B1 · Misiones con fecha (tarea 4: 10 % de éxito, SEQ 4,6).** Bloque "Con fecha" arriba de Tus pasos y de Todas tus misiones, visible desde cualquier paso, ordenado por vencimiento. La primera lleva el sello amarillo "Vence primero" (texto gris oscuro; el amarillo nunca es texto) y un recuadro con el día. Esas misiones salen de la lista del paso para no repetirse. Fórmula `misionesConFecha` con pruebas. Meta: éxito de 80 % o más.
+- **S27-B2 · Llegar al camino (tarea 2: 60 % de éxito; 4 de 5 no sabían que debían ir a Explorar).** Hecho así (decisión de Bárbara, 12-nov): sin camino elegido, Inicio muestra arriba el crédito tradicional (pie del 20 %, el "muro" del pitch; con la entrega si el departamento está en obra) y debajo "¿Te parece mucho tiempo?" con los caminos que te hacen llegar antes y sus meses (el recomendado primero, con el sello "Para ti"). Si ninguno te hace llegar antes, la tarjeta se oculta; el slider la actualiza. En Tus pasos, la fila del camino muestra el recomendado con "Para ti", el porqué y "Ver este camino". En Explorar, el recomendado va primero con el sello. Al elegir, el aviso dice "Ahora: paso N de 6". Con camino elegido, Inicio muestra ese camino como antes.
+- **S27-B3 · Términos donde aparecen (P1 y P3).** Hecho: botones "¿Qué es…?" con subrayado punteado para la garantía del Estado, la compra en grupo, el DS1, el DS19 y el Registro Social de Hogares (`TERMINOS` en app.js). Abren una hoja con 3 líneas: qué es, con qué se combina y su límite, más "Ver todas las ayudas". Están bajo la descripción de cada camino para vivir y bajo "Con fecha" en Tus pasos; dentro de la hoja de la misión (DS1 y Registro Social) se despliegan ahí mismo, sin abrir otra hoja.
+- **S27-B4 · Revisión.** Hecha con un script de Playwright a 375 px, en horizontal y con texto al 150 %, con movimiento reducido: zonas táctiles de 44 px o más en todo lo nuevo, contraste de 5 a 9,6 (mínimo 4,5), sin desborde horizontal en lo nuevo y sin errores. Arreglado: los colores escritos a mano de S27 pasaron a tokens del Bci Kit, y con texto grande los meses de "¿Te parece mucho tiempo?" bajan bajo el nombre. La app no tiene modo oscuro (no aplica). Pendiente anterior a S27: con texto al 150 %, las tarjetas de proyecto de cada camino se salen por la derecha.
+- **S27-B5 · Nuevo test.** Mismas 5 tareas con 3 a 5 profesionales jóvenes que quieran comprar pronto; consigna más clara para la tarea 4 y metas de tiempo de 1,5 veces el tiempo de quien conoce la app.
+
+**B1 a B4 hechos (12-nov-2026).** 207 pruebas pasan.
+
+## Sprint 28 · Arquitectura de la información v2 (13-nov)
+
+No se sube a GitHub todavía: la versión publicada es la del test con usuarios.
+
+- [x] B1 Pestañas Inicio · Tus pasos · Explorar · Tu pie. Perfil pasa al avatar de arriba a la derecha de cada pestaña y no marca pestaña.
+- [x] B2 "Volver" vuelve a la pantalla de la que vienes, con su nombre. Cambiar de pestaña empieza un historial nuevo.
+- [x] B3 Elegir departamento vive en Tus pasos; un departamento visto desde un camino sigue en Explorar.
+- [x] B4 Preaprobación sin callejón: la hoja muestra sueldos → documentos → pedir, y resuelve cada paso ahí mismo.
+- [x] B5 Inicio con un solo botón principal ("Abrir mi cuenta" pasa a secundario).
+- [x] B6 En grupo, el detalle dice "Unirme al grupo" en vez de "Juntar mi pie".
+- [x] B7 Una sola cabecera en Perfil y sus subpantallas (Tu equipo tenía dos h1).
+- [x] B8 Palabras: misión "Elige tu departamento" si ya hay camino; "Tu cuenta de vivienda" antes de unirte al grupo; "Departamentos de este camino"; Volver en Ayudas que te acercan.
+- [x] B10 (13-nov) Inicio opción B: edificio grande a todo el ancho dentro del azul, con lo que llevas y un solo botón bajo la obra; el deslizador justo bajo el azul; sin la tarjeta repetida de abrir la cuenta.
+- [x] B11 (13-nov) Barra: Inicio · Tus pasos · Explorar · Perfil (Perfil vuelve; sin avatar arriba). Tu pie se abre desde Inicio y Tus pasos, con Volver. "Bci | Primer Peldaño" arriba de cada pestaña.
+- [x] B12 (13-nov) Misiones que llevan a la acción: DS1 y Registro Social abren el sitio del Estado (ChileAtiende/Minvu, registrosocial.gob.cl) y al volver confirmas; ahorro automático y bajo llave abren Tu pie → Tu cuota con el interruptor marcado; si falta la cuenta o el RSH, la hoja lleva a eso primero.
+- [x] B13 (13-nov) Pagar mi cuota como transferencia Bci: desde Cuenta Corriente ·· 4821 (saldo disponible) hacia Cuenta Vivienda ·· 7305, autorizar con huella, transfiriendo y comprobante con N° de operación.
+- [x] B9 Varios primarios en el detalle ("Ver ruta" + la acción): hecho en S30-B9 ("Ver ruta" pasa a secundario).
+
+## Sprint 30 · Menos texto, mejor camino (13-nov)
+Plan completo en `PLAN-S30.md`. Origen: Certamen 2 (tareas 2 y 4), tus comentarios del 13-nov y una auditoría de palabras, altura y navegación. Nada se subió a GitHub; respaldo antes de empezar en `vault-18_version-testeo/`.
+
+- [x] B0 Copia de respaldo (`vault-18_version-testeo/`).
+- [x] B1 "Ayudas para llegar antes" rediseñada: lista plegable, una abierta a la vez, barra de "cuánto te acerca", un botón por ayuda ("Ver departamentos con DS1"). 597 → 138 palabras; 3.705 → ~1.300 px.
+- [x] B2 Un camino: sin los chips de ayudas (pasan a las ayudas), sin "Cambiar de camino" (bandera `TIRA_CAMINOS = false`), un solo botón "Elegir este camino", un solo botón de términos. **Borrador 1 publicado.**
+- [x] B3 Hoja de elegir camino: "Tu fecha pasa de X a Y" y los pasos, con la lista plegada.
+- [x] B4 Tus pasos: sin tarjeta de fecha repetida; enlace "Ver caminos ›"; "Empezar" visible sin scroll a 360×740.
+- [x] B5 Explorar: el camino "Para ti" destacado y los otros tres en filas: los 4 caminos caben en una pantalla. 128 → 68 palabras.
+- [x] B6 Navegación: `#camino/elegir` redirige a `#explorar/<camino>/elegir` (misma lista del camino, franja "Elige tu departamento", pestaña Explorar, Atrás a Tus pasos). `nav.py` valida pestaña y destino de Atrás en 28 rutas + 4 flujos. **Borrador 2 publicado.**
+- [x] B7 Dieta de texto: "¿Te parece mucho tiempo?" pasa a una línea dentro del azul de Inicio (D4); usados, arriendo con opción, respaldo familiar, Tu pie, Todas las misiones; toasts ≤ 8–9 palabras.
+- [x] B8 Grupo: franja "Todos preaprobados por Bci" + "Si alguien se va: tu descuento no baja" con chip Propuesta (la regla ya estaba en la app; falta confirmarla con Bci: devolución total o con multa).
+- [x] B9 "Ver ruta" deja de ser botón principal; las hojas se cierran con Esc y devuelven el foco (9 casos probados).
+- [x] B10 Cierre: 216 pruebas, 28 rutas sin errores, `nav.py` todo ✓, sin desbordes a 360/390 px ni con texto al 150 %, contraste ≥ 5,4:1 en lo nuevo, zonas táctiles de 44 px en lo nuevo.
+
+**Antes → después (390 px, palabras en el DOM / altura):** Inicio 100 → 95 · Tus pasos 114 → 96 (1.407 → 1.167 px) · Misiones 122 → 110 · Explorar 128 → 68 (1.601 → 987 px) · Un camino 183–254 → 152–199 · Ayudas 597 → 138 (3.705 → 1.353 px) · Usados 254 → 204 · Arriendo 320 → 271 · Elegir departamento 849 → 180 (10.417 → 2.451 px) · Respaldo 183 → 133.
+
+**Pendiente / límites (honestos):**
+- Tus pasos, Inicio y Respaldo no llegan a las metas del plan (≤ 65 / ≤ 70 / ≤ 90 palabras); el conteo incluye texto solo para lector de pantalla.
+- Siguen bajo 44 px: el chip de rango de Inicio (36 px) y "Movimientos" en Tu pie (36 px), de sprints anteriores.
+- Inicio todavía tiene dos botones principales ("Ver mi pie" y "Ir a pasos").
+- `#departamentos` ("Todos") sigue siendo una lista larga (849 palabras, ~10.400 px).
+- Los textos de la propuesta de "¿Te parece mucho tiempo?" se recortaron sin la tarjeta de caminos; si prefieres la tarjeta, vuelve con una línea (D4, alternativa).
+- Todo queda como propuesta a mejorar, no como corregido, para testear a todos con la misma versión.
+
 ## Estado
 
 | Sprint | Feature | Estado |

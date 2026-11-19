@@ -3506,3 +3506,519 @@ a.camino-es-tuyo { text-decoration: none; }
 .equipo-quitar { color: #B20913 !important; }
 .equipo-fila-av { border-radius: 50%; background: #D4E3F5; }
 .equipo-acciones { display: grid; gap: 10px; }
+
+/* S27-B1 (test del 12-nov): misiones con fecha, arriba de Tus pasos y ordenadas por vencimiento */
+.con-fecha { padding: 14px 16px; }
+.con-fecha-titulo { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 18px; font-weight: 700; color: var(--gray-dark); }
+.con-fecha-titulo .icono { width: 20px; height: 20px; color: var(--blue-dark); }
+.con-fecha .lista-misiones { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.mision-fecha { width: 100%; display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; column-gap: 12px; text-align: left; background: var(--gray-light); border: 0; border-radius: 12px; padding: 10px 12px; min-height: 64px; font: inherit; color: var(--gray-dark); cursor: pointer; transition: transform var(--dur-micro) var(--ease-salida); }
+.mision-fecha:active { transform: scale(.97); }
+.mision-fecha:focus-visible { outline: 2px solid var(--blue-dark); outline-offset: 2px; }
+.mision-fecha.primero { background: var(--yellow-20); box-shadow: inset 0 0 0 1px var(--yellow-normal); }
+.mision-fecha strong { font-size: 15px; }
+.mision-fecha-dia { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 10px; background: var(--white); border: 1px solid var(--gray-semilight); line-height: 1; }
+.mision-fecha-dia strong { font-size: 20px; color: var(--blue-dark); }
+.mision-fecha-dia small { margin-top: 3px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--gray-semidark); }
+.sello-vence { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; margin-bottom: 2px; padding: 2px 8px; border-radius: 999px; background: var(--yellow-normal); color: var(--gray-dark); font-size: 12px; font-weight: 700; }
+.sello-vence .icono { width: 14px; height: 14px; }
+
+/* S27-B2 (test del 12-nov): tu camino recomendado, en Inicio, Tus pasos y Explorar */
+.sello-para-ti { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; padding: 2px 10px; border-radius: 999px; background: var(--green-dark); color: var(--white); font-size: 12px; font-weight: 700; line-height: 1.5; white-space: nowrap; }
+.sello-para-ti .icono { width: 14px; height: 14px; margin: 0; color: var(--white); }
+.para-ti { display: flex; flex-direction: column; gap: 6px; padding: 16px; }
+.para-ti h2 { margin: 2px 0 0; }
+.para-ti-razon { margin: 0 0 8px; font-size: 15px; color: var(--gray-semidark); }
+.para-ti-pasos > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.camino-boton .sello-para-ti { background: var(--white); color: var(--green-dark); }
+.camino-boton .sello-para-ti .icono { color: var(--green-dark); }
+.camino-pasos-aviso strong { font-weight: 700; }
+.pasos-camino.para-ti-pasos { flex-wrap: wrap; align-items: flex-start; }
+.para-ti-pasos > span { flex: 1; }
+.para-ti-pasos > .enlace { flex-basis: 100%; margin-left: 60px; min-height: 44px; display: inline-flex; align-items: center; }
+
+/* S27-B2 (12-nov): "¿Te parece mucho tiempo?" en Inicio, debajo del crédito tradicional */
+.mucho-tiempo { display: flex; flex-direction: column; gap: 4px; padding: 16px; }
+.mucho-tiempo h2 { margin: 0; }
+.mucho-tiempo .texto-apoyo { margin: 0 0 4px; }
+.mucho-tiempo .filas { list-style: none; margin: 0; padding: 0; }
+.camino-antes { display: grid; grid-template-columns: minmax(0, 1fr) auto 20px; align-items: center; column-gap: 10px; min-height: 64px; text-decoration: none; color: var(--gray-dark); }
+.mucho-tiempo li + li .camino-antes { border-top: 1px solid var(--gray-semilight); }
+.camino-antes > span:first-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.camino-antes small { font-size: 13px; color: var(--gray-semidark); }
+.camino-antes-meses { font-weight: 700; font-size: 17px; color: var(--green-dark); white-space: nowrap; }
+.mucho-tiempo-todos { align-self: center; min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; text-decoration: none; }
+.mucho-tiempo[hidden] { display: none; }
+
+/* S27-B3 (test del 12-nov): términos explicados donde aparecen */
+.terminos { display: flex; flex-wrap: wrap; gap: 0 16px; margin: 6px 0 0; }
+.termino { background: none; border: 0; padding: 0; min-height: 44px; font: inherit; font-size: 15px; font-weight: 600; color: var(--blue-dark); text-decoration: underline dotted; text-decoration-thickness: 2px; text-underline-offset: 4px; cursor: pointer; }
+.termino:hover { color: var(--blue-normal); }
+.termino:focus-visible { outline: 2px solid var(--blue-dark); outline-offset: 2px; border-radius: 4px; }
+.con-fecha .terminos { margin-top: 4px; }
+.termino-datos { margin: 12px 0; display: grid; gap: 10px; }
+.termino-datos dt { font-size: 13px; font-weight: 700; color: var(--gray-semidark); }
+.termino-datos dd { margin: 2px 0 0; color: var(--gray-dark); }
+.termino-detalle { margin: 8px 0 12px; border-radius: 12px; background: var(--gray-light); padding: 0 14px; }
+.termino-detalle summary { min-height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--blue-dark); cursor: pointer; }
+.termino-detalle[open] { padding-bottom: 12px; }
+/* S27-B4 (revisión): con texto grande, los meses bajan bajo el nombre en vez de apretar la columna */
+.camino-antes { display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 10px 0; }
+.camino-antes > span:first-child { flex: 1 1 10rem; }
+.camino-antes-meses { flex: none; margin-left: auto; }
+.camino-antes .flecha-derecha { flex: none; width: 20px; height: 20px; }
+.camino-antes > .camino-antes-meses { flex: none; display: block; margin-left: auto; }
+
+/* ---------- Sprint 28: arquitectura v2 ---------- */
+/* B1: Perfil en el avatar, arriba a la derecha de cada pestaña. */
+.avatar-perfil {
+  position: absolute; top: 24px; right: max(20px, env(safe-area-inset-right)); z-index: 2;
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; overflow: hidden;
+  background: var(--white); border: 1px solid var(--gray-light); color: var(--blue-dark);
+  transition: transform var(--dur-micro) var(--ease-salida);
+}
+.avatar-perfil.con-campana { right: calc(max(20px, env(safe-area-inset-right)) + 52px); }
+.avatar-perfil:active { transform: scale(.94); }
+.avatar-perfil:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.avatar-perfil > svg { width: 22px; height: 22px; }
+.avatar-perfil .avatar-perfil-av { width: 40px; height: 40px; }
+.pantalla:has(> .avatar-perfil) .encabezado > h1,
+.pantalla:has(> .avatar-perfil) > h1 { padding-right: 52px; }
+.pantalla:has(> .avatar-perfil.con-campana) .encabezado > h1 { padding-right: 104px; }
+
+/* B4: la preaprobación muestra sus tres pasos en la misma hoja. */
+.pre-lista { list-style: none; margin: 8px 0 12px; padding: 0; display: grid; gap: 8px; }
+.pre-lista li { display: flex; align-items: center; gap: 10px; color: var(--gray-dark); }
+.pre-lista li.listo { color: var(--green-dark); }
+.pre-num {
+  flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  border: 1.5px solid var(--gray-semidark); font-size: 13px; font-weight: 600;
+}
+.pre-check { flex: none; width: 24px; height: 24px; color: var(--green-dark); }
+.pantalla:has(> .avatar-perfil) .pie-lapiz { right: 0; }
+.pantalla:has(> .avatar-perfil) .pie-cabeza > h1 { padding-right: 52px; }
+.volver[hidden], .encabezado[hidden] { display: none; }
+
+/* ---------- Sprint 29: Inicio, opción B (edificio grande en el azul, botón bajo la obra) ---------- */
+.noche.con-obra-grande { padding-bottom: 0; }
+.noche .noche-etiqueta { padding-right: 40px; }
+.obra-grande {
+  position: relative; margin: 16px -18px 0; padding: 14px 14px 0;
+  background: linear-gradient(180deg, var(--blue-20) 0%, var(--white) 70%); color: var(--gray-dark);
+}
+.obra-grande .obra-svg { width: 100%; height: auto; }
+.og-etiqueta {
+  position: absolute; left: 16px; top: 12px; z-index: 1; padding: 3px 10px; border-radius: 999px;
+  background: rgba(255, 255, 255, .9); color: var(--blue-dark); font-size: 13px; font-weight: 700;
+}
+.og-abajo { padding: 12px 4px 18px; background: var(--white); margin: 0 -14px; padding-inline: 18px; }
+.og-texto { margin: 0 0 12px; color: var(--gray-semidark); font-size: 15px; }
+.og-barra { display: block; height: 10px; border-radius: 999px; background: var(--gray-semilight); overflow: hidden; }
+.og-barra i { display: block; height: 100%; border-radius: 999px; background: var(--green-normal); }
+.og-fila { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 0 12px; font-size: 14px; color: var(--gray-semidark); }
+.og-fila strong { font-size: 18px; color: var(--gray-dark); }
+.despues-junto { margin: 6px 0 0; padding: 14px 0 0; border-top: 1px solid var(--gray-semilight); box-shadow: none; }
+/* S29: Tu camino y el rango en una sola fila. */
+.inicio-cabeza { margin-bottom: 0; }
+.titulo-fila { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; }
+.titulo-fila h1 { margin: 0; padding-right: 0 !important; }
+.chip-rango {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--gray-neutral); background: var(--white); color: var(--blue-dark);
+  font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: transform var(--dur-micro) var(--ease-salida);
+}
+.chip-rango:active { transform: scale(.97); }
+.chip-rango:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.chip-rango svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.inicio-cabeza + .noche { margin-top: 12px; }
+/* La fila del logo mide lo mismo que el avatar y la campana: el título y el rango van debajo, sin toparse. */
+/* S29 (13-nov, Bárbara): lo de abajo de la obra vuelve al azul, menos aire, y el deslizador se superpone como antes. */
+.noche.con-obra-grande { padding-bottom: 96px; }
+.noche .freno-llaves { margin-top: 8px; }
+.obra-grande { margin: 12px 0 0; padding: 0; background: none; color: var(--white); }
+.og-escena { position: relative; margin: 0 -18px; padding: 12px 14px 0; background: linear-gradient(180deg, var(--blue-20) 0%, var(--white) 100%); }
+.og-abajo { margin: 0; padding: 12px 0 0; background: none; }
+.og-texto { margin: 0 0 10px; color: var(--white); opacity: .9; font-size: 14px; }
+.og-barra { background: rgba(255, 255, 255, .25); }
+.og-barra i { background: var(--white); }
+.og-fila { margin: 6px 0 10px; color: var(--white); }
+.og-fila strong { color: var(--white); }
+.obra-grande .btn-primario { background: var(--white); border-color: var(--white); color: var(--blue-dark); }
+.obra-grande .btn-primario:hover { background: var(--blue-20); border-color: var(--blue-20); }
+.obra-grande .btn-primario:focus-visible { outline: 3px solid var(--white); outline-offset: 2px; }
+/* S29: Bci · Primer Peldaño arriba de cada pestaña, en la fila del avatar (44 px). */
+.marca-app { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 0 0 8px; padding-right: 110px; }
+.marca-app .logo-bci { margin: 0; flex: none; }
+.marca-nombre { padding-left: 10px; border-left: 1.5px solid var(--gray-neutral); font-size: 15px; font-weight: 700; color: var(--gray-dark); letter-spacing: .2px; white-space: nowrap; }
+/* S29: Tu pie está protegido, dos capas lado a lado. */
+.pie-capas { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; padding-top: 12px; border-top: 1px solid var(--gray-light); }
+.pie-capas > div { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px; background: var(--gray-light); }
+.pie-capas > div > span { display: flex; flex-direction: column; gap: 2px; }
+/* S29: misiones que llevan a la acción. */
+.mision-nota { margin: 8px 0 4px; }
+.interruptor.resaltado { outline: 3px solid var(--green-normal); outline-offset: 2px; border-radius: 12px; animation: resaltar 1.2s var(--ease-salida) 2; }
+@keyframes resaltar { 50% { outline-color: var(--green-20); } }
+/* ---------- S29: transferencia a tu pie ---------- */
+.tr-monto { display: grid; justify-items: center; gap: 2px; margin: 4px 0 14px; text-align: center; }
+.tr-monto .numero { font-size: 34px; color: var(--gray-dark); }
+.tr-monto small { color: var(--gray-semidark); }
+.tr-cuentas { display: grid; gap: 6px; padding: 12px; border-radius: 16px; background: var(--gray-light); }
+.tr-cuenta { display: flex; align-items: center; gap: 12px; }
+.tr-cuenta > span:last-child { display: flex; flex-direction: column; }
+.tr-cuenta small { color: var(--gray-semidark); font-size: 13px; }
+.tr-cuenta-icono { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--white); color: var(--blue-dark); }
+.tr-cuenta-icono svg { width: 22px; height: 22px; }
+.tr-flecha { display: block; padding-left: 10px; color: var(--gray-semidark); }
+.tr-flecha svg { width: 18px; height: 18px; }
+.tr-detalle { display: flex; justify-content: space-between; margin: 12px 4px 0; font-size: 15px; color: var(--gray-semidark); }
+.tr-detalle strong { color: var(--gray-dark); }
+.tr-huella { display: grid; place-items: center; width: 96px; height: 96px; margin: 18px auto 8px; border-radius: 50%; border: 2px solid var(--blue-normal); background: var(--blue-20); color: var(--blue-dark); cursor: pointer; transition: transform var(--dur-micro) var(--ease-salida); }
+.tr-huella:active { transform: scale(.94); }
+.tr-huella:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 3px; }
+.tr-huella svg { width: 52px; height: 52px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.tr-huella-texto { text-align: center; margin: 0 0 8px; color: var(--gray-semidark); }
+.tr-cargando { display: grid; justify-items: center; gap: 12px; padding: 24px 0; color: var(--gray-semidark); }
+.tr-rueda { width: 44px; height: 44px; border-radius: 50%; border: 4px solid var(--blue-20); border-top-color: var(--blue-normal); animation: girar .9s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+.tr-exito { display: grid; justify-items: center; gap: 4px; margin: 4px 0 14px; text-align: center; }
+.tr-exito .numero { font-size: 30px; color: var(--gray-dark); }
+.tr-exito small { color: var(--green-dark); font-weight: 700; }
+.tr-check { width: 64px; height: 64px; }
+.tr-check circle { fill: var(--green-normal); transform-origin: center; animation: sello var(--dur-media) var(--ease-resorte); }
+.tr-check path { fill: none; stroke: var(--white); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: dibujarCheck var(--dur-corta) var(--ease-salida) 200ms forwards; }
+@keyframes sello { from { transform: scale(.4); opacity: 0; } }
+.tr-comprobante { margin: 0 0 8px; padding: 12px 14px; border-radius: 16px; background: var(--gray-light); display: grid; gap: 8px; }
+.tr-comprobante div { display: flex; justify-content: space-between; gap: 12px; }
+.tr-comprobante dt { color: var(--gray-semidark); font-size: 14px; }
+.tr-comprobante dd { margin: 0; text-align: right; font-size: 14px; font-weight: 600; color: var(--gray-dark); }
+#btn-cerrar-hoja[hidden] { display: none; }
+
+/* ===== Sprint 30 · B1: Ayudas para llegar antes (filas plegables) ===== */
+.ayudas-lista { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.ayuda-fila { background: var(--white); border-radius: 20px; box-shadow: var(--sombra-tarjeta); overflow: hidden; scroll-margin-top: 16px; }
+.ayuda-fila-titulo { margin: 0; font: inherit; }
+.ayuda-cab { display: grid; grid-template-columns: 44px 1fr auto 20px; align-items: center; gap: 10px; width: 100%; min-height: 64px; padding: 10px 14px; border: 0; background: transparent; text-align: left; font: inherit; color: var(--gray-dark); cursor: pointer; }
+.ayuda-cab:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: -3px; border-radius: 20px; }
+.ayuda-nombre { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; font-weight: 700; font-size: 16px; line-height: 1.2; }
+.ayuda-nombre .chip { margin: 0; font-size: 12px; padding: 2px 8px; }
+.ayuda-impacto { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 76px; font-size: 14px; color: var(--green-dark); text-align: right; }
+.ayuda-impacto strong { font-weight: 700; white-space: nowrap; }
+.ayuda-barra { display: block; width: 76px; height: 8px; border-radius: 4px; background: var(--gray-semilight); overflow: hidden; }
+.ayuda-barra i { display: block; height: 100%; border-radius: 4px; background: var(--green-normal); transform-origin: left center; transform: scaleX(var(--w, 0)); }
+@media (prefers-reduced-motion: no-preference) {
+  .ayuda-barra i { animation: ayuda-barra var(--dur-larga) var(--ease-salida) both; }
+  .ayuda-flecha { transition: transform var(--dur-corta) var(--ease-mover); }
+}
+@keyframes ayuda-barra { from { transform: scaleX(0); } }
+.ayuda-flecha { width: 20px; height: 20px; color: var(--gray-semidark); }
+.ayuda-cab[aria-expanded="true"] .ayuda-flecha { transform: rotate(180deg); }
+.ayuda-cuerpo { padding: 0 14px 16px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--gray-semilight); }
+.ayuda-cuerpo[hidden] { display: none; }
+.ayuda-cuerpo .ayuda-datos { margin: 12px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.ayuda-cuerpo .ayuda-datos > div { display: grid; grid-template-columns: 22px 92px 1fr; align-items: start; gap: 8px; padding: 0; border: 0; }
+.ayuda-cuerpo .ayuda-datos svg { width: 22px; height: 22px; color: var(--blue-dark); }
+.ayuda-cuerpo .ayuda-datos dt { font-size: 13px; font-weight: 700; color: var(--gray-semidark); padding-top: 2px; }
+.ayuda-cuerpo .ayuda-datos dd { margin: 0; font-size: 15px; line-height: 1.35; color: var(--gray-dark); }
+.ayuda-tu { margin: 0; }
+.ayuda-marca { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 14px; font-weight: 700; }
+.ayuda-marca svg { width: 18px; height: 18px; }
+.ayuda-marca.ok { background: var(--green-20); color: var(--green-dark); }
+.ayuda-marca.falta { background: var(--yellow-20); color: var(--gray-dark); }
+.ayuda-pasos { list-style: none; counter-reset: paso; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ayuda-pasos li { counter-increment: paso; display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--gray-dark); }
+.ayuda-pasos li::before { content: counter(paso); flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--blue-20); color: var(--blue-dark); font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; }
+.ayuda-acciones { display: flex; flex-direction: column; gap: 8px; }
+.ayuda-acciones .btn { min-height: 48px; }
+.ayuda-cuerpo .ayuda-tu { background: none; padding: 0; margin: 0; display: block; }
+
+/* ===== Sprint 30 · B2/B3: página de un camino ===== */
+.camino-llegada { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 15px; color: var(--gray-dark); }
+.camino-llegada svg { width: 22px; height: 22px; color: var(--blue-dark); flex: none; }
+.camino-llegada strong { font-weight: 700; }
+.camino-lista-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
+.camino-lista-cab h2 { margin: 0; }
+.chip-filtro.activo { background: var(--blue-20); color: var(--blue-dark); border-color: var(--blue-dark); font-weight: 700; }
+.camino-cambio { margin: 0 0 12px; font-size: 17px; line-height: 1.4; color: var(--gray-dark); }
+.terminos .termino { display: inline-flex; align-items: center; gap: 6px; }
+.terminos .termino svg { width: 20px; height: 20px; }
+
+/* ===== Sprint 30 · B4: Tus pasos más corto (el botón queda sobre el pliegue) ===== */
+.tarjeta.con-fecha, .con-fecha { padding: 0; background: transparent; box-shadow: none; margin-bottom: 12px; }
+.con-fecha .mision-fecha { box-shadow: var(--sombra-tarjeta); border-radius: 16px; padding: 10px 14px; background: var(--white); }
+.con-fecha .mision-fecha.primero { background: var(--yellow-20); box-shadow: inset 0 0 0 1px var(--yellow-normal), var(--sombra-tarjeta); }
+.pasos-unica { gap: 10px; padding: 14px 16px; }
+.pasos-avance { padding-top: 8px; }
+.paso-en-tarjeta .paso-elegido-cabeza { padding-top: 8px; }
+.paso-en-tarjeta .paso-elegido-cuerpo { padding: 8px 0 10px; gap: 8px; }
+/* Pantallas bajas (360 × 740): la escalera se achata y el botón sigue sobre el pliegue */
+@media (max-height: 780px) {
+  .pasos-unica .escalones .escalon:not(.x) { height: calc(30px + var(--n, 0) * 10px) !important; }
+  .pasos-unica .escalones li:nth-child(1) .escalon { --n: 0; } .pasos-unica .escalones li:nth-child(2) .escalon { --n: 1; }
+  .pasos-unica .escalones li:nth-child(3) .escalon { --n: 2; } .pasos-unica .escalones li:nth-child(4) .escalon { --n: 3; }
+  .pasos-unica .escalones li:nth-child(5) .escalon { --n: 4; } .pasos-unica .escalones li:nth-child(6) .escalon { --n: 5; }
+  .pasos-unica .escalon-puerta { height: 40px; width: auto; }
+  .pasos-avance { display: none; }
+  .paso-en-tarjeta .paso-elegido-tiempo { display: none; }
+  .paso-en-tarjeta .paso-elegido-cabeza { padding-top: 4px; }
+  .encabezado .marca-app { margin-bottom: 0; }
+}
+
+/* ===== Sprint 30 · B5: Explorar con un camino destacado y filas compactas ===== */
+.camino-destacado { min-height: 0; }
+.camino-destacado .camino-boton-cuerpo { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.camino-destacado .camino-llegada-chip { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 4px 10px; font-size: 13px; }
+.camino-destacado .camino-llegada-chip svg { width: 16px; height: 16px; }
+.camino-destacado-caja { margin-top: 12px; }
+.otros-caminos-titulo { margin: 16px 0 8px; color: var(--gray-semidark); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.caminos-filas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.camino-fila { display: grid; grid-template-columns: 44px 1fr 20px; align-items: center; gap: 12px; min-height: 60px; padding: 8px 14px; border-radius: 16px; background: var(--white); box-shadow: var(--sombra-tarjeta); text-decoration: none; color: var(--gray-dark); }
+.camino-fila:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.camino-fila-ico { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--blue-20); color: var(--blue-dark); }
+.camino-fila.color-0 .camino-fila-ico { background: var(--green-20); color: var(--green-dark); }
+.camino-fila.color-1 .camino-fila-ico { background: var(--blue-20); color: var(--blue-dark); }
+.camino-fila.color-2 .camino-fila-ico { background: var(--yellow-20); color: var(--gray-dark); }
+.camino-fila.color-3 .camino-fila-ico { background: var(--red-20); color: var(--red-dark); }
+.camino-fila-ico .camino-dibujo { width: 24px; height: 24px; }
+.camino-fila-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.camino-fila-txt strong { font-size: 16px; line-height: 1.2; }
+.camino-fila-txt small { font-size: 13px; color: var(--gray-semidark); }
+.camino-fila-ir { width: 20px; height: 20px; fill: none; stroke: var(--blue-dark); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.explorar-dos { margin-top: 14px; gap: 10px; }
+.explorar-mini { min-height: 56px; flex-direction: row; align-items: center; gap: 10px; padding: 8px 12px; }
+.explorar-mini .explorar-mini-icono { width: 36px; height: 36px; margin: 0; }
+.explorar-mini strong { font-size: 15px; line-height: 1.2; }
+.explorar-mini small { margin-left: auto; font-size: 13px; font-weight: 700; }
+.explorar-mini strong { font-size: 14px; overflow-wrap: anywhere; }
+.explorar-mini { padding: 8px 10px; gap: 8px; }
+.camino-lista-cab.solo-chip { justify-content: flex-end; }
+/* Sprint 30 · B7 */
+.noche-mucho { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: 4px 0 0; color: var(--white); font-size: 14px; text-decoration: none; }
+.noche-mucho strong { text-decoration: underline; text-underline-offset: 3px; }
+.noche-mucho[hidden] { display: none; }
+.delta-plazo:empty { display: none; }
+/* Sprint 30 · B8 */
+.grupo-confianza { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; list-style: none; margin: 0 0 12px; padding: 0; }
+.grupo-confianza li { display: grid; gap: 2px; align-content: start; padding: 12px; border-radius: var(--radio); background: var(--green-20); }
+.grupo-confianza svg { width: 24px; height: 24px; color: var(--green-dark); margin-bottom: 4px; }
+.grupo-confianza strong { font-size: 15px; line-height: 1.25; }
+.grupo-confianza small { font-size: 13px; color: var(--gray-dark); }
+.grupo-confianza .chip { justify-self: start; margin-top: 4px; font-size: 11px; padding: 2px 8px; }
+/* Sprint 30 · B10: zonas de toque de 44 px */
+.llega-rango { display: flex; align-items: center; flex-wrap: wrap; gap: 0 4px; }
+.llega-rango .enlace { min-height: 44px; display: inline-flex; align-items: center; padding: 0 8px; }
+.chips-explorar .chip-filtro { min-height: 44px; }
+
+/* S31 (18-nov): cuántos meses antes llegas con cada camino; monto editable en la transferencia. */
+.camino-antes-meses { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+.camino-antes .camino-antes-ahorro { font-size: 13px; font-weight: 600; color: var(--green-dark); }
+.despues .aviso-icono { margin-top: 12px; font-weight: 600; }
+.tr-monto-editable { margin: 4px 0 12px; }
+.tr-monto-editable .campo-caja input { font-size: 28px; font-weight: 700; }
+.tr-monto-uf { margin: 6px 0 0; font-size: 14px; color: var(--gray-semidark); }
+#tr-cuerpo .aviso { margin-bottom: 12px; }
+.camino-antes > .camino-antes-meses { text-align: right; }
+.camino-antes .camino-antes-ahorro { display: block; margin-top: 2px; }
+
+/* ---------- S31: ¿Listo para el banco?, del sí a las llaves, Mis datos para el banco ---------- */
+.selector-opciones.selector-tres { grid-template-columns: repeat(3, 1fr); }
+.selector-tres label { font-size: 14px; padding: 0 4px; }
+.datos-subtitulo { margin: 20px 0 8px; }
+.campo-ayuda { margin: 6px 0 0; font-size: 13px; color: var(--gray-semidark); }
+#form-datos > .campo-ayuda { margin: -6px 0 12px; }
+#form-datos .selector { margin: 0 0 14px; border: 0; }
+
+.banco-titulo { margin: 14px 0 6px; }
+.banco-lista { list-style: none; margin: 0 0 12px; padding: 0; }
+.banco-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--gray-semilight); }
+.banco-item:first-child { border-top: 0; }
+.banco-item > span { display: flex; flex-direction: column; gap: 2px; }
+.banco-item strong { font-size: 15px; color: var(--gray-dark); }
+.banco-item small { font-size: 13px; color: var(--gray-semidark); }
+.banco-icono { width: 22px; height: 22px; flex: none; margin-top: 1px; }
+.banco-item.ok .banco-icono { color: var(--green-dark); }
+.banco-item.ojo .banco-icono { color: var(--gray-dark); }
+.banco-item.falta .banco-icono { color: var(--red-dark); }
+.banco-item.falta small { color: var(--red-dark); font-weight: 600; }
+.banco-item.pendiente .banco-icono { color: var(--blue-normal); }
+
+.llaves-linea { list-style: none; margin: 8px 0 0; padding: 0; }
+.llaves-linea li { position: relative; display: flex; gap: 12px; padding: 0 0 14px; }
+.llaves-linea li:not(:last-child)::before { content: ''; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--gray-semilight); }
+.llaves-linea li.hecho:not(:last-child)::before { background: var(--green-dark); }
+.llaves-punto { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700;
+  background: var(--white); border: 2px solid var(--gray-semilight); color: var(--gray-semidark); }
+.llaves-punto .icono, .llaves-punto svg { width: 28px; height: 28px; margin: 0; }
+.llaves-linea li.hecho .llaves-punto { border: 0; color: var(--green-dark); }
+.llaves-linea li.actual .llaves-punto { background: var(--blue-normal); border-color: var(--blue-normal); color: var(--white); }
+.llaves-linea li > span:last-child { display: flex; flex-direction: column; gap: 2px; padding-top: 3px; }
+.llaves-linea strong { font-size: 15px; color: var(--gray-dark); }
+.llaves-linea li.hecho strong { color: var(--gray-semidark); font-weight: 600; }
+.llaves-linea small { font-size: 13px; color: var(--gray-semidark); }
+.llaves-linea .llaves-texto { color: var(--gray-dark); }
+.llaves-total { margin: 4px 0 0; font-size: 13px; color: var(--gray-semidark); }
+.firma-dia .llaves-linea { margin-top: 12px; }
+.paso-adelanto { display: inline-block; margin-top: 8px; min-height: 44px; padding: 0; background: none; border: 0; font: inherit; font-weight: 700; color: var(--blue-dark, #1B5299); text-decoration: underline; cursor: pointer; }
+
+/* ---------- S32-B3: Mi compra ---------- */
+.noche.mi-compra-fecha { padding-bottom: 18px; }
+.noche .btn-comparar { margin-top: 12px; min-height: 44px; }
+.camino-juego { margin-top: 16px; background: var(--green-20); border-radius: 24px; padding: 14px 0 8px; }
+.camino-juego-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 0 16px; }
+.camino-juego-cab h2 { margin: 0; color: var(--green-dark); }
+.camino-juego-cab span { font-size: 14px; font-weight: 700; color: var(--green-dark); }
+.camino-juego-mapa { position: relative; width: 100%; max-width: 358px; aspect-ratio: 358 / 196; margin: 2px auto 0; }
+.camino-juego-mapa > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cj-hecho { stroke-dasharray: 600; stroke-dashoffset: 0; animation: cjTrazo var(--dur-larga) var(--ease-salida); }
+@keyframes cjTrazo { from { stroke-dashoffset: 600; } }
+.cj-parada {
+  position: absolute; width: 44px; height: 44px; transform: translate(-50%, -50%); padding: 0; border: 0; background: transparent;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%; font: inherit;
+}
+.cj-parada:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.cj-parada.actual { width: 56px; height: 56px; }
+.cj-parada.actual > svg { border-radius: 50%; background: var(--white); box-shadow: 0 0 0 4px var(--blue-normal); }
+.cj-parada.cj-casa { width: 52px; height: 52px; margin-top: -10px; }
+.cj-num {
+  width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; background: var(--white); color: var(--gray-semidark); border: 2px solid var(--green-40);
+  transition: transform var(--dur-corta) var(--ease-resorte);
+}
+.cj-parada.hecho .cj-num { background: var(--green-dark); color: var(--white); border-color: var(--green-dark); }
+.cj-parada:hover .cj-num { transform: scale(1.08); }
+.cj-av.sube { animation: saltar var(--dur-larga) var(--ease-resorte); }
+.cj-nombre {
+  position: absolute; width: 74px; margin-left: -37px; text-align: center; font-size: 12px; font-weight: 600; line-height: 1.25;
+  color: var(--gray-semidark); pointer-events: none;
+}
+.cj-nombre.abajo { margin-top: 28px; }
+.cj-nombre.arriba { margin-top: -46px; }
+.cj-nombre.hecho { color: var(--green-dark); }
+.cj-nombre.actual { color: var(--blue-dark); font-weight: 700; background: var(--white); border-radius: 8px; padding: 1px 0; }
+.cj-nombre.actual.abajo { margin-top: 34px; }
+.cj-nombre.actual.arriba { margin-top: -52px; }
+.camino-juego-nota { margin: 0 16px 6px; font-size: 14px; font-weight: 600; color: var(--green-dark); }
+.cj-celebra { margin: 4px 16px 6px; }
+.siguiente-paso.ahora { border: 2px solid var(--green-normal); border-radius: 20px; }
+.chip-ahora { justify-self: start; margin: 0; background: var(--green-20); color: var(--green-dark); font-weight: 700; }
+.chip-ahora .sep { margin: 0 4px; }
+.mi-compra-enlaces { display: grid; gap: 0; margin: 8px 0 0; }
+.mi-compra-enlaces .enlace { min-height: 44px; display: flex; align-items: center; font-weight: 700; }
+/* Tu recorrido, con fechas */
+.recorrido-lista { list-style: none; margin: 16px 0 0; padding: 8px 12px; background: var(--white); border-radius: 20px; }
+.recorrido-lista li { position: relative; }
+.recorrido-lista li:not(:last-child)::before { content: ''; position: absolute; left: 26px; top: 46px; bottom: -6px; width: 2px; background: var(--gray-semilight); }
+.recorrido-lista li.hecho:not(:last-child)::before { background: var(--green-normal); }
+.recorrido-fila { width: 100%; display: flex; gap: 12px; align-items: flex-start; text-align: left; padding: 10px 4px; border: 0; background: transparent; font: inherit; color: inherit; cursor: pointer; border-radius: 12px; min-height: 44px; }
+.recorrido-fila:hover { background: var(--gray-light); }
+.recorrido-punto { flex: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; background: var(--white); color: var(--gray-semidark); border: 1.6px solid var(--gray-neutral); margin-left: 8px; position: relative; z-index: 1; }
+.recorrido-lista li.hecho .recorrido-punto { background: var(--green-dark); color: var(--white); border-color: var(--green-dark); }
+.recorrido-lista li.actual .recorrido-punto { background: var(--blue-normal); color: var(--white); border-color: var(--blue-normal); }
+.recorrido-texto { display: grid; gap: 2px; min-width: 0; }
+.recorrido-texto strong { font-size: 16px; }
+.recorrido-fecha { font-size: 15px; font-weight: 700; color: var(--gray-dark); }
+.recorrido-lista li.hecho .recorrido-fecha { color: var(--green-dark); }
+.recorrido-lista li.actual .recorrido-fecha { color: var(--blue-dark); }
+.recorrido-texto small { font-size: 13px; color: var(--gray-semidark); }
+.recorrido-nota { margin-top: 12px; }
+@media (prefers-reduced-motion: reduce) { .cj-hecho, .cj-av.sube { animation: none; } }
+
+/* ---------- S32-B4: Comparar caminos ---------- */
+.toast.con-accion:not([hidden]) { pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-right: 6px; }
+.toast-accion { flex: none; min-height: 44px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; color: var(--white); font: inherit; font-weight: 700; text-decoration: underline; text-transform: uppercase; cursor: pointer; }
+.toast-accion:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+.camino-anterior { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding: 10px 12px 10px 14px; background: var(--white); border: 1.6px solid var(--gray-neutral); border-radius: 16px; font-size: 14px; }
+.camino-anterior .btn { flex: none; min-height: 44px; }
+.prioridades { border: 0; margin: 16px 0 0; padding: 0; }
+.prioridades legend { margin-bottom: 8px; padding: 0; }
+.prioridades-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.prioridades-chips .chip-filtro { min-height: 44px; }
+.carrera { margin-top: 20px; }
+.carrera h2, .lado h2 { margin: 0; }
+.carrera-ayuda { margin: 2px 0 8px; }
+.carrera-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.carrera-item { display: flex; align-items: stretch; gap: 6px; }
+.carrera-fila {
+  flex: 1; min-width: 0; display: grid; gap: 6px; text-align: left; padding: 10px 12px; border-radius: 14px; cursor: pointer; font: inherit; color: inherit;
+  background: var(--white); border: 1.6px solid var(--gray-semilight); transition: background var(--dur-corta), border-color var(--dur-corta);
+}
+.carrera-fila[aria-pressed="true"] { background: var(--green-20); border: 2px solid var(--green-dark); }
+.carrera-fila:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.carrera-cab { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.carrera-cab strong { font-size: 16px; }
+.sello-tuyo { background: var(--blue-dark); }
+.carrera-pista { display: block; height: 10px; border-radius: 999px; background: var(--gray-semilight); overflow: hidden; }
+.carrera-pista i { display: block; height: 100%; border-radius: 999px; background: var(--blue-60); transition: width var(--dur-media) var(--ease-salida); }
+.carrera-fila[aria-pressed="true"] .carrera-pista i { background: var(--green-dark); }
+.carrera-pie { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; }
+.carrera-fecha { font-size: 14px; font-weight: 700; color: var(--green-dark); }
+.carrera-pie small { font-size: 13px; color: var(--gray-semidark); }
+.carrera-info { flex: none; width: 44px; border: 0; border-radius: 14px; background: transparent; color: var(--blue-dark); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.carrera-info svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.carrera-info:hover { background: var(--blue-20); }
+.carrera-info:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.lado { margin-top: 20px; }
+.lado-vacio { margin-top: 6px; }
+.lado-a-lado { width: 100%; margin-top: 8px; border-collapse: separate; border-spacing: 0; background: var(--white); border-radius: 16px; overflow: hidden; font-size: 14px; table-layout: fixed; }
+.lado-a-lado th, .lado-a-lado td { padding: 8px 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--gray-semilight); }
+.lado-a-lado thead th { font-size: 14px; color: var(--green-dark); background: var(--green-20); }
+.lado-a-lado thead td { background: var(--green-20); width: 27%; }
+.lado-a-lado tbody th { font-weight: 600; color: var(--gray-semidark); font-size: 13px; }
+.lado-a-lado td small { display: block; font-size: 12px; color: var(--gray-semidark); }
+.lado-a-lado tr:last-child td { border-bottom: 0; }
+.lado-acciones td { display: table-cell; }
+.lado-acciones .btn { width: 100%; min-height: 44px; margin-bottom: 4px; }
+.lado-acciones .enlace { display: inline-flex; min-height: 44px; align-items: center; font-weight: 700; }
+.lado-tuyo { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; color: var(--green-dark); font-weight: 700; }
+.lado-tuyo .icono { margin: 0; color: var(--green-dark); }
+.info-titulo { margin: 16px 0 6px; }
+.info-como { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.info-numeros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; }
+.info-numeros div { background: var(--gray-light); border-radius: 12px; padding: 8px; }
+.info-numeros dt { font-size: 12px; color: var(--gray-semidark); }
+.info-numeros dd { margin: 2px 0 0; font-weight: 700; font-size: 14px; }
+.info-camino { margin-top: 16px; }
+.info-camino h2 { margin: 0 0 8px; }
+
+/* ---------- S32-B5: Departamentos ---------- */
+.deptos-controles { display: flex; gap: 8px; margin: 12px 0 0; }
+.deptos-controles .btn { min-height: 44px; flex: 1; justify-content: center; }
+.deptos-camino { gap: 4px; }
+.deptos-camino svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.deptos-mirar { display: flex; gap: 8px; align-items: flex-start; margin: 12px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--blue-20); color: var(--gray-dark); font-size: 14px; }
+.deptos-mirar .icono { flex: none; margin: 2px 0 0; color: var(--blue-dark); }
+.lista-deptos { margin-top: 12px; }
+.tp-tuyo { display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--green-dark); }
+.tp-tuyo .icono { width: 16px; height: 16px; margin: 0; color: var(--green-dark); }
+.chips-filtros { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.chips-filtros .chip-filtro { min-height: 44px; }
+.hoja-opciones { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+.hoja-opcion { width: 100%; min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 14px; border-radius: 14px; border: 1.6px solid var(--gray-semilight); background: var(--white); font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.hoja-opcion span { display: grid; }
+.hoja-opcion small { font-size: 13px; color: var(--green-dark); font-weight: 700; }
+.hoja-opcion[aria-pressed="true"] { border: 2px solid var(--green-dark); background: var(--green-20); }
+.hoja-opcion-n { font-weight: 700; color: var(--gray-semidark); }
+.enlace-centro { display: flex; justify-content: center; min-height: 44px; align-items: center; font-weight: 700; }
+.deptos-camino-txt { display: grid; text-align: left; line-height: 1.15; }
+.deptos-camino-txt small { font-size: 11px; font-weight: 600; text-transform: none; color: var(--gray-semidark); }
+
+/* ---------- S32-B6: Mi pie ---------- */
+.pie-si-juntas { margin-top: 16px; }
+.pie-tuyo { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; font-size: 15px; color: var(--gray-dark); }
+.pie-tuyo .icono { flex: none; margin: 2px 0 0; color: var(--green-dark); }
+.pie-tuyo span { display: grid; }
+.pie-tuyo strong { color: var(--green-dark); }
+.pie-tuyo small { font-size: 13px; color: var(--gray-semidark); }
+/* S32-B9: toques de al menos 44 px en el chip del rango y en «Movimientos». */
+.chip-rango, .pie-movimientos { min-height: 44px; }
+/* S32-B9: con texto grande (150 %), los controles bajan de línea en vez de salirse. */
+.deptos-controles { flex-wrap: wrap; }
+.deptos-controles .btn { min-width: 0; flex: 1 1 140px; }
+.pie-si-juntas .si-juntas-fila { flex-wrap: wrap; }
+.pie-heroe-fila .numero { font-size: clamp(30px, 11vw, 40px); overflow-wrap: anywhere; }
+.camino-juego-mapa { margin-top: 14px; }
+@media (max-width: 340px) { .cj-nombre { font-size: 11px; width: 64px; margin-left: -32px; } }
+/* S32-B9: contraste ≥ 4,5:1 sobre el verde claro del camino. */
+.cj-nombre { color: var(--gray-dark); }
+.camino-juego .cj-nombre.hecho { color: var(--green-dark); }
+.camino-juego .cj-nombre.actual { color: var(--blue-dark); }

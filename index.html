@@ -32,6 +32,7 @@
     <symbol id="i-escalera" viewBox="0 0 24 24"><path d="M3 20.5V16h5v-4.5h5V7h5V3.5h3v17z" style="fill: var(--relleno, none)" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
     <symbol id="i-explorar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" style="fill: var(--relleno, none)" stroke="currentColor" stroke-width="2"/><path d="M15.5 8.5l-2 5-5 2 2-5z" style="stroke: var(--hueco, currentColor)" fill="none" stroke-width="2" stroke-linejoin="round"/></symbol>
     <symbol id="i-corazon" viewBox="0 0 24 24"><path d="M12 20.5S3.5 15.3 3.5 9.2A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.5 2.6c0 6.1-8.5 11.3-8.5 11.3z" style="fill: var(--relleno, none)" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-buscar" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" style="fill: var(--relleno, none)" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L20.5 20.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
     <symbol id="i-perfil" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" style="fill: var(--relleno, none)" stroke="currentColor" stroke-width="2"/><path d="M4 21c0-4.2 3.6-7 8-7s8 2.8 8 7z" style="fill: var(--relleno, none)" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
     <!-- Íconos del semáforo (de línea, en el color de su estado) -->
     <symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -152,8 +153,8 @@
       </section>
       <!-- ===== Perfil (se dibuja desde app.js) ===== -->
       <section id="pantalla-perfil" class="pantalla" aria-labelledby="titulo-perfil" hidden>
-        <header class="encabezado">
-          <p class="md-marca"><img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24"><span class="figuras-bci" aria-hidden="true"></span></p>
+        <header class="encabezado" id="perfil-cabeza">
+          <p class="marca-app"><img class="logo-bci" src="logo_bci_negro.svg" alt="Bci" width="52" height="24"><span class="marca-nombre">Primer Peldaño</span></p>
           <h1 id="titulo-perfil" class="h2">Perfil</h1>
         </header>
         <div id="perfil-contenido"></div>
@@ -162,9 +163,9 @@
 
     <nav class="barra" aria-label="Secciones">
       <ul>
-        <li><a href="#camino" data-seccion="inicio"><svg aria-hidden="true"><use href="#i-inicio"/></svg>Inicio</a></li>
-        <li><a href="#pasos" data-seccion="pasos"><svg aria-hidden="true"><use href="#i-escalera"/></svg>Tus pasos</a></li>
-        <li><a href="#explorar" data-seccion="explorar"><svg aria-hidden="true"><use href="#i-explorar"/></svg>Explorar</a></li>
+        <li><a href="#compra" data-seccion="compra"><svg aria-hidden="true"><use href="#i-inicio"/></svg>Mi compra</a></li>
+        <li><a href="#pie" data-seccion="pie"><svg aria-hidden="true"><use href="#i-alcancia"/></svg>Mi pie</a></li>
+        <li><a href="#departamentos" data-seccion="deptos"><svg aria-hidden="true"><use href="#i-buscar"/></svg>Departamentos</a></li>
         <li><a href="#perfil" data-seccion="perfil"><svg aria-hidden="true"><use href="#i-perfil"/></svg>Perfil</a></li>
       </ul>
     </nav>
