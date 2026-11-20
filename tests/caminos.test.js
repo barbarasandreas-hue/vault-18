@@ -177,7 +177,7 @@ test('Registro: el texto para copiar', () => {
     meInteresa: ['respaldo-familiar'], recordarme: null }, '2026-11-04');
   assert.match(t, /Plazo que cree necesitar antes: 8 años/);
   assert.match(t, /Camino elegido: Pie compartido/);
-  assert.match(t, /Me interesa: Respaldo familiar/);
+  assert.match(t, /Me interesa: Garantía de un familiar/);
   assert.match(c.textoRegistro({}, null), /Camino elegido: sin elegir/);
 });
 

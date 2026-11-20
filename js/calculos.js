@@ -728,7 +728,10 @@ var CAMINOS = {
     credito: 0.80, usuario: 0.20, inversionistas: 0, existeHoy: true },
   'arriendo-opcion': { nombre: 'Arriendo con opción de compra', corto: 'Arriendo con opción de compra', modo: 'vivir',
     ficha: true, existeHoy: true },
-  'respaldo-familiar': { nombre: 'Respaldo familiar', corto: 'Respaldo familiar', modo: 'ambos',
+  // 20-nov: la garantía de un familiar es un camino para vivir (Bci presta 95 %, el familiar deja 10 % en garantía; RESPALDO).
+  'familiar-vivir': { nombre: 'Garantía de un familiar', corto: 'Garantía de un familiar', modo: 'vivir', grupo: false, familiar: true,
+    credito: 0.95, usuario: 0.05, inversionistas: 0, existeHoy: false },
+  'respaldo-familiar': { nombre: 'Garantía de un familiar', corto: 'Garantía de un familiar', modo: 'ambos',
     ficha: true, existeHoy: false }
 };
 
@@ -1443,7 +1446,7 @@ var PIEZAS_VIVIR = {
     cond: 'Solo terminados antes del 17 de octubre de 2026. Firma la promesa hasta noviembre de 2027.' },
   regalo: { nombre: 'Regalo de tu familia', grupo: 'ayuda', existeHoy: false,
     cond: '$300 mil en una ocasión. Hasta nov-2027, si tu familia te dona por escritura, paga la mitad del impuesto.' },
-  respaldo: { nombre: 'Respaldo familiar', grupo: 'ayuda', existeHoy: false,
+  respaldo: { nombre: 'Garantía de un familiar', grupo: 'ayuda', existeHoy: false,
     cond: 'Un familiar deja el 10 % en garantía y lo recupera. Sube lo que pagas al mes.' }
 };
 var ORDEN_PIEZAS = ['grupo', 'subsidio', 'iva', 'regalo', 'respaldo'];
@@ -1683,6 +1686,8 @@ function misiones(s, hoy) {
     m('rsh', 'Inscríbete en el Registro Social de Hogares', 'Para el DS1', 'pie', s.rsh || s.ds1Postulado);
   }
   // 11-nov: "Completa tus datos y documentos" ya no es misión: es el mismo paso de la preaprobación (Tus datos → Tus documentos).
+  // 20-nov: con la garantía de un familiar, tu familiar deja el 10 % antes de pedir el crédito.
+  if (s.familiar) m('familiar', 'Tu familiar deja su garantía', 'Pie del 5 %', 'preaprobacion', s.garantiaFamiliar);
   m('ahorro-auto', 'Activa el ahorro automático', 'Pie', 'pie', s.ahorroAutomatico);
   // S34: en grupo la cuenta ya está bloqueada hasta la firma; «bajo llave» es para quien junta solo.
   if (s.cuentaVivienda && !s.grupo) m('bajo-llave', 'Guarda tu pie bajo llave', 'Protege', 'pie', s.bajoLlave);
