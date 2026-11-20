@@ -3400,6 +3400,72 @@
     if (estado.pasos.preaprobado) { guardarSubpaso('resultado'); location.hash = '#compra/postular/resultado'; }
     else location.hash = '#compra/postular/datos';
   }
+  // 20-nov (Bárbara): en Ganancia, en cuántos años terminas de pagar el crédito y cómo adelantarlo:
+  // pagando más al mes (prepago) o si baja la tasa (refinanciar).
+  var PAGO_EXTRA_MAX = 400000, PAGO_EXTRA_PASO = 25000, BAJA_TASA = 0.01;
+  function mesesParaPagar(creditoUF, tasa, cuotaUF) {
+    var i = tasa / 12;
+    if (cuotaUF <= creditoUF * i) return null;
+    return Math.ceil(-Math.log(1 - i * creditoUF / cuotaUF) / Math.log(1 + i));
+  }
+  function textoAnios(m) {
+    if (m === null) return '—';
+    var a = Math.floor(m / 12), r = m % 12;
+    return r === 0 ? plural(a, 'año', 'años') : a === 0 ? plural(r, 'mes', 'meses') : plural(a, 'año', 'años') + ' y ' + plural(r, 'mes', 'meses');
+  }
+  function planPago(creditoUF, tasa, extra) {
+    var cuota = cuotaFija(creditoUF, tasa, SUPUESTOS.mesesBci);
+    var m = mesesParaPagar(creditoUF, tasa, cuota + extra / SUPUESTOS.uf);
+    return { meses: m, intereses: m === null ? null : ufAPesos(m * (cuota + extra / SUPUESTOS.uf) - creditoUF) };
+  }
+  function pagoAntesHtml(e, mFirma) {
+    var creditoUF = e.precioUF * e.pctCredito, tasa = SUPUESTOS.tasaBci;
+    var base = planPago(creditoUF, tasa, 0);
+    var fin = function (m) { return mFirma === null ? '' : ' (aprox. ' + fechaLlaves(mFirma + m, hoyDemo()).split(' de ').pop() + ')'; };
+    var tasaBaja = tasa - BAJA_TASA;
+    var cuotaHoy = cuotaFija(creditoUF, tasa, SUPUESTOS.mesesBci), cuotaBaja = cuotaFija(creditoUF, tasaBaja, SUPUESTOS.mesesBci);
+    var mismoDiv = mesesParaPagar(creditoUF, tasaBaja, cuotaHoy);
+    var pct = function (t) { return (t * 100).toFixed(2).replace('.', ',') + NBSP + '%'; };
+    return '<section class="pa" aria-labelledby="pa-titulo" data-credito="' + creditoUF.toFixed(4) + '" data-firma="' + (mFirma === null ? '' : mFirma) + '">' +
+      '<h2 class="h5" id="pa-titulo">¿En cuántos años lo pagas?</h2>' +
+      '<div class="pa-plazo"><span class="pa-icono" aria-hidden="true">' + icono('i-calendario') + '</span><span><small>Con el dividendo de siempre, terminas de pagar en</small>' +
+        '<strong>' + textoAnios(base.meses) + fin(base.meses) + '</strong></span></div>' +
+      '<div class="pa-bloque pa-juntas"><h3 class="h6">Si pagas más al mes</h3>' +
+        '<p class="si-juntas-fila"><label for="pa-extra">Pagas de más</label><strong class="numero" id="pa-extra-valor">$0</strong></p>' +
+        '<input type="range" id="pa-extra" min="0" max="' + PAGO_EXTRA_MAX + '" step="' + PAGO_EXTRA_PASO + '" value="0" aria-valuetext="$0 al mes: terminas en ' + textoAnios(base.meses) + '">' +
+        '<div class="pa-resultado" id="pa-resultado" aria-live="polite">' + resultadoPago(creditoUF, tasa, 0, base, mFirma) + '</div>' +
+        '<p class="pa-nota">' + icono('i-info') + '<span>También puedes abonar una vez (un bono, un aguinaldo). Por ley, Bci puede cobrar por prepagar hasta 1,5 meses de intereses.</span></p></div>' +
+      '<div class="pa-bloque"><h3 class="h6">Si baja la tasa</h3>' +
+        '<p class="pa-tasa"><span>Hoy</span><b>' + pct(tasa) + '</b><span aria-hidden="true">→</span><span>Si baja 1 punto</span><b>' + pct(tasaBaja) + '</b></p>' +
+        '<ul class="pa-opciones">' +
+          '<li><small>Pagas menos al mes</small><strong>−' + formatoRedondeado(ufAPesos(cuotaHoy - cuotaBaja)) + '</strong><small>mismo plazo</small></li>' +
+          '<li><small>O, con el mismo dividendo, terminas en</small><strong>' + textoAnios(mismoDiv) + '</strong><small>' + textoAnios(base.meses - mismoDiv) + ' antes</small></li>' +
+        '</ul>' +
+        '<p class="pa-nota">' + icono('i-info') + '<span>Para eso cambias tu crédito a la tasa nueva (refinanciar). Tiene gastos de tasación y notaría: conviene si la baja es grande.</span></p></div>' +
+    '</section>';
+  }
+  function resultadoPago(creditoUF, tasa, extra, base, mFirma) {
+    if (!extra) return '<p>Sube el monto para ver cuánto antes terminas.</p>';
+    var x = planPago(creditoUF, tasa, extra);
+    var antes = base.meses - x.meses, ahorro = base.intereses - x.intereses;
+    return '<p>Terminas en <strong>' + textoAnios(x.meses) + '</strong>' + (mFirma === null || mFirma === '' ? '' : ' (aprox. ' + fechaLlaves(Number(mFirma) + x.meses, hoyDemo()).split(' de ').pop() + ')') + ': <strong>' + textoAnios(antes) + ' antes</strong>.</p>' +
+      '<p>Ahorras unos <strong>' + formatoRedondeado(ahorro) + '</strong> en intereses.</p>';
+  }
+  function iniciarPagoAntes() {
+    var sec = document.querySelector('.pa'), rango = $('pa-extra');
+    if (!sec || !rango) return;
+    var creditoUF = Number(sec.dataset.credito), mFirma = sec.dataset.firma === '' ? null : Number(sec.dataset.firma);
+    var tasa = SUPUESTOS.tasaBci, base = planPago(creditoUF, tasa, 0);
+    var pintar = function () {
+      var v = Number(rango.value);
+      rango.style.setProperty('--lleno', (v / PAGO_EXTRA_MAX * 100).toFixed(1) + '%');
+      $('pa-extra-valor').textContent = v ? formatoRedondeado(v) : '$0';
+      $('pa-resultado').innerHTML = resultadoPago(creditoUF, tasa, v, base, mFirma);
+      rango.setAttribute('aria-valuetext', formatoRedondeado(v) + ' al mes: terminas en ' + textoAnios(v ? planPago(creditoUF, tasa, v).meses : base.meses));
+    };
+    rango.addEventListener('input', pintar);
+    pintar();
+  }
   function grupoInvertirHtml(p, ahorroGrupo) {
     return '<a class="tarjeta fila grupo-posible" href="#compra/proyecto/' + esc(p.id) + '/grupo-invertir">' + icono('i-grupo', 'icono-grande') +
       '<span><strong>Si te unes a su grupo</strong><small>Podrías pagar ' + formatoRedondeado(ahorroGrupo) + ' menos</small></span>' +
@@ -3445,6 +3511,7 @@
         '<p>' + icono('i-flujo') + '<span>Si el arriendo es 10' + NBSP + '% más bajo: ' + (peor >= 0 ? 'te quedan ' : 'pones ') + '<strong>' + formatoRedondeado(Math.abs(peor)) + '</strong> al mes.</span></p>' +
         '<p>' + icono('i-alerta') + '<span>Un mes sin arrendatario: el dividendo de ' + formatoRedondeado(dividendo) + ' lo pagas tú.</span></p>' +
       '</section>' +
+      pagoAntesHtml(e, mFirma) +
       '<p class="llega-sello detalle-sello">' + icono('i-escudo') + 'Sin contar que el departamento suba de precio</p>';
     var numeros =
       '<div class="det-cifras"><div><small>Juntas antes de firmar</small><strong>' + formatoRedondeado(e.alEscriturar) + '</strong><small>pie y gastos</small></div>' +
@@ -3804,6 +3871,7 @@
     iniciarGalerias(contenedor);
     iniciarPlegables();
     iniciarPestanasDetalle(contenedor);
+    iniciarPagoAntes();
     iniciarVisita(p);
     if ($('btn-bajar-precio')) $('btn-bajar-precio').addEventListener('click', function () { abrirBajarPrecio(p, solo, caminoVista, $('btn-bajar-precio')); });
     if ($('btn-detalle-credito')) $('btn-detalle-credito').addEventListener('click', function () {

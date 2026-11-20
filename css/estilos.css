@@ -1603,15 +1603,15 @@ div.fila { cursor: default; }
 .si-juntas-fila { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 0; }
 .si-juntas-fila label { font-weight: 600; }
 .si-juntas-fila strong { font-size: 20px; }
-.si-juntas input[type="range"], .carrera input[type="range"] {
+.si-juntas input[type="range"], .carrera input[type="range"], .pa input[type="range"] {
   -webkit-appearance: none; appearance: none; width: 100%; height: 44px; margin: 4px 0 0; background: transparent; cursor: pointer;
 }
-.si-juntas input[type="range"]::-webkit-slider-runnable-track, .carrera input[type="range"]::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--green-normal) var(--lleno, 50%), var(--gray-semilight) var(--lleno, 50%)); }
-.si-juntas input[type="range"]::-moz-range-track, .carrera input[type="range"]::-moz-range-track { height: 8px; border-radius: 4px; background: var(--gray-semilight); }
-.si-juntas input[type="range"]::-moz-range-progress, .carrera input[type="range"]::-moz-range-progress { height: 8px; border-radius: 4px; background: var(--green-normal); }
-.si-juntas input[type="range"]::-webkit-slider-thumb, .carrera input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -10px; border-radius: 50%; background: var(--white); border: 3px solid var(--green-normal); box-shadow: 0 2px 6px rgba(0, 0, 0, .2); }
-.si-juntas input[type="range"]::-moz-range-thumb, .carrera input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--white); border: 3px solid var(--green-normal); }
-.si-juntas input[type="range"]:focus-visible, .carrera input[type="range"]:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; border-radius: 8px; }
+.pa input[type="range"]::-webkit-slider-runnable-track, .si-juntas input[type="range"]::-webkit-slider-runnable-track, .carrera input[type="range"]::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--green-normal) var(--lleno, 50%), var(--gray-semilight) var(--lleno, 50%)); }
+.pa input[type="range"]::-moz-range-track, .si-juntas input[type="range"]::-moz-range-track, .carrera input[type="range"]::-moz-range-track { height: 8px; border-radius: 4px; background: var(--gray-semilight); }
+.pa input[type="range"]::-moz-range-progress, .si-juntas input[type="range"]::-moz-range-progress, .carrera input[type="range"]::-moz-range-progress { height: 8px; border-radius: 4px; background: var(--green-normal); }
+.pa input[type="range"]::-webkit-slider-thumb, .si-juntas input[type="range"]::-webkit-slider-thumb, .carrera input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -10px; border-radius: 50%; background: var(--white); border: 3px solid var(--green-normal); box-shadow: 0 2px 6px rgba(0, 0, 0, .2); }
+.pa input[type="range"]::-moz-range-thumb, .si-juntas input[type="range"]::-moz-range-thumb, .carrera input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--white); border: 3px solid var(--green-normal); }
+.pa input[type="range"]:focus-visible, .si-juntas input[type="range"]:focus-visible, .carrera input[type="range"]:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; border-radius: 8px; }
 .si-juntas-extremos { display: flex; justify-content: space-between; gap: 8px; margin: 0; font-size: 13px; color: var(--gray-semidark); }
 .si-juntas-extremos span { display: grid; }
 .si-juntas-extremos span:last-child { text-align: right; }
@@ -4811,3 +4811,30 @@ img { color: transparent; }
 .det-tabs button { padding: 0 4px; }
 .ga-total span small { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--gray-semidark); }
 .ga-total strong { white-space: nowrap; }
+/* 20-nov: Ganancia → ¿En cuántos años lo pagas? */
+.pa { display: flex; flex-direction: column; gap: 12px; padding: 16px; margin-top: 12px; border-radius: 16px; background: var(--white); box-shadow: var(--sombra-1); border-top: 4px solid var(--blue-normal); }
+.pa h2, .pa h3 { margin: 0; }
+.pa-plazo { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 12px; background: #D4E3F5; }
+.pa-icono { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--blue-normal); color: var(--white); }
+.pa-icono svg { width: 20px; height: 20px; }
+.pa-plazo small { display: block; font-size: 12px; color: var(--blue-dark); }
+.pa-plazo strong { font-size: 18px; color: var(--blue-dark); }
+.pa-bloque { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--gray-semilight); }
+.pa-resultado { padding: 10px 12px; border-radius: 12px; background: var(--gray-light); font-size: 14px; color: var(--gray-dark); }
+.pa-resultado p { margin: 0; line-height: 1.4; }
+.pa-resultado p + p { margin-top: 4px; }
+.pa-resultado strong { color: var(--green-dark); }
+.pa-nota { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 12px; line-height: 1.35; color: var(--gray-semidark); }
+.pa-nota svg { width: 16px; height: 16px; flex: none; }
+.pa-tasa { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 0; font-size: 13px; color: var(--gray-semidark); }
+.pa-tasa b { font-size: 16px; color: var(--gray-dark); }
+.pa-opciones { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pa-opciones li { display: flex; flex-direction: column; gap: 2px; padding: 10px; border-radius: 12px; background: #EAF4EA; }
+.pa-opciones small { font-size: 12px; color: var(--gray-semidark); }
+.pa-opciones strong { font-size: 16px; color: var(--green-dark); }
+.pa input[type="range"] { width: 100%; }
+.pa .pa-juntas { padding: 12px 0 0; margin: 0; background: none; box-shadow: none; border-radius: 0; } .pa .pa-juntas input[type="range"] { margin: 0; }
+.pa .pa-bloque.pa-juntas { padding: 12px 0 0; margin: 0; background: none; box-shadow: none; border: 0; border-top: 1px solid var(--gray-semilight); border-radius: 0; }
+
+.pa .si-juntas-fila { display: flex; justify-content: space-between; align-items: baseline; margin: 0; }
+.pa .si-juntas-fila strong { font-size: 20px; color: var(--gray-dark); }
