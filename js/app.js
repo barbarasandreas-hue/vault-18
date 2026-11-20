@@ -3481,7 +3481,7 @@
 
     // La posibilidad: el mismo departamento uniéndote a su grupo (otro camino).
     var grupoPosible = '';
-    if (solo && vivirAqui && !esMiCompra && !grupoCerrado(p) && r.cuposLibres > 0) {
+    if (solo && vivirAqui && !esMiCompra && !grupoCerrado(p) && r.cuposLibres > 0 && !pd.on.respaldo) {
       var pdG = plazoDepartamento(p);
       var menos = ufAPesos(pd.precioUF - pdG.precioUF), antes = (pd.meses || 0) - (pdG.meses || 0);
       if (menos > 0) grupoPosible = '<a class="tarjeta fila grupo-posible" href="#compra/proyecto/' + esc(p.id) + '/grupo-vivir">' + icono('i-grupo', 'icono-grande') +
@@ -3521,7 +3521,7 @@
         : '';
       var metaVivir = ctx === 'departamentos' && estado.modo === 'vivir' && puedeCambiarMeta();
       comprar = (metaVivir ? '<p class="aviso">Tu departamento es ' + esc(actual.nombre) + '.</p>' : '<p class="aviso">Ya estás comprando en ' + esc(actual.nombre) + '.</p>') +
-        (metaVivir && r.cuposLibres > 0 ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-cambiar-compra" aria-haspopup="dialog">' + textoElegirDepto({ tipo: 'proyecto', p: p, d: d, solo: solo, camino: caminoVista }).replace('Elegir este departamento', 'Cambiar mi departamento a este') + '</button>' :
+        (metaVivir && r.cuposLibres > 0 ? notaCambioCamino({ tipo: 'proyecto', p: p, d: d, solo: solo, camino: caminoVista }) + '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-cambiar-compra" aria-haspopup="dialog">Cambiar mi departamento a este</button>' :
         ctx === 'camino' && r.cuposLibres > 0
           ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-cambiar-compra">Cambiar mi compra a este departamento</button>' + reemplaza
           : '<a href="#compra" class="btn btn-secundario-dark btn-bloque">Ver tu compra</a>');
@@ -3533,9 +3533,8 @@
         ? accionVisita(p, solo)
         : (!estado.preguntasListas
           ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-me-alcanza">¿Me alcanza?</button>'
-          : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-llevar" aria-haspopup="dialog">' + (estado.modo === 'vivir' ? textoElegirDepto({ tipo: 'proyecto', p: p, d: d, solo: solo, camino: caminoVista }) : 'Elegir este departamento') + '</button>' +
-            (estado.modo === 'vivir' && estado.caminoElegido && estado.caminoElegido !== caminoDeItem({ tipo: 'proyecto', p: p, solo: solo, camino: caminoVista })
-              ? '<a class="enlace enlace-centro" href="#compra/caminos/' + caminoDeItem({ tipo: 'proyecto', p: p, solo: solo, camino: caminoVista }) + '">Cómo funciona este camino</a>' : ''));
+          : (estado.modo === 'vivir' ? notaCambioCamino({ tipo: 'proyecto', p: p, d: d, solo: solo, camino: caminoVista }) : '') +
+            '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-llevar" aria-haspopup="dialog">Elegir este departamento</button>');
     }
     if (ctx === 'inversiones') {
       comprar = r.faltaUF > 0 && !esMiCompra
@@ -3582,7 +3581,7 @@
                   '<p class="det-freno">' + textoPlanGrupo(g) + '</p>'; })()
               : '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>' + (pd.meses === null || pd.meses === undefined ? 'Todavía no te alcanza' : 'Sería tuyo <strong>aprox. ' + fechaLlaves(pd.meses + MESES_SI_A_LLAVES, hoyDemo()) + '</strong>') + '</span></p>' +
                 '<p class="det-freno">' + FRENO[pd.freno] + '</p>') +
-            (conjunto ? cierreGrupoHtml(p, 'en-azul') : '') + '</section>' +
+            (conjunto && !pd.on.respaldo ? cierreGrupoHtml(p, 'en-azul') : '') + '</section>' +
           pestanasDetalle(p, [
             ['numeros', 'Números',
               (pd.on.respaldo ? garantiaFamiliarDetalle(pd) : '') +
@@ -7471,7 +7470,7 @@
             '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(dividendo) + '</strong><small>con seguros' + SEP + ufDecimales(dividendo / SUPUESTOS.uf, 2) + '</small></div></div>' +
           '<p class="det-subsidio">' + icono('i-info') + '<span>Bci presta el 80' + NBSP + '% a 30 años. Un usado no tiene subsidio a la tasa ni garantía del Estado, por eso el pie es más alto.</span></p>') +
       (vivir ? (estado.usadoElegido === u.id && estado.caminoElegido === 'usados' ? '<p class="aviso">Es tu departamento: con él calculamos tu fecha.</p>'
-          : puedeCambiarMeta() ? '<button type="button" class="btn btn-primario btn-bloque usado-cta" id="btn-usado-meta" aria-haspopup="dialog">' + textoElegirDepto({ tipo: 'usado', u: u }) + '</button>' : '')
+          : puedeCambiarMeta() ? notaCambioCamino({ tipo: 'usado', u: u }) + '<button type="button" class="btn btn-primario btn-bloque usado-cta" id="btn-usado-meta" aria-haspopup="dialog">Elegir este departamento</button>' : '')
         : '<button type="button" class="btn btn-primario btn-bloque usado-cta" id="btn-usado-camino" aria-haspopup="dialog">Elegir este camino</button>') +
       '<p class="texto-apoyo texto-centro"><small>Ejemplo simulado' + SEP + 'fotos referenciales</small></p>';
     iniciarGalerias(cont);
@@ -8541,9 +8540,14 @@
     return item.tipo === 'usado' ? 'usados' : item.tipo === 'arriendo' ? 'arriendo-opcion' : (item.p.tipo === 'conjunto' && !item.solo ? 'grupo-vivir'
       : item.camino === 'familiar-vivir' || estado.caminoElegido === 'familiar-vivir' ? 'familiar-vivir' : 'individual-vivir');
   }
-  function textoElegirDepto(item) {
+  // 20-nov (Bárbara): el botón dice siempre lo mismo; si cambias de camino, lo dice una línea arriba (el texto largo no cabía).
+  function textoElegirDepto() { return 'Elegir este departamento'; }
+  function notaCambioCamino(item) {
     var cam = caminoDeItem(item);
-    return !estado.caminoElegido || estado.caminoElegido === cam ? 'Elegir este departamento' : 'Cambiarme a ' + primeraMinuscula(CAMINOS[cam].corto) + ' con este';
+    if (!estado.caminoElegido || estado.caminoElegido === cam || !CAMINOS[cam]) return '';
+    return '<p class="nota-cambio-camino" style="' + varsCamino(cam) + '"><span class="ncc-icono" aria-hidden="true">' + iconoCaminoD(cam) + '</span>' +
+      '<span class="ncc-txt">Con este, tu camino pasa a <strong>' + CAMINOS[cam].corto + '</strong></span>' +
+      '<a class="ncc-ver" href="#compra/caminos/' + cam + '">Ver<span class="oculto-visual"> cómo funciona ' + CAMINOS[cam].corto + '</span></a></p>';
   }
   function confirmarDeptoMeta(item, boton) {
     var cam = caminoDeItem(item);

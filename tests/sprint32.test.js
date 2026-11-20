@@ -103,7 +103,8 @@ test('S32-B5: Departamentos: una lista con Camino ▾ y Filtros; usados y arrien
 test('S32-B5 (D5): elegir un departamento no lo reserva y vuelve a Mi compra', () => {
   assert.match(app32, /function confirmarDeptoMeta\(item, boton\)/);
   assert.match(app32, /No lo reservas: con él calculamos tu fecha/);
-  assert.match(app32, /'Cambiarme a ' \+ primeraMinuscula\(CAMINOS\[cam\]\.corto\) \+ ' con este'/);
+  // 20-nov: el cambio de camino va en una línea sobre el botón (notaCambioCamino).
+  assert.match(app32, /Con este, tu camino pasa a <strong>' \+ CAMINOS\[cam\]\.corto/);
   const i = app32.indexOf('  function confirmarDeptoMeta(');
   const cuerpo = app32.slice(i, app32.indexOf('\n  }\n', i));
   assert.match(cuerpo, /location\.hash = '#compra'/);
