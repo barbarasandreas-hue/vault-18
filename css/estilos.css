@@ -4640,3 +4640,70 @@ img { color: transparent; }
 .det-tuyo { background: rgba(255,255,255,.16); color: var(--white); }
 .det-tuyo strong { color: var(--white); }
 .det-freno { color: var(--white); opacity: .9; }
+
+/* 20-nov: Tu compra cabe en la pantalla, sin scroll */
+#inicio-principal .encabezado h1 { margin-top: 8px; margin-bottom: 0; }
+#inicio-principal .noche.mi-compra-fecha { margin-top: 10px; padding: 14px 18px 16px; gap: 2px; }
+#inicio-principal .noche-plazo { font-size: 36px; line-height: 1.1; }
+#inicio-principal .noche .btn-comparar { margin-top: 8px; min-height: 44px; }
+#inicio-principal .camino-juego.metro { margin-top: 12px; padding-top: 12px; padding-bottom: 6px; }
+#inicio-principal .camino-juego-cab { margin-bottom: 4px; }
+#inicio-principal .metro-ahora { margin-top: 6px; }
+#inicio-principal .ahora-dentro { padding: 10px 14px 12px; gap: 2px; }
+#inicio-principal .ahora-dentro .h3 { font-size: 19px; margin: 4px 0 0; }
+#inicio-principal .ahora-dentro .siguiente-gana { margin: 0 0 8px; font-size: 14px; }
+#inicio-principal .ahora-dentro .btn { min-height: 44px; }
+#inicio-principal .metro-fechas { min-height: 36px; margin-top: 2px; }
+#inicio-principal .misiones-compra { margin-top: 12px; padding-top: 10px; padding-bottom: 10px; }
+#inicio-principal .mc-cab { margin-bottom: 4px; }
+#inicio-principal .mc-fila { min-height: 48px; padding-top: 6px; padding-bottom: 6px; }
+#inicio-principal .tu-edificio { margin-top: 12px; padding-top: 10px; padding-bottom: 10px; }
+#inicio-principal .tu-edificio-obra { width: 56px; height: 56px; }
+#inicio-principal .tu-edificio-texto small + small { display: none; }
+#inicio-principal .camino-juego-cab { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#inicio-principal .camino-juego-cab .metro-fechas { margin: 0 0 0 auto; min-height: 44px; display: inline-flex; align-items: center; font-size: 14px; }
+#inicio-principal .misiones-compra .mc-cab h2 { font-size: 15px; }
+#inicio-principal .misiones-compra { padding-top: 8px; padding-bottom: 8px; }
+#inicio-principal .mc-cab { margin: 0; min-height: 36px; }
+#inicio-principal .mc-cab h2 { margin: 0; }
+#inicio-principal .mc-fila { min-height: 44px; }
+#inicio-principal .noche-aprox { margin-top: 0; }
+/* Sin espacio sobrante abajo: Tu compra no se desplaza si todo cabe */
+.app:has(#pantalla-inicio:not([hidden])) { padding-bottom: 72px; }
+#pantalla-inicio { padding-bottom: 8px; }
+#inicio-principal .mc-compacta { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; }
+#inicio-principal .mc-compacta .mc-lista { flex: 1; min-width: 0; margin: 0; }
+#inicio-principal .mc-compacta .mc-fila { width: 100%; }
+#inicio-principal .mc-todas { flex: none; min-height: 44px; display: inline-flex; align-items: center; font-size: 14px; white-space: nowrap; }
+#inicio-principal .mc-dia { background: #D4E3F5; border-color: var(--blue-normal); }
+#inicio-principal .ahora-dentro .siguiente-gana { display: none; }
+#inicio-principal .ahora-dentro .h3 { margin-bottom: 8px; }
+#inicio-principal .noche-etiqueta { font-size: 13px; }
+#inicio-principal .camino-anterior { margin-top: 10px; padding: 6px 8px 6px 14px; min-height: 0; font-size: 14px; }
+#inicio-principal .camino-anterior .btn { min-height: 40px; }
+#inicio-principal .camino-juego-nota { margin: 4px 0 0; font-size: 13px; }
+.ar-depto { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 10px 12px; text-decoration: none; color: var(--gray-dark); }
+.ar-depto-foto { width: 64px; height: 64px; flex: none; border-radius: 12px; overflow: hidden; background: var(--gray-light); display: grid; place-items: center; }
+.ar-depto-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ar-depto-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ar-depto-texto small { font-size: 12px; color: var(--gray-semidark); }
+.ar-depto-texto strong { font-size: 15px; line-height: 1.2; }
+.ar-depto-pago { font-size: 13px; color: var(--gray-dark); }
+.ar-barra.mini { height: 6px; margin: 4px 0 2px; gap: 2px; }
+.ar-barra.mini i:first-child { background: #7DAAE0; }
+.ar-barra.mini i:last-child { background: var(--green-normal); }
+.ar-depto-leyenda { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--gray-semidark); white-space: nowrap; }
+.ar-depto-leyenda i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.ar-depto-leyenda i.arr { background: #7DAAE0; }
+.ar-depto-leyenda i.pie { background: var(--green-normal); margin-left: 6px; }
+.ar-depto .flecha-derecha { width: 20px; height: 20px; flex: none; transform: rotate(-90deg); color: var(--gray-semidark); }
+#inicio-principal .ahora-dentro .chip-ahora { display: none; }
+#inicio-principal .ahora-dentro .h3 { margin-top: 0; }
+#inicio-principal .metro-nombre { font-size: 11px; line-height: 1.2; }
+#inicio-principal .camino-anterior { font-size: 13px; gap: 8px; }
+#inicio-principal .camino-anterior .btn { min-height: 36px; padding: 0 14px; font-size: 12px; }
+.ar-depto { padding: 8px 10px; margin-top: 10px; }
+.ar-depto-foto { width: 56px; height: 56px; }
+#inicio-principal .misiones-compra { margin-top: 10px; }
+.app:has(#pantalla-inicio:not([hidden])) { padding-bottom: 64px; }
+#pantalla-inicio { padding-bottom: 4px; }
