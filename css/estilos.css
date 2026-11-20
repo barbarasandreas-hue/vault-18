@@ -4427,3 +4427,50 @@ img { color: transparent; }
 .dc-opcion { padding: 10px 8px; gap: 8px; }
 .dc-mini { width: 32px; height: 32px; }
 .dc-opcion-texto small { font-size: 11.5px; }
+
+/* S36: Tu pie está protegido (lienzo P31 y P32) */
+.pp-protegido { margin: 16px 0 0; border-radius: 20px; overflow: hidden; background: var(--white); box-shadow: 0 1px 2px rgba(55,71,79,.06), 0 8px 22px rgba(55,71,79,.10); }
+.pp-cab { position: relative; display: flex; align-items: center; gap: 12px; padding: 18px 18px 22px; background: linear-gradient(135deg, #1D5699 0%, #2772CC 100%); color: var(--white); overflow: hidden; }
+.pp-fondo { position: absolute; right: -24px; top: -18px; width: 140px; height: 140px; fill: none; stroke: var(--white); stroke-opacity: .14; stroke-width: 1.4; stroke-linejoin: round; }
+.pp-escudo { position: relative; width: 48px; height: 48px; flex: none; border-radius: 14px; background: rgba(255,255,255,.18); display: grid; place-items: center; }
+.pp-escudo svg { width: 26px; height: 26px; fill: none; stroke: var(--white); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.pp-cab > span:last-child { position: relative; display: flex; flex-direction: column; }
+.pp-cab h2 { margin: 0; font-size: 20px; font-weight: 600; color: var(--white); }
+.pp-cab small { font-size: 13px; opacity: .9; }
+.pp-lista { list-style: none; margin: 0; padding: 6px 16px 10px; }
+.pp-lista li { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+.pp-lista li + li { border-top: 1px solid var(--gray-semilight); }
+.pp-icono { width: 44px; height: 44px; flex: none; border-radius: 12px; display: grid; place-items: center; }
+.pp-icono.verde { background: var(--green-20, #D4E7D5); color: var(--green-dark); }
+.pp-icono.azul { background: #D4E3F5; color: var(--blue-dark); }
+.pp-icono b { font-size: 14px; font-weight: 800; letter-spacing: .02em; }
+.pp-icono svg { width: 22px; height: 22px; }
+.pp-texto { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.pp-texto strong { font-size: 15px; color: var(--gray-dark); }
+.pp-texto small { font-size: 13px; line-height: 1.35; color: var(--gray-semidark); }
+.pp-siempre { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #D4E7D5; color: var(--green-dark); white-space: nowrap; }
+.pp-siempre svg { width: 14px; height: 14px; }
+.pp-interruptor { flex: none; width: 52px; height: 32px; padding: 3px; border: 0; border-radius: 16px; background: var(--gray-neutral, #BBC5CA); cursor: pointer; display: flex; align-items: center; transition: background .2s; }
+.pp-interruptor span { width: 26px; height: 26px; border-radius: 50%; background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+.pp-interruptor[aria-checked="true"] { background: var(--green-normal); }
+.pp-interruptor[aria-checked="true"] span { transform: translateX(20px); }
+.pp-interruptor:disabled { cursor: default; opacity: 1; }
+
+/* S36: Tu compra en arriendo (lienzo P60 y P63) */
+.ar-chip-depto { position: relative; z-index: 1; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 28px; margin: 0 0 8px; padding: 4px 12px; border-radius: 999px; background: rgba(255,255,255,.18); color: var(--white); font-size: 13px; font-weight: 700; text-decoration: none; }
+.ar-chip-depto svg { width: 14px; height: 14px; }
+.ar-pago { margin: 16px 0 0; border-radius: 20px; overflow: hidden; background: var(--white); box-shadow: 0 1px 2px rgba(55,71,79,.06), 0 8px 22px rgba(55,71,79,.10); }
+.ar-pago-cab { position: relative; padding: 16px 18px 18px; background: linear-gradient(135deg, #1D5699 0%, #2772CC 75%, #7DAAE0 150%); color: var(--white); overflow: hidden; }
+.ar-pago-fondo { position: absolute; right: -18px; top: -14px; width: 120px; height: 120px; fill: none; stroke: var(--white); stroke-opacity: .14; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.ar-pago-cab p { position: relative; margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .92; }
+.ar-pago-cab .numero { position: relative; display: block; margin-top: 2px; font-size: 34px; font-weight: 700; line-height: 1.1; color: var(--white); }
+.ar-barra { position: relative; display: flex; gap: 3px; height: 12px; margin-top: 14px; border-radius: 999px; overflow: hidden; }
+.ar-barra i:first-child { background: #D4E3F5; }
+.ar-barra i:last-child { background: #A9D0AA; }
+.ar-monto { font-size: 16px; color: var(--gray-dark); white-space: nowrap; }
+.ar-monto.verde { color: var(--green-dark); }
+.ar-despues { margin: 0 16px 14px; padding: 12px 14px; border-radius: 14px; background: var(--gray-light); display: flex; align-items: center; gap: 12px; }
+.ar-despues-icono { width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--white); color: var(--blue-dark); display: grid; place-items: center; box-shadow: 0 2px 6px rgba(55,71,79,.12); }
+.ar-despues-icono svg { width: 22px; height: 22px; }
+.ar-despues .pp-texto small { order: -1; }
+.ar-uf { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #D4E3F5; color: var(--blue-dark); white-space: nowrap; }
