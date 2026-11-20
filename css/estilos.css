@@ -4676,3 +4676,5 @@ img { color: transparent; }
 .intro-escalera i:nth-child(3) { height: 94px; }
 .intro-escalera i:nth-child(4) { height: 122px; }
 .intro-escalera i:nth-child(5) { height: 150px; padding-top: 10px; }
+.intro-puntos li { align-items: center; }
+.intro-puntos li > span:last-child { white-space: nowrap; }
