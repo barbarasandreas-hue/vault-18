@@ -4664,3 +4664,15 @@ img { color: transparent; }
 .intro-escalera i:nth-child(4) { height: 78px; }
 .intro-escalera i:nth-child(5) { height: 96px; padding-top: 8px; }
 .intro { min-height: calc(100dvh - 24px); }
+/* 20-nov: la introducción con menos texto: solo los títulos */
+.intro { gap: 20px; }
+.intro-puntos { gap: 14px; margin-top: 8px; }
+.intro-puntos li { align-items: center; }
+.intro-puntos strong { font-size: 17px; }
+.intro-escalera { min-height: 150px; }
+.intro-escalera i { width: 40px; }
+.intro-escalera i:nth-child(1) { height: 38px; }
+.intro-escalera i:nth-child(2) { height: 66px; }
+.intro-escalera i:nth-child(3) { height: 94px; }
+.intro-escalera i:nth-child(4) { height: 122px; }
+.intro-escalera i:nth-child(5) { height: 150px; padding-top: 10px; }
