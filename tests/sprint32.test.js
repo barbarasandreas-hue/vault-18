@@ -55,7 +55,7 @@ test('S32-B2: el código ya no usa las direcciones viejas (solo las redirige)', 
 });
 test('S32-B3: Mi compra: camino horizontal, «Ahora», recorrido con fechas y sin obra ni deslizador', () => {
   assert.match(app32, /function caminoJuego\(h, celebra\)/);
-  assert.match(app32, /function bloqueRecorrido\(\)/);
+  assert.match(app32, /function bloqueRecorrido\((extra)?\)/);
   assert.match(app32, /function renderRecorrido\(\)/);
   // S33-C2: «Ver con fechas ›» va dentro de «Tus pasos».
   assert.match(app32, /Ver con fechas ›/);
