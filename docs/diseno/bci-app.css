@@ -1,0 +1,74 @@
+/* ===== Acabado «app real de Bci» (capa sobre estilos.css) ===== */
+:root { --sombra-1: 0 1px 2px rgba(55,71,79,.06), 0 4px 14px rgba(55,71,79,.07); --radio-t: 16px; }
+body { background: var(--gray-light); -webkit-font-smoothing: antialiased; font-feature-settings: "tnum" 1; }
+
+/* Barra superior: blanca, fija arriba, con el logo y el nombre del producto */
+.marca-app { position: sticky; top: 0; z-index: 20; margin: -24px -20px 4px; padding: 12px 20px; min-height: 56px; box-sizing: border-box;
+  display: flex; align-items: center; gap: 10px; background: var(--white); border-bottom: 1px solid var(--gray-semilight); }
+.marca-app .logo-bci { width: 46px; height: auto; }
+.marca-nombre { font-size: 15px; font-weight: 600; color: var(--gray-semidark); padding-left: 10px; border-left: 1px solid var(--gray-semilight); line-height: 20px; }
+.campana { top: 6px !important; right: 12px !important; width: 44px; height: 44px; background: transparent !important; box-shadow: none !important; border: 0 !important; z-index: 21; }
+.campana-numero { background: var(--red-normal) !important; min-width: 16px; height: 16px; font-size: 10px; line-height: 16px; top: 6px; right: 6px; }
+.encabezado .figuras, .figuras { display: none; }
+
+/* Títulos */
+.encabezado h1, .encabezado .h1, .encabezado .h2 { font-size: 26px; line-height: 1.25; font-weight: 400; color: var(--gray-dark); letter-spacing: -0.01em; margin-top: 12px; }
+.texto-apoyo { color: var(--gray-semidark); }
+h2.h5, .h5 { font-size: 17px; font-weight: 600; color: var(--gray-dark); letter-spacing: 0; }
+.h3 { font-weight: 400; }
+
+/* Tarjetas blancas, sin borde, con sombra suave */
+.tarjeta, .camino-juego, .misiones-compra, .tu-edificio, .si-juntas, .tarjeta-depto, .lista-deptos > li > a, .lista-deptos > li > article, .carrera-item, .lado, .conoce-tarjeta {
+  border: 0 !important; border-radius: var(--radio-t) !important; box-shadow: var(--sombra-1) !important; }
+
+/* El bloque azul protagonista: azul Bci plano, sin luna ni estrellas */
+.noche { background: var(--blue-dark) !important; border-radius: var(--radio-t) !important; box-shadow: 0 6px 18px rgba(29,86,153,.22); }
+.noche::before, .noche::after { display: none !important; }
+.noche-luna, .noche-estrella { display: none !important; }
+.noche-etiqueta { font-size: 14px; font-weight: 400; opacity: .9; }
+.noche-plazo { font-weight: 600 !important; letter-spacing: -0.02em; }
+.noche-aprox { opacity: .85; }
+.noche-pie { background: rgba(255,255,255,.14) !important; }
+
+/* Botones: píldoras del Bci Kit */
+.btn { min-height: 50px; border-radius: 48px; font-size: 14px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; box-shadow: none !important; }
+.btn-sm { min-height: 44px; }
+.btn-primario { background: var(--green-normal); border-color: var(--green-normal); color: var(--white); }
+.btn-terciario { background: var(--white); color: var(--gray-semidark); border: 1.6px solid var(--gray-neutral); }
+
+/* Chips */
+.chip, .sello, .chip-ahora { border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: .01em; }
+.chip-rango { background: var(--white); border: 1px solid var(--gray-semilight); box-shadow: var(--sombra-1); color: var(--blue-dark); }
+
+/* Enlaces */
+.enlace { color: var(--blue-normal); text-decoration: none; font-weight: 700; }
+.enlace:hover { text-decoration: underline; }
+
+/* Barra de pestañas: blanca, con indicador */
+.barra { background: var(--white) !important; border-top: 1px solid var(--gray-semilight) !important; box-shadow: 0 -2px 10px rgba(55,71,79,.05) !important; }
+.barra a { font-size: 11px !important; font-weight: 600; color: var(--gray-semidark) !important; }
+.barra a[aria-current="page"] { color: var(--green-dark) !important; }
+
+/* Fotos que no cargan: un bloque gris, sin el texto alternativo a la vista */
+img { color: transparent; }
+.galeria-foto img, .tarjeta-depto img, .lista-deptos img { background: linear-gradient(135deg, var(--gray-semilight), var(--gray-light)); }
+
+/* Sin efectos de prototipo */
+.confeti, .escalon-celebra { display: none !important; }
+
+/* Misiones como lista de banco */
+.mc-fila { border-radius: 12px; }
+.mc-icono { background: var(--blue-20) !important; color: var(--blue-dark); }
+
+/* Ventanas que suben desde abajo */
+.hoja-inferior:not(.hoja-pantalla) { border-radius: 20px 20px 0 0; box-shadow: 0 -8px 30px rgba(0,0,0,.18); }
+.hoja-fondo { background: rgba(28,40,46,.45) !important; }
+
+/* Pantallas de segundo nivel: «‹ Volver» como barra superior blanca, sin las figuras */
+.pantalla > div > .volver:first-child, .pantalla > .volver:first-child, .hoja-pantalla .pantalla-cab {
+  position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 4px; min-height: 56px; box-sizing: border-box;
+  margin: -24px -20px 8px; padding: 0 20px; background: var(--white); border-bottom: 1px solid var(--gray-semilight);
+  font-size: 16px; font-weight: 600; color: var(--blue-dark); }
+.hoja-pantalla .pantalla-cab { margin: -20px -20px 12px; }
+.volver::after { display: none !important; }
+.pantalla-cab .volver { margin: 0; }
