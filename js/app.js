@@ -593,9 +593,11 @@
   // S10: si para arrendar eligió un camino sin pie compartido (A solo o crédito al 80 %), en los proyectos
   // en grupo pone el 20 % y no hay inversionistas. El pie compartido siempre lleva inversionistas.
   var CAMINOS_PROPIOS = ['grupo-invertir', 'individual-invertir'];
+  var caminoMirado = null; // 20-nov: el camino desde el que se mira un detalle para arrendar (no cambia tu plan).
   function modoFinanciero(proyecto) {
-    if (estado.modo === 'arrendar' && estado.caminoElegido === 'familiar-invertir') return 'familiar';
-    if (estado.modo === 'arrendar' && proyecto.tipo === 'conjunto' && CAMINOS_PROPIOS.indexOf(estado.caminoElegido) !== -1) return 'propio';
+    var cam = caminoMirado || estado.caminoElegido;
+    if (estado.modo === 'arrendar' && cam === 'familiar-invertir') return 'familiar';
+    if (estado.modo === 'arrendar' && proyecto.tipo === 'conjunto' && CAMINOS_PROPIOS.indexOf(cam) !== -1) return 'propio';
     return estado.modo;
   }
 
@@ -3579,6 +3581,10 @@
   // 20-nov: mirado desde la garantía de un familiar (o desde la del Estado), el detalle usa el crédito de ese camino.
   function renderDetalle(id, ctx, caminoVista) {
     var c = caminoVista && CAMINOS[caminoVista];
+    if (estado.modo === 'arrendar' && c) {
+      caminoMirado = caminoVista;
+      try { return renderDetalleBase(id, ctx, caminoVista); } finally { caminoMirado = null; }
+    }
     if (!c || c.grupo || estado.modo !== 'vivir' || !!c.familiar === !!piezasOn().respaldo) return renderDetalleBase(id, ctx, caminoVista);
     var antes = estado.piezas;
     estado.piezas = Object.assign({}, antes, { respaldo: !!c.familiar });
@@ -3686,7 +3692,7 @@
         ? accionVisita(p, solo)
         : (!estado.preguntasListas
           ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-me-alcanza">¿Me alcanza?</button>'
-          : (estado.modo === 'vivir' ? notaCambioCamino({ tipo: 'proyecto', p: p, d: d, solo: solo, camino: caminoVista }) : '') +
+          : notaCambioCamino({ tipo: 'proyecto', p: p, d: d, solo: solo, camino: caminoVista }) +
             '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-llevar" aria-haspopup="dialog">Elegir este departamento</button>');
     }
     if (ctx === 'inversiones') {
@@ -3720,7 +3726,7 @@
       (arrendarAqui ? detalleArrendarHtml(p, r, e, {
           enGrupo: enGrupo, conjunto: conjunto, solo: solo, listaUF: d.listaUF,
           grupo: conjunto && bloqueGrupo ? bloqueGrupo + conoceGrupo : '',
-          extraNumeros: (solo && !esMiCompra && !grupoCerrado(p) && r.cuposLibres > 0 && ahorroGrupo > 0 ? grupoInvertirHtml(p, ahorroGrupo) : '') + (conjunto && !solo ? soloPosible : '')
+          extraNumeros: (solo && !esMiCompra && !grupoCerrado(p) && r.cuposLibres > 0 && ahorroGrupo > 0 && !(CAMINOS[caminoVista] && CAMINOS[caminoVista].familiar) ? grupoInvertirHtml(p, ahorroGrupo) : '') + (conjunto && !solo ? soloPosible : '')
         }) :
       vivirAqui
         // S17-F1 y F2: para vivir, el mismo plazo que Inicio y Tu pie, con cifras redondeadas.
@@ -3847,7 +3853,7 @@
     });
     // El único cruce entre pestañas: se confirma en una hoja.
     if ($('btn-llevar')) $('btn-llevar').addEventListener('click', function () {
-      if (estado.modo === 'vivir') { confirmarDeptoMeta({ tipo: 'proyecto', p: p, d: d, solo: solo, camino: caminoVista }, $('btn-llevar')); return; }
+      if (estado.modo === 'vivir' || ctx === 'departamentos') { confirmarDeptoMeta({ tipo: 'proyecto', p: p, d: d, solo: solo, camino: caminoVista }, $('btn-llevar')); return; }
       abrirHojaContenido('¿Elegir ' + esc(p.nombre) + ' para tu camino?',
         '<p class="texto-apoyo">Sigues con tu preaprobación en Tu compra.</p>' +
         '<button type="button" class="btn btn-primario btn-bloque" id="btn-llevar-si">Sí, elegir</button>', $('btn-llevar'), function () {
@@ -7121,7 +7127,11 @@
     'grupo-vivir': 'Te unes a otras personas para comprar, pero cada uno con su propio departamento.',
     usados: 'Bci te presta el 80' + NBSP + '%. Sirve para departamentos usados.',
     'arriendo-opcion': 'Te mudas ahora y parte de tu arriendo va a tu pie.',
-    'familiar-vivir': 'Un familiar deja el 10' + NBSP + '% en garantía y lo recupera. Tú juntas solo el 5' + NBSP + '%.'
+    'familiar-vivir': 'Un familiar deja el 10' + NBSP + '% en garantía y lo recupera. Tú juntas solo el 5' + NBSP + '%.',
+    'pie-compartido': 'Pones el 5' + NBSP + '% y unos inversionistas el 15' + NBSP + '%. Con el arriendo les compras su parte.',
+    'grupo-invertir': 'Te unes a otras personas para comprar en obra; cada uno con su departamento y su crédito.',
+    'individual-invertir': 'Bci te presta el 80' + NBSP + '% y tú juntas el 20' + NBSP + '%. Sirve para nuevos y usados.',
+    'familiar-invertir': 'Un familiar deja el 10' + NBSP + '% en garantía. Tú pones el 5' + NBSP + '% y el departamento es todo tuyo.'
   };
 
   // Los departamentos de un camino, sin cambiar el camino elegido (mirar no cambia el plan).
@@ -8401,9 +8411,11 @@
   // Mirar otro camino no cambia tu plan.
   var deptoCamino = null; // null = el de tu camino (o todos); 'todos' o un id de CAMINOS_COMPARAR
   var filtrosDeptos = { comuna: null, rango: true, dormitorios: null, estado: null, orden: 'antes', favoritos: false };
+  // 20-nov: Departamentos para arrendar funciona igual que para vivir, con los caminos para arrendar.
+  function caminosDeptos() { return estado.modo === 'arrendar' ? CAMINOS_ARRENDAR : CAMINOS_COMPARAR; }
   function caminoDeptosActual() {
-    if (deptoCamino) return deptoCamino;
-    return CAMINOS_COMPARAR.indexOf(estado.caminoElegido) !== -1 ? estado.caminoElegido : 'todos';
+    if (deptoCamino && (deptoCamino === 'todos' || caminosDeptos().indexOf(deptoCamino) !== -1)) return deptoCamino;
+    return caminosDeptos().indexOf(estado.caminoElegido) !== -1 ? estado.caminoElegido : 'todos';
   }
   // Los proyectos de un camino sin los filtros de la lista antigua (el rango y los demás se aplican aquí).
   function proyectosParaDeptos(id) {
@@ -8415,6 +8427,7 @@
   }
   // Todos los departamentos de un camino (o de todos), con lo que se necesita para filtrar y ordenar.
   function itemsDeptos(cam) {
+    if (estado.modo === 'arrendar') return itemsDeptosArrendar(cam);
     var items = [], perfil = perfilActual();
     var vistos = {};
     var proy = function (id) {
@@ -8450,6 +8463,28 @@
     });
     return items;
   }
+  // Para arrendar: los edificios de cada camino; la fecha es cuándo firmas (juntas tu pie + del sí a la firma, o la entrega).
+  function itemsDeptosArrendar(cam) {
+    var items = [], perfil = perfilActual(), vistos = {};
+    var ids = cam === 'todos' ? idsComparar() : [cam];
+    ids.forEach(function (id) {
+      proyectosParaDeptos(id).forEach(function (p) {
+        if (vistos[p.id]) return;
+        vistos[p.id] = true;
+        var d = departamentosDe(p.id)[0];
+        var c = CAMINOS[id];
+        var m = null;
+        try {
+          var n = numerosCamino(id, d.listaUF, perfil);
+          m = n.meses === null || !isFinite(n.meses) || !(n.evaluacion && n.evaluacion.cumple) ? null
+            : Math.max(n.meses + MESES_SI_A_LLAVES, c.grupo ? mesesParaEntrega(p) : 0);
+        } catch (e) { m = null; }
+        items.push({ tipo: 'proyecto', id: p.id, p: p, d: d, solo: p.tipo === 'conjunto' && !c.grupo, camino: id, comuna: p.comuna, uf: d.listaUF, dorm: d.dormitorios,
+          estado: p.tipo === 'conjunto' ? 'obra' : 'nuevo', tuyo: m });
+      });
+    });
+    return items;
+  }
   function filtrarDeptos(items, f) {
     var rango = rangoActual();
     var lista = items.filter(function (x) {
@@ -8471,10 +8506,10 @@
     return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + 'Firman todos en ' + g.fecha + '</p>' +
       (g.falta && !g.alcanza ? '<p class="tp-linea tp-cuota' + (g.posible ? '' : ' no') + '">' + (g.posible ? 'Junta ' + formatoRedondeado(g.cuota) + ' al mes para llegar' : 'No te alcanza: necesitarías ' + formatoRedondeado(g.cuota) + ' al mes') + '</p>' : '');
   }
-  function lineaTuyo(m) { return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + (m === null ? 'Todavía no te alcanza' : 'Sería tuyo ' + mesTuyo(m)) + '</p>'; }
+  function lineaTuyo(m) { return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + (m === null ? 'Todavía no te alcanza' : (estado.modo === 'arrendar' ? 'Firmas ' : 'Sería tuyo ') + mesTuyo(m)) + '</p>'; }
   function tarjetaDepto(x, i) {
     if (x.tipo === 'proyecto') {
-      var html = tarjetaProyecto(x.p, '#departamentos/', false, x.camino === 'familiar-vivir' ? '/familiar-vivir' : x.solo ? '/individual-vivir' : '');
+      var html = tarjetaProyecto(x.p, '#departamentos/', false, estado.modo === 'arrendar' ? '/' + x.camino : x.camino === 'familiar-vivir' ? '/familiar-vivir' : x.solo ? '/individual-vivir' : '');
       html = html.replace('<span class="tp-ver">', (x.grupo ? lineaGrupo(x.grupo) : lineaTuyo(x.tuyo)) + '<span class="tp-ver">');
       // S34: el que elegiste se marca en la lista.
       if (estado.compra && estado.compra.proyectoId === x.p.id) html = html.replace('<span class="tp-ver">', '<span class="chip chip-recomendado chip-tu-eleccion">' + icono('i-ok') + 'Tu elección</span><span class="tp-ver">');
@@ -8503,7 +8538,8 @@
       '<p class="usado-precio"><strong class="tp-cifra">' + formatoRedondeado(a.mensualidad) + '</strong> <span>' + formatoRedondeado(a.aporte) + ' va a tu pie</span></p>' +
       lineaTuyo(x.tuyo) + '</li>';
   }
-  var CORTO_DEPTOS = { todos: 'Todos', 'grupo-vivir': 'En grupo', 'individual-vivir': 'Con garantía', 'familiar-vivir': 'Con familiar', usados: 'Tradicional', 'arriendo-opcion': 'Arriendo' };
+  var CORTO_DEPTOS = { todos: 'Todos', 'grupo-vivir': 'En grupo', 'individual-vivir': 'Con garantía', 'familiar-vivir': 'Con familiar', usados: 'Tradicional', 'arriendo-opcion': 'Arriendo',
+    'pie-compartido': 'Pie compartido', 'grupo-invertir': 'En grupo', 'individual-invertir': 'Crédito 80' + NBSP + '%', 'familiar-invertir': 'Con familiar' };
   function nombreCaminoDeptos(cam) { return cam === 'todos' ? 'Todos los caminos' : nombreCamino(cam); }
   // S35 (19-nov, Bárbara, opción D del canvas): con camino elegido, arriba va el camino que estás mirando y
   // «Cambiar» despliega los demás ahí mismo. Sin camino, «¿Qué quieres explorar?» con las tarjetas de colores
@@ -8520,7 +8556,8 @@
   }
   // S36 (20-nov, Claude Design): colores de cada camino (sin rojo ni amarillo): suave, fuerte e ícono.
   var COLOR_CAMINO = { 'grupo-vivir': ['#D4E7D5', '#28892B', '#28652B'], 'individual-vivir': ['#D4E3F5', '#2772CC', '#1D5699'],
-    usados: ['#E2E8EA', '#546E7A', '#37474F'], 'arriendo-opcion': ['#E4EEFA', '#7DAAE0', '#2772CC'], 'familiar-vivir': ['#DCE2F0', '#3B5A9A', '#243B6B'], 'familiar-invertir': ['#DCE2F0', '#3B5A9A', '#243B6B'], todos: ['#E2E8EA', '#546E7A', '#37474F'] };
+    usados: ['#E2E8EA', '#546E7A', '#37474F'], 'arriendo-opcion': ['#E4EEFA', '#7DAAE0', '#2772CC'], 'familiar-vivir': ['#DCE2F0', '#3B5A9A', '#243B6B'], 'familiar-invertir': ['#DCE2F0', '#3B5A9A', '#243B6B'],
+    'pie-compartido': ['#D4E3F5', '#2772CC', '#1D5699'], 'grupo-invertir': ['#D4E7D5', '#28892B', '#28652B'], 'individual-invertir': ['#E2E8EA', '#546E7A', '#37474F'], todos: ['#E2E8EA', '#546E7A', '#37474F'] };
   function varsCamino(id) { var c = COLOR_CAMINO[id] || COLOR_CAMINO.todos; return '--cs:' + c[0] + ';--cf:' + c[1] + ';--ci:' + c[2]; }
   // S36: «¿Qué quieres explorar?» lleva a conocer los caminos para elegir uno (lienzo P20).
   function renderExplorarDeptos(cont) {
@@ -8533,7 +8570,7 @@
     var chips = function (id) { return (DATOS_CAMINO[id] || []).map(function (t) { return '<span class="ex-chip">' + t + '</span>'; }).join(''); };
     var linea = function (id) {
       var n = porId[id] || {};
-      var etq = id === 'arriendo-opcion' ? 'Te mudas' : 'Es tuyo';
+      var etq = id === 'arriendo-opcion' ? 'Te mudas' : esArrendarCamino(id) ? 'Firmas' : 'Es tuyo';
       var f = id === 'arriendo-opcion' ? n.mudas : n.tuyo;
       return etq + ' <b>' + mesCorto(f) + '</b>' + (n.pagas ? SEP + formatoRedondeado(n.pagas) + ' al mes' : '');
     };
@@ -8586,7 +8623,8 @@
   }
   // S36 (lienzo P23 y P24): el camino como una tarjeta de su color; «Cambiar» abre una grilla de 2 columnas adentro.
   var DEGRADE_CAMINO = { 'grupo-vivir': ['#28652B', '#28892B'], 'individual-vivir': ['#1D5699', '#2772CC'], usados: ['#37474F', '#546E7A'],
-    'arriendo-opcion': ['#1D5699', '#2772CC'], 'familiar-vivir': ['#243B6B', '#3B5A9A'], 'familiar-invertir': ['#243B6B', '#3B5A9A'], todos: ['#37474F', '#546E7A'] };
+    'arriendo-opcion': ['#1D5699', '#2772CC'], 'familiar-vivir': ['#243B6B', '#3B5A9A'], 'familiar-invertir': ['#243B6B', '#3B5A9A'],
+    'pie-compartido': ['#1D5699', '#2772CC'], 'grupo-invertir': ['#28652B', '#28892B'], 'individual-invertir': ['#37474F', '#546E7A'], todos: ['#37474F', '#546E7A'] };
   function bannerCaminoHtml(cam) {
     var tuyo = cam === estado.caminoElegido;
     var ids = ['todos'].concat(idsComparar());
@@ -8612,7 +8650,7 @@
     '</section>';
   }
   function renderDepartamentos() {
-    if (estado.modo !== 'vivir' || !estado.preguntasListas) return renderLista('explorar'); // D11: para arrendar, la lista de siempre.
+    if (!estado.preguntasListas) return renderLista('explorar'); // 20-nov: para arrendar, igual que para vivir.
     var cont = $('lista-contenido');
     if (!estado.caminoElegido && !deptoCamino && ingresoTotal(estado.sueldoPropio, estado.sueldoPareja)) return renderExplorarDeptos(cont);
     var cam = caminoDeptosActual();
@@ -8713,6 +8751,7 @@
   }
   // S32-B5 (D5): elegir un departamento es elegir tu meta. No lo reservas: con él calculamos tu fecha.
   function caminoDeItem(item) {
+    if (estado.modo === 'arrendar') return item.camino && CAMINOS[item.camino] ? item.camino : (item.p ? caminoParaProyecto(item.p) : estado.caminoElegido);
     return item.tipo === 'usado' ? 'usados' : item.tipo === 'arriendo' ? 'arriendo-opcion' : (item.p.tipo === 'conjunto' && !item.solo ? 'grupo-vivir'
       : item.camino === 'familiar-vivir' || estado.caminoElegido === 'familiar-vivir' ? 'familiar-vivir' : 'individual-vivir');
   }
@@ -9856,7 +9895,7 @@
     if (p[0] === 'compra' && p[1] === 'pie') return r('pie', 'pie', function () { location.replace('#pie'); });
     if (p[0] === 'departamentos') {
       // S32-B5: una sola lista con «Camino ▾» y «Filtros»; usados y arriendo con opción tienen su detalle aquí.
-      if (p[1] === 'camino') return r('proyectos', 'deptos', function () { if (p[2] === 'todos' || CAMINOS_COMPARAR.indexOf(p[2]) !== -1) deptoCamino = p[2]; renderDepartamentos(); });
+      if (p[1] === 'camino') return r('proyectos', 'deptos', function () { if (p[2] === 'todos' || caminosDeptos().indexOf(p[2]) !== -1) deptoCamino = p[2]; renderDepartamentos(); });
       if (p[1] === 'usado' && p[2]) return r('caminos', 'deptos', function () { renderUsado(p[2]); });
       if (p[1] === 'arriendo' && p[2]) return r('caminos', 'deptos', function () { renderArriendoDepto(p[2]); });
       if (p[1]) return r('proyecto', 'deptos', function () { renderDetalle(p[1], 'departamentos', CAMINOS[p[2]] ? p[2] : null); });
