@@ -7580,9 +7580,11 @@
   var DIBUJO_CAMINO = {
     'grupo-vivir': function () {
       return edificioDibujo(118, 34, 70, 86, '#1D5699', '#D4E3F5') +
-        '<rect x="118" y="22" width="70" height="12" fill="#BBC5CA"/>' +
-        '<path d="M206 120V18M206 18h-70M196 18l10-8 10 8" stroke="#736600" stroke-width="3" fill="none"/><rect x="146" y="22" width="12" height="6" fill="#FFE300"/>' +
-        personita(62, 122, '#28892B') + personita(84, 122, '#2772CC') + personita(240, 122, '#B20913') + personita(262, 122, '#28652B');
+        // S36: sin grúa; una insignia verde con el ícono de grupo, como el escudo del camino con garantía.
+        '<circle cx="236" cy="60" r="24" fill="#28892B"/><g fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round">' +
+        '<circle cx="236" cy="51" r="5"/><circle cx="223" cy="56" r="3.6"/><circle cx="249" cy="56" r="3.6"/>' +
+        '<path d="M227 72c0-5.5 4-9 9-9s9 3.5 9 9M215 70c0-3.4 2.2-6 5.2-6.4M257 70c0-3.4-2.2-6-5.2-6.4"/></g>' +
+        personita(62, 122, '#28892B') + personita(84, 122, '#2772CC') + personita(240, 122, '#546E7A') + personita(262, 122, '#28652B');
     },
     'individual-vivir': function () {
       return edificioDibujo(110, 26, 80, 94, '#2772CC', '#FFF9CC') +
@@ -7591,7 +7593,7 @@
     },
     usados: function () {
       return edificioDibujo(70, 40, 76, 80, '#546E7A', '#FFE933') + edificioDibujo(150, 56, 56, 64, '#37474F', '#FFF499') +
-        '<circle cx="246" cy="70" r="14" fill="none" stroke="#B20913" stroke-width="5"/><path d="M256 80l26 26M268 92l6-6M276 100l6-6" stroke="#B20913" stroke-width="5" stroke-linecap="round"/>';
+        '<circle cx="246" cy="70" r="14" fill="none" stroke="#546E7A" stroke-width="5"/><path d="M256 80l26 26M268 92l6-6M276 100l6-6" stroke="#546E7A" stroke-width="5" stroke-linecap="round"/>';
     },
     'arriendo-opcion': function () {
       return edificioDibujo(150, 30, 74, 90, '#28652B', '#D4E7D5') +
@@ -7605,7 +7607,7 @@
   DIBUJO_CAMINO['individual-invertir'] = DIBUJO_CAMINO.usados;
   DIBUJO_CAMINO['pie-compartido'] = function () {
     return edificioDibujo(116, 30, 80, 90, '#2772CC', '#FFF9CC') + personita(70, 122, '#28892B') +
-      personita(240, 122, '#B20913') + personita(264, 122, '#28652B') +
+      personita(240, 122, '#546E7A') + personita(264, 122, '#28652B') +
       '<circle cx="226" cy="62" r="12" fill="#FFE300"/><circle cx="250" cy="50" r="12" fill="#FFE933"/>' +
       '<path d="M220 62h12M244 50h12" stroke="#736600" stroke-width="3" stroke-linecap="round"/>';
   };
@@ -7976,7 +7978,7 @@
     var f = filtrosDeptos;
     return (f.comuna ? 1 : 0) + (f.rango ? 0 : 1) + (f.dormitorios !== null ? 1 : 0) + (f.estado ? 1 : 0) + (f.orden !== 'antes' ? 1 : 0) + (f.favoritos ? 1 : 0);
   }
-  function lineaTuyo(m) { return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + (m === null ? 'Con este, todavía no te alcanza' : 'Con este, es tuyo ' + mesTuyo(m)) + '</p>'; }
+  function lineaTuyo(m) { return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + (m === null ? 'Todavía no te alcanza' : 'Sería tuyo ' + mesTuyo(m)) + '</p>'; }
   function tarjetaDepto(x, i) {
     if (x.tipo === 'proyecto') {
       var html = tarjetaProyecto(x.p, '#departamentos/', false, x.solo ? '/individual-vivir' : '');
@@ -8016,34 +8018,67 @@
   var COLOR_DEPTOS = { todos: 'gris', 'grupo-vivir': 'verde', 'individual-vivir': 'azul', usados: 'amarillo', 'arriendo-opcion': 'rojo' };
   var deptosAbierto = false;
   function nombreCaminoD(id) { return id === 'todos' ? 'Todos los caminos' : id === 'usados' ? NOMBRE_USADOS : nombreCamino(id); }
-  function iconoCaminoD(id) { return id === 'todos' ? icono('i-proyectos') : iconoCamino(id === 'usados' ? 'individual-invertir' : id); }
+  // S36: el mismo ícono por camino en toda la app: grupo, escudo (garantía), casa (tradicional) y llave (arriendo).
+  var ICONO_CAMINO_D = { 'individual-vivir': 'M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3zM8.5 12l2.5 2.5 4.5-5', usados: 'M3.5 11L12 4l8.5 7M5.5 9.5V20h13V9.5M10 20v-5h4v5' };
+  function iconoCaminoD(id) {
+    if (id === 'todos') return icono('i-proyectos');
+    if (ICONO_CAMINO_D[id]) return '<svg class="camino-dibujo" viewBox="0 0 24 24" aria-hidden="true"><path d="' + ICONO_CAMINO_D[id] + '"/></svg>';
+    return iconoCamino(id);
+  }
+  // S36 (20-nov, Claude Design): colores de cada camino (sin rojo ni amarillo): suave, fuerte e ícono.
+  var COLOR_CAMINO = { 'grupo-vivir': ['#D4E7D5', '#28892B', '#28652B'], 'individual-vivir': ['#D4E3F5', '#2772CC', '#1D5699'],
+    usados: ['#E2E8EA', '#546E7A', '#37474F'], 'arriendo-opcion': ['#E4EEFA', '#7DAAE0', '#2772CC'], todos: ['#E2E8EA', '#546E7A', '#37474F'] };
+  function varsCamino(id) { var c = COLOR_CAMINO[id] || COLOR_CAMINO.todos; return '--cs:' + c[0] + ';--cf:' + c[1] + ';--ci:' + c[2]; }
+  // S36: «¿Qué quieres explorar?» lleva a conocer los caminos para elegir uno (lienzo P20).
   function renderExplorarDeptos(cont) {
     var ids = idsComparar();
     var nums = ids.map(function (id) { return numerosComparar(id); });
+    var porId = {}; nums.forEach(function (n) { porId[n.id] = n; });
     var paraTi = paraTiComparar(nums);
-    if (paraTi) ids = [paraTi].concat(ids.filter(function (k) { return k !== paraTi; }));
-    var orden = { 'individual-vivir': 0, 'grupo-vivir': 1, usados: 2, 'arriendo-opcion': 3 };
+    var reco = paraTi || ids[0];
     var porque = { antes: 'llegas antes', menos: 'pagas menos al mes', ya: 'te mudas antes' };
+    var chips = function (id) { return (DATOS_CAMINO[id] || []).map(function (t) { return '<span class="ex-chip">' + t + '</span>'; }).join(''); };
+    var linea = function (id) {
+      var n = porId[id] || {};
+      var etq = id === 'arriendo-opcion' ? 'Te mudas' : 'Es tuyo';
+      var f = id === 'arriendo-opcion' ? n.mudas : n.tuyo;
+      return etq + ' <b>' + mesCorto(f) + '</b>' + (n.pagas ? SEP + formatoRedondeado(n.pagas) + ' al mes' : '');
+    };
+    var favs = guardadosProyectos();
     cont.innerHTML =
       '<header class="encabezado">' + MARCA + '<h1 id="titulo-proyectos" class="h2" tabindex="-1">¿Qué quieres explorar?</h1>' +
-        '<p class="texto-apoyo">Tienes ' + ids.length + ' caminos para llegar a tu departamento</p></header>' +
+        '<p class="texto-apoyo">Hay ' + ids.length + ' caminos para llegar a tu departamento. Conoce cada uno y elige el tuyo.</p></header>' +
       '<fieldset class="prioridades"><legend class="h6">¿Qué te importa más?</legend><div class="prioridades-chips">' +
         PRIORIDADES.map(function (p) {
           return '<button type="button" class="chip chip-filtro" data-prioridad-deptos="' + p[0] + '" aria-pressed="' + (estado.prioridad === p[0]) + '">' + p[1] + '</button>';
         }).join('') + '</div></fieldset>' +
-      '<ul class="caminos-botones">' + ids.map(function (id) {
-        var datos = (DATOS_CAMINO[id] || []).map(function (t) { return '<span class="chip">' + t + '</span>'; }).join('');
-        var sello = id === paraTi ? '<span class="sello-para-ti">' + icono('i-ok') + (estado.prioridad ? 'Para ti: ' + porque[estado.prioridad] : 'Te lo recomendamos') + '</span>' : '';
-        var k = filtrarDeptos(itemsDeptos(id), filtrosDeptos).length;
-        return '<li><button type="button" class="camino-boton color-' + orden[id] + '" data-explorar-camino="' + id + '">' +
-          '<span class="camino-boton-cabeza"><span class="camino-datos">' + sello + datos + '</span></span>' +
-          '<span class="camino-boton-cuerpo"><strong class="h4">' + nombreCaminoD(id) + '</strong>' +
-            '<span class="camino-boton-texto">' + (TEXTO_EXPLORAR[id] || '') + '</span>' +
-            '<span class="camino-boton-texto"><small>' + plural(k, 'departamento', 'departamentos') + (filtrosDeptos.rango && rangoActual() ? ' en tu rango' : '') + '</small></span></span>' +
-          '<span class="camino-boton-ir" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></button></li>';
-      }).join('') + '</ul>' +
-      '<div class="acciones"><button type="button" class="btn btn-terciario btn-bloque" data-explorar-camino="todos">Ver todos los departamentos</button>' +
-        '<a class="enlace" href="#compra/caminos">Comparar caminos ›</a></div>';
+      '<section class="ex-reco" aria-labelledby="ex-reco-nombre" style="' + varsCamino(reco) + '">' +
+        '<div class="ex-reco-dibujo">' + ilustracionCamino(reco) +
+          '<span class="ex-sello">' + icono('i-ok') + (paraTi ? (estado.prioridad ? 'Para ti: ' + porque[estado.prioridad] : 'Te lo recomendamos') : 'Para empezar') + '</span></div>' +
+        '<div class="ex-reco-cuerpo"><div class="ex-chips">' + chips(reco) + '</div>' +
+          '<h2 class="ex-reco-nombre" id="ex-reco-nombre">' + nombreCaminoD(reco) + '</h2>' +
+          '<p class="ex-reco-texto">' + (TEXTO_EXPLORAR[reco] || '') + '</p>' +
+          '<a class="btn btn-primario btn-bloque" href="' + rutaCamino(reco) + '">Conocer este camino</a>' +
+          '<button type="button" class="enlace ex-ver-deptos" data-explorar-camino="' + reco + '">Ver sus departamentos ›</button></div></section>' +
+      '<section class="ex-otros" aria-labelledby="ex-otros-titulo"><h2 class="h5" id="ex-otros-titulo">Otros caminos</h2><ul>' +
+        ids.filter(function (id) { return id !== reco; }).map(function (id) {
+          return '<li><a class="ex-camino" href="' + rutaCamino(id) + '" style="' + varsCamino(id) + '">' +
+            '<span class="ex-camino-franja" aria-hidden="true"><span class="ex-camino-icono">' + iconoCaminoD(id) + '</span></span>' +
+            '<span class="ex-camino-texto"><strong>' + nombreCaminoD(id) + '</strong><span class="ex-chips">' + chips(id) + '</span>' +
+              '<small>' + linea(id) + '</small></span>' +
+            '<span class="ex-conocer">Conocer<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></a></li>';
+        }).join('') + '</ul>' +
+        '<a class="btn btn-secundario btn-bloque ex-comparar" href="#compra/caminos">Comparar los ' + ids.length + ' caminos</a></section>' +
+      (favs.length ? '<section class="ex-favs" aria-labelledby="ex-favs-titulo"><div class="ex-favs-cab"><h2 class="h5" id="ex-favs-titulo">' + icono('i-corazon') + 'Tus favoritos</h2>' +
+          '<a class="enlace" href="#compra/caminos/guardados">Ver todos ›</a></div><ul class="ex-favs-pista">' +
+        favs.map(function (p) {
+          var foto = fotoEdificio(p), d = departamentosDe(p.id)[0];
+          return '<li><a class="ex-fav" href="#departamentos/' + esc(p.id) + '">' +
+            (foto ? '<img src="' + foto + '" alt="' + esc(p.nombre) + ' (foto referencial)" loading="lazy" width="800" height="600">' : '<span class="ex-fav-foto">' + fachada(p) + '</span>') +
+            '<span class="ex-fav-texto"><small>' + (p.tipo === 'conjunto' ? 'Compra en grupo' : p.tipo === 'venta' ? 'Terminado' : NOMBRE_TIPO[p.tipo]) + '</small>' +
+            '<strong>' + esc(p.nombre) + '</strong><span>' + (d ? formatoRedondeado(ufAPesos(d.listaUF)) : '') + '</span></span></a></li>';
+        }).join('') + '</ul></section>' : '') +
+      '<div class="acciones"><button type="button" class="btn btn-terciario btn-bloque" data-explorar-camino="todos">Ver todos los departamentos</button></div>';
     cont.querySelectorAll('[data-explorar-camino]').forEach(function (b) {
       b.addEventListener('click', function () { deptoCamino = b.dataset.explorarCamino; deptosAbierto = false; renderDepartamentos(); $('titulo-proyectos').focus(); });
     });
@@ -8056,24 +8091,31 @@
       });
     });
   }
+  // S36 (lienzo P23 y P24): el camino como una tarjeta de su color; «Cambiar» abre una grilla de 2 columnas adentro.
+  var DEGRADE_CAMINO = { 'grupo-vivir': ['#28652B', '#28892B'], 'individual-vivir': ['#1D5699', '#2772CC'], usados: ['#37474F', '#546E7A'],
+    'arriendo-opcion': ['#1D5699', '#2772CC'], todos: ['#37474F', '#546E7A'] };
   function bannerCaminoHtml(cam) {
     var tuyo = cam === estado.caminoElegido;
     var ids = ['todos'].concat(idsComparar());
     var sinCamino = !estado.caminoElegido;
-    return '<section class="deptos-camino-d color-' + COLOR_DEPTOS[cam] + '" aria-labelledby="deptos-camino-nombre">' +
-      '<div class="dcd-fila">' +
-        '<span class="dcd-icono" aria-hidden="true">' + iconoCaminoD(cam) + '</span>' +
-        '<span class="dcd-texto"><small>' + (tuyo ? 'Tu camino' : 'Estás mirando' + (sinCamino ? '' : ' (no cambia tu plan)')) + '</small>' +
+    var g = DEGRADE_CAMINO[cam] || DEGRADE_CAMINO.todos;
+    var datos = (DATOS_CAMINO[cam] || []).map(function (t) { return '<span>' + t + '</span>'; }).join('');
+    return '<section class="dc-tarjeta" aria-labelledby="deptos-camino-nombre" style="background: linear-gradient(120deg, ' + g[0] + ' 0%, ' + g[1] + ' 70%, #7DAAE0 160%)">' +
+      (deptosAbierto ? '' : '<span class="dc-dibujo" aria-hidden="true">' + iconoCaminoD(cam) + '</span>') +
+      '<div class="dc-fila">' +
+        '<span class="dc-texto"><small>' + (tuyo ? 'Tu camino' : 'Estás mirando') + '</small>' +
           '<strong id="deptos-camino-nombre">' + nombreCaminoD(cam) + '</strong></span>' +
-        '<button type="button" class="btn btn-secundario-dark btn-sm" id="btn-deptos-cambiar"' + (sinCamino ? '' : ' aria-expanded="' + deptosAbierto + '" aria-controls="deptos-otros"') + '>' + (deptosAbierto ? 'Listo' : 'Cambiar') + '</button>' +
+        '<button type="button" class="dc-cambiar" id="btn-deptos-cambiar"' + (sinCamino ? '' : ' aria-expanded="' + deptosAbierto + '" aria-controls="deptos-otros"') + '>' + (deptosAbierto ? 'Listo' : 'Cambiar') + '</button>' +
       '</div>' +
-      (deptosAbierto && !sinCamino ? '<ul class="dcd-otros" id="deptos-otros">' + ids.map(function (id) {
+      (!deptosAbierto && datos ? '<div class="dc-datos">' + datos + (tuyo || sinCamino ? '' : '<span>No cambia tu plan</span>') + '</div>' : '') +
+      (deptosAbierto && !sinCamino ? '<ul class="dc-grilla" id="deptos-otros">' + ids.map(function (id) {
           var k = filtrarDeptos(itemsDeptos(id), filtrosDeptos).length;
-          return '<li><button type="button" class="dcd-opcion color-' + COLOR_DEPTOS[id] + '" data-filtro-camino="' + id + '" aria-pressed="' + (id === cam) + '">' +
-            '<span class="dcd-mini" aria-hidden="true">' + iconoCaminoD(id) + '</span>' +
-            '<span><strong>' + (CORTO_DEPTOS[id] || nombreCaminoD(id)) + '</strong><small>' + plural(k, 'departamento', 'departamentos') + '</small>' + (id === estado.caminoElegido ? '<small class="dcd-tuyo">Tu camino</small>' : '') + '</span></button></li>';
+          return '<li><button type="button" class="dc-opcion" data-filtro-camino="' + id + '" aria-pressed="' + (id === cam) + '" style="' + varsCamino(id) + '">' +
+            '<span class="dc-mini" aria-hidden="true">' + iconoCaminoD(id) + '</span>' +
+            '<span class="dc-opcion-texto"><strong>' + (CORTO_DEPTOS[id] || nombreCaminoD(id)) + '</strong><small>' + plural(k, 'departamento', 'departamentos') + '</small>' +
+            (id === estado.caminoElegido ? '<small class="dc-tuyo">Tu camino</small>' : '') + '</span></button></li>';
         }).join('') +
-        '<li><a class="dcd-opcion dcd-comparar" href="#compra/caminos">Comparar caminos ›</a></li></ul>' : '') +
+        '<li><a class="dc-comparar" href="#compra/caminos">Comparar caminos ›</a></li></ul>' : '') +
     '</section>';
   }
   function renderDepartamentos() {
@@ -8085,12 +8127,10 @@
     var n = nFiltrosDeptos();
     var rango = rangoActual();
     cont.innerHTML =
-      '<header class="encabezado">' + MARCA + '<h1 id="titulo-proyectos" class="h2" tabindex="-1">Departamentos</h1>' +
+      '<header class="encabezado">' + MARCA + '<div class="titulo-con-boton"><h1 id="titulo-proyectos" class="h2" tabindex="-1">Departamentos</h1>' +
+        '<button type="button" class="btn btn-terciario btn-sm" id="btn-deptos-filtros" aria-haspopup="dialog">' + icono('i-filtro') + 'Filtros' + (n ? ' (' + n + ')' : '') + '</button></div>' +
         '<p class="texto-apoyo">' + plural(lista.length, 'departamento', 'departamentos') + (filtrosDeptos.rango && rango ? ' en tu rango' : '') + '</p></header>' +
       bannerCaminoHtml(cam) +
-      (deptosAbierto && estado.caminoElegido ? '' : '<div class="deptos-controles deptos-controles-d">' +
-        '<button type="button" class="btn btn-terciario btn-sm" id="btn-deptos-filtros" aria-haspopup="dialog">' + icono('i-filtro') + 'Filtros' + (n ? ' (' + n + ')' : '') + '</button>' +
-      '</div>') +
       (lista.length
         ? '<ul class="lista-proyectos lista-deptos" id="lista-proyectos">' + lista.map(tarjetaDepto).join('') + '</ul>'
         : '<div class="vacio"><svg aria-hidden="true"><use href="#i-proyectos"/></svg><h2 class="h3">Ninguno con estos filtros</h2>' +
