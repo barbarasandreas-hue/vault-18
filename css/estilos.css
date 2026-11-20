@@ -4706,3 +4706,37 @@ img { color: transparent; }
 .plan-grupo.sube, .plan-grupo.no { font-weight: 600; }
 .tp-cuota { font-size: 13px; font-weight: 600; color: var(--blue-dark); }
 .tp-cuota.no { color: var(--gray-semidark); }
+/* 20-nov: garantía de un familiar en el detalle del departamento */
+.det-camino-chip { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 8px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.18); color: var(--white); font-size: 12px; font-weight: 600; }
+.det-camino-chip svg { width: 16px; height: 16px; }
+.gf { display: flex; flex-direction: column; gap: 10px; padding: 16px; margin-bottom: 12px; border-radius: 16px; background: var(--white); box-shadow: var(--sombra-1); border-top: 4px solid #3B5A9A; }
+.gf h2 { margin: 0; }
+.gf-que { margin: 0; font-size: 14px; line-height: 1.4; color: var(--gray-dark); }
+.gf-sub { margin: 4px 0 0; font-size: 12px; font-weight: 600; color: var(--gray-semidark); }
+.gf-barra { display: flex; height: 14px; border-radius: 7px; overflow: hidden; gap: 2px; background: var(--white); }
+.gf-barra span { display: block; height: 100%; }
+.gf-barra .tu, .gf-parte.tu .gf-punto { background: var(--green-normal); }
+.gf-barra .sub, .gf-parte.sub .gf-punto { background: var(--gray-neutral); }
+.gf-barra .bci, .gf-parte.bci .gf-punto { background: var(--blue-normal); }
+.gf-partes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.gf-parte { display: grid; grid-template-columns: 10px 1fr; column-gap: 8px; align-items: start; padding: 10px; border-radius: 12px; background: var(--gray-light); }
+.gf-punto { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; }
+.gf-parte-txt { display: flex; flex-direction: column; }
+.gf-parte-txt small, .gf-nota { font-size: 12px; color: var(--gray-semidark); }
+.gf-parte-txt strong { font-size: 16px; white-space: nowrap; color: var(--gray-dark); }
+.gf-nota { grid-column: 2; }
+.gf-familiar { display: grid; grid-template-columns: 40px 1fr; gap: 10px; padding: 12px; border: 1.6px dashed #3B5A9A; border-radius: 14px; background: #F1F4FA; }
+.gf-fam-icono { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #3B5A9A; color: var(--white); }
+.gf-fam-icono svg { width: 22px; height: 22px; }
+.gf-fam-txt { display: flex; flex-direction: column; }
+.gf-fam-txt small { font-size: 12px; color: var(--gray-semidark); }
+.gf-fam-txt strong { font-size: 18px; color: #243B6B; }
+.gf-linea { grid-column: 1 / -1; list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); position: relative; }
+.gf-linea::before { content: ""; position: absolute; top: 7px; left: 16%; right: 16%; height: 2px; background: #3B5A9A; }
+.gf-linea li { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; font-size: 12px; color: var(--gray-semidark); }
+.gf-linea li::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--white); border: 3px solid #3B5A9A; box-sizing: border-box; margin-bottom: 4px; }
+.gf-linea li:last-child::before { background: #3B5A9A; }
+.gf-linea b { font-size: 13px; color: #243B6B; }
+.gf-ojo { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 13px; line-height: 1.35; color: var(--gray-dark); }
+.gf-ojo svg { width: 18px; height: 18px; flex: none; color: var(--gray-semidark); }
+.gf-enlace { align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; font-weight: 600; }

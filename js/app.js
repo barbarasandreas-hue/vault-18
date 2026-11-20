@@ -3394,6 +3394,37 @@
     if (estado.pasos.preaprobado) { guardarSubpaso('resultado'); location.hash = '#compra/postular/resultado'; }
     else location.hash = '#compra/postular/datos';
   }
+  // 20-nov (Bárbara): en el detalle, qué es la garantía de un familiar, diagramado: cómo se paga el precio
+  // (tu pie y el crédito Bci del 95 %) y, aparte, la garantía que deja tu familiar y cuándo la recupera.
+  function garantiaFamiliarDetalle(pd) {
+    var precio = ufAPesos(pd.precioUF), pie = pd.pie, subsidio = ufAPesos(pd.subsidioUF || 0), credito = ufAPesos(pd.creditoUF);
+    var rf = respaldoFamiliar(pd.precioUF);
+    var anios = Math.round(rf.mesesLibera / 12);
+    var pct = function (v) { return Math.max(3, v / precio * 100).toFixed(1) + '%'; };
+    var parte = function (clase, etq, monto, nota) {
+      return '<li class="gf-parte ' + clase + '"><span class="gf-punto" aria-hidden="true"></span><span class="gf-parte-txt"><small>' + etq + '</small><strong>' + formatoRedondeado(monto) + '</strong></span><small class="gf-nota">' + nota + '</small></li>';
+    };
+    return '<section class="gf" aria-labelledby="gf-titulo">' +
+      '<h2 class="h5" id="gf-titulo">Cómo funciona aquí</h2>' +
+      '<p class="gf-que">Tu familiar <strong>no te regala el dinero</strong>: lo deja en Bci como garantía. Así Bci te presta más y tú juntas menos pie.</p>' +
+      '<p class="gf-sub">Cómo se paga el precio (' + formatoRedondeado(precio) + ')</p>' +
+      '<div class="gf-barra" aria-hidden="true"><span class="tu" style="width:' + pct(pie) + '"></span>' +
+        (subsidio > 0 ? '<span class="sub" style="width:' + pct(subsidio) + '"></span>' : '') +
+        '<span class="bci" style="flex:1"></span></div>' +
+      '<ul class="gf-partes">' +
+        parte('tu', 'Tú pones', pie, 'Pie del 5' + NBSP + '%') +
+        (subsidio > 0 ? parte('sub', 'Subsidio', subsidio, 'Del Estado') : '') +
+        parte('bci', 'Bci te presta', credito, 'Crédito del 95' + NBSP + '%') +
+      '</ul>' +
+      '<div class="gf-familiar">' +
+        '<span class="gf-fam-icono" aria-hidden="true">' + icono('i-grupo') + '</span>' +
+        '<div class="gf-fam-txt"><small>Tu familiar deja en Bci</small><strong>' + formatoRedondeado(rf.deposito) + '</strong><small>10' + NBSP + '% del precio' + SEP + 'con intereses</small></div>' +
+        '<ol class="gf-linea"><li><b>Hoy</b><span>Lo deja</span></li><li><b>' + (anios === 1 ? '1 año' : 'En ' + anios + ' años') + '</b><span>Tu deuda baja al 80' + NBSP + '%</span></li><li><b>Vuelve</b><span>Lo recupera</span></li></ol>' +
+      '</div>' +
+      '<p class="gf-ojo">' + icono('i-alerta') + '<span>Si no pagas y hay remate, tu familiar puede perder su garantía. Es una propuesta: hoy no existe en Chile.</span></p>' +
+      '<a class="enlace gf-enlace" href="#compra/ficha/respaldo-familiar/familiar">Cómo lo vive tu familiar ›</a>' +
+    '</section>';
+  }
   // 20-nov: mirado desde la garantía de un familiar (o desde la del Estado), el detalle usa el crédito de ese camino.
   function renderDetalle(id, ctx, caminoVista) {
     var c = caminoVista && CAMINOS[caminoVista];
@@ -3490,7 +3521,7 @@
         : '';
       var metaVivir = ctx === 'departamentos' && estado.modo === 'vivir' && puedeCambiarMeta();
       comprar = (metaVivir ? '<p class="aviso">Tu departamento es ' + esc(actual.nombre) + '.</p>' : '<p class="aviso">Ya estás comprando en ' + esc(actual.nombre) + '.</p>') +
-        (metaVivir && r.cuposLibres > 0 ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-cambiar-compra" aria-haspopup="dialog">' + textoElegirDepto({ tipo: 'proyecto', p: p, d: d, solo: solo }).replace('Elegir este departamento', 'Cambiar mi departamento a este') + '</button>' :
+        (metaVivir && r.cuposLibres > 0 ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-cambiar-compra" aria-haspopup="dialog">' + textoElegirDepto({ tipo: 'proyecto', p: p, d: d, solo: solo, camino: caminoVista }).replace('Elegir este departamento', 'Cambiar mi departamento a este') + '</button>' :
         ctx === 'camino' && r.cuposLibres > 0
           ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-cambiar-compra">Cambiar mi compra a este departamento</button>' + reemplaza
           : '<a href="#compra" class="btn btn-secundario-dark btn-bloque">Ver tu compra</a>');
@@ -3502,9 +3533,9 @@
         ? accionVisita(p, solo)
         : (!estado.preguntasListas
           ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-me-alcanza">¿Me alcanza?</button>'
-          : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-llevar" aria-haspopup="dialog">' + (estado.modo === 'vivir' ? textoElegirDepto({ tipo: 'proyecto', p: p, d: d, solo: solo }) : 'Elegir este departamento') + '</button>' +
-            (estado.modo === 'vivir' && estado.caminoElegido && estado.caminoElegido !== caminoDeItem({ tipo: 'proyecto', p: p, solo: solo })
-              ? '<a class="enlace enlace-centro" href="#compra/caminos/' + caminoDeItem({ tipo: 'proyecto', p: p, solo: solo }) + '">Cómo funciona este camino</a>' : ''));
+          : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-llevar" aria-haspopup="dialog">' + (estado.modo === 'vivir' ? textoElegirDepto({ tipo: 'proyecto', p: p, d: d, solo: solo, camino: caminoVista }) : 'Elegir este departamento') + '</button>' +
+            (estado.modo === 'vivir' && estado.caminoElegido && estado.caminoElegido !== caminoDeItem({ tipo: 'proyecto', p: p, solo: solo, camino: caminoVista })
+              ? '<a class="enlace enlace-centro" href="#compra/caminos/' + caminoDeItem({ tipo: 'proyecto', p: p, solo: solo, camino: caminoVista }) + '">Cómo funciona este camino</a>' : ''));
     }
     if (ctx === 'inversiones') {
       comprar = r.faltaUF > 0 && !esMiCompra
@@ -3542,6 +3573,7 @@
         // S33-C7: «Es tuyo» se calcula igual que en el resto de la app (tu pie + 3 meses hasta las llaves).
         // S36 (lienzo P22, P25 y P62): menos scroll. Arriba el precio y cuándo sería tuyo; abajo, pestañas.
         ? '<section class="det-precio" aria-labelledby="det-llaves">' +
+            (pd.on.respaldo ? '<span class="det-camino-chip">' + icono('i-grupo') + 'Con la garantía de un familiar</span>' : '') +
             '<p class="det-etq">Precio' + (enGrupo ? ' con descuento del grupo' : p.tipo === 'venta' && piezasValidas(piezasOn()).iva ? ' sin IVA' : '') + '</p>' +
             '<div class="det-precio-fila"><strong class="det-precio-num">' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong>' +
               (enGrupo && r.ahorro > 0 ? '<span class="det-ahorras">Ahorras ' + formatoRedondeado(r.ahorro) + '</span>' : '') + '</div>' +
@@ -3553,6 +3585,7 @@
             (conjunto ? cierreGrupoHtml(p, 'en-azul') : '') + '</section>' +
           pestanasDetalle(p, [
             ['numeros', 'Números',
+              (pd.on.respaldo ? garantiaFamiliarDetalle(pd) : '') +
               '<div class="det-cifras"><div><small>Juntas antes de firmar</small><strong>' + formatoRedondeado(pd.meta) + '</strong><small>pie y gastos</small></div>' +
                 '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(pd.dividendo) + '</strong><small>con seguros' + SEP + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2) + '</small></div></div>' +
               '<p class="det-subsidio">' + icono('i-info') + '<span>Si se acaba el subsidio a la tasa, el dividendo sube a <strong>' + formatoRedondeado(pd.dividendoSinSubsidio) + '</strong> (' + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + ').</span></p>' +
@@ -3638,7 +3671,7 @@
     var botonCambiar = $('btn-cambiar-compra');
     if (botonCambiar) {
       botonCambiar.addEventListener('click', function () {
-        if (ctx === 'departamentos' && estado.modo === 'vivir') { confirmarDeptoMeta({ tipo: 'proyecto', p: p, d: d, solo: solo }, botonCambiar); return; }
+        if (ctx === 'departamentos' && estado.modo === 'vivir') { confirmarDeptoMeta({ tipo: 'proyecto', p: p, d: d, solo: solo, camino: caminoVista }, botonCambiar); return; }
         conCarga(botonCambiar, function () {
           guardarCompra(solo ? { proyectoId: p.id, departamentoId: d.id, paso: 1, sinGrupo: true } : { proyectoId: p.id, departamentoId: d.id, paso: 1 });
           irAPostular();
@@ -3657,7 +3690,7 @@
     });
     // El único cruce entre pestañas: se confirma en una hoja.
     if ($('btn-llevar')) $('btn-llevar').addEventListener('click', function () {
-      if (estado.modo === 'vivir') { confirmarDeptoMeta({ tipo: 'proyecto', p: p, d: d, solo: solo }, $('btn-llevar')); return; }
+      if (estado.modo === 'vivir') { confirmarDeptoMeta({ tipo: 'proyecto', p: p, d: d, solo: solo, camino: caminoVista }, $('btn-llevar')); return; }
       abrirHojaContenido('¿Elegir ' + esc(p.nombre) + ' para tu camino?',
         '<p class="texto-apoyo">Sigues con tu preaprobación en Tu compra.</p>' +
         '<button type="button" class="btn btn-primario btn-bloque" id="btn-llevar-si">Sí, elegir</button>', $('btn-llevar'), function () {
