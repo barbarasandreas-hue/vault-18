@@ -4700,3 +4700,9 @@ img { color: transparent; }
 .ll-ojo { color: var(--gray-semidark); }
 .ll-elegir { margin-top: auto; min-height: 44px; border-color: var(--green-normal); color: var(--green-dark); }
 .ll-columnas { margin: 0; } .lado-a-lado { box-shadow: var(--sombra-1); }
+/* 20-nov: plan del grupo (todos firman el mismo día) */
+.plan-grupo { position: relative; z-index: 1; display: flex; gap: 8px; align-items: flex-start; margin: 8px 0 0; font-size: 14px; line-height: 1.35; color: var(--white); }
+.plan-grupo svg { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+.plan-grupo.sube, .plan-grupo.no { font-weight: 600; }
+.tp-cuota { font-size: 13px; font-weight: 600; color: var(--blue-dark); }
+.tp-cuota.no { color: var(--gray-semidark); }

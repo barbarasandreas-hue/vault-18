@@ -2410,6 +2410,27 @@
   var pasoInicio = null;
   function fechaCorta(iso) { return formatoFecha(iso).replace(/ de \d{4}$/, ''); }
   // Con compra: cuándo llegas según lo que falta del pie y la entrega del edificio.
+  // 20-nov (regla del grupo): los cupos cierran en una fecha fija y todos firman el mismo día, cuando se entrega el edificio.
+  // «Es tuyo» es esa fecha, igual para todos. Tu pie se paga en cuotas hasta ese día: la app dice cuánto juntar al mes
+  // y, si no se puede (te quedaría menos del 40 % de tu sueldo para vivir), lo dice.
+  function planGrupo(p) {
+    var pd = plazoDepartamento(p);
+    var meta = pd.meta;
+    var falta = Math.max(0, meta - ahorradoTuPie(meta));
+    var meses = mesesParaEntrega(p);
+    var cuota = meses > 0 ? Math.ceil(falta / meses / 1000) * 1000 : falta;
+    var pf = perfilActual();
+    var ingreso = ingresoTotal(pf.sueldoPropio, pf.sueldoPareja) || 0;
+    var maximo = ingreso ? Math.max(0, ingreso * (1 - MINIMO_PARA_VIVIR) - (pf.arriendoActual || 0) - (pf.otrasCuotas || 0)) : Infinity;
+    return { meses: meses, fecha: fechaLlaves(meses, hoyDemo()), meta: meta, falta: falta, cuota: cuota,
+      alcanza: falta === 0 || (estado.ahorroMensual || 0) >= cuota, posible: cuota <= maximo };
+  }
+  function textoPlanGrupo(g) {
+    return g.falta === 0 ? 'Ya tienes tu pie para la firma.'
+      : g.alcanza ? 'Con lo que juntas hoy llegas con tu pie a la firma.'
+      : g.posible ? 'Para llegar con tu pie, sube tu cuota a ' + formatoRedondeado(g.cuota) + ' al mes.'
+      : 'No alcanzas: necesitarías juntar ' + formatoRedondeado(g.cuota) + ' al mes. Mira otro edificio u otro camino.';
+  }
   // 20-nov: la compra en grupo tiene una fecha fija; se ve siempre (en Tu compra y en el detalle).
   function cierreGrupoHtml(p, clase) {
     if (!p || p.tipo !== 'conjunto' || !p.cierre) return '';
@@ -2421,6 +2442,18 @@
       '<span>' + texto + (d > 0 ? '<b>' + (d === 1 ? 'Queda 1 día' : 'Quedan ' + d + ' días') + '</b>' : '') + '</span></p>';
   }
   function cuandoLlegasCompra(p, sinObra) {
+    if (estado.modo === 'vivir' && p.tipo === 'conjunto' && !compraSinGrupo(p) && mesesParaEntrega(p) > 0) {
+      var g = planGrupo(p);
+      return '<section class="noche sin-slider' + (sinObra ? ' mi-compra-fecha' : '') + '" aria-labelledby="titulo-cuando">' +
+        '<span class="noche-luna" aria-hidden="true"></span>' +
+        '<p class="noche-etiqueta" id="titulo-cuando">Firman todos en</p>' +
+        '<strong class="numero noche-plazo' + claseLargo(textoMeses(g.meses)) + '">' + textoMeses(g.meses) + '</strong>' +
+        '<p class="noche-sub">Es tuyo en ' + g.fecha + ': el mismo día para todo el grupo</p>' +
+        '<p class="plan-grupo' + (g.alcanza ? ' ok' : g.posible ? ' sube' : ' no') + '">' + icono(g.alcanza ? 'i-check' : 'i-info') + '<span>' + textoPlanGrupo(g) + '</span></p>' +
+        cierreGrupoHtml(p, 'en-azul') +
+        (sinObra ? '' : tarjetaObra(true)) +
+      '</section>';
+    }
     var meta = metaCompra(p);
     var pl = plazoTuPie(p, meta);
     var mesesPie = mesesParaMeta(Math.max(0, meta - ahorradoTuPie(meta)), estado.ahorroMensual) || 0;
@@ -3500,8 +3533,12 @@
             '<p class="det-etq">Precio' + (enGrupo ? ' con descuento del grupo' : p.tipo === 'venta' && piezasValidas(piezasOn()).iva ? ' sin IVA' : '') + '</p>' +
             '<div class="det-precio-fila"><strong class="det-precio-num">' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong>' +
               (enGrupo && r.ahorro > 0 ? '<span class="det-ahorras">Ahorras ' + formatoRedondeado(r.ahorro) + '</span>' : '') + '</div>' +
-            '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>' + (pd.meses === null || pd.meses === undefined ? 'Todavía no te alcanza' : 'Sería tuyo <strong>aprox. ' + fechaLlaves(pd.meses + MESES_SI_A_LLAVES, hoyDemo()) + '</strong>') + '</span></p>' +
-            '<p class="det-freno">' + FRENO[pd.freno] + '</p>' + (conjunto ? cierreGrupoHtml(p, 'en-azul') : '') + '</section>' +
+            (enGrupo && mesesParaEntrega(p) > 0
+              ? (function () { var g = planGrupo(p); return '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>Firman todos en <strong>' + g.fecha + '</strong>: ese día es tuyo</span></p>' +
+                  '<p class="det-freno">' + textoPlanGrupo(g) + '</p>'; })()
+              : '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>' + (pd.meses === null || pd.meses === undefined ? 'Todavía no te alcanza' : 'Sería tuyo <strong>aprox. ' + fechaLlaves(pd.meses + MESES_SI_A_LLAVES, hoyDemo()) + '</strong>') + '</span></p>' +
+                '<p class="det-freno">' + FRENO[pd.freno] + '</p>') +
+            (conjunto ? cierreGrupoHtml(p, 'en-azul') : '') + '</section>' +
           pestanasDetalle(p, [
             ['numeros', 'Números',
               '<div class="det-cifras"><div><small>Juntas antes de firmar</small><strong>' + formatoRedondeado(pd.meta) + '</strong><small>pie y gastos</small></div>' +
@@ -6266,6 +6303,20 @@
     var minimo = 100000, paso = 50000, maximo = Math.max(1000000, Math.ceil(ingreso * 0.4 / paso) * paso);
     return { minimo: minimo, paso: paso, maximo: maximo, valor: Math.min(maximo, Math.max(minimo, estado.ahorroMensual || 300000)) };
   }
+  // 20-nov: en grupo la fecha no se mueve (todos firman el mismo día): el deslizador dice si llegas con tu pie a esa firma.
+  function grupoDelPie() {
+    var p = proyectoCompra();
+    return p && estado.modo === 'vivir' && p.tipo === 'conjunto' && !compraSinGrupo(p) && mesesParaEntrega(p) > 0 ? p : null;
+  }
+  function textoPieTuyo(v, m) {
+    var p = grupoDelPie();
+    if (p) {
+      var g = planGrupo(p);
+      return g.falta === 0 || v >= g.cuota ? 'Llegas con tu pie a la firma: <strong>' + g.fecha + '</strong>'
+        : 'No llegas a la firma de ' + g.fecha + ': junta <strong>' + formatoRedondeado(g.cuota) + '</strong> al mes';
+    }
+    return m === null ? 'Todavía no te alcanza' : 'Es tuyo <strong>' + mesTuyo(m) + '</strong>';
+  }
   function deslizadorPie(dentro) {
     if (estado.modo !== 'vivir' || esArriendo()) return '';
     var l = limitesMensual();
@@ -6273,7 +6324,7 @@
     return '<' + (dentro ? 'div class="si-juntas pie-si-juntas dentro"' : 'section class="tarjeta bloque si-juntas pie-si-juntas" aria-labelledby="titulo-si-juntas"') + '>' +
       '<p class="si-juntas-fila"><label for="rango-mensual" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-mensual">' + formatoRedondeado(l.valor) + '</strong></p>' +
       '<input type="range" id="rango-mensual" min="' + l.minimo + '" max="' + l.maximo + '" step="' + l.paso + '" value="' + l.valor + '" aria-valuetext="' + formatoRedondeado(l.valor) + ' al mes: es tuyo ' + mesTuyo(m) + '">' +
-      '<p class="pie-tuyo" id="pie-tuyo" aria-live="polite">' + icono('i-calendario') + '<span>' + (m === null ? 'Todavía no te alcanza' : 'Es tuyo <strong>' + mesTuyo(m) + '</strong>') +
+      '<p class="pie-tuyo" id="pie-tuyo" aria-live="polite">' + icono('i-calendario') + '<span>' + textoPieTuyo(l.valor, m) +
         (estado.caminoElegido && CAMINOS_COMPARAR.indexOf(estado.caminoElegido) !== -1 ? '' : '<small>Con crédito tradicional</small>') + '</span></p>' +
       '<p class="delta-plazo" id="delta-plazo" aria-live="polite"></p>' +
     (dentro ? '</div>' : '</section>');
@@ -6288,8 +6339,8 @@
     rm.addEventListener('input', function () {
       var v = pintar(), m = tuyoConMensual(v);
       $('valor-mensual').textContent = formatoRedondeado(v);
-      $('pie-tuyo').querySelector('span').innerHTML = (m === null ? 'Todavía no te alcanza' : 'Es tuyo <strong>' + mesTuyo(m) + '</strong>');
-      var dp = $('delta-plazo'); dp.innerHTML = textoDelta(base, m);
+      $('pie-tuyo').querySelector('span').innerHTML = textoPieTuyo(v, m);
+      var dp = $('delta-plazo'); dp.innerHTML = grupoDelPie() ? '' : textoDelta(base, m);
       dp.className = 'delta-plazo' + (m !== null && base !== null && m < base ? ' sube' : m !== null && base !== null && m > base ? ' baja' : '');
       rm.setAttribute('aria-valuetext', formatoRedondeado(v) + ' al mes: es tuyo ' + mesTuyo(m));
     });
@@ -8129,8 +8180,11 @@
         var d = departamentosDe(p.id)[0];
         var solo = p.tipo === 'conjunto' && id !== 'grupo-vivir';
         var m = null;
+        var g = null;
         try { var pd = plazoDepartamento(p, null, solo); m = razonJusto(pd) || pd.meses === null ? null : pd.meses + MESES_SI_A_LLAVES; } catch (e) { m = null; }
-        items.push({ tipo: 'proyecto', id: p.id, p: p, d: d, solo: solo, camino: id, comuna: p.comuna, uf: d.listaUF, dorm: d.dormitorios, estado: p.tipo === 'conjunto' ? 'obra' : 'nuevo', tuyo: m });
+        // 20-nov: en grupo, la fecha es la firma de todos (la entrega del edificio).
+        if (p.tipo === 'conjunto' && !solo && estado.modo === 'vivir' && mesesParaEntrega(p) > 0) { try { g = planGrupo(p); m = g.posible ? g.meses : null; } catch (e) { g = null; } }
+        items.push({ tipo: 'proyecto', id: p.id, p: p, d: d, solo: solo, camino: id, comuna: p.comuna, uf: d.listaUF, dorm: d.dormitorios, estado: p.tipo === 'conjunto' ? 'obra' : 'nuevo', tuyo: m, grupo: g });
       });
     };
     if (cam === 'todos' || cam === 'grupo-vivir') { if (perfil.hayGrupo || cam === 'grupo-vivir') proy('grupo-vivir'); }
@@ -8165,11 +8219,15 @@
     var f = filtrosDeptos;
     return (f.comuna ? 1 : 0) + (f.rango ? 0 : 1) + (f.dormitorios !== null ? 1 : 0) + (f.estado ? 1 : 0) + (f.orden !== 'antes' ? 1 : 0) + (f.favoritos ? 1 : 0);
   }
+  function lineaGrupo(g) {
+    return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + 'Firman todos en ' + g.fecha + '</p>' +
+      (g.falta && !g.alcanza ? '<p class="tp-linea tp-cuota' + (g.posible ? '' : ' no') + '">' + (g.posible ? 'Junta ' + formatoRedondeado(g.cuota) + ' al mes para llegar' : 'No te alcanza: necesitarías ' + formatoRedondeado(g.cuota) + ' al mes') + '</p>' : '');
+  }
   function lineaTuyo(m) { return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + (m === null ? 'Todavía no te alcanza' : 'Sería tuyo ' + mesTuyo(m)) + '</p>'; }
   function tarjetaDepto(x, i) {
     if (x.tipo === 'proyecto') {
       var html = tarjetaProyecto(x.p, '#departamentos/', false, x.solo ? '/individual-vivir' : '');
-      html = html.replace('<span class="tp-ver">', lineaTuyo(x.tuyo) + '<span class="tp-ver">');
+      html = html.replace('<span class="tp-ver">', (x.grupo ? lineaGrupo(x.grupo) : lineaTuyo(x.tuyo)) + '<span class="tp-ver">');
       // S34: el que elegiste se marca en la lista.
       if (estado.compra && estado.compra.proyectoId === x.p.id) html = html.replace('<span class="tp-ver">', '<span class="chip chip-recomendado chip-tu-eleccion">' + icono('i-ok') + 'Tu elección</span><span class="tp-ver">');
       return html;
