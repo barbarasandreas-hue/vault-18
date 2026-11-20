@@ -6362,8 +6362,8 @@
       grupoEnPieHtml() +
       '<button type="button" class="tarjeta fila fila-regalo" id="btn-pedir-regalo" aria-haspopup="dialog"><span class="regalo-circulo" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="1" fill="none" stroke="#B20913" stroke-width="2"/><path d="M3 7h18v3H3zM12 7v13M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0" fill="none" stroke="#B20913" stroke-width="2" stroke-linejoin="round"/></svg></span>' +
         '<span><strong>Regalo para tu pie</strong><small>Comparte un enlace con tu familia</small><span class="regalo-compartir">Compartir ›</span></span></button>' +
-      // S36 (lienzo P31 y P32): cabecera azul con el escudo y las protecciones como una lista de banco.
-      '<section class="pie-protegido protegido-visual pp-protegido" aria-labelledby="titulo-protegido">' +
+      // S36 (lienzo P31 y P32): cabecera azul con el escudo y las protecciones como una lista de banco (reemplaza a protegido-visual).
+      '<section class="pp-protegido" aria-labelledby="titulo-protegido">' +
         '<div class="pp-cab"><svg class="pp-fondo" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/></svg>' +
           '<span class="pp-escudo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span>' +
           '<span><h2 id="titulo-protegido">Tu pie está protegido</h2><small>En tu cuenta de vivienda Bci, a tu nombre</small></span></div>' +
