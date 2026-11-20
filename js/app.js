@@ -2621,7 +2621,7 @@
       '<div class="mc-cab"><h2 class="h5" id="titulo-mc">Misiones</h2><a class="enlace" href="#compra/misiones">Ver todas ›</a></div>' +
       '<ul class="mc-lista">' + filas + '</ul></section>';
   }
-  var ICONO_MISION_ID = { familiar: 'i-grupo', ds1: 'i-casa', rsh: 'i-documento', 'ahorro-auto': 'i-calendario', 'bajo-llave': 'i-candado', equipo: 'i-grupo', cuota: 'i-alcancia' };
+  var ICONO_MISION_ID = { fogaes: 'i-escudo', familiar: 'i-grupo', ds1: 'i-casa', rsh: 'i-documento', 'ahorro-auto': 'i-calendario', 'bajo-llave': 'i-candado', equipo: 'i-grupo', cuota: 'i-alcancia' };
   // Lo que va bajo la fecha en Tu compra.
   function bloqueRecorrido(extra) {
     var s = fotoPasos(), h = hitoActual(s), hoy = hoyDemo();
@@ -3394,6 +3394,80 @@
     if (estado.pasos.preaprobado) { guardarSubpaso('resultado'); location.hash = '#compra/postular/resultado'; }
     else location.hash = '#compra/postular/datos';
   }
+  // 20-nov (Bárbara): «Formas de pagar menos» en el detalle de un departamento: la garantía del Estado (FOGAES)
+  // y el subsidio DS1, con cuánto cambian lo que juntas y lo que pagas al mes, tus requisitos y un botón
+  // para sumarlos a tus pasos como misión.
+  function formasPagarMenos(p, solo) {
+    var pd = plazoDepartamento(p, null, solo);
+    var perfil = perfilPiezas(), depto = deptoDeProyecto(p), hoy = hoyDemo();
+    var precio = pd.precioUF, ps = estado.pasos;
+    var formas = [];
+    // Garantía del Estado: Bci presta 90 % en vez del 80 % del crédito tradicional.
+    if (!pd.on.respaldo) {
+      var meta80 = ufAPesos(precio * (1 - SUPUESTOS_PIEZAS.creditoSiempre) + gastosUF(precio) - pd.subsidioUF);
+      var div80 = ufAPesos(cuotaFija(precio * SUPUESTOS_PIEZAS.creditoSiempre - pd.subsidioUF, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
+      formas.push({ id: 'fogaes', sigla: 'FOGAES', nombre: 'Garantía del Estado', que: 'El Estado respalda tu crédito: Bci te presta hasta el 90' + NBSP + '% y juntas un pie del 10' + NBSP + '% (en vez del 20' + NBSP + '%).',
+        juntas: pd.meta - meta80, pagas: pd.dividendo - div80, incluido: true,
+        req: [['Departamento nuevo, en primera venta', true], ['De hasta UF 6.000', precio <= 6000], ['Primera vez que la usas', null]],
+        enPasos: !!ps.fogaesAgregado, lista: !!ps.fogaesCalifica });
+    }
+    // Subsidio DS1: dinero del Estado para tu pie.
+    var conDS1 = pd.on.subsidio, bloq = conDS1 ? null : bloqueoPieza('subsidio', pd.on, depto, perfil);
+    var otro = calcularPiezas(perfil, Object.assign({}, pd.on, { subsidio: !conDS1 }), depto, hoy);
+    var con = conDS1 ? pd : otro, sin = conDS1 ? otro : pd;
+    var ds1 = ds1Para(precio, perfil);
+    formas.push({ id: 'ds1', sigla: 'DS1', nombre: 'Subsidio DS1', que: 'El Estado pone dinero en tu pie' + (ds1.montoUF ? ': unas ' + formatoUF(Math.round(ds1.montoUF)) + ' para este departamento' : '') + '. Se postula en el Minvu.',
+      juntas: bloq ? null : con.meta - sin.meta, pagas: bloq ? null : con.dividendo - sin.dividendo, incluido: conDS1, bloqueo: bloq,
+      espera: !bloq && ds1.mesesCuenta ? 'Tu cuenta de vivienda debe tener ' + ds1.mesesCuenta + ' meses' : '',
+      req: [['Departamento de hasta UF 4.000', precio <= 4000], ['Tu sueldo bajo el tope del tramo', !(bloq && /sueldo/i.test(bloq.razon))],
+        ['Registro Social de Hogares', ps.rsh ? true : null], ['No tener otra vivienda', null]],
+      enPasos: !!(conDS1 || ps.ds1Agregado || ps.ds1Postulado), lista: !!ps.ds1Postulado });
+    // Subsidio a la tasa: ya va en el dividendo.
+    formas.push({ id: 'tasa', sigla: '%', nombre: 'Subsidio a la tasa', que: 'Baja la tasa de tu crédito en un departamento nuevo. Ya va en tu dividendo, mientras queden cupos.',
+      juntas: 0, pagas: pd.dividendo - pd.dividendoSinSubsidio, incluido: true, auto: true, req: [] });
+    return formas;
+  }
+  function efectoPill(etq, v, alMes) {
+    if (v === null || v === undefined || Math.abs(v) < 1000) return '<span class="fp-efecto igual"><small>' + etq + '</small><strong>Igual</strong></span>';
+    var baja = v < 0;
+    return '<span class="fp-efecto ' + (baja ? 'baja' : 'sube') + '"><small>' + etq + '</small><strong>' + (baja ? '−' : '+') + formatoRedondeado(Math.abs(v)) + (alMes ? ' al mes' : '') + '</strong></span>';
+  }
+  function abrirBajarPrecio(p, solo, caminoVista, boton) {
+    var c = caminoVista && CAMINOS[caminoVista], antes = estado.piezas, formas;
+    if (c && !c.grupo && estado.modo === 'vivir') estado.piezas = Object.assign({}, antes, { respaldo: !!c.familiar });
+    try { formas = formasPagarMenos(p, solo); } finally { estado.piezas = antes; }
+    var marca = function (ok) { return '<span class="fp-marca ' + (ok === true ? 'ok' : ok === false ? 'no' : 'q') + '" aria-hidden="true">' + (ok === true ? icono('i-check') : ok === false ? '✕' : '?') + '</span>'; };
+    var html = '<p class="texto-apoyo">Cuánto cambia lo que juntas y lo que pagas al mes en este departamento. Súmalas a tus pasos para revisar si cumples y pedirlas.</p>' +
+      '<ul class="fp-lista">' + formas.map(function (f) {
+        var estadoF = f.auto ? '<span class="fp-chip">Va incluido</span>'
+          : f.bloqueo ? '<span class="fp-chip gris">' + f.bloqueo.razon + '</span>'
+          : f.lista ? '<span class="fp-chip verde">' + icono('i-check') + 'Lista</span>'
+          : f.enPasos ? '<span class="fp-chip verde">' + icono('i-check') + 'En tus pasos</span>' : '';
+        return '<li class="fp-forma"><div class="fp-cab"><span class="fp-sigla" aria-hidden="true">' + f.sigla + '</span><h3 class="h6">' + f.nombre + '</h3>' + estadoF + '</div>' +
+          '<p class="fp-que">' + f.que + '</p>' +
+          (f.bloqueo ? '<p class="fp-bloqueo">' + icono('i-info') + '<span>' + f.bloqueo.como + '</span></p>'
+            : '<div class="fp-efectos">' + (f.auto ? '' : efectoPill(f.incluido && f.id === 'fogaes' ? 'Juntas, frente al 20' + NBSP + '%' : 'Juntas', f.juntas)) +
+              efectoPill(f.auto ? 'Tu dividendo baja' : 'Pagas', f.auto ? -Math.abs(f.pagas) : f.pagas, true) + '</div>') +
+          (f.espera ? '<p class="fp-espera">' + icono('i-calendario') + f.espera + '</p>' : '') +
+          (f.req.length ? '<ul class="fp-req">' + f.req.map(function (r) { return '<li>' + marca(r[1]) + '<span>' + r[0] + (r[1] === null ? ' <small>(lo revisas en la misión)</small>' : '') + '</span></li>'; }).join('') + '</ul>' : '') +
+          (f.auto || f.bloqueo || f.enPasos ? '' : '<button type="button" class="btn btn-secundario btn-bloque" data-sumar-forma="' + f.id + '">Agregar a mis pasos</button>') +
+        '</li>';
+      }).join('') + '</ul>' +
+      '<p class="fp-sello">' + icono('i-escudo') + 'Lo confirma Bci al aprobar tu crédito.</p>';
+    abrirHojaContenido('Formas de pagar menos', html, boton, function () {
+      document.querySelectorAll('[data-sumar-forma]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var id = b.dataset.sumarForma;
+          if (id === 'fogaes') estado.pasos.fogaesAgregado = true;
+          if (id === 'ds1') { estado.pasos.ds1Agregado = true; if (estado.modo === 'vivir') estado.piezas = Object.assign({}, estado.piezas, { subsidio: true }); }
+          guardarEstado();
+          cerrarHoja(false);
+          mostrar();
+          toast(id === 'fogaes' ? 'Se sumó a tus pasos: revisa si calificas a la garantía del Estado.' : 'Se sumó a tus pasos: postula al DS1.');
+        });
+      });
+    });
+  }
   // 20-nov (Bárbara): en el detalle, qué es la garantía de un familiar, diagramado: cómo se paga el precio
   // (tu pie y el crédito Bci del 95 %) y, aparte, la garantía que deja tu familiar y cuándo la recupera.
   function garantiaFamiliarDetalle(pd) {
@@ -3589,6 +3663,8 @@
                 '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(pd.dividendo) + '</strong><small>con seguros' + SEP + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2) + '</small></div></div>' +
               '<p class="det-subsidio">' + icono('i-info') + '<span>Si se acaba el subsidio a la tasa, el dividendo sube a <strong>' + formatoRedondeado(pd.dividendoSinSubsidio) + '</strong> (' + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + ').</span></p>' +
               grupoPosible +
+              '<button type="button" class="tarjeta dueno-card bajar-card" id="btn-bajar-precio" aria-haspopup="dialog"><span class="circulo-icono verde" aria-hidden="true">' + icono('i-alcancia') + '</span>' +
+                '<span><strong>Formas de pagar menos</strong><small>Garantía del Estado y subsidio: cuánto cambian tus números</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
               '<a class="tarjeta dueno-card" href="#compra/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
                 '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para tus gastos</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
               soloPosible +
@@ -3642,6 +3718,7 @@
     iniciarPlegables();
     iniciarPestanasDetalle(contenedor);
     iniciarVisita(p);
+    if ($('btn-bajar-precio')) $('btn-bajar-precio').addEventListener('click', function () { abrirBajarPrecio(p, solo, caminoVista, $('btn-bajar-precio')); });
     if ($('btn-detalle-credito')) $('btn-detalle-credito').addEventListener('click', function () {
       abrirHojaContenido('Detalle del crédito', repartoCasa(partesPiezas(pd), formatoRedondeado) +
         '<ul class="datos-inversion"><li><span>Gastos al firmar</span><strong>' + formatoRedondeado(pd.gastos) + '</strong></li>' +
@@ -5905,7 +5982,9 @@
       // S33-C0: en grupo, la aprobación final va después de juntar el pie (paso 3 de la compra).
       preaprobado: preaprobado, asegurado: !!(c && c.carga && paso >= (c.sinGrupo || !esGrupo() ? 2 : 3)) || (usadoMeta() && !!ps.usadoReservado),
       esTuyo: paso === 4 || (esArriendo() && !!ps.arriendoTuyo) || (usadoMeta() && !!ps.usadoTuyo),
-      ds1: ds1Mision(), rsh: !!ps.rsh, ds1Postulado: !!ps.ds1Postulado, documentos: !!ps.documentos || preaprobado,
+      ds1: ds1Mision(), rsh: !!ps.rsh, ds1Postulado: !!ps.ds1Postulado,
+      ds1Elegido: !!(piezasOn().subsidio || ps.ds1Agregado || ps.ds1Postulado || ps.rsh),
+      fogaes: !!ps.fogaesAgregado && estado.caminoElegido !== 'familiar-vivir', fogaesCalifica: !!ps.fogaesCalifica, documentos: !!ps.documentos || preaprobado,
       bajoLlave: !!ps.bajoLlave, ahorroAutomatico: !!estado.cuotaAutomatica, equipo: estado.equipo.length > 0,
       eligio: !!c || (esArriendo() && !!estado.arriendoElegido) || (estado.caminoElegido === 'usados' && !!estado.usadoElegido), cuotaPendiente: false,
       // 9-nov: arriendo con opción de compra.
@@ -6672,6 +6751,7 @@
     'ahorro-auto': ['Bci pasa tu cuota a tu cuenta de vivienda el día de pago.', 'Activar'],
     equipo: ['Suma a tu pareja, tu familia o tu bebé para que te acompañen.', null],
     elegir: ['Mira tus caminos y elige un departamento.', null],
+    fogaes: ['La garantía del Estado (FOGAES) deja que Bci te preste hasta el 90' + NBSP + '%: juntas un pie del 10' + NBSP + '%. Es para departamentos nuevos y se usa una sola vez.', null],
     familiar: ['Tu familiar deja el 10' + NBSP + '% en una cuenta Bci, con intereses. Lo recupera cuando tu deuda baja al 80' + NBSP + '%.', 'Ya la dejó']
   };
   var MISION_CLAVE = { ds1: 'ds1Postulado', rsh: 'rsh', documentos: 'documentos', 'bajo-llave': 'bajoLlave', familiar: 'garantiaFamiliar' };
@@ -6697,6 +6777,7 @@
       falta === 'cuenta' ? '<p class="texto-apoyo">' + icono('i-alerta') + ' Primero abre tu cuenta de vivienda: el DS1 pide ahorrar en ella.</p>' + enlaceHoja('#pie', 'Abrir mi cuenta') :
       falta === 'rsh' ? '<p class="texto-apoyo">' + icono('i-alerta') + ' Primero: el Registro Social de Hogares.</p>' + botonEnHoja('btn-mision-rsh', 'Ir a inscribirme en el Registro Social') :
       id === 'equipo' ? enlaceHoja('#perfil/equipo', 'Ir a Tu equipo') :
+      id === 'fogaes' ? enlaceHoja('#compra/caminos/individual-vivir/califica', 'Revisar si califico') :
       id === 'familiar' ? enlaceHoja('#compra/ficha/respaldo-familiar/familiar', 'Ver cómo lo vive tu familiar') +
           '<button type="button" class="btn btn-terciario btn-bloque" id="btn-mision-accion">' + t[1] + '</button>' :
       id === 'elegir' ? enlaceHoja(esArriendo() ? '#compra/caminos/arriendo-opcion' : rutaElegir(), estado.caminoElegido ? 'Elegir departamento' : 'Comparar caminos') :
@@ -6730,7 +6811,7 @@
   }
   // 10-nov: "Ver todas" lleva a una pantalla con todas las misiones separadas por etapa.
   // S33-C3: Misiones, más visual y con menos texto: lo que vence primero, las que faltan en mosaico y las fechas en una línea de tiempo.
-  var COLOR_MISION_ID = { familiar: 'azul', ds1: 'rojo', rsh: 'azul', 'ahorro-auto': 'verde', 'bajo-llave': 'azul', equipo: 'verde', cuota: 'verde' };
+  var COLOR_MISION_ID = { fogaes: 'azul', familiar: 'azul', ds1: 'rojo', rsh: 'azul', 'ahorro-auto': 'verde', 'bajo-llave': 'azul', equipo: 'verde', cuota: 'verde' };
   function renderTodasMisiones() {
     var cont = $('pasos-contenido');
     var s = fotoPasos(), hoy = hoyDemo();
@@ -8209,7 +8290,10 @@
         : r === 'no' ? '<a class="btn btn-primario btn-bloque" href="#compra">Ver tu compra</a>'
         : '<button type="button" class="btn btn-primario btn-bloque" disabled>Responde la pregunta</button>') + '</div>';
     cont.querySelectorAll('[data-cal]').forEach(function (b) {
-      b.addEventListener('click', function () { respuestaGarantia = b.dataset.cal; renderCalifica(); var nb = cont.querySelector('[data-cal="' + respuestaGarantia + '"]'); if (nb) nb.focus(); });
+      b.addEventListener('click', function () {
+        respuestaGarantia = b.dataset.cal;
+        if (estado.pasos.fogaesAgregado) { estado.pasos.fogaesCalifica = respuestaGarantia === 'no'; guardarEstado(); }
+        renderCalifica(); var nb = cont.querySelector('[data-cal="' + respuestaGarantia + '"]'); if (nb) nb.focus(); });
     });
     if ($('btn-cal-elegir')) $('btn-cal-elegir').addEventListener('click', function () { confirmarMiCamino(id, $('btn-cal-elegir')); });
   }

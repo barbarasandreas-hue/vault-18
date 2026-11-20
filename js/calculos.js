@@ -1678,7 +1678,8 @@ function misiones(s, hoy) {
     lista.push(Object.assign({ id: id, titulo: titulo, etiqueta: etiqueta, ayudaA: ayudaA, hecho: !!hecho, fecha: null, requiere: [] }, extra));
   };
   // S34-8: el DS1 aparece cuando ya elegiste camino (antes no sabes si lo vas a usar).
-  if (s.ds1 && s.caminoElegido !== false) {
+  // 20-nov: el DS1 se suma a tus pasos cuando lo eliges (en el detalle o en Ayudas); s.ds1Elegido sin dato = como antes.
+  if (s.ds1 && s.caminoElegido !== false && s.ds1Elegido !== false) {
     // Pasado el cierre del llamado, la misión queda para el próximo (sin fecha).
     var abierto = !hoy || diasHastaFecha(FECHAS_IMPORTAN[0].fecha, hoy) >= 0;
     m('ds1', abierto ? 'Postula al DS1' : 'Postula al próximo llamado del DS1', '+UF ' + Math.round(s.ds1.montoUF), 'pie', s.ds1Postulado,
@@ -1687,6 +1688,8 @@ function misiones(s, hoy) {
   }
   // 11-nov: "Completa tus datos y documentos" ya no es misión: es el mismo paso de la preaprobación (Tus datos → Tus documentos).
   // 20-nov: con la garantía de un familiar, tu familiar deja el 10 % antes de pedir el crédito.
+  // 20-nov: revisar si calificas a la garantía del Estado (FOGAES), sumado desde el detalle de un departamento.
+  if (s.fogaes) m('fogaes', 'Revisa si calificas a la garantía del Estado', 'Pie del 10 %', 'preaprobacion', s.fogaesCalifica);
   if (s.familiar) m('familiar', 'Tu familiar deja su garantía', 'Pie del 5 %', 'preaprobacion', s.garantiaFamiliar);
   m('ahorro-auto', 'Activa el ahorro automático', 'Pie', 'pie', s.ahorroAutomatico);
   // S34: en grupo la cuenta ya está bloqueada hasta la firma; «bajo llave» es para quien junta solo.

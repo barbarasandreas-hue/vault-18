@@ -4749,3 +4749,35 @@ img { color: transparent; }
 .ncc-txt strong { color: var(--ci); }
 .ncc-ver { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: 22px; background: var(--cs); color: var(--ci); font-weight: 700; text-decoration: none; }
 .detalle-accion .btn, .usado-cta { white-space: normal; }
+/* 20-nov: Formas de pagar menos (detalle del departamento) */
+.bajar-card { width: 100%; border: 0; font: inherit; text-align: left; cursor: pointer; }
+.circulo-icono.verde { background: var(--green-light, #D4E7D5); color: var(--green-dark); }
+.fp-lista { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 12px; }
+.fp-forma { display: grid; gap: 10px; padding: 14px; border-radius: 16px; background: var(--white); border: 1px solid var(--gray-semilight); box-shadow: var(--sombra-1); }
+.fp-cab { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.fp-cab h3 { margin: 0; flex: 1; font-size: 16px; }
+.fp-sigla { display: grid; place-items: center; min-width: 44px; height: 32px; padding: 0 6px; border-radius: 10px; background: #D4E3F5; color: var(--blue-dark); font-size: 12px; font-weight: 800; }
+.fp-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: #D4E3F5; color: var(--blue-dark); font-size: 12px; font-weight: 700; }
+.fp-chip.verde { background: #D4E7D5; color: var(--green-dark); }
+.fp-chip.gris { background: var(--gray-semilight); color: var(--gray-dark); }
+.fp-chip svg { width: 14px; height: 14px; }
+.fp-que { margin: 0; font-size: 14px; line-height: 1.4; color: var(--gray-dark); }
+.fp-efectos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fp-efecto { display: flex; flex-direction: column; gap: 2px; padding: 10px; border-radius: 12px; background: var(--gray-light); }
+.fp-efecto small { font-size: 12px; color: var(--gray-semidark); }
+.fp-efecto strong { font-size: 16px; color: var(--gray-dark); }
+.fp-efecto.baja { background: #EAF4EA; }
+.fp-efecto.baja strong { color: var(--green-dark); }
+.fp-efecto.sube strong { color: var(--gray-dark); }
+.fp-espera, .fp-bloqueo { display: flex; gap: 6px; align-items: flex-start; margin: 0; font-size: 13px; color: var(--gray-semidark); }
+.fp-espera svg, .fp-bloqueo svg { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+.fp-req { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.fp-req li { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--gray-dark); }
+.fp-req small { color: var(--gray-semidark); }
+.fp-marca { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 800; }
+.fp-marca svg { width: 12px; height: 12px; }
+.fp-marca.ok { background: var(--green-normal); color: var(--white); }
+.fp-marca.no { background: var(--gray-semilight); color: var(--gray-dark); }
+.fp-marca.q { background: #D4E3F5; color: var(--blue-dark); }
+.fp-sello { display: flex; gap: 6px; align-items: center; margin: 14px 0 0; font-size: 13px; color: var(--gray-semidark); }
+.fp-sello svg { width: 16px; height: 16px; }
