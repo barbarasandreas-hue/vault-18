@@ -18,9 +18,9 @@ test('Escalón de descuento cruzado al unirse alguien', () => {
 });
 
 test('Texto del hito del pie, con la obra', () => {
-  assert.strictEqual(c.textoHito(0.5, 1), 'Vas en la mitad de tu pie. Tu edificio va en obra gruesa.');
+  assert.strictEqual(c.textoHito(0.5, 1), 'Vas en la mitad de tu pie. En tu edificio, están levantando los muros.' /* S34: etapas en palabras simples */);
   assert.strictEqual(c.textoHito(0.25), 'Llevas un cuarto de tu pie.');
-  assert.strictEqual(c.textoHito(0.75, 2), 'Llevas tres cuartos de tu pie. Tu edificio va en terminaciones.');
+  assert.strictEqual(c.textoHito(0.75, 2), 'Llevas tres cuartos de tu pie. En tu edificio, están haciendo las terminaciones.');
 });
 
 test('Días hasta la entrega de las llaves', () => {

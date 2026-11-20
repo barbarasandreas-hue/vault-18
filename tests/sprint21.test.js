@@ -29,7 +29,7 @@ test('S21: hitoActual es el primero que falta', () => {
   assert.deepStrictEqual(h.hitos.map((x) => x.estado), ['hecho', 'hecho', 'actual', 'pendiente', 'pendiente', 'pendiente']);
   // En grupo, después del edificio viene la preaprobación (asegura el cupo), antes del pie.
   assert.strictEqual(c.hitoActual(base({ grupo: true, cuentaVivienda: true })).id, 'preaprobacion');
-  assert.strictEqual(c.hitoActual(base({ grupo: true, cuentaVivienda: true })).nombre, 'Preaprobación y tu cupo');
+  assert.strictEqual(c.hitoActual(base({ grupo: true, cuentaVivienda: true })).nombre, 'Pide tu preaprobación'); // S34: un nombre por paso
 });
 
 test('S21: con el pie juntado sigue la preaprobación; es tuyo termina todo', () => {

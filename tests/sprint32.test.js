@@ -26,7 +26,7 @@ test('S32-B1: "Tus números" y "Tu cuenta" ya no son pasos', () => {
 test('S32-B1: en grupo el paso del departamento es tu edificio', () => {
   const h = c.hitoActual(foto({ caminoElegido: true, grupo: true }));
   assert.strictEqual(h.id, 'depto');
-  assert.strictEqual(h.nombre, 'Tu edificio');
+  assert.strictEqual(h.nombre, 'Elige tu departamento'); // S34: un solo nombre (antes «Tu edificio»)
 });
 test('S32-B1: las misiones no repiten pasos (elegir ya no es misión)', () => {
   const ids = c.misiones(foto({ caminoElegido: true, ds1: { montoUF: 410 }, cuentaVivienda: true }), HOY).map((x) => x.id);
@@ -46,7 +46,8 @@ const html32 = fs32.readFileSync(path32.join(__dirname, '..', 'index.html'), 'ut
 test('S32-B2: la barra tiene Mi compra, Mi pie, Departamentos y Perfil', () => {
   ['#compra" data-seccion="compra"', '#pie" data-seccion="pie"', '#departamentos" data-seccion="deptos"', '#perfil" data-seccion="perfil"']
     .forEach(x => assert.ok(html32.includes(x), x));
-  assert.match(app32, /RAICES_PESTANA = \{ '#compra': 'Mi compra', '#pie': 'Mi pie', '#departamentos': 'Departamentos', '#perfil': 'Perfil' \}/);
+  // S33-C1 (E1): la barra te habla de «tú».
+  assert.match(app32, /RAICES_PESTANA = \{ '#compra': 'Tu compra', '#pie': 'Tu pie', '#departamentos': 'Departamentos', '#perfil': 'Perfil' \}/);
 });
 test('S32-B2: el código ya no usa las direcciones viejas (solo las redirige)', () => {
   assert.doesNotMatch(app32, /['"]#(camino|pasos|explorar)(['"\/])/);
@@ -56,7 +57,8 @@ test('S32-B3: Mi compra: camino horizontal, «Ahora», recorrido con fechas y si
   assert.match(app32, /function caminoJuego\(h, celebra\)/);
   assert.match(app32, /function bloqueRecorrido\(\)/);
   assert.match(app32, /function renderRecorrido\(\)/);
-  assert.match(app32, /Ver todo tu recorrido, con fechas ›/);
+  // S33-C2: «Ver con fechas ›» va dentro de «Tus pasos».
+  assert.match(app32, /Ver con fechas ›/);
   assert.match(app32, /¡Avanzaste un paso!/);
   assert.doesNotMatch(app32, /¡Subiste un escalón!/);
   const i = app32.indexOf('  function renderTuCaminoVivir(');
@@ -73,7 +75,7 @@ test('S32-B4: comparar caminos: prioridades, carrera, lado a lado, «i» y Desha
   assert.match(app32, /function renderComparar\(\)/);
   assert.match(app32, /return r\('caminos', 'compra', renderComparar\)/);
   assert.match(app32, /¿Qué te importa más\?/);
-  assert.match(app32, /Carrera hacia tus llaves/);
+  assert.match(app32, /¿Cuándo es tuyo con cada camino\?/); // S34: antes «Carrera hacia tus llaves»
   assert.match(app32, /class="lado-a-lado"/);
   assert.match(app32, /function abrirInfoCamino\(id, boton\)/);
   assert.match(app32, /toastAccion\('Ahora vas por '/);
@@ -110,8 +112,9 @@ test('S32-B5 (D5): elegir un departamento no lo reserva y vuelve a Mi compra', (
 
 // ---------- B6 ----------
 test('S32-B6: Mi pie es pestaña, con el deslizador y su efecto en la fecha', () => {
-  assert.match(app32, /<h1 id="titulo-tu-pie" class="h2" tabindex="-1">Mi pie<\/h1>/);
-  assert.match(app32, /function deslizadorPie\(\)/);
+  assert.match(app32, /<h1 id="titulo-tu-pie" class="h2" tabindex="-1">Tu pie<\/h1>/);
+  // S33-C4: el deslizador puede ir dentro de la tarjeta de la cuota.
+  assert.match(app32, /function deslizadorPie\(dentro\)/);
   assert.match(app32, /function tuyoConMensual\(v\)/);
   assert.match(app32, /return r\('pie', 'pie',/);
   assert.match(app32, /id="btn-abrir-cuenta">Abrir mi cuenta/);
@@ -135,6 +138,9 @@ test('S32-B9: el crédito tradicional llega a «Es tuyo» (reserva y escritura d
   assert.match(app32, /marcarPaso\('usadoTuyo'/);
 });
 test('S32-B9: asegurar es después de la postulación; con el edificio en obra, la firma espera la entrega', () => {
-  assert.match(app32, /asegurado: !!\(c && c\.carga && \(c\.paso \|\| 1\) >= 2\)/);
-  assert.match(app32, /Firmas cuando entreguen tu edificio/);
+  // S33-C0: en grupo, después del pie (paso 3).
+  assert.match(app32, /asegurado: !!\(c && c\.carga && paso >= \(c\.sinGrupo \|\| !esGrupo\(\) \? 2 : 3\)\)/);
+  // S33-C9: ahora se puede avanzar hasta la entrega (simulación).
+  assert.match(app32, /firmas cuando terminen tu edificio/); // S34: «terminen», como en Tu edificio real
+  assert.match(app32, /Avanzar hasta la entrega \(simulación\)/);
 });

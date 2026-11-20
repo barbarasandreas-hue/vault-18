@@ -1133,6 +1133,9 @@ function cuposParaMasDescuento(tomados, cupos) {
 
 // S13-F4: etapas de la obra (la última es la escritura).
 var ETAPAS_OBRA = ['Excavación', 'Obra gruesa', 'Terminaciones', 'Recepción', 'Escritura'];
+// S34: las etapas en palabras de todos los días («obra gruesa» y «recepción» son de constructora).
+var ETAPAS_OBRA_CLARA = ['Están excavando el terreno', 'Están levantando los muros', 'Están haciendo las terminaciones', 'El edificio está terminado', 'Ya están entregando los departamentos'];
+function etapaClaraMin(i) { var t = ETAPAS_OBRA_CLARA[i] || ''; return t.charAt(0).toLowerCase() + t.slice(1); }
 // S22-F1: nombre del archivo de la foto referencial de cada etapa (fotos/obra/<nombre>.jpg).
 var FOTOS_ETAPA = ['excavacion', 'obra-gruesa', 'terminaciones', 'recepcion', 'recepcion'];
 
@@ -1174,8 +1177,8 @@ function escalonCruzado(antes, despues) {
 var NOMBRE_HITO = { 0.25: 'Llevas un cuarto de tu pie.', 0.5: 'Vas en la mitad de tu pie.', 0.75: 'Llevas tres cuartos de tu pie.', 1: 'Juntaste tu pie.' };
 function textoHito(hito, etapaObra) {
   var base = NOMBRE_HITO[hito] || '';
-  var etapa = typeof etapaObra === 'number' ? ETAPAS_OBRA[etapaObra] : null;
-  return etapa ? base + ' Tu edificio va en ' + etapa.toLowerCase() + '.' : base;
+  var etapa = typeof etapaObra === 'number' ? etapaClaraMin(etapaObra) : null;
+  return etapa ? base + ' En tu edificio, ' + etapa + '.' : base;
 }
 
 // S14-F4: días que faltan para una fecha (0 si ya pasó). hoy es un Date.
@@ -1278,19 +1281,19 @@ function avisosDelMes(c) {
   var lista = [];
   var apagado = function (tipo) { return c.apagados && c.apagados[tipo]; };
   if (c.etapa === 'camino' && c.meses !== null && c.meses !== undefined) {
-    lista.push({ tipo: 'cuota', titulo: 'Nuevo mes', texto: 'Faltan ' + c.meses + ' meses para tu departamento ' + c.lugar + '.' });
+    lista.push({ tipo: 'cuota', titulo: 'Nuevo mes', texto: 'Faltan ' + c.meses + ' meses para juntar el pie de tu departamento ' + c.lugar + '.' });
   }
   if (c.etapa === 'pie') {
     var nuevaRacha = c.ultimoMes === 'protector' || c.ultimoMes === 'reinicio';
     lista.push({ tipo: 'cuota', titulo: nuevaRacha ? 'Nuevo mes, nueva racha' : 'Nuevo mes: tu cuota de ' + formatoPesos(c.cuota),
-      texto: (c.meses === 0 ? 'Ya juntaste tu pie para tu departamento ' : 'Faltan ' + c.meses + ' meses para tu departamento ') + c.lugar + '.' });
+      texto: (c.meses === 0 ? 'Ya juntaste tu pie para tu departamento ' : 'Faltan ' + c.meses + ' meses para juntar el pie de tu departamento ') + c.lugar + '.' });
   }
   if (c.grupo && c.grupo.faltan > 0) {
     lista.push({ tipo: 'grupo', titulo: 'Tu grupo',
       texto: 'Con ' + (c.grupo.faltan === 1 ? '1 persona' : c.grupo.faltan + ' personas') + ' más, el descuento sube a ' + formatoPorcentaje(c.grupo.descuentoSiguiente, 0) + '.' });
   }
   if (c.obra) {
-    lista.push({ tipo: 'obra', titulo: 'Tu obra', texto: 'Tu edificio va en ' + ETAPAS_OBRA[c.obra.etapa].toLowerCase() + '.' });
+    lista.push({ tipo: 'obra', titulo: 'Tu obra', texto: 'En tu edificio, ' + etapaClaraMin(c.obra.etapa) + '.' });
   }
   if (c.etapa === 'departamento' && c.crecioPesos > 0) {
     lista.push({ tipo: 'departamento', titulo: 'Lo tuyo creció ' + formatoPesos(c.crecioPesos) + ' este mes',
@@ -1592,29 +1595,29 @@ var HITOS_CAMINO = {
   sinCamino: ['camino', 'es-tuyo']
 };
 var HITOS = {
-  camino: { nombre: '¿Cómo compras?', accion: 'Compara y elige tu camino', gana: 'Tus pasos se arman', cuesta: '5 minutos' },
-  depto: { nombre: 'Tu departamento', accion: 'Elige tu departamento', gana: 'Tu fecha se calcula con él', cuesta: '10 minutos' },
+  camino: { nombre: 'Elige tu camino', accion: 'Elige tu camino', gana: 'Con él se arman tus pasos', cuesta: '5 minutos' },
+  depto: { nombre: 'Elige tu departamento', accion: 'Elige tu departamento', gana: 'Tu fecha se calcula con él', cuesta: '10 minutos' },
   numeros: { nombre: 'Tus números', accion: 'Cuéntanos tus números', gana: 'Sabes cuándo llegas', cuesta: '2 minutos' },
   cuenta: { nombre: 'Tu cuenta de vivienda', accion: 'Abre tu cuenta de vivienda', gana: 'Tu pie crece en UF', cuesta: '5 minutos' },
-  pie: { nombre: 'Juntar tu pie', accion: 'Mira tu pie', gana: 'Llegas a tu meta', cuesta: 'Cada mes' },
-  preaprobacion: { nombre: 'Preaprobación Bci', accion: 'Pide tu preaprobación', gana: 'Sabes cuánto te presta Bci', cuesta: '10 minutos' },
-  asegurar: { nombre: 'Asegurar tu departamento', accion: 'Reserva y firma la promesa', gana: 'Tu departamento queda reservado', cuesta: '15 minutos' },
-  aprobacion: { nombre: 'Aprobación final', accion: 'Revisa tu aprobación', gana: 'Bci confirma tu crédito', cuesta: '15 minutos' },
-  'es-tuyo': { nombre: 'Es tuyo', accion: 'Prepara tu firma', gana: 'Recibes tus llaves', cuesta: '1 día' },
+  pie: { nombre: 'Junta tu pie', accion: 'Junta tu pie', gana: 'Llegas a tu meta', cuesta: 'Cada mes' },
+  preaprobacion: { nombre: 'Pide tu preaprobación', accion: 'Pide tu preaprobación', gana: 'Sabes cuánto te presta Bci', cuesta: '10 minutos' },
+  asegurar: { nombre: 'Reserva y firma la promesa', accion: 'Reserva y firma la promesa', gana: 'Tu departamento queda reservado', cuesta: '15 minutos' },
+  aprobacion: { nombre: 'Bci aprueba tu crédito', accion: 'Bci aprueba tu crédito', gana: 'Tasa tu departamento y revisa los papeles', cuesta: '2 a 3 semanas' },
+  'es-tuyo': { nombre: 'Firma y recibe tus llaves', accion: 'Firma y recibe tus llaves', gana: 'Después de firmar, es tuyo', cuesta: '1 día' },
   entrada: { nombre: 'Juntar el 5 % para entrar', accion: 'Junta tu entrada', gana: 'Puedes firmar y mudarte', cuesta: 'Cada mes' },
   contrato: { nombre: 'Firmar y mudarte', accion: 'Firma tu contrato', gana: 'Vives en tu departamento', cuesta: '1 día' }
 };
 // 9-nov: en el arriendo con opción, el pie se junta con el aporte de cada mes y el crédito es al 80 %.
 var HITOS_ARRIENDO = {
-  pie: { nombre: 'Juntar tu pie', accion: 'Mira tu pie', gana: 'Desde el tercer año, compras', cuesta: 'Cada mes' },
-  preaprobacion: { nombre: 'Preaprobación Bci', accion: 'Pide tu preaprobación', gana: 'Bci te presta el 80 %', cuesta: '10 minutos' },
-  'es-tuyo': { nombre: 'Es tuyo', accion: 'Firma la escritura', gana: 'El departamento pasa a tu nombre', cuesta: '1 día' }
+  pie: { nombre: 'Junta tu pie', accion: 'Junta tu pie', gana: 'Desde el tercer año, compras', cuesta: 'Cada mes' },
+  preaprobacion: { nombre: 'Pide tu preaprobación', accion: 'Pide tu preaprobación', gana: 'Bci te presta el 80 %', cuesta: '10 minutos' },
+  'es-tuyo': { nombre: 'Firma y recibe tus llaves', accion: 'Firma la escritura', gana: 'El departamento pasa a tu nombre', cuesta: '1 día' }
 };
 // En grupo, el hito 3 también asegura tu cupo y el pie se paga en cuotas durante la obra.
 var HITOS_GRUPO = {
-  depto: { nombre: 'Tu edificio', accion: 'Elige tu edificio', gana: 'Te unes al grupo', cuesta: '10 minutos' },
-  preaprobacion: { nombre: 'Preaprobación y tu cupo', accion: 'Pide tu preaprobación', gana: 'Aseguras tu cupo en el grupo' },
-  pie: { nombre: 'Juntar tu pie en cuotas', gana: 'Pagas tu pie durante la obra' }
+  depto: { nombre: 'Elige tu departamento', accion: 'Elige tu departamento', gana: 'Te unes al grupo de su edificio', cuesta: '10 minutos' },
+  preaprobacion: { nombre: 'Pide tu preaprobación', accion: 'Pide tu preaprobación', gana: 'Con ella aseguras tu cupo en el grupo' },
+  pie: { nombre: 'Junta tu pie', accion: 'Junta tu pie', gana: 'En cuotas, mientras se construye' }
 };
 // tipo: true (grupo), 'arriendo' o falso (individual).
 function datosHito(id, tipo) { return Object.assign({ id: id }, HITOS[id], tipo === 'arriendo' ? HITOS_ARRIENDO[id] : tipo ? HITOS_GRUPO[id] : null); }
@@ -1656,7 +1659,7 @@ function hitoActual(s) {
 var FECHAS_IMPORTAN = [
   { id: 'ds1', texto: 'Cierra la postulación al DS1', fecha: '2026-11-27' },
   { id: 'iva', texto: 'Último mes para firmar la promesa sin IVA', fecha: '2027-11-30' },
-  { id: 'garantia', texto: 'Último día para pedir la garantía del Estado', fecha: '2028-05-31' }
+  { id: 'garantia', texto: 'Último día para pedir la garantía del Estado (pie del 10 %)', fecha: '2028-05-31' }
 ];
 var DIAS_PRONTO = 30;
 function diasHastaFecha(fechaISO, hoy) {
@@ -1671,17 +1674,19 @@ function misiones(s, hoy) {
   var m = function (id, titulo, etiqueta, ayudaA, hecho, extra) {
     lista.push(Object.assign({ id: id, titulo: titulo, etiqueta: etiqueta, ayudaA: ayudaA, hecho: !!hecho, fecha: null, requiere: [] }, extra));
   };
-  if (s.ds1) {
+  // S34-8: el DS1 aparece cuando ya elegiste camino (antes no sabes si lo vas a usar).
+  if (s.ds1 && s.caminoElegido !== false) {
     // Pasado el cierre del llamado, la misión queda para el próximo (sin fecha).
     var abierto = !hoy || diasHastaFecha(FECHAS_IMPORTAN[0].fecha, hoy) >= 0;
     m('ds1', abierto ? 'Postula al DS1' : 'Postula al próximo llamado del DS1', '+UF ' + Math.round(s.ds1.montoUF), 'pie', s.ds1Postulado,
       { fecha: abierto ? FECHAS_IMPORTAN[0].fecha : null, requiere: ['cuenta', 'rsh'] });
-    m('rsh', 'Inscríbete en el Registro Social de Hogares', 'DS1', 'pie', s.rsh || s.ds1Postulado);
+    m('rsh', 'Inscríbete en el Registro Social de Hogares', 'Para el DS1', 'pie', s.rsh || s.ds1Postulado);
   }
   // 11-nov: "Completa tus datos y documentos" ya no es misión: es el mismo paso de la preaprobación (Tus datos → Tus documentos).
   m('ahorro-auto', 'Activa el ahorro automático', 'Pie', 'pie', s.ahorroAutomatico);
-  if (s.cuentaVivienda) m('bajo-llave', 'Guarda tu pie bajo llave', 'Protege', 'pie', s.bajoLlave);
-  m('equipo', 'Suma a tu equipo', 'Ánimo', null, s.equipo);
+  // S34: en grupo la cuenta ya está bloqueada hasta la firma; «bajo llave» es para quien junta solo.
+  if (s.cuentaVivienda && !s.grupo) m('bajo-llave', 'Guarda tu pie bajo llave', 'Protege', 'pie', s.bajoLlave);
+  m('equipo', 'Suma a tu equipo', 'Te acompañan', null, s.equipo);
   // S32-B1: elegir camino y departamento ya no son misiones: son los dos primeros pasos.
   var actual = hitoActual(s).id;
   var peso = function (x) {
@@ -1951,6 +1956,7 @@ if (typeof module !== 'undefined') module.exports = {
   ventaHoy: ventaHoy,
   cuposParaMasDescuento: cuposParaMasDescuento,
   ETAPAS_OBRA: ETAPAS_OBRA,
+  ETAPAS_OBRA_CLARA: ETAPAS_OBRA_CLARA,
   FOTOS_ETAPA: FOTOS_ETAPA,
   patrimonioUF: patrimonioUF,
   crecimientoMesUF: crecimientoMesUF,

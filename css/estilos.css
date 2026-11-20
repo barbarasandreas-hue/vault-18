@@ -4022,3 +4022,227 @@ a.camino-es-tuyo { text-decoration: none; }
 .cj-nombre { color: var(--gray-dark); }
 .camino-juego .cj-nombre.hecho { color: var(--green-dark); }
 .camino-juego .cj-nombre.actual { color: var(--blue-dark); }
+
+/* ---------- S33-C2: Tu compra ---------- */
+.mi-compra-fecha.clicable { cursor: pointer; }
+.noche-pie { display: inline-flex; align-items: center; min-height: 44px; margin-top: 4px; color: var(--white); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.noche-pie:focus-visible { outline: 3px solid var(--white); outline-offset: 2px; }
+.metro { padding: 14px 0 6px; }
+.metro-linea { position: relative; margin: 14px 8px 0; }
+.metro-via { position: absolute; top: 26px; height: 6px; border-radius: 999px; background: var(--white); }
+.metro-via i { display: block; height: 100%; border-radius: 999px; background: var(--green-normal); transition: width var(--dur-larga) var(--ease-salida); }
+.metro-paradas { position: relative; list-style: none; margin: 0; padding: 0; display: grid; }
+.metro-parada { display: grid; justify-items: center; align-content: start; gap: 4px; min-width: 0; }
+.metro-parada .cj-parada { position: static; transform: none; width: 44px; height: 58px; display: flex; align-items: center; justify-content: center; }
+.metro-parada.actual .cj-parada { width: 56px; }
+.metro-parada.actual .cj-parada > svg { border-radius: 50%; background: var(--white); box-shadow: 0 0 0 4px var(--blue-normal); }
+.metro-parada.meta .cj-parada { width: 48px; }
+.metro-nombre { font-size: 12px; font-weight: 600; line-height: 1.2; text-align: center; color: var(--gray-dark); overflow-wrap: anywhere; }
+.metro-parada.hecho .metro-nombre { color: var(--green-dark); }
+.metro-parada.actual .metro-nombre { color: var(--blue-dark); font-weight: 800; }
+.metro-ahora { position: relative; margin: 14px 12px 0; }
+.metro-ahora::before { content: ''; position: absolute; top: -9px; left: clamp(18px, var(--x), calc(100% - 18px)); margin-left: -9px; border: 9px solid transparent; border-top: 0; border-bottom-color: var(--white); }
+.ahora-dentro { display: grid; gap: 8px; padding: 14px; border-radius: 16px; background: var(--white); }
+.ahora-dentro h2 { margin: 0; }
+.ahora-dentro .siguiente-gana { color: var(--green-dark); }
+.metro-fechas { display: flex; justify-content: center; align-items: center; min-height: 44px; margin-top: 4px; font-weight: 700; color: var(--green-dark); }
+.tu-edificio { display: grid; grid-template-columns: 72px 1fr auto; align-items: center; gap: 12px; margin-top: 16px; padding: 10px 14px; color: inherit; text-decoration: none; }
+.tu-edificio-obra { width: 72px; height: 72px; overflow: hidden; border-radius: 12px; background: var(--blue-20); display: flex; align-items: flex-end; justify-content: center; }
+.tu-edificio-obra svg { width: 100%; height: auto; }
+.tu-edificio-texto { display: grid; gap: 2px; }
+.tu-edificio-texto .etiqueta { margin: 0; }
+.tu-edificio-texto small { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--gray-semidark); }
+.tu-edificio-texto small .icono { width: 16px; height: 16px; margin: 0; color: var(--green-dark); }
+.misiones-compra { margin-top: 16px; padding: 14px 14px 6px; }
+.mc-cab { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.mc-cab h2 { margin: 0; }
+.mc-cab .enlace { min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; }
+.mc-lista { list-style: none; margin: 4px 0 0; padding: 0; }
+.mc-lista li + li { border-top: 1px solid var(--gray-semilight); }
+.mc-fila { width: 100%; min-height: 56px; display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 10px; padding: 8px 0; border: 0; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.mc-fila:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; border-radius: 10px; }
+.mc-dia { width: 44px; height: 44px; border-radius: 10px; background: var(--yellow-20); border: 1.6px solid var(--yellow-normal); display: grid; place-content: center; text-align: center; line-height: 1; }
+.mc-dia strong { font-size: 17px; }
+.mc-dia small { font-size: 11px; text-transform: uppercase; color: var(--gray-dark); }
+.mc-icono { width: 44px; height: 44px; border-radius: 50%; background: var(--blue-20); display: grid; place-items: center; }
+.mc-icono .icono { margin: 0; color: var(--blue-dark); }
+.mc-texto { display: grid; gap: 2px; min-width: 0; }
+.mc-texto strong { font-size: 15px; line-height: 1.25; }
+.mc-texto small { font-size: 13px; color: var(--gray-dark); }
+.mc-chip { font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 999px; background: var(--yellow-normal); color: var(--gray-dark); white-space: nowrap; }
+.mc-chip.azul { background: var(--blue-20); color: var(--blue-dark); }
+/* ---------- S33-C3: Misiones ---------- */
+.misiones-cabeza { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.misiones-anillo { flex: none; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(closest-side, var(--gray-light) 74%, transparent 75%), conic-gradient(var(--green-normal) calc(var(--p) * 1%), var(--gray-semilight) 0); }
+.misiones-anillo strong { font-size: 15px; color: var(--green-dark); }
+.misiones-sub { margin: 20px 0 8px; }
+.mosaico-misiones { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mision-mosaico { width: 100%; height: 100%; min-height: 132px; display: grid; align-content: start; justify-items: start; gap: 8px; padding: 14px; border-radius: 18px; border: 1.6px solid var(--gray-semilight); background: var(--white); font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.mision-mosaico:hover { border-color: var(--blue-normal); }
+.mision-mosaico:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.mision-mosaico strong { font-size: 15px; line-height: 1.25; }
+.mision-mosaico.hecha { background: var(--gray-light); }
+.mision-mosaico.hecha strong { color: var(--gray-semidark); }
+.mm-icono { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; }
+.mm-icono .icono { margin: 0; width: 24px; height: 24px; }
+.mm-icono.azul { background: var(--blue-20); } .mm-icono.azul .icono { color: var(--blue-dark); }
+.mm-icono.verde { background: var(--green-20); } .mm-icono.verde .icono { color: var(--green-dark); }
+.mm-icono.rojo { background: var(--red-20); } .mm-icono.rojo .icono { color: var(--red-dark); }
+.mm-icono.listo { background: var(--green-dark); } .mm-icono.listo .icono { color: var(--white); }
+.fechas-linea { margin-top: 20px; }
+.fechas-linea h2 { margin: 0 0 10px; }
+.linea-fechas { list-style: none; margin: 0; padding: 0 0 0 4px; display: grid; gap: 14px; }
+.linea-fechas li { position: relative; display: grid; gap: 2px; padding-left: 24px; }
+.linea-fechas li:not(:last-child)::after { content: ''; position: absolute; left: 6px; top: 16px; bottom: -14px; width: 2px; background: var(--blue-40); }
+.lf-punto { position: absolute; left: 0; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--blue-normal); box-shadow: 0 0 0 3px var(--blue-20); }
+.linea-fechas strong { font-size: 15px; }
+.linea-fechas small { font-size: 13px; color: var(--gray-dark); }
+/* ---------- S33-C4: Tu pie ---------- */
+.pie-heroe { padding-bottom: 72px; }
+.pie-cuota-mes { margin-top: -60px; }
+.pie-si-juntas.dentro { margin: 0 0 4px; padding: 0 0 14px; border-bottom: 1px solid var(--gray-semilight); }
+.protegido-visual .protegido-cab { display: flex; align-items: center; gap: 8px; }
+.protegido-visual .protegido-cab .icono { margin: 0; color: var(--green-dark); width: 24px; height: 24px; }
+.protegido-visual h2 { margin: 0; }
+.protegido-capas { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.protegido-capas li { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 12px; padding: 10px; border-radius: 16px; background: var(--gray-light); }
+.protegido-capas li.activa { background: var(--green-20); }
+.pc-dibujo { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; background: var(--white); }
+.pc-dibujo .icono { margin: 0; width: 28px; height: 28px; color: var(--gray-semidark); }
+.protegido-capas li.activa .pc-dibujo .icono { color: var(--green-dark); }
+.pc-dibujo.uf strong { font-size: 17px; color: var(--green-dark); letter-spacing: .5px; }
+.protegido-capas strong { font-size: 15px; }
+.protegido-capas small { display: block; font-size: 13px; color: var(--gray-dark); line-height: 1.3; }
+.pc-estado { font-size: 12px; font-weight: 700; color: var(--green-dark); }
+.protegido-capas .btn-chico { min-height: 44px; }
+.protegido-capas .btn-chico { padding: 0 14px; }
+.tu-grupo-pie { margin-top: 16px; display: grid; gap: 10px; }
+.tu-grupo-pie h2 { margin: 0; }
+.tu-grupo-pie .enlace { min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; }
+/* ---------- S33-C5: las ventanas son pantallas aparte ---------- */
+.hoja-inferior.hoja-pantalla {
+  top: 0; bottom: 0; max-height: none; height: 100%; border-radius: 0; z-index: 60;
+  padding: calc(8px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom));
+  background: var(--gray-light); animation: entrarPantalla var(--dur-media) var(--ease-salida);
+}
+@keyframes entrarPantalla { from { transform: translateX(24px); opacity: 0; } }
+.hoja-pantalla .pantalla-cab { position: sticky; top: calc(-8px - env(safe-area-inset-top)); z-index: 2; margin: 0 -20px 4px; padding: 6px 12px; background: var(--gray-light); }
+.hoja-pantalla .pantalla-cab .volver { min-height: 44px; display: inline-flex; align-items: center; gap: 4px; margin: 0; }
+.hoja-pantalla .h3 { margin: 4px 0 12px; }
+.hoja-pantalla .acciones { margin-top: 20px; }
+@media (prefers-reduced-motion: reduce) { .hoja-inferior.hoja-pantalla { animation: none; } }
+/* ---------- S33-C6: Conoce los caminos ---------- */
+.ilustracion-camino { display: block; width: 100%; height: auto; margin: 4px 0 12px; }
+.ilustracion-cabeza { margin-top: 8px; }
+.conoce-caminos { margin-top: 12px; }
+.conoce-caminos h2 { margin: 0 0 8px; }
+.conoce-pista { list-style: none; margin: 0 -20px; padding: 0 20px 8px; display: grid; grid-auto-flow: column; grid-auto-columns: 74%; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 20px; }
+.conoce-pista li { scroll-snap-align: start; }
+.conoce-tarjeta { height: 100%; display: grid; align-content: start; gap: 2px; padding: 10px 10px 12px; border-radius: 18px; background: var(--white); border: 1.6px solid var(--gray-semilight); color: inherit; text-decoration: none; }
+.conoce-tarjeta:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.conoce-tarjeta .ilustracion-camino { margin: 0 0 6px; }
+.conoce-tarjeta strong { font-size: 16px; }
+.conoce-tarjeta small { font-size: 13px; color: var(--gray-dark); }
+.conoce-ir { margin-top: 4px; font-weight: 700; color: var(--blue-dark); min-height: 28px; display: flex; align-items: center; }
+.como-visual { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 10px; }
+.como-visual li { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: center; font-size: 15px; line-height: 1.3; }
+.cv-icono { position: relative; width: 52px; height: 52px; border-radius: 16px; background: var(--blue-20); display: grid; place-items: center; }
+.cv-icono .icono { margin: 0; width: 26px; height: 26px; color: var(--blue-dark); }
+.cv-icono b { position: absolute; top: -6px; left: -6px; width: 22px; height: 22px; border-radius: 50%; background: var(--green-dark); color: var(--white); font-size: 12px; display: grid; place-items: center; }
+/* ---------- S33-C7: el grupo, más chico ---------- */
+.grupo-confianza.compacta { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.grupo-confianza.compacta li { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--green-dark); }
+.grupo-confianza.compacta svg { width: 16px; height: 16px; margin: 0; }
+.grupo-detalle-titulo { font-size: 18px; margin: 0 0 8px; }
+.sin-grupo-opcion { display: grid; gap: 2px; margin: 16px 0 0; padding: 0 4px; }
+.sin-grupo-opcion .enlace { min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; }
+.sin-grupo-opcion small { font-size: 13px; color: var(--gray-dark); }
+/* ---------- S33-C8: perfil de ejemplo ---------- */
+.perfil-ejemplo { width: 100%; display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; margin-top: 16px; padding: 12px 14px; border: 1.6px dashed var(--blue-60); background: var(--blue-20); font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.perfil-ejemplo strong { display: block; font-size: 16px; color: var(--blue-dark); }
+.perfil-ejemplo small { font-size: 13px; color: var(--gray-dark); line-height: 1.35; }
+.perfil-ejemplo:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.perfil-ejemplo-av { border-radius: 50%; background: var(--white); }
+/* ---------- S33-C9: preaprobación ---------- */
+.ceja-paso { display: flex; align-items: center; gap: 6px; }
+.ceja-paso .icono { width: 16px; height: 16px; margin: 0; }
+.espera-bci { display: grid; justify-items: start; gap: 8px; margin: 12px 0 16px; }
+.espera-reloj { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--blue-20); }
+.espera-reloj .icono { margin: 0; width: 28px; height: 28px; color: var(--blue-dark); animation: respirar 2.4s ease-in-out infinite; }
+.espera-bci h2 { margin: 0; }
+.espera-linea { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 10px; }
+.espera-linea li { position: relative; padding-left: 28px; font-size: 15px; color: var(--gray-semidark); }
+.espera-linea li::before { content: ''; position: absolute; left: 0; top: 2px; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--gray-neutral); background: var(--white); }
+.espera-linea li.hecho { color: var(--green-dark); } .espera-linea li.hecho::before { background: var(--green-dark); border-color: var(--green-dark); }
+.espera-linea li.actual { color: var(--blue-dark); font-weight: 700; } .espera-linea li.actual::before { border-color: var(--blue-normal); box-shadow: 0 0 0 3px var(--blue-20); }
+#btn-avanzar-tiempo .icono { color: var(--white); margin: 0 8px 0 0; }
+.pp-deptos { margin-top: 10px; }
+.pp-editar { margin-top: 8px; }
+.enlace-gris { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--gray-dark); font-weight: 600; }
+.enlace-gris .icono { margin: 0; width: 18px; height: 18px; color: var(--gray-semidark); }
+@media (prefers-reduced-motion: reduce) { .espera-reloj .icono { animation: none; } }
+#btn-avanzar-tiempo { display: flex; justify-content: center; align-items: center; gap: 8px; } #btn-avanzar-tiempo .icono { margin: 0; }
+/* S33-C10: con texto grande (150 %), nada se sale. */
+.metro-ahora, .ahora-dentro, .ahora-dentro > * { min-width: 0; }
+.ahora-dentro h2 { overflow-wrap: anywhere; }
+.ahora-dentro .btn { white-space: normal; }
+.protegido-capas li { grid-template-columns: 52px minmax(0, 1fr) auto; }
+@media (max-width: 340px) {
+  .protegido-capas li { grid-template-columns: 44px minmax(0, 1fr); }
+  .protegido-capas .pc-dibujo { width: 44px; height: 44px; }
+  .protegido-capas .pc-estado, .protegido-capas .btn-chico { grid-column: 2; justify-self: start; }
+}
+/* ---------- S33 (ajustes 2): comentarios de Bárbara ---------- */
+/* «Ver tu pie»: una flecha a la derecha del azul. */
+.mi-compra-fecha.clicable .noche-luna { display: none; }
+.noche-pie { position: absolute; top: 14px; right: 14px; width: 44px; height: 44px; min-height: 0; margin: 0; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .16); text-decoration: none; }
+.noche-pie svg { width: 24px; height: 24px; fill: none; stroke: var(--white); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.noche-pie:hover { background: rgba(255, 255, 255, .26); }
+.mi-compra-fecha .noche-etiqueta { padding-right: 52px; }
+/* Tus pasos con más color: fondo blanco, verde lo hecho, azul lo de ahora, «Ahora» en celeste. */
+.camino-juego.metro { background: var(--white); border: 1.6px solid var(--gray-semilight); }
+.metro .camino-juego-cab h2 { color: var(--gray-dark); }
+.metro .camino-juego-cab span { color: var(--blue-dark); background: var(--blue-20); padding: 2px 10px; border-radius: 999px; }
+.metro-via { background: var(--gray-semilight); }
+.metro-parada .cj-num { border-color: var(--gray-neutral); }
+.metro-parada.pendiente .metro-nombre { color: var(--gray-semidark); }
+.metro-ahora::before { border-bottom-color: var(--blue-20); }
+.ahora-dentro { background: var(--blue-20); }
+.ahora-dentro .chip-ahora { background: var(--white); color: var(--blue-dark); }
+.ahora-dentro .siguiente-gana { color: var(--blue-dark); }
+.metro-fechas { color: var(--blue-dark); }
+.camino-juego.metro .camino-juego-nota { color: var(--gray-dark); }
+/* Tu cuota: más aire entre bloques. */
+.pie-cuota-mes { gap: 16px; padding: 20px; }
+.pie-si-juntas.dentro { padding-bottom: 18px; }
+.pie-si-juntas.dentro .pie-tuyo { margin-top: 14px; }
+.pie-si-juntas.dentro .delta-plazo { margin-top: 6px; }
+.pie-cuota-mes .pie-cuota-fila { margin: 2px 0 0; }
+/* Tu pie y tu edificio real, bien separados. */
+.obra-pie-titulo { margin: 4px 0 6px; font-size: 13px; font-weight: 700; color: var(--white); opacity: .92; }
+.tu-edificio-obra { background: var(--gray-light); }
+.tu-edificio-obra img, .tu-edificio-obra svg { width: 100%; height: 100%; object-fit: cover; }
+
+/* ===== S34: arreglos del recorrido como usuaria ===== */
+/* Los 7 trámites van rotulados como «por dentro» del paso. */
+.llaves-intro { margin: 8px 0 6px; font-size: 14px; color: var(--gray-dark); }
+/* La preaprobación en grupo confirma el cupo. */
+.pp-cupo { display: flex; gap: 10px; align-items: flex-start; margin: 16px 0 0; padding: 12px 16px; border-radius: 16px; background: var(--green-20, #E6F4E6); }
+.pp-cupo .icono { flex: none; margin: 2px 0 0; color: var(--green-dark); }
+.pp-deptos.enlace { display: block; margin: 12px auto 0; text-align: center; min-height: 44px; line-height: 44px; }
+/* Pagar la cuota adelanta un mes: se dice en el comprobante. */
+.aviso-tiempo { display: flex; gap: 10px; align-items: flex-start; margin: 12px 0 4px; padding: 12px 14px; border-radius: 12px; background: var(--blue-20); color: var(--gray-dark); font-size: 14px; text-align: left; }
+.aviso-tiempo .icono { flex: none; margin: 1px 0 0; color: var(--blue-dark); }
+/* Perfil: lo que no es tu compra, aparte. */
+.perfil-sub { margin: 20px 4px 8px; color: var(--gray-semidark); }
+/* Tu pie es una alcancía (antes, un edificio que se confundía con el real). */
+.alcancia-svg { max-width: 180px; margin: 0 auto; }
+.obra-izq .alcancia-svg { max-width: 120px; }
+.alcancia-moneda { animation: moneda-cae 2.4s ease-in-out infinite; }
+@keyframes moneda-cae { 0%, 55% { transform: translateY(0); opacity: 1; } 80% { transform: translateY(18px); opacity: 0; } 100% { transform: translateY(0); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .alcancia-moneda { animation: none; } }
+/* Nombres de los pasos de una palabra larga: se cortan con guion, no a la mitad. */
+.metro-nombre { hyphens: manual; overflow-wrap: normal; word-break: normal; }
+.tu-edificio-texto small + small { margin-top: 2px; }
+.chip-tu-eleccion { margin: 8px 0 0; align-self: flex-start; }

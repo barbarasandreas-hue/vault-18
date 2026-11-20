@@ -28,9 +28,9 @@ test('Avisos del mes: nombran la meta, uno por semana y la cuota el día 1', () 
   assert.deepStrictEqual(a.map((x) => x.tipo), ['cuota', 'grupo', 'obra']);
   assert.deepStrictEqual(a.map((x) => x.dia), [1, 8, 15]);
   assert.match(a[0].titulo, /Nuevo mes: tu cuota de \$800\.000/);
-  assert.match(a[0].texto, /Faltan 7 meses para tu departamento en Independencia/);
+  assert.match(a[0].texto, /Faltan 7 meses para juntar el pie de tu departamento en Independencia/);
   assert.match(a[1].texto, /Con 4 personas más, el descuento sube a 5/);
-  assert.match(a[2].texto, /obra gruesa/);
+  assert.match(a[2].texto, /levantando los muros/); // S34
   for (const x of a) assert.doesNotMatch(x.titulo + x.texto, /Recuerda ahorrar/i);
 });
 

@@ -79,6 +79,6 @@ test('Arriendo con opción como camino (S32-B1): sus 7 pasos en orden', () => {
   assert.strictEqual(c.hitoActual(Object.assign({}, base, { ahorrado: 4500000 })).id, 'contrato');
   assert.strictEqual(c.hitoActual(Object.assign({}, base, { ahorrado: 4500000, contratoArriendo: true })).id, 'pie');
   assert.strictEqual(c.hitoActual(Object.assign({}, base, { ahorrado: 19900000, contratoArriendo: true })).id, 'preaprobacion');
-  assert.strictEqual(c.hitoActual(Object.assign({}, base, { ahorrado: 19900000, contratoArriendo: true, preaprobado: true })).nombre, 'Es tuyo');
+  assert.strictEqual(c.hitoActual(Object.assign({}, base, { ahorrado: 19900000, contratoArriendo: true, preaprobado: true })).nombre, 'Firma y recibe tus llaves') // S34;
   assert.strictEqual(c.hitoActual(base).total, 7);
 });
