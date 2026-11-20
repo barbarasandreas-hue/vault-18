@@ -7003,23 +7003,13 @@
   // S32-B5: «Cómo funciona» del crédito tradicional y del arriendo con opción (los departamentos, en Departamentos).
   function renderCaminoInfo(id) {
     var cont = $('caminos-contenido');
-    var inf = INFO_CAMINO[id], n = numerosComparar(id);
     var esTuyo = id === estado.caminoElegido;
     cont.innerHTML =
       '<a href="#compra/caminos" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Comparar caminos</a>' +
-      '<header class="encabezado"><h1 id="titulo-caminos" class="h2" tabindex="-1">' + nombreCamino(id) + '</h1>' +
-        '<p class="texto-apoyo camino-descripcion">' + inf.que + '</p></header>' +
-      ilustracionCamino(id, 'ilustracion-cabeza') +
-      '<section class="tarjeta bloque info-camino" aria-labelledby="titulo-como"><h2 class="h5" id="titulo-como">Cómo funciona</h2>' +
-        pasosVisuales(id) +
-        '<p class="texto-apoyo"><strong>Para quién:</strong> ' + inf.para + '</p>' +
-        '<p class="aviso aviso-icono">' + icono('i-alerta') + '<span><strong>Ten en cuenta:</strong> ' + inf.cuidado + '</span></p></section>' +
+      '<header class="encabezado fc-titulo"><h1 id="titulo-caminos" class="h2" tabindex="-1">' + nombreCamino(id) + '</h1></header>' +
+      fichaCaminoHtml(id) +
       (esTuyo ? '<a class="camino-es-tuyo" href="#compra">' + icono('i-check') + 'Es tu camino' + SEP + 'ver tus pasos</a>'
-        : '<p class="camino-llegada">' + icono('i-calendario') + (n.tuyo === null ? 'Todavía no te alcanza' : 'Es tuyo <strong>' + mesTuyo(n.tuyo) + '</strong>') + '</p>' +
-          '<button type="button" class="btn btn-mi-camino" id="btn-mi-camino" aria-haspopup="dialog">Elegir este camino</button>') +
-      '<a class="tarjeta fila como-funciona" href="#departamentos/camino/' + id + '">' + icono('i-casa', 'icono-grande') +
-        '<span><strong>Ver sus departamentos</strong><small>' + plural(itemsDeptos(id).length, 'departamento', 'departamentos') + '</small></span>' +
-        '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>';
+        : '<div class="acciones accion-fija"><button type="button" class="btn btn-primario btn-bloque" id="btn-mi-camino" aria-haspopup="dialog">Elegir este camino</button></div>');
     if ($('btn-mi-camino')) $('btn-mi-camino').addEventListener('click', function () { confirmarMiCamino(id, $('btn-mi-camino')); });
   }
 
@@ -7989,23 +7979,41 @@
     rm.addEventListener('change', function () { estado.ahorroMensual = Number(rm.value); guardarEstado(); });
   }
   // La «i» de cada camino: qué es, cómo funciona, tus pasos, tus números, para quién y qué tener en cuenta.
+  // S36 (lienzo P14): la ficha de un camino tiene todo; ya no hay «Ver todo sobre este camino».
+  var CAMINO_TERMINOS = { 'grupo-vivir': 'Grupo, cuota del pie, preaprobación', 'individual-vivir': 'Garantía del Estado, pie, dividendo',
+    usados: 'Pie, tasación, escritura', 'arriendo-opcion': 'Entrada, aporte al pie, opción de compra' };
+  function fichaCaminoHtml(id) {
+    var inf = INFO_CAMINO[id], n = numerosComparar(id), h = pasosDeCamino(id);
+    var c = COLOR_CAMINO[id] || COLOR_CAMINO.todos;
+    var r = recomendadoParaTi();
+    var chips = (id === estado.caminoElegido ? '<span class="fc-chip fuerte">Tu camino</span>' : r && r.id === id ? '<span class="fc-chip fuerte">Te lo recomendamos</span>' : '') +
+      (DATOS_CAMINO[id] || []).slice(-1).map(function (t) { return '<span class="fc-chip">' + t + '</span>'; }).join('');
+    var celda = function (etq, val, nota) { return '<div><small>' + etq + '</small><strong>' + val + '</strong><small>' + nota + '</small></div>'; };
+    var k = filtrarDeptos(itemsDeptos(id), filtrosDeptos).length;
+    return '<div class="fc" style="' + varsCamino(id) + '">' +
+      '<section class="fc-cabeza" style="background: linear-gradient(180deg, ' + c[0] + ' 0%, var(--gray-light) 100%)">' +
+        '<div class="fc-dibujo">' + ilustracionCamino(id) + '</div>' +
+        (chips ? '<div class="fc-chips">' + chips + '</div>' : '') +
+        '<p class="fc-que">' + inf.que + '</p></section>' +
+      '<section class="fc-tarjeta" aria-labelledby="fc-num"><h2 class="h5" id="fc-num">Con tus números</h2><div class="fc-numeros">' +
+        celda('Juntas', n.pie ? formatoRedondeado(n.pie) : '—', n.pieNota || 'pie y gastos') +
+        (esArrendarCamino(id) ? celda('Firmas', mesCorto(n.tuyo), 'aprox.') : id === 'arriendo-opcion' ? celda('Te mudas', n.mudas !== null && n.mudas <= 0 ? 'Ya' : mesCorto(n.mudas), 'aprox.') : celda('Es tuyo', mesCorto(n.tuyo), 'aprox.')) +
+        celda('Pagas al mes', n.pagas ? formatoRedondeado(n.pagas) : '—', n.pagasNota || 'dividendo') +
+        '</div><p class="fc-sello">' + icono('i-escudo') + 'Sin contar que el departamento suba de precio</p></section>' +
+      '<section class="fc-tarjeta" aria-labelledby="fc-como"><h2 class="h5" id="fc-como">Cómo funciona</h2>' + pasosVisuales(id) +
+        '<details class="fc-pasos"><summary>Ver tus ' + h.total + ' pasos</summary>' + listaPasosPrevia(h) + '</details></section>' +
+      '<section class="fc-tarjeta fc-para"><span class="fc-para-icono" aria-hidden="true">' + icono('i-persona') + '</span><span><strong>Para quién</strong><small>' + inf.para + '</small></span></section>' +
+      '<nav class="fc-mas" aria-label="Más sobre este camino">' +
+        (esArrendarCamino(id) ? '' : '<a href="#departamentos/camino/' + id + '"><span class="fc-mas-icono verde" aria-hidden="true">' + icono('i-casa') + '</span><span><strong>Ver sus departamentos</strong><small>' + plural(k, 'departamento', 'departamentos') + (filtrosDeptos.rango && rangoActual() ? ' en tu rango' : '') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>') +
+        (estado.modo === 'vivir' ? '<a href="#compra/caminos/' + id + '/como"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-pronto') + '</span><span><strong>Ayudas para llegar antes</strong><small>Lo que puede acercar tu fecha</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
+        '<a href="#perfil/ayuda"><span class="fc-mas-icono gris" aria-hidden="true">' + icono('i-info') + '</span><span><strong>Qué significan estos términos</strong><small>' + (CAMINO_TERMINOS[id] || 'Pie, dividendo, preaprobación') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' +
+      '</nav>' +
+      '<p class="fc-cuidado">' + icono('i-alerta') + '<span><strong>Ten en cuenta:</strong> ' + inf.cuidado + '</span></p>' +
+    '</div>';
+  }
   function abrirInfoCamino(id, boton) {
-    var inf = INFO_CAMINO[id], n = numerosComparar(id);
-    var h = pasosDeCamino(id);
-    abrirHojaContenido(nombreCamino(id),
-      ilustracionCamino(id) +
-      '<p class="texto-apoyo">' + inf.que + '</p>' +
-      '<h3 class="h6 info-titulo">Cómo funciona</h3>' + pasosVisuales(id) +
-      '<details class="termino-detalle"><summary>Tus ' + h.total + ' pasos</summary>' + listaPasosPrevia(h) + '</details>' +
-      '<h3 class="h6 info-titulo">Con tus números</h3>' +
-      '<dl class="info-numeros">' + (esArrendarCamino(id) ? '' : '<div><dt>Te mudas</dt><dd>' + (n.mudas !== null && n.mudas <= 0 ? 'Ya' : mesCorto(n.mudas)) + '</dd></div>') +
-        '<div><dt>' + (esArrendarCamino(id) ? 'Firmas' : 'Es tuyo') + '</dt><dd>' + mesCorto(n.tuyo) + '</dd></div>' +
-        '<div><dt>Pagas al mes</dt><dd>' + (n.pagas ? formatoRedondeado(n.pagas) : '—') + '</dd></div></dl>' +
-      '<h3 class="h6 info-titulo">Para quién</h3><p class="texto-apoyo">' + inf.para + '</p>' +
-      '<p class="aviso aviso-icono">' + icono('i-alerta') + '<span><strong>Ten en cuenta:</strong> ' + inf.cuidado + '</span></p>' +
-      '<div class="acciones">' +
-        (id === estado.caminoElegido ? '' : '<button type="button" class="btn btn-primario btn-bloque" id="btn-info-elegir">Elegir este camino</button>') +
-        '<a class="enlace" href="' + rutaCamino(id) + '">Ver todo sobre este camino ›</a></div>', boton,
+    abrirHojaContenido(nombreCamino(id), fichaCaminoHtml(id) +
+      (id === estado.caminoElegido ? '' : '<div class="acciones accion-fija"><button type="button" class="btn btn-primario btn-bloque" id="btn-info-elegir">Elegir este camino</button></div>'), boton,
       function () {
         if ($('btn-info-elegir')) $('btn-info-elegir').addEventListener('click', function () { cerrarHoja(false); confirmarMiCamino(id, boton); });
       });
@@ -9472,6 +9480,8 @@
       if (q[1] === 'usados' && q[2]) return r('caminos', 'deptos', function () { location.replace('#departamentos/usado/' + q[2]); });
       if (q[1] === 'usados') return r('caminos', 'compra', function () { if (estado.modo === 'vivir') renderCaminoInfo('usados'); else renderUsados(); });
       if (q[1] === 'guardados') return r('caminos', 'deptos', renderGuardados);
+      // S36: para vivir, cada camino abre su ficha completa (la misma de la «i»).
+      if (q[1] && !q[2] && estado.modo === 'vivir' && INFO_CAMINO[q[1]] && CAMINOS_COMPARAR.indexOf(q[1]) !== -1) return r('caminos', 'compra', function () { renderCaminoInfo(q[1]); });
       if (q[1]) return r('caminos', 'compra', function () { renderUnCamino(q[1], q[2] === 'elegir'); });
       return r('caminos', 'compra', renderComparar);
     }

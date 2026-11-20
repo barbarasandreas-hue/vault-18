@@ -4531,3 +4531,49 @@ img { color: transparent; }
 .det-panel .barrio li strong { font-size: 15px; color: var(--gray-dark); }
 .det-panel .barrio li small { font-size: 12px; line-height: 1.35; color: var(--gray-semidark); }
 .det-panel .barrio .barrio-icono { width: 40px; height: 40px; border-radius: 12px; background: var(--white) !important; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(55,71,79,.12); }
+
+/* S36: ficha de un camino (lienzo P14) */
+.fc-titulo h1 { margin-bottom: 0; }
+.fc-cabeza { margin: 8px -20px 0; padding: 16px 20px 4px; }
+.fc-dibujo { border-radius: 20px; overflow: hidden; box-shadow: 0 6px 18px rgba(55,71,79,.16); }
+.fc-dibujo .ilustracion-camino { margin: 0; }
+.fc-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.fc-chip { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--white); color: var(--gray-dark); }
+.fc-chip.fuerte { background: var(--ci); color: var(--white); font-weight: 700; }
+.fc-que { margin: 10px 0 0; font-size: 16px; line-height: 1.45; color: var(--gray-semidark); }
+.fc-tarjeta { margin: 16px 0 0; padding: 16px; background: var(--white); border-radius: 16px; box-shadow: var(--sombra-1); }
+.fc-tarjeta h2 { margin: 0 0 10px; }
+.fc-numeros { display: flex; gap: 8px; }
+.fc-numeros > div { flex: 1; min-width: 0; padding: 12px; border-radius: 12px; background: var(--gray-light); display: flex; flex-direction: column; gap: 2px; }
+.fc-numeros small { font-size: 12px; color: var(--gray-semidark); }
+.fc-numeros small:last-child { font-size: 11px; }
+.fc-numeros strong { font-size: 17px; line-height: 1.2; color: var(--gray-dark); }
+.fc-sello { margin: 10px 0 0; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--green-dark); }
+.fc-sello svg { width: 16px; height: 16px; }
+.fc-pasos { margin: 8px -16px -16px; border-top: 1px solid var(--gray-semilight); }
+.fc-pasos summary { display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 16px; font-size: 15px; font-weight: 600; color: var(--blue-dark); cursor: pointer; list-style: none; }
+.fc-pasos summary::-webkit-details-marker { display: none; }
+.fc-pasos summary::after { content: ""; width: 9px; height: 9px; border-right: 2.2px solid currentColor; border-bottom: 2.2px solid currentColor; transform: rotate(45deg) translateY(-3px); }
+.fc-pasos[open] summary::after { transform: rotate(-135deg) translateY(-3px); }
+.fc-pasos > :not(summary) { padding: 0 16px 12px; }
+.fc-para { display: flex; gap: 12px; align-items: flex-start; }
+.fc-para-icono { width: 40px; height: 40px; flex: none; border-radius: 50%; background: var(--cs); color: var(--ci); display: grid; place-items: center; }
+.fc-para-icono svg { width: 20px; height: 20px; }
+.fc-para > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.fc-para strong { font-size: 15px; }
+.fc-para small { font-size: 14px; line-height: 1.4; color: var(--gray-semidark); }
+.fc-mas { margin: 16px 0 0; overflow: hidden; background: var(--white); border-radius: 16px; box-shadow: var(--sombra-1); }
+.fc-mas a { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 16px; text-decoration: none; color: var(--gray-dark); }
+.fc-mas a + a { border-top: 1px solid var(--gray-semilight); }
+.fc-mas a > span:nth-child(2) { display: flex; flex-direction: column; flex: 1; }
+.fc-mas strong { font-size: 15px; }
+.fc-mas small { font-size: 13px; color: var(--gray-semidark); }
+.fc-mas-icono { width: 40px; height: 40px; flex: none; border-radius: 12px; display: grid; place-items: center; }
+.fc-mas-icono svg { width: 22px; height: 22px; }
+.fc-mas-icono.verde { background: #D4E7D5; color: var(--green-dark); }
+.fc-mas-icono.azul { background: #D4E3F5; color: var(--blue-dark); }
+.fc-mas-icono.gris { background: var(--gray-light); color: var(--gray-semidark); }
+.fc-flecha { width: 20px; height: 20px; flex: none; transform: rotate(-90deg); color: var(--gray-semidark); }
+.fc-cuidado { margin: 16px 0 0; padding: 12px 16px; border-radius: 12px; background: #D4E3F5; color: var(--blue-dark); display: flex; gap: 8px; align-items: flex-start; font-size: 15px; line-height: 1.4; }
+.fc-cuidado svg { width: 22px; height: 22px; flex: none; }
+.det-panel .barrio .barrio-icono.rojo, .det-panel .barrio .barrio-icono.amarillo { color: var(--gray-semidark); }
