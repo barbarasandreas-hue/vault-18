@@ -47,7 +47,7 @@ test('C6 (E3): Conoce los caminos, con ilustración y pasos con íconos', () => 
 test('C7: el grupo compacto y comprar sin grupo como opción secundaria', () => {
   assert.match(app, /grupo-confianza compacta/);
   assert.match(app, /¿Prefieres comprarlo sin grupo\? ›/);
-  assert.match(app, /Con este, es tuyo<\/p>/);
+  assert.match(app, /Sería tuyo <strong>aprox. /); // S36: antes «Con este, es tuyo»
 });
 test('C8 (E8): perfil de ejemplo con avatar, sin nombres en la interfaz', () => {
   assert.match(app, /function usarPerfilEjemplo\(\)/);

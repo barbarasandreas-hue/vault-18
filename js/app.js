@@ -1115,6 +1115,56 @@
     }).join('') + '</dl>';
   }
 
+  // S36 (lienzo P41): Ayuda por temas, con buscador y cada palabra desplegable.
+  var TEMAS_AYUDA = [
+    ['Tu pie y tu ahorro', 'verde', 'i-alcancia', ['pie', 'uf', 'cuenta-vivienda', 'cuota-pie', 'regalo-pie', 'protector', 'donacion']],
+    ['Tu crédito', 'azul', 'i-banco', ['preaprobacion', 'dividendo', 'tu-limite', 'carga', 'tasa-ejemplo', 'simulacion', 'tasacion', 'garantia']],
+    ['Ayudas del Estado', 'celeste', 'i-escudo', ['ds1', 'rsh']],
+    ['Comprar y firmar', 'gris', 'i-documento', ['promesa', 'escritura', 'salida-sin-multa', 'terminado', 'mas-barato', 'cliente-bci', 'patrimonio']],
+    ['Comprar con otros', 'verde', 'i-grupo', ['compra-conjunto', 'meta-comun', 'comprador-respaldo', 'financiamiento-pie', 'participacion', 'cuenta-custodia']]
+  ];
+  function ayudaPorSecciones() {
+    var usados = [].concat.apply([], TEMAS_AYUDA.map(function (t) { return t[3]; }));
+    var otros = Object.keys(GLOSARIO).filter(function (k) { return usados.indexOf(k) === -1; });
+    var temas = TEMAS_AYUDA.concat(otros.length ? [['Otras palabras', 'gris', 'i-info', otros]] : []);
+    return '<section class="ayuda" aria-labelledby="titulo-ayuda">' +
+      '<h1 class="h2" id="titulo-ayuda" tabindex="-1">Ayuda</h1><p class="texto-apoyo">Las palabras de tu compra, explicadas simple.</p>' +
+      '<label class="ayuda-buscar">' + icono('i-buscar') + '<span class="oculto-visual">Buscar una palabra</span>' +
+        '<input type="search" id="ayuda-buscar" placeholder="Busca una palabra, por ejemplo «UF»" autocomplete="off"></label>' +
+      '<div class="ayuda-chips" role="group" aria-label="Temas">' + temas.map(function (t, i) {
+        return '<button type="button" class="ayuda-chip ' + t[1] + '" data-ayuda-tema="' + i + '">' + t[0] + '</button>';
+      }).join('') + '</div>' +
+      temas.map(function (t, i) {
+        var ks = t[3].filter(function (k) { return GLOSARIO[k]; });
+        return '<section class="ayuda-tema" id="ayuda-tema-' + i + '" aria-labelledby="ayuda-t' + i + '">' +
+          '<div class="ayuda-cab ' + t[1] + '"><span class="ayuda-icono" aria-hidden="true">' + icono(t[2]) + '</span>' +
+            '<span><h2 id="ayuda-t' + i + '">' + t[0] + '</h2><small>' + plural(ks.length, 'palabra', 'palabras') + '</small></span></div>' +
+          '<ul class="ayuda-lista">' + ks.map(function (k, j) {
+            return '<li data-ayuda-texto="' + esc((GLOSARIO[k].termino + ' ' + GLOSARIO[k].texto).toLowerCase()) + '"><details' + (i === 0 && j === 0 ? ' open' : '') + '><summary>' + GLOSARIO[k].termino + '</summary><p>' + GLOSARIO[k].texto + '</p></details></li>';
+          }).join('') + '</ul></section>';
+      }).join('') +
+      '<p class="texto-apoyo ayuda-nada" id="ayuda-nada" hidden>No encontramos esa palabra.</p></section>';
+  }
+  function iniciarAyuda(c) {
+    c.querySelectorAll('[data-ayuda-tema]').forEach(function (b) {
+      b.addEventListener('click', function () { var t = $('ayuda-tema-' + b.dataset.ayudaTema); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    });
+    var q = $('ayuda-buscar');
+    if (q) q.addEventListener('input', function () {
+      var v = q.value.trim().toLowerCase(), hay = 0;
+      c.querySelectorAll('.ayuda-tema').forEach(function (t) {
+        var n = 0;
+        t.querySelectorAll('[data-ayuda-texto]').forEach(function (li) {
+          var ok = !v || li.dataset.ayudaTexto.indexOf(v) !== -1;
+          li.hidden = !ok; if (ok) n++;
+          var d = li.querySelector('details'); if (d && v) d.open = ok;
+        });
+        t.hidden = !n; hay += n;
+      });
+      $('ayuda-nada').hidden = !!hay;
+    });
+  }
+
   // ---------- S7-F6: introducción (solo la primera vez, antes de Inicio) ----------
   var CLAVE_INTRO = 'primer-peldano-intro';
   function leerIntroVista() {
@@ -3432,24 +3482,27 @@
       (vivirAqui
         // S17-F1 y F2: para vivir, el mismo plazo que Inicio y Tu pie, con cifras redondeadas.
         // S33-C7: «Es tuyo» se calcula igual que en el resto de la app (tu pie + 3 meses hasta las llaves).
-        ? '<section class="detalle-llaves" aria-labelledby="det-llaves"><p id="det-llaves">Con este, es tuyo</p>' +
-            '<strong>' + (pd.meses === null || pd.meses === undefined ? 'Todavía no' : 'aprox. ' + fechaLlaves(pd.meses + MESES_SI_A_LLAVES, hoyDemo())) + '</strong>' +
-            '<p>' + FRENO[pd.freno] + '</p></section>' +
-          // 9-nov: el grupo va justo debajo de tus llaves.
-          (conjunto ? bloqueGrupo : '') +
-          '<ul class="detalle-filas">' +
-            '<li><span>Precio' + (enGrupo ? ' con descuento' : p.tipo === 'venta' && piezasValidas(piezasOn()).iva ? ' sin IVA' : '') + '</span><strong>' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong></li>' +
-            (enGrupo ? '<li><span>Ahorras en grupo hoy</span><strong>' + formatoRedondeado(r.ahorro) + '</strong></li>' : '') +
-            '<li><span>Juntas antes de firmar</span><strong>' + formatoRedondeado(pd.meta) + '</strong></li>' +
-            '<li><span>Dividendo al mes (con seguros)</span><span class="en-uf"><strong>' + formatoRedondeado(pd.dividendo) + '</strong><small>' + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2) + '</small></span></li>' +
-            '<li class="suave"><span>Si se acaba el subsidio a la tasa</span><span>' + formatoRedondeado(pd.dividendoSinSubsidio) + SEP + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + '</span></li>' +
-          '</ul>' +
-          grupoPosible +
-          // 11-nov (comentario): quiénes están en el grupo, justo antes de Tu mes como dueño.
-          (conjunto ? conoceGrupo : '') + soloPosible +
-          '<a class="tarjeta dueno-card" href="#compra/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
-            '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para tus gastos</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
-          barrioHtml(p) +
+        // S36 (lienzo P22, P25 y P62): menos scroll. Arriba el precio y cuándo sería tuyo; abajo, pestañas.
+        ? '<section class="det-precio" aria-labelledby="det-llaves">' +
+            '<p class="det-etq">Precio' + (enGrupo ? ' con descuento del grupo' : p.tipo === 'venta' && piezasValidas(piezasOn()).iva ? ' sin IVA' : '') + '</p>' +
+            '<div class="det-precio-fila"><strong class="det-precio-num">' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong>' +
+              (enGrupo && r.ahorro > 0 ? '<span class="det-ahorras">Ahorras ' + formatoRedondeado(r.ahorro) + '</span>' : '') + '</div>' +
+            '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>' + (pd.meses === null || pd.meses === undefined ? 'Todavía no te alcanza' : 'Sería tuyo <strong>aprox. ' + fechaLlaves(pd.meses + MESES_SI_A_LLAVES, hoyDemo()) + '</strong>') + '</span></p>' +
+            '<p class="det-freno">' + FRENO[pd.freno] + '</p></section>' +
+          pestanasDetalle(p, [
+            ['numeros', 'Números',
+              '<div class="det-cifras"><div><small>Juntas antes de firmar</small><strong>' + formatoRedondeado(pd.meta) + '</strong><small>pie y gastos</small></div>' +
+                '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(pd.dividendo) + '</strong><small>con seguros' + SEP + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2) + '</small></div></div>' +
+              '<p class="det-subsidio">' + icono('i-info') + '<span>Si se acaba el subsidio a la tasa, el dividendo sube a <strong>' + formatoRedondeado(pd.dividendoSinSubsidio) + '</strong> (' + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + ').</span></p>' +
+              grupoPosible +
+              '<a class="tarjeta dueno-card" href="#compra/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
+                '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para tus gastos</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
+              soloPosible +
+              '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>'],
+            conjunto && bloqueGrupo ? ['grupo', 'Grupo', bloqueGrupo + conoceGrupo] : null,
+            BARRIOS[p.comuna] ? ['barrio', 'Barrio', barrioSolo(p)] : null,
+            ['visita', 'Visita', visitaHtml(p)]
+          ]) +
           '<p class="llega-sello detalle-sello">' + icono('i-escudo') + 'Sin contar que el departamento suba de precio</p>'
         : '<div class="tarjeta protagonista">' +
         '<p class="etiqueta">Precio del departamento</p>' + precio +
@@ -3470,10 +3523,9 @@
         '</ul>')) +
 
       (p.tipo === 'venta'
-        ? '<p class="detalle-terminado">Edificio terminado' + SEP + 'lo recibes al firmar</p>' +
-          (vivirAqui ? '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>' : '')
+        ? (vivirAqui ? '' : '<p class="detalle-terminado">Edificio terminado' + SEP + 'lo recibes al firmar</p>')
         // S26: con el crédito con garantía del Estado (camino individual) no se muestra el grupo: no compra en grupo.
-        : (conjunto ? '' : bloqueGrupo) + (vivirAqui ? '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>' : '')) +
+        : (conjunto ? '' : bloqueGrupo)) +
 
       (ctx !== 'inversiones' ? '' :
       '<section class="tarjeta bloque" aria-labelledby="titulo-para-invertir">' +
@@ -3494,6 +3546,7 @@
 
     iniciarGalerias(contenedor);
     iniciarPlegables();
+    iniciarPestanasDetalle(contenedor);
     iniciarVisita(p);
     if ($('btn-detalle-credito')) $('btn-detalle-credito').addEventListener('click', function () {
       abrirHojaContenido('Detalle del crédito', repartoCasa(partesPiezas(pd), formatoRedondeado) +
@@ -7012,10 +7065,39 @@
       $('barrio-ruta').textContent = estado.trabajo ? 'En transporte público, desde ' + estado.trabajo : '';
     });
   }
-  function barrioHtml(p) {
+  var detPestana = { id: null, tab: 'numeros' };
+  function pestanasDetalle(p, lista) {
+    lista = lista.filter(Boolean);
+    if (detPestana.id !== p.id) detPestana = { id: p.id, tab: 'numeros' };
+    if (!lista.some(function (t) { return t[0] === detPestana.tab; })) detPestana.tab = lista[0][0];
+    return '<div class="det-tabs" role="tablist" aria-label="Información del departamento">' + lista.map(function (t) {
+        var on = t[0] === detPestana.tab;
+        return '<button type="button" role="tab" id="det-tab-' + t[0] + '" aria-controls="det-panel-' + t[0] + '" aria-selected="' + on + '" tabindex="' + (on ? 0 : -1) + '" data-det-tab="' + t[0] + '">' + t[1] + '</button>';
+      }).join('') + '</div>' +
+      lista.map(function (t) {
+        return '<section class="det-panel" role="tabpanel" id="det-panel-' + t[0] + '" aria-labelledby="det-tab-' + t[0] + '"' + (t[0] === detPestana.tab ? '' : ' hidden') + '>' + t[2] + '</section>';
+      }).join('');
+  }
+  function iniciarPestanasDetalle(cont) {
+    var tabs = cont.querySelectorAll('[data-det-tab]');
+    var mostrar = function (k, foco) {
+      detPestana.tab = k;
+      tabs.forEach(function (b) { var on = b.dataset.detTab === k; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; if (on && foco) b.focus(); });
+      cont.querySelectorAll('.det-panel').forEach(function (pn) { pn.hidden = pn.id !== 'det-panel-' + k; });
+    };
+    tabs.forEach(function (b, i) {
+      b.addEventListener('click', function () { mostrar(b.dataset.detTab); });
+      b.addEventListener('keydown', function (ev) {
+        var d = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { ev.preventDefault(); mostrar(tabs[(i + d + tabs.length) % tabs.length].dataset.detTab, true); }
+      });
+    });
+  }
+  function barrioHtml(p) { return barrioSolo(p) + visitaHtml(p); }
+  // S36: el barrio en cuadros de color y la visita, por separado (cada uno en su pestaña del detalle).
+  function barrioSolo(p) {
     var b = BARRIOS[p.comuna];
     if (!b) return '';
-    var hechos = estado.visita[p.id] || [];
     var fila = function (k, titulo, texto) {
       return '<li><span class="barrio-icono ' + ICONOS_BARRIO[k][0] + '" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="' + ICONOS_BARRIO[k][1] + '"/></svg></span><span><strong>' + titulo + '</strong><small>' + texto + '</small></span></li>';
     };
@@ -7029,9 +7111,11 @@
           '<button type="submit" class="btn btn-secundario-dark btn-sm">Ver ruta</button></div>' +
           '<p class="barrio-ruta" id="barrio-ruta" aria-live="polite">' + (estado.trabajo ? 'En transporte público, desde ' + esc(estado.trabajo) : '') + '</p></form>' +
         '<a class="barrio-link" id="barrio-abrir" href="' + urlMapaAfuera(p.comuna, estado.trabajo) + '" target="_blank" rel="noopener">Abrir en Google Maps</a>' +
-      '</section>' +
-      // 9-nov: plegada; se abre al tocar el título.
-      '<details class="tarjeta visita">' +
+      '</section>';
+  }
+  function visitaHtml(p) {
+    var hechos = estado.visita[p.id] || [];
+    return '<details class="tarjeta visita" open>' +
         '<summary class="visita-cabeza"><h2 id="titulo-visita">Qué revisar en la visita</h2><span id="visita-cuenta">' + hechos.length + ' de ' + REVISAR_VISITA.length + '</span>' +
           '<svg class="plegable-flecha" aria-hidden="true"><use href="#i-flecha"/></svg></summary>' +
         '<ul>' + REVISAR_VISITA.map(function (r, i) {
@@ -9244,7 +9328,8 @@
       return;
     }
     if (sub === 'ayuda') {
-      c.innerHTML = volver + '<section class="tarjeta bloque" aria-labelledby="titulo-ayuda"><h2 class="h4" id="titulo-ayuda">Ayuda</h2>' + glosarioCompleto() + '</section>';
+      c.innerHTML = volver + ayudaPorSecciones();
+      iniciarAyuda(c);
       return;
     }
     var activos = TIPOS_AVISO.filter(function (t) { return !estado.avisosApagados[t]; }).length;
