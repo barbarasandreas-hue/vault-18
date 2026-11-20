@@ -4781,3 +4781,33 @@ img { color: transparent; }
 .fp-marca.q { background: #D4E3F5; color: var(--blue-dark); }
 .fp-sello { display: flex; gap: 6px; align-items: center; margin: 14px 0 0; font-size: 13px; color: var(--gray-semidark); }
 .fp-sello svg { width: 16px; height: 16px; }
+/* 20-nov: detalle para arrendar, sección «Ganancia» */
+.ga { display: flex; flex-direction: column; gap: 10px; padding: 16px; margin-bottom: 12px; border-radius: 16px; background: var(--white); box-shadow: var(--sombra-1); border-top: 4px solid var(--green-normal); }
+.ga h2 { margin: 0; }
+.ga-sub { margin: -4px 0 0; font-size: 13px; color: var(--gray-semidark); }
+.ga-barras { display: grid; gap: 6px; }
+.ga-fila { display: grid; grid-template-columns: 40px 1fr; align-items: center; gap: 8px; }
+.ga-fila small { font-size: 12px; font-weight: 600; color: var(--gray-semidark); }
+.ga-pista { display: flex; gap: 2px; height: 16px; border-radius: 8px; overflow: hidden; background: var(--gray-light); }
+.ga-pista span { display: block; height: 100%; }
+.ga-arriendo, .ga-punto.arriendo { background: var(--green-normal); }
+.ga-gastos, .ga-punto.gastos { background: var(--gray-neutral); }
+.ga-dividendo, .ga-punto.dividendo { background: var(--blue-normal); }
+.ga-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ga-lista li { display: grid; grid-template-columns: 10px 1fr auto; gap: 8px; align-items: center; font-size: 14px; color: var(--gray-dark); }
+.ga-lista strong { font-size: 15px; }
+.ga-punto { width: 10px; height: 10px; border-radius: 50%; }
+.ga-total { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 14px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+.ga-total strong { font-size: 20px; }
+.ga-total.positivo { background: #EAF4EA; color: var(--green-dark); }
+.ga-total.negativo { background: var(--gray-semilight); color: var(--gray-dark); }
+.ga-nota { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 13px; line-height: 1.35; color: var(--gray-dark); }
+.ga-nota svg { width: 18px; height: 18px; flex: none; color: var(--blue-normal); }
+.ga-cifras { margin-bottom: 12px; }
+.ga-riesgos { display: grid; gap: 8px; padding: 14px 16px; border-radius: 16px; background: var(--white); box-shadow: var(--sombra-1); }
+.ga-riesgos h3 { margin: 0; }
+.ga-riesgos p { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 13px; line-height: 1.35; color: var(--gray-dark); }
+.ga-riesgos svg { width: 18px; height: 18px; flex: none; color: var(--gray-semidark); }
+.det-tabs button { padding: 0 4px; }
+.ga-total span small { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--gray-semidark); }
+.ga-total strong { white-space: nowrap; }

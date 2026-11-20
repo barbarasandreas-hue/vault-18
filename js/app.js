@@ -606,9 +606,12 @@
     return estado.modo !== 'vivir' && compraSinGrupo(proyecto) ? resumenSinGrupo(proyecto, r) : r;
   }
   // 9-nov: para invertir, un edificio en obra con grupo comprado solo (Crédito al 80 %): precio de lista, sin descuento.
-  function resumenSinGrupo(p, r) {
+  // 20-nov: sin grupo, con el financiamiento del camino (pie compartido: 5 % + inversionistas; familiar: 95 %).
+  function resumenSinGrupo(p, r, caminoVista) {
     var d = departamentosDe(p.id)[0];
-    return Object.assign({}, r, { tipoCompra: 'individual', escenario: escenario(d.listaUF, 'individual', 'propio', 1), ahorro: 0, ahorroCompleto: 0,
+    var c = CAMINOS[caminoVista] || CAMINOS[estado.caminoElegido];
+    var modo = c && c.inversionistas > 0 ? 'arrendar' : c && c.familiar ? 'familiar' : 'propio';
+    return Object.assign({}, r, { tipoCompra: 'individual', escenario: escenario(d.listaUF, 'individual', modo, 1), ahorro: 0, ahorroCompleto: 0,
       descuento: 0, rentabilidad: rentabilidad(d.arriendoEstimadoIA, d.listaUF) });
   }
   // S18-F7: para vivir, el crédito de toda la compra (Postular, preaprobación, Firmar y Mi departamento)
@@ -3395,6 +3398,75 @@
     if (estado.pasos.preaprobado) { guardarSubpaso('resultado'); location.hash = '#compra/postular/resultado'; }
     else location.hash = '#compra/postular/datos';
   }
+  function grupoInvertirHtml(p, ahorroGrupo) {
+    return '<a class="tarjeta fila grupo-posible" href="#compra/proyecto/' + esc(p.id) + '/grupo-invertir">' + icono('i-grupo', 'icono-grande') +
+      '<span><strong>Si te unes a su grupo</strong><small>Podrías pagar ' + formatoRedondeado(ahorroGrupo) + ' menos</small></span>' +
+      '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>';
+  }
+  // 20-nov (Bárbara): el detalle para arrendar, como el de vivir: arriba el precio y cuándo firmas; abajo, pestañas
+  // (Números, Ganancia, Grupo, Barrio y Visita). «Ganancia»: lo que entra con el arriendo, lo que sale y lo que te queda.
+  function detalleArrendarHtml(p, r, e, o) {
+    var perfil = perfilActual();
+    var falta = Math.max(0, e.alEscriturar - (perfil.ahorroActual || 0));
+    var mPie = falta === 0 ? 0 : mesesParaMeta(falta, perfil.ahorroMensual);
+    var mFirma = mPie === null || !isFinite(mPie) ? null : Math.max(mPie + MESES_SI_A_LLAVES, mesesParaEntrega(p));
+    var bruto = r.arriendoBruto, neto = Math.round(arriendoNeto(bruto)), gastos = bruto - neto;
+    var dividendo = e.dividendo, queda = neto - dividendo;
+    var conInv = e.participacionUF > 0;
+    var rec = conInv ? plazoRecompra(e.participacionUF, r.netoMensualUF, 1) : null;
+    var peor = Math.round(arriendoNeto(bruto * PEOR_CASO_ARRIENDO)) - dividendo;
+    var plata = function (v) { return (v < 0 ? '−' : '+') + formatoRedondeado(Math.abs(v)); };
+    var escala = Math.max(bruto, gastos + dividendo);
+    var ancho = function (v) { return Math.max(2, Math.round(v / escala * 100)) + '%'; };
+    var anios = function (m) { return m === null ? '—' : m < 12 ? plural(m, 'mes', 'meses') : (Math.round(m / 6) / 2).toString().replace('.', ',') + ' años'; };
+    var precioNum = o.enGrupo ? e.precio : (o.solo ? ufAPesos(o.listaUF) : e.precio);
+    var ganancia =
+      '<section class="ga" aria-labelledby="ga-titulo"><h2 class="h5" id="ga-titulo">Lo que ganas al arrendarlo</h2>' +
+        '<p class="ga-sub">Cada mes, con el arriendo estimado por IA</p>' +
+        '<div class="ga-barras" aria-hidden="true">' +
+          '<div class="ga-fila"><small>Entra</small><div class="ga-pista"><span class="ga-arriendo" style="width:' + ancho(bruto) + '"></span></div></div>' +
+          '<div class="ga-fila"><small>Sale</small><div class="ga-pista"><span class="ga-gastos" style="width:' + ancho(gastos) + '"></span><span class="ga-dividendo" style="width:' + ancho(dividendo) + '"></span></div></div>' +
+        '</div>' +
+        '<ul class="ga-lista">' +
+          '<li><span class="ga-punto arriendo" aria-hidden="true"></span><span>Arriendo</span><strong>' + formatoRedondeado(bruto) + '</strong></li>' +
+          '<li><span class="ga-punto gastos" aria-hidden="true"></span><span>Administración y un mes vacío al año</span><strong>−' + formatoRedondeado(gastos) + '</strong></li>' +
+          '<li><span class="ga-punto dividendo" aria-hidden="true"></span><span>Dividendo</span><strong>−' + formatoRedondeado(dividendo) + '</strong></li>' +
+        '</ul>' +
+        (conInv
+          ? '<div class="ga-total negativo"><span>Mientras compras la parte de los inversionistas (' + (rec && !rec.noAlcanza ? 'unos ' + anios(rec.meses) : 'más de 7 años') + '), pones al mes<small>El arriendo va a esa compra; el dividendo lo pagas tú</small></span><strong>' + formatoRedondeado(dividendo) + '</strong></div>' +
+            '<div class="ga-total ' + (queda >= 0 ? 'positivo' : 'negativo') + '"><span>Después, ' + (queda >= 0 ? 'te queda al mes' : 'pones al mes') + '</span><strong>' + formatoRedondeado(Math.abs(queda)) + '</strong></div>'
+          : '<div class="ga-total ' + (queda >= 0 ? 'positivo' : 'negativo') + '"><span>' + (queda >= 0 ? 'Te queda al mes' : 'Pones de tu bolsillo al mes') + '</span><strong>' + formatoRedondeado(Math.abs(queda)) + '</strong></div>') +
+      '</section>' +
+      '<div class="det-cifras ga-cifras"><div><small>Rentabilidad neta</small><strong>' + formatoPorcentaje(r.rentabilidad, 1) + '</strong><small>al año, sobre el precio</small></div>' +
+        '<div><small>Arriendo neto al año</small><strong>' + formatoRedondeado(neto * 12) + '</strong><small>después de gastos</small></div></div>' +
+      '<section class="ga-riesgos" aria-labelledby="ga-riesgos-t"><h3 class="h6" id="ga-riesgos-t">Si las cosas salen peor</h3>' +
+        '<p>' + icono('i-flujo') + '<span>Si el arriendo es 10' + NBSP + '% más bajo: ' + (peor >= 0 ? 'te quedan ' : 'pones ') + '<strong>' + formatoRedondeado(Math.abs(peor)) + '</strong> al mes.</span></p>' +
+        '<p>' + icono('i-alerta') + '<span>Un mes sin arrendatario: el dividendo de ' + formatoRedondeado(dividendo) + ' lo pagas tú.</span></p>' +
+      '</section>' +
+      '<p class="llega-sello detalle-sello">' + icono('i-escudo') + 'Sin contar que el departamento suba de precio</p>';
+    var numeros =
+      '<div class="det-cifras"><div><small>Juntas antes de firmar</small><strong>' + formatoRedondeado(e.alEscriturar) + '</strong><small>pie y gastos</small></div>' +
+        '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(dividendo) + '</strong><small>con seguros' + SEP + ufDecimales(dividendo / SUPUESTOS.uf, 2) + '</small></div></div>' +
+      '<p class="det-subsidio">' + icono('i-info') + '<span>Si se acaba el subsidio a la tasa, el dividendo sube a <strong>' + formatoRedondeado(e.dividendoSinSubsidio) + '</strong>.</span></p>' +
+      o.extraNumeros +
+      plegable('detalle-credito', 'Ver detalle del crédito', '', repartoCasa(partesEscenario(e)) +
+        '<ul class="datos-inversion"><li><span>Gastos al firmar</span><strong>' + formatoRedondeado(e.gastos) + '</strong></li></ul>');
+    return '<section class="det-precio" aria-labelledby="det-llaves">' +
+        '<p class="det-etq">Precio' + (o.enGrupo ? ' con descuento del grupo' : '') + '</p>' +
+        '<div class="det-precio-fila"><strong class="det-precio-num">' + formatoRedondeado(precioNum) + '</strong>' +
+          (o.enGrupo && r.ahorro > 0 ? '<span class="det-ahorras">Ahorras ' + formatoRedondeado(r.ahorro) + '</span>' : '') + '</div>' +
+        '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>' + (mFirma === null ? 'Todavía no te alcanza' : 'Firmas <strong>aprox. ' + fechaLlaves(mFirma, hoyDemo()) + '</strong>') + '</span></p>' +
+        '<p class="det-freno">Lo arriendas en unos ' + formatoRedondeado(bruto) + ' al mes' + (conInv ? '' : SEP + (queda >= 0 ? 'te quedan ' + formatoRedondeado(queda) : 'pones ' + formatoRedondeado(-queda))) + '</p>' +
+        (o.enGrupo ? cierreGrupoHtml(p, 'en-azul') : '') +
+      '</section>' +
+      pestanasDetalle(p, [
+        ['numeros', 'Números', numeros],
+        ['ganancia', 'Ganancia', ganancia],
+        o.grupo ? ['grupo', 'Grupo', o.grupo] : null,
+        BARRIOS[p.comuna] ? ['barrio', 'Barrio', barrioSolo(p)] : null,
+        ['visita', 'Visita', visitaHtml(p)]
+      ]);
+  }
   // 20-nov (Bárbara): «Formas de pagar menos» en el detalle de un departamento: la garantía del Estado (FOGAES)
   // y el subsidio DS1, con cuánto cambian lo que juntas y lo que pagas al mes, tus requisitos y un botón
   // para sumarlos a tus pasos como misión.
@@ -3540,8 +3612,10 @@
     var solo = conjunto && ctx !== 'inversiones' && (caminoSinGrupo || compraSinGrupo(p));
     var enGrupo = conjunto && !solo;
     var ahorroGrupo = r.ahorro;
-    if (solo && estado.modo !== 'vivir') { r = resumenSinGrupo(p, r); e = r.escenario; }
+    if (solo && estado.modo !== 'vivir') { r = resumenSinGrupo(p, r, caminoVista); e = r.escenario; }
     var pd = vivirAqui ? plazoDepartamento(p, null, solo) : null;
+    // 20-nov (Bárbara): para arrendar, el detalle va en secciones como el de vivir, con una de lo que ganas.
+    var arrendarAqui = estado.modo === 'arrendar' && ctx !== 'inversiones';
 
     var precio = enGrupo
       ? '<p class="precio-lista">Precio de lista <s>' + formatoPesos(e.precioLista) + '</s></p>' +
@@ -3640,13 +3714,15 @@
         '<p class="texto-apoyo">' + esc(p.comuna) + SEP + ficha(d) + '</p>' +
       '</header>' +
       galeria(fotosDe(p, d)) +
-      (conjunto && !vivirAqui ? bloqueGrupo + conoceGrupo + soloPosible : '') +
-      (solo && !vivirAqui && !esMiCompra && !grupoCerrado(p) && r.cuposLibres > 0 && ahorroGrupo > 0
-        ? '<a class="tarjeta fila grupo-posible" href="#compra/proyecto/' + esc(p.id) + '/grupo-invertir">' + icono('i-grupo', 'icono-grande') +
-          '<span><strong>Si te unes a su grupo</strong><small>Podrías pagar ' + formatoRedondeado(ahorroGrupo) + ' menos</small></span>' +
-          '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' : '') +
+      (conjunto && !vivirAqui && !arrendarAqui ? bloqueGrupo + conoceGrupo + soloPosible : '') +
+      (solo && !vivirAqui && !arrendarAqui && !esMiCompra && !grupoCerrado(p) && r.cuposLibres > 0 && ahorroGrupo > 0 ? grupoInvertirHtml(p, ahorroGrupo) : '') +
 
-      (vivirAqui
+      (arrendarAqui ? detalleArrendarHtml(p, r, e, {
+          enGrupo: enGrupo, conjunto: conjunto, solo: solo, listaUF: d.listaUF,
+          grupo: conjunto && bloqueGrupo ? bloqueGrupo + conoceGrupo : '',
+          extraNumeros: (solo && !esMiCompra && !grupoCerrado(p) && r.cuposLibres > 0 && ahorroGrupo > 0 ? grupoInvertirHtml(p, ahorroGrupo) : '') + (conjunto && !solo ? soloPosible : '')
+        }) :
+      vivirAqui
         // S17-F1 y F2: para vivir, el mismo plazo que Inicio y Tu pie, con cifras redondeadas.
         // S33-C7: «Es tuyo» se calcula igual que en el resto de la app (tu pie + 3 meses hasta las llaves).
         // S36 (lienzo P22, P25 y P62): menos scroll. Arriba el precio y cuándo sería tuyo; abajo, pestañas.
@@ -3685,10 +3761,10 @@
         '<p class="texto-apoyo">Sin subsidio: ' + formatoPesos(e.dividendoSinSubsidio) + ' al mes ' + ayuda('dividendo') + '</p>' +
         '<p class="sello"><svg aria-hidden="true"><use href="#i-escudo"/></svg>Sin contar que el departamento suba de precio</p>' +
       '</div>') +
-      rinde +
+      (arrendarAqui ? '' : rinde) +
 
       // S19-B1: el detalle del crédito queda plegado; a la vista, las filas que deciden.
-      (vivirAqui ? '' : plegable('detalle-credito', 'Ver detalle del crédito', '',
+      (vivirAqui || arrendarAqui ? '' : plegable('detalle-credito', 'Ver detalle del crédito', '',
         // S18-F4: para vivir, redondeado; los exactos quedan en la simulación, la preaprobación y Firmar.
         (vivirAqui ? repartoCasa(partesPiezas(pd), formatoRedondeado) : repartoCasa(partesEscenario(e))) +
         '<ul class="datos-inversion">' +
@@ -3697,7 +3773,7 @@
           (vivirAqui && enGrupo && r.ahorroCompleto > r.ahorro ? '<li><span>Si el grupo llega a 5 personas, ahorras</span><strong>' + formatoRedondeado(r.ahorroCompleto) + '</strong></li>' : '') +
         '</ul>')) +
 
-      (p.tipo === 'venta'
+      (arrendarAqui ? '' : p.tipo === 'venta'
         ? (vivirAqui ? '' : '<p class="detalle-terminado">Edificio terminado' + SEP + 'lo recibes al firmar</p>')
         // S26: con el crédito con garantía del Estado (camino individual) no se muestra el grupo: no compra en grupo.
         : (conjunto ? '' : bloqueGrupo)) +
