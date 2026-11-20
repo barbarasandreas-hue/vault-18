@@ -7871,26 +7871,23 @@
   function ladoALadoHtml(nums) {
     var dos = comparaSel.map(function (id) { return nums.filter(function (n) { return n.id === id; })[0]; }).filter(Boolean);
     if (dos.length < 2) return '<p class="texto-apoyo lado-vacio"><small>Toca otro camino para verlos lado a lado.</small></p>';
-    var fila = function (titulo, f) {
-      return '<tr><th scope="row">' + titulo + '</th>' + dos.map(function (n) { return '<td>' + f(n) + '</td>'; }).join('') + '</tr>';
-    };
+    // 20-nov (como en Claude Design): dos columnas, una por camino, con solo lo importante.
     var plata = function (v) { return v === null || v === undefined ? '—' : formatoRedondeado(v); };
-    return '<table class="lado-a-lado"><caption class="oculto-visual">Dos caminos lado a lado</caption>' +
-      '<thead><tr><td></td>' + dos.map(function (n) { return '<th scope="col">' + nombreCamino(n.id) + '</th>'; }).join('') + '</tr></thead><tbody>' +
-      (estado.modo === 'arrendar' ? '' : fila('Te mudas', function (n) { return n.mudas !== null && n.mudas <= 0 ? 'Ya' : mesPlazo(n.mudas).replace('aprox. ', ''); })) +
-      fila(estado.modo === 'arrendar' ? 'Firmas' : 'Es tuyo', function (n) { return mesTuyo(n.tuyo).replace('aprox. ', ''); }) +
-      fila('Pasos', function (n) { return String(pasosDeCamino(n.id).total); }) +
-      fila('Juntas', function (n) { return plata(n.pie) + (n.pieNota ? '<small>' + n.pieNota + '</small>' : ''); }) +
-      fila('Dividendo al mes', function (n) { return plata(n.pagas) + (n.pagasNota ? '<small>' + n.pagasNota + '</small>' : ''); }) +
-      fila('Departamento', function (n) { return INFO_CAMINO[n.id].depto; }) +
-      fila('Lo bueno', function (n) { return INFO_CAMINO[n.id].bueno; }) +
-      fila('Ojo', function (n) { return INFO_CAMINO[n.id].ojo; }) +
-      '<tr class="lado-acciones"><td></td>' + dos.map(function (n) {
-        return '<td>' + (n.id === estado.caminoElegido ? '<span class="lado-tuyo">' + icono('i-check') + 'Tu camino</span>'
-          : '<button type="button" class="btn btn-primario btn-chico" data-elegir-camino="' + n.id + '" aria-haspopup="dialog">Elegir</button>') +
-          '<a class="enlace" href="' + rutaCamino(n.id) + '">Conocer ›</a></td>';
-      }).join('') + '</tr>' +
-      '</tbody></table>';
+    var dato = function (etq, val, nota, clase) { return '<span class="ll-dato' + (clase ? ' ' + clase : '') + '"><small>' + etq + '</small><strong>' + val + '</strong>' + (nota ? '<small>' + nota + '</small>' : '') + '</span>'; };
+    return '<div class="lado-a-lado"><div class="ll-columnas">' + dos.map(function (n) {
+      var c = COLOR_CAMINO[n.id] || COLOR_CAMINO.todos;
+      return '<div class="ll-col" style="border-top-color:' + c[1] + '">' +
+        '<strong class="ll-nombre">' + nombreCamino(n.id) + '</strong>' +
+        dato(estado.modo === 'arrendar' ? 'Firmas' : 'Es tuyo', mesTuyo(n.tuyo).replace('aprox. ', ''), '', 'fuerte') +
+        (n.id === 'arriendo-opcion' ? dato('Te mudas', n.mudas !== null && n.mudas <= 0 ? 'Ya' : mesPlazo(n.mudas).replace('aprox. ', '')) : '') +
+        dato('Juntas', plata(n.pie), n.pieNota || 'pie y gastos') +
+        dato('Pagas al mes', plata(n.pagas), n.pagasNota || 'dividendo') +
+        '<span class="ll-bueno">' + icono('i-check') + INFO_CAMINO[n.id].bueno + '</span>' +
+        '<span class="ll-ojo">' + icono('i-info') + INFO_CAMINO[n.id].ojo + '</span>' +
+        (n.id === estado.caminoElegido ? '<span class="lado-tuyo">' + icono('i-check') + 'Tu camino</span>'
+          : '<button type="button" class="btn btn-secundario ll-elegir" data-elegir-camino="' + n.id + '" aria-haspopup="dialog">Elegir</button>') +
+      '</div>';
+    }).join('') + '</div></div>';
   }
   function rutaCamino(id) { return '#compra/caminos/' + id; }
   // La barra «Antes ibas por X · Volver», hasta que avanzas un paso.
