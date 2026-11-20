@@ -7849,7 +7849,8 @@
     var pasoA = anioFin - hoy.getFullYear() > 6 ? 2 : 1, anios = [];
     for (var y = hoy.getFullYear() + 1; y <= anioFin; y += pasoA) anios.push('<span style="left:' + (((y - hoy.getFullYear()) * 12 - mes0) / total * 100).toFixed(1) + '%">' + y + '</span>');
     var pct = function (m) { return Math.max(4, Math.min(100, Math.round(m / total * 100))) + '%'; };
-    return '<div class="cr-anios" aria-hidden="true">' + anios.join('') + '</div><ul class="carrera-lista cr-lista">' + nums.map(function (n) {
+    // 20-nov: sin la línea de años arriba ni la fecha escrita bajo cada camino; la barra muestra cuánto falta.
+    return '<ul class="carrera-lista cr-lista">' + nums.map(function (n) {
       var sel = comparaSel.indexOf(n.id) !== -1;
       var nota = n.id === 'arriendo-opcion' ? (n.mudas === null ? INFO_CAMINO[n.id].ojo : 'Te mudas ' + (n.mudas <= 0 ? 'ya' : mesPlazo(n.mudas).replace('aprox. ', 'en ')))
         : (DATOS_CAMINO[n.id] ? DATOS_CAMINO[n.id][0] : '') + SEP + INFO_CAMINO[n.id].depto;
@@ -7859,8 +7860,7 @@
             (sel ? '<span class="cr-check" aria-hidden="true">' + icono('i-check') + '</span>' : '') + '</span>' +
           '<span class="cr-pista" aria-hidden="true"><i style="width:' + (n.tuyo === null ? 0 : pct(n.tuyo)) + '"></i>' +
             (n.id === 'arriendo-opcion' && n.mudas !== null ? '<b style="left:' + pct(Math.max(0, n.mudas)) + '"></b>' : '') + '</span>' +
-          '<span class="carrera-pie"><span class="carrera-fecha">' + (n.tuyo === null ? 'Todavía no te alcanza' : (esArrendarCamino(n.id) ? 'Firmas ' : 'Es tuyo ') + mesTuyo(n.tuyo)) + '</span>' +
-            '<small>' + nota + '</small></span>' +
+          '<span class="carrera-pie"><span class="carrera-fecha">' + (n.tuyo === null ? 'Todavía no te alcanza' : (esArrendarCamino(n.id) ? 'Firmas ' : 'Es tuyo ') + mesTuyo(n.tuyo)) + '</span></span>' +
         '</button>' +
         '<button type="button" class="carrera-info" data-info-camino="' + n.id + '" aria-haspopup="dialog" aria-label="Cómo funciona ' + nombreCamino(n.id) + '">' +
           '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5h.01"/></svg></button>' +
@@ -7961,9 +7961,7 @@
         '<input type="range" id="rango-comparar" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '" aria-valuetext="' + formatoRedondeado(mensual) + ' al mes">' +
       '</section>' +
       '<section class="carrera" aria-labelledby="titulo-carrera"><h2 class="h5" id="titulo-carrera">' + (arrendar ? '¿Cuándo firmas con cada camino?' : '¿Cuándo es tuyo con cada camino?') + '</h2>' +
-        // S34: estas fechas son del tope de tu rango; tu departamento puede salir antes (y esa es la fecha de Tu compra).
-        '<p class="texto-apoyo carrera-ayuda"><small>' + (rangoActual() ? 'Para un departamento de ' + formatoUF(rangoActual().hasta) + ', el tope de tu rango. Con uno más barato, llegas antes. ' : '') +
-          (arrendar ? '' : '«Te mudas» es cuando vives ahí; «Es tuyo», cuando firmas. ') + 'Toca dos caminos para verlos lado a lado.</small></p>' +
+        // 20-nov: sin la descripción bajo el título.
         '<div id="carrera-cuerpo" aria-live="polite">' + carreraHtml(nums, paraTi) + '</div></section>' +
       '<section class="lado" aria-labelledby="titulo-lado"><h2 class="h5" id="titulo-lado">Lado a lado</h2>' +
         '<div id="lado-cuerpo">' + ladoALadoHtml(nums) + '</div></section>' +

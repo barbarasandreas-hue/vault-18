@@ -4678,3 +4678,10 @@ img { color: transparent; }
 .intro-escalera i:nth-child(5) { height: 150px; padding-top: 10px; }
 .intro-puntos li { align-items: center; }
 .intro-puntos li > span:last-child { white-space: nowrap; }
+/* 20-nov: al elegir un camino en Comparar, el bloque no cambia de tamaño */
+.cr-item .carrera-fila, .cr-item .carrera-fila[aria-pressed="true"] { border: 1.6px solid var(--gray-semilight); border-left: 4px solid var(--cf); }
+.cr-item.sel .carrera-fila { border-color: var(--blue-normal); border-left-color: var(--cf); box-shadow: inset 0 0 0 1px var(--blue-normal); }
+.cr-item .carrera-cab { position: relative; min-height: 24px; padding-right: 26px; }
+.cr-item .cr-check { position: absolute; right: 0; top: 50%; margin: -11px 0 0; }
+.cr-item .cr-pista { margin-bottom: 2px; }
+.cr-punto { display: none; }
