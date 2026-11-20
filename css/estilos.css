@@ -4631,3 +4631,12 @@ img { color: transparent; }
 .cal-notas p:first-child { padding: 12px; border-radius: 12px; background: #D4E3F5; color: var(--blue-dark); }
 .cal-notas svg { width: 20px; height: 20px; flex: none; }
 .cal-fila.ok .cal-marca svg { color: var(--green-normal); }
+
+/* 20-nov: el bloque del precio en el detalle vuelve a ser azul, como antes */
+.det-precio { background: linear-gradient(180deg, var(--blue-dark) 0%, var(--blue-normal) 100%); color: var(--white); box-shadow: 0 6px 18px rgba(29,86,153,.22); }
+.det-precio .det-etq { color: var(--white); opacity: .9; font-weight: 600; }
+.det-precio-num { color: var(--white); }
+.det-ahorras { background: rgba(255,255,255,.2); color: var(--white); }
+.det-tuyo { background: rgba(255,255,255,.16); color: var(--white); }
+.det-tuyo strong { color: var(--white); }
+.det-freno { color: var(--white); opacity: .9; }
