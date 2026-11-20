@@ -2409,6 +2409,16 @@
   var pasoInicio = null;
   function fechaCorta(iso) { return formatoFecha(iso).replace(/ de \d{4}$/, ''); }
   // Con compra: cuándo llegas según lo que falta del pie y la entrega del edificio.
+  // 20-nov: la compra en grupo tiene una fecha fija; se ve siempre (en Tu compra y en el detalle).
+  function cierreGrupoHtml(p, clase) {
+    if (!p || p.tipo !== 'conjunto' || !p.cierre) return '';
+    var d = diasEntre(hoyDemo(), p.cierre);
+    var asegurado = !!(estado.pasos && estado.pasos.preaprobado);
+    var texto = d <= 0 ? 'El grupo ya cerró el ' + formatoFecha(p.cierre)
+      : (asegurado ? 'El grupo cierra el ' : 'Asegura tu cupo antes del ') + formatoFecha(p.cierre);
+    return '<p class="cierre-grupo ' + (clase || '') + (d > 0 && d <= 14 ? ' pronto' : '') + '">' + icono('i-pronto') +
+      '<span>' + texto + (d > 0 ? '<b>' + (d === 1 ? 'Queda 1 día' : 'Quedan ' + d + ' días') + '</b>' : '') + '</span></p>';
+  }
   function cuandoLlegasCompra(p, sinObra) {
     var meta = metaCompra(p);
     var pl = plazoTuPie(p, meta);
@@ -2422,6 +2432,7 @@
       '<strong class="numero noche-plazo">' + (mesesPie === 0 ? '¡Listo!' : mesesRango(mesesPie, mesesPie)) + '</strong>' +
       (aproxRango(mesesPie, mesesPie) ? '<span class="noche-aprox">' + aproxRango(mesesPie, mesesPie) + '</span>' : '') +
       '<p class="noche-sub">' + (sinObra ? 'Es tuyo aprox. en ' + fechaLlaves(pl.meses + MESES_SI_A_LLAVES, hoyDemo()) : 'Tus llaves: ' + fechaLlaves(pl.meses, hoyDemo())) + '</p>' +
+      cierreGrupoHtml(p, 'en-azul') +
       (sinObra ? '' : tarjetaObra(true)) +
     '</section>';
   }
@@ -3491,7 +3502,7 @@
             '<div class="det-precio-fila"><strong class="det-precio-num">' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong>' +
               (enGrupo && r.ahorro > 0 ? '<span class="det-ahorras">Ahorras ' + formatoRedondeado(r.ahorro) + '</span>' : '') + '</div>' +
             '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>' + (pd.meses === null || pd.meses === undefined ? 'Todavía no te alcanza' : 'Sería tuyo <strong>aprox. ' + fechaLlaves(pd.meses + MESES_SI_A_LLAVES, hoyDemo()) + '</strong>') + '</span></p>' +
-            '<p class="det-freno">' + FRENO[pd.freno] + '</p></section>' +
+            '<p class="det-freno">' + FRENO[pd.freno] + '</p>' + (conjunto ? cierreGrupoHtml(p, 'en-azul') : '') + '</section>' +
           pestanasDetalle(p, [
             ['numeros', 'Números',
               '<div class="det-cifras"><div><small>Juntas antes de firmar</small><strong>' + formatoRedondeado(pd.meta) + '</strong><small>pie y gastos</small></div>' +
