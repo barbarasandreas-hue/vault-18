@@ -3514,14 +3514,18 @@
       '</section>' +
       pagoAntesHtml(e, mFirma) +
       '<p class="llega-sello detalle-sello">' + icono('i-escudo') + 'Sin contar que el departamento suba de precio</p>';
+    // 20-nov (Bárbara): con la garantía de un familiar, Números parte explicando cómo funciona; sin «Ver detalle del crédito».
+    var familiar = e.pctCredito >= 0.95;
     var numeros =
-      '<div class="det-cifras"><div><small>Juntas antes de firmar</small><strong>' + formatoRedondeado(e.alEscriturar) + '</strong><small>pie y gastos</small></div>' +
-        '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(dividendo) + '</strong><small>con seguros' + SEP + ufDecimales(dividendo / SUPUESTOS.uf, 2) + '</small></div></div>' +
+      (familiar ? garantiaFamiliarDetalle({ precioUF: e.precioUF, pie: e.pie, subsidioUF: 0, creditoUF: e.precioUF * e.pctCredito }) : '') +
+      '<div class="det-cifras"><div><small>Juntas antes de firmar</small><strong>' + formatoRedondeado(e.alEscriturar) + '</strong><small>' + (familiar ? 'pie del 5' + NBSP + '% y gastos' : 'pie y gastos') + '</small></div>' +
+        '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(dividendo) + '</strong><small>' + (familiar ? 'crédito del 95' + NBSP + '%' : 'con seguros' + SEP + ufDecimales(dividendo / SUPUESTOS.uf, 2)) + '</small></div></div>' +
       '<p class="det-subsidio">' + icono('i-info') + '<span>Si se acaba el subsidio a la tasa, el dividendo sube a <strong>' + formatoRedondeado(e.dividendoSinSubsidio) + '</strong>.</span></p>' +
       o.extraNumeros +
-      plegable('detalle-credito', 'Ver detalle del crédito', '', repartoCasa(partesEscenario(e)) +
-        '<ul class="datos-inversion"><li><span>Gastos al firmar</span><strong>' + formatoRedondeado(e.gastos) + '</strong></li></ul>');
+      (familiar ? '' : plegable('detalle-credito', 'Ver detalle del crédito', '', repartoCasa(partesEscenario(e)) +
+        '<ul class="datos-inversion"><li><span>Gastos al firmar</span><strong>' + formatoRedondeado(e.gastos) + '</strong></li></ul>'));
     return '<section class="det-precio" aria-labelledby="det-llaves">' +
+        (familiar ? '<span class="det-camino-chip">' + icono('i-grupo') + 'Con la garantía de un familiar</span>' : '') +
         '<p class="det-etq">Precio' + (o.enGrupo ? ' con descuento del grupo' : '') + '</p>' +
         '<div class="det-precio-fila"><strong class="det-precio-num">' + formatoRedondeado(precioNum) + '</strong>' +
           (o.enGrupo && r.ahorro > 0 ? '<span class="det-ahorras">Ahorras ' + formatoRedondeado(r.ahorro) + '</span>' : '') + '</div>' +
@@ -3814,8 +3818,8 @@
           pestanasDetalle(p, [
             ['numeros', 'Números',
               (pd.on.respaldo ? garantiaFamiliarDetalle(pd) : '') +
-              '<div class="det-cifras"><div><small>Juntas antes de firmar</small><strong>' + formatoRedondeado(pd.meta) + '</strong><small>pie y gastos</small></div>' +
-                '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(pd.dividendo) + '</strong><small>con seguros' + SEP + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2) + '</small></div></div>' +
+              '<div class="det-cifras"><div><small>Juntas antes de firmar</small><strong>' + formatoRedondeado(pd.meta) + '</strong><small>' + (pd.on.respaldo ? 'pie del 5' + NBSP + '% y gastos' : 'pie y gastos') + '</small></div>' +
+                '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(pd.dividendo) + '</strong><small>' + (pd.on.respaldo ? 'crédito del 95' + NBSP + '%' : 'con seguros' + SEP + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2)) + '</small></div></div>' +
               '<p class="det-subsidio">' + icono('i-info') + '<span>Si se acaba el subsidio a la tasa, el dividendo sube a <strong>' + formatoRedondeado(pd.dividendoSinSubsidio) + '</strong> (' + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + ').</span></p>' +
               grupoPosible +
               '<button type="button" class="tarjeta dueno-card bajar-card" id="btn-bajar-precio" aria-haspopup="dialog"><span class="circulo-icono verde" aria-hidden="true">' + icono('i-alcancia') + '</span>' +
@@ -3823,7 +3827,7 @@
               '<a class="tarjeta dueno-card" href="#compra/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
                 '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para tus gastos</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
               soloPosible +
-              '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>'],
+              (pd.on.respaldo ? '' : '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>')],
             conjunto && bloqueGrupo ? ['grupo', 'Grupo', bloqueGrupo + conoceGrupo] : null,
             BARRIOS[p.comuna] ? ['barrio', 'Barrio', barrioSolo(p)] : null,
             ['visita', 'Visita', visitaHtml(p)]
