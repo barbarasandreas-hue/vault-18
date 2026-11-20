@@ -4308,10 +4308,7 @@ h2.h5, .h5 { font-size: 17px; font-weight: 600; color: var(--gray-dark); letter-
 .tarjeta, .camino-juego, .misiones-compra, .tu-edificio, .si-juntas, .tarjeta-depto, .lista-deptos > li > a, .lista-deptos > li > article, .carrera-item, .lado, .conoce-tarjeta {
   border: 0 !important; border-radius: var(--radio-t) !important; box-shadow: var(--sombra-1) !important; }
 
-/* El bloque azul protagonista: azul Bci plano, sin luna ni estrellas */
-.noche { background: var(--blue-dark) !important; border-radius: var(--radio-t) !important; box-shadow: 0 6px 18px rgba(29,86,153,.22); }
-.noche::before, .noche::after { display: none !important; }
-.noche-luna, .noche-estrella { display: none !important; }
+/* El bloque azul protagonista: vuelve el efecto de antes (degradado, luna y estrellas), 20-nov-2026 */
 .noche-etiqueta { font-size: 14px; font-weight: 400; opacity: .9; }
 .noche-plazo { font-weight: 600 !important; letter-spacing: -0.02em; }
 .noche-aprox { opacity: .85; }
