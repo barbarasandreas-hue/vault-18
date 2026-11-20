@@ -7463,14 +7463,14 @@
             '<h2 class="h3" id="titulo-plazo">' + a.razon + '</h2>' + salidaArriendoHtml(u) + '</section>'
         : '<section class="noche mi-compra-fecha" aria-labelledby="titulo-plazo">' +
             '<span class="noche-luna" aria-hidden="true"></span>' +
-            '<a class="ar-chip-depto" href="#compra/caminos/arriendo-opcion/' + esc(u.id) + '" aria-label="Arriendo con opción de compra en ' + esc(u.nombre) + '">' + icono('i-llave') + esc(u.nombre) + ' ›</a>' +
             '<p class="noche-etiqueta" id="titulo-plazo">' + etq(a) + '</p>' +
             '<strong class="numero noche-plazo' + claseLargo(num(a)) + '" id="numero-plazo" aria-live="polite">' + num(a) + '</strong>' +
             '<span class="freno-llaves" id="freno-llaves">' + sub(a) + '</span>' +
             '<a class="btn btn-secundario-light btn-comparar" href="#compra/caminos">Comparar caminos ›</a>' +
           '</section>') +
       animosInicio() +
-      bloqueRecorrido(pago);
+      // 20-nov: el departamento, sin píldora: una tarjeta con su foto, como «Tu edificio real» en los otros caminos.
+      bloqueRecorrido(tuDeptoArriendo(u, a, vive, tuyo) + pago);
     var rm = $('rango-mensual');
     if (rm) {
       var pintar = function () { var v = Number(rm.value); rm.style.setProperty('--lleno', ((v - minimo) / (maximo - minimo) * 100).toFixed(1) + '%'); return v; };
@@ -7488,6 +7488,16 @@
   }
   // arriendoOpcion (calculos.js): mensualidad = arriendo + aporte a tu pie; cuándo es tuyo; si se sostiene.
   function fotosArriendo(u) { return fotosUsado(u); }
+  function tuDeptoArriendo(u, a, vive, tuyo) {
+    if (tuyo) return '';
+    var f = fotosArriendo(u)[0];
+    return '<a class="tarjeta tu-edificio" href="#departamentos/arriendo/' + esc(u.id) + '">' +
+      '<span class="tu-edificio-obra" aria-hidden="true">' + (f ? '<img src="' + f.src + '" alt="" loading="lazy">' : icono('i-casa')) + '</span>' +
+      '<span class="tu-edificio-texto"><span class="etiqueta">' + (estado.arriendoElegido === u.id ? 'Tu departamento' : 'Con este calculamos tu fecha') + '</span><strong>' + esc(u.nombre) + '</strong>' +
+        '<small>' + fichaArriendo(u) + '</small>' +
+        '<small>' + (vive ? 'Ya vives aquí: lo arriendas con opción de compra.' : 'Lo arriendas con opción de compra y, después, es tuyo.') + '</small></span>' +
+      '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>';
+  }
   function fichaArriendo(u) { return esc(u.comuna) + SEP + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + SEP + plural(u.banos || 1, 'baño', 'baños') + SEP + u.m2 + NBSP + 'm²'; }
   function siMeArrepientoArriendo() {
     return '<ul class="lista-check">' +
