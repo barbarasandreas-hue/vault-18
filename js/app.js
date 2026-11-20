@@ -1365,6 +1365,7 @@
     $('inicio-principal').innerHTML =
       '<header class="encabezado">' + FIGURAS +
         campana() + '<h1 id="titulo-inicio" class="h2" tabindex="-1">Tu compra</h1>' +
+        '<p class="texto-apoyo">' + esc(x.p.nombre) + SEP + esc(x.p.comuna) + '</p>' +
       '</header>' +
       novedadesInicio(x) +
       (x.paso < 4 ? cuandoLlegasCompra(x.p, true) + animosInicio() + bloqueRecorrido() :
@@ -2520,9 +2521,7 @@
     }).join('');
     var ahora = h.terminado ? '' : tarjetaSiguientePaso(true);
     return '<section class="camino-juego metro" aria-labelledby="titulo-recorrido">' +
-      // 20-nov (sin scroll): «Ver con fechas» va en la cabecera, junto a cuántos pasos llevas.
-      '<div class="camino-juego-cab"><h2 id="titulo-recorrido" class="h5">Tus pasos</h2><span>' + (h.terminado ? '¡Llegaste!' : !fotoPasos().caminoElegido && !fotoPasos().eligio ? 'Según tu camino' : listosDe(h) + ' de ' + N + ' listos') + '</span>' +
-        (sinCamino ? '' : '<a class="enlace metro-fechas" href="#compra/recorrido">Ver con fechas ›</a>') + '</div>' +
+      '<div class="camino-juego-cab"><h2 id="titulo-recorrido" class="h5">Tus pasos</h2><span>' + (h.terminado ? '¡Llegaste!' : !fotoPasos().caminoElegido && !fotoPasos().eligio ? 'Según tu camino' : listosDe(h) + ' de ' + N + ' listos') + '</span></div>' +
       '<div class="metro-linea" style="--n:' + N + '">' +
         '<span class="metro-via" aria-hidden="true" style="left:' + pct(0) + ';right:' + pct(0) + '"><i style="width:' + (N > 1 ? (hechos / (N - 1) * 100).toFixed(1) : 0) + '%"></i></span>' +
         '<ol class="metro-paradas" style="grid-template-columns:repeat(' + N + ',1fr)">' + paradas + '</ol>' +
@@ -2531,6 +2530,8 @@
       (celebra ? '<div class="escalon-celebra cj-celebra" role="status"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#FFFFFF"/><path d="M6.5 12.5l3.6 3.6L17.5 8.8" fill="none" stroke="#28652B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
         '<span>¡Avanzaste un paso!<small>Sigue así: ya vas en el paso ' + Math.min(h.indice, N) + ' de ' + N + '.</small></span></div>' : '') +
       (ahora ? '<div class="metro-ahora" style="--x:' + pct(actualI) + '">' + ahora + '</div>' : '') +
+      // S36: sin camino no hay fechas que mostrar.
+      (sinCamino ? '' : '<a class="enlace metro-fechas" href="#compra/recorrido">Ver con fechas ›</a>') +
     '</section>';
   }
   // S33-C2 (E7): tu edificio y tu grupo, como avance de tu compra. Al tocarla, abre Tu pie.
@@ -2575,15 +2576,14 @@
         '<span class="mc-dia" aria-hidden="true"><strong>' + f.getDate() + '</strong><small>' + MESES[f.getMonth()].slice(0, 3) + '</small></span>' +
         '<span class="mc-texto"><strong>' + x.titulo + '</strong><small>' + (d === 0 ? 'Vence hoy' : d === 1 ? 'Vence mañana' : 'Vence en ' + d + ' días') + '</small></span>' +
         '</button></li>';
-    }).concat(resto.slice(0, conFecha.length ? 0 : 1).map(function (x) { // 20-nov: Tu compra sin scroll: solo la misión que va primero.
+    }).concat(resto.slice(0, conFecha.length ? 2 : 3).map(function (x) {
       return '<li><button type="button" class="mc-fila" data-mision="' + x.id + '" aria-haspopup="dialog">' +
         '<span class="mc-icono" aria-hidden="true">' + icono(ICONO_MISION_ID[x.id] || 'i-check') + '</span>' +
         '<span class="mc-texto"><strong>' + x.titulo + '</strong></span></button></li>';
     })).join('');
-    // 20-nov (sin scroll): una sola fila con la próxima misión y «Todas ›».
-    return '<section class="tarjeta misiones-compra mc-compacta" aria-labelledby="titulo-mc">' +
-      '<h2 class="oculto-visual" id="titulo-mc">Misiones</h2>' +
-      '<ul class="mc-lista">' + filas + '</ul><a class="enlace mc-todas" href="#compra/misiones" aria-label="Ver todas las misiones">Misiones ›</a></section>';
+    return '<section class="tarjeta misiones-compra" aria-labelledby="titulo-mc">' +
+      '<div class="mc-cab"><h2 class="h5" id="titulo-mc">Misiones</h2><a class="enlace" href="#compra/misiones">Ver todas ›</a></div>' +
+      '<ul class="mc-lista">' + filas + '</ul></section>';
   }
   var ICONO_MISION_ID = { ds1: 'i-casa', rsh: 'i-documento', 'ahorro-auto': 'i-calendario', 'bajo-llave': 'i-candado', equipo: 'i-grupo', cuota: 'i-alcancia' };
   // Lo que va bajo la fecha en Tu compra.
@@ -2594,8 +2594,7 @@
     listosVistos = listos;
     celebraInicio = celebra;
     var ms = misiones(s, hoy);
-    // 20-nov (sin scroll): «Tu edificio real» vive en Tu pie; en Tu compra la foto está en la última parada.
-    return barraCaminoAnterior() + caminoJuego(h, celebra) + (extra || '') + misionesCompraHtml(ms, hoy);
+    return barraCaminoAnterior() + caminoJuego(h, celebra) + tuEdificioHtml(s) + (extra || '') + misionesCompraHtml(ms, hoy);
   }
   // S32-B3: la fecha aproximada de cada paso, con los plazos que ya calcula la app (D13: nada del prototipo).
   function fechasRecorrido() {
@@ -7480,8 +7479,7 @@
           '</section>') +
       animosInicio() +
       // 20-nov: el departamento, sin píldora: una tarjeta con su foto, como «Tu edificio real» en los otros caminos.
-      // 20-nov (sin scroll): el departamento y lo que pagas en una sola tarjeta; el detalle está en la ficha del departamento.
-      bloqueRecorrido(tuDeptoArriendo(u, a, vive, tuyo));
+      bloqueRecorrido(tuDeptoArriendo(u, a, vive, tuyo) + pago);
     var rm = $('rango-mensual');
     if (rm) {
       var pintar = function () { var v = Number(rm.value); rm.style.setProperty('--lleno', ((v - minimo) / (maximo - minimo) * 100).toFixed(1) + '%'); return v; };
@@ -7502,17 +7500,13 @@
   function tuDeptoArriendo(u, a, vive, tuyo) {
     if (tuyo) return '';
     var f = fotosArriendo(u)[0];
-    var pct = a.mensualidad ? Math.round(a.arriendo / a.mensualidad * 1000) / 10 : 50;
-    return '<a class="tarjeta ar-depto" href="#departamentos/arriendo/' + esc(u.id) + '">' +
-      '<span class="ar-depto-foto" aria-hidden="true">' + (f ? '<img src="' + f.src + '" alt="" loading="lazy">' : icono('i-casa')) + '</span>' +
-      '<span class="ar-depto-texto"><small>' + (estado.arriendoElegido === u.id ? 'Tu departamento' : 'Con este calculamos tu fecha') + '</small>' +
-        '<strong>' + esc(u.nombre) + '</strong>' +
-        '<span class="ar-depto-pago">' + (vive ? 'Pagas ' : 'Al mudarte pagas ') + '<b>' + formatoRedondeado(a.mensualidad) + '</b> al mes</span>' +
-        '<span class="ar-barra mini" aria-hidden="true"><i style="width:' + pct + '%"></i><i style="width:' + (100 - pct) + '%"></i></span>' +
-        '<span class="ar-depto-leyenda"><i class="arr"></i>Arriendo ' + formatoRedondeado(a.arriendo) + '<i class="pie"></i>A tu pie ' + formatoRedondeado(a.aporte) + '</span></span>' +
+    return '<a class="tarjeta tu-edificio" href="#departamentos/arriendo/' + esc(u.id) + '">' +
+      '<span class="tu-edificio-obra" aria-hidden="true">' + (f ? '<img src="' + f.src + '" alt="" loading="lazy">' : icono('i-casa')) + '</span>' +
+      '<span class="tu-edificio-texto"><span class="etiqueta">' + (estado.arriendoElegido === u.id ? 'Tu departamento' : 'Con este calculamos tu fecha') + '</span><strong>' + esc(u.nombre) + '</strong>' +
+        '<small>' + fichaArriendo(u) + '</small>' +
+        '<small>' + (vive ? 'Ya vives aquí: lo arriendas con opción de compra.' : 'Lo arriendas con opción de compra y, después, es tuyo.') + '</small></span>' +
       '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>';
   }
-
   function fichaArriendo(u) { return esc(u.comuna) + SEP + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + SEP + plural(u.banos || 1, 'baño', 'baños') + SEP + u.m2 + NBSP + 'm²'; }
   function siMeArrepientoArriendo() {
     return '<ul class="lista-check">' +
