@@ -70,5 +70,5 @@ test('Ajustes 2: novedades en la campana, misiones en ventana chica, edificio re
   assert.match(app, /\(estado\.novedades \|\| \[\]\)\.length/);
   assert.match(app, /\{ hoja: true \}\)/);
   assert.match(app, /Tu edificio real/);
-  assert.match(app, /Así se llena tu pie/); // S34: el pie es una alcancía, no un edificio
+  assert.match(app, /Así se construye tu pie/); // S35: el pie vuelve a ser un edificio en obra
 });

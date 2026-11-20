@@ -4246,3 +4246,39 @@ a.camino-es-tuyo { text-decoration: none; }
 .metro-nombre { hyphens: manual; overflow-wrap: normal; word-break: normal; }
 .tu-edificio-texto small + small { margin-top: 2px; }
 .chip-tu-eleccion { margin: 8px 0 0; align-self: flex-start; }
+
+/* S35 (opción D): el camino que miras, arriba, y «Cambiar» despliega los demás. */
+.deptos-camino-d { margin: 12px 0 0; padding: 12px; border-radius: 16px; background: var(--gray-light); }
+.deptos-camino-d.color-verde { background: var(--green-20); }
+.deptos-camino-d.color-azul { background: var(--blue-20); }
+.deptos-camino-d.color-amarillo { background: var(--yellow-20); }
+.deptos-camino-d.color-rojo { background: var(--red-20); }
+.dcd-fila { display: flex; align-items: center; gap: 12px; }
+.dcd-icono { width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--white); display: grid; place-items: center; color: var(--gray-dark); }
+.dcd-icono svg, .dcd-mini svg { display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.color-verde .dcd-icono, .dcd-opcion.color-verde .dcd-mini { color: var(--green-dark); }
+.color-azul .dcd-icono, .dcd-opcion.color-azul .dcd-mini { color: var(--blue-dark); }
+.color-amarillo .dcd-icono, .dcd-opcion.color-amarillo .dcd-mini { color: var(--gray-dark); }
+.color-rojo .dcd-icono, .dcd-opcion.color-rojo .dcd-mini { color: var(--red-dark); }
+.dcd-texto { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.dcd-texto small { font-size: 12px; color: var(--gray-dark); }
+.dcd-texto strong { font-size: 15px; line-height: 1.25; color: var(--gray-dark); }
+.dcd-fila .btn { flex: none; min-height: 44px; }
+.dcd-otros { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.dcd-opcion { width: 100%; min-height: 56px; padding: 8px 10px; border-radius: 12px; border: 2px solid var(--gray-semilight); background: var(--white); display: flex; align-items: center; gap: 8px; text-align: left; font: inherit; color: var(--gray-dark); cursor: pointer; text-decoration: none; box-sizing: border-box; }
+.dcd-opcion[aria-pressed="true"] { border-color: var(--blue-normal); }
+.dcd-opcion:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; }
+.dcd-opcion span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.dcd-opcion strong { font-size: 14px; }
+.dcd-opcion small { font-size: 12px; color: var(--gray-dark); }
+.dcd-mini { width: 30px; height: 30px; flex: none; border-radius: 9px; background: var(--gray-light); display: grid; place-items: center; }
+.dcd-mini svg { width: 18px; height: 18px; }
+.dcd-opcion.color-verde .dcd-mini { background: var(--green-20); }
+.dcd-opcion.color-azul .dcd-mini { background: var(--blue-20); }
+.dcd-opcion.color-amarillo .dcd-mini { background: var(--yellow-20); }
+.dcd-opcion.color-rojo .dcd-mini { background: var(--red-20); }
+.dcd-comparar { justify-content: center; border-style: dashed; border-color: var(--blue-40); color: var(--blue-dark); font-weight: 700; }
+.deptos-controles-d { justify-content: flex-end; }
+.deptos-controles-d .btn { flex: 0 0 auto; }
+button.camino-boton { width: 100%; font: inherit; text-align: left; cursor: pointer; }
+.dcd-tuyo { color: var(--green-dark) !important; font-weight: 700; }

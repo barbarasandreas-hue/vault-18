@@ -46,8 +46,7 @@ test('4: «postular» solo para el DS1 y los términos con explicación', () => 
 });
 
 test('5: el pie es una alcancía; en grupo, la cuenta va bloqueada sin «Activar»', () => {
-  assert.match(app, /function alcanciaSvg\(o\)/);
-  assert.match(app, /Así se llena tu pie/);
+  assert.match(app, /Así se construye tu pie/); // S35: vuelve el edificio en obra
   assert.match(app, /Bloqueado hasta la firma/);
   assert.match(calc, /s\.cuentaVivienda && !s\.grupo\) m\('bajo-llave'/);
 });
