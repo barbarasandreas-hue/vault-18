@@ -30,7 +30,9 @@ var SUPUESTOS = {
 var MODOS = {
   vivir: { credito: 0.90, usuario: 0.10, inversionistas: 0 },
   arrendar: { credito: 0.80, usuario: 0.05, inversionistas: 0.15 },
-  propio: { credito: 0.80, usuario: 0.20, inversionistas: 0 }
+  propio: { credito: 0.80, usuario: 0.20, inversionistas: 0 },
+  // 20-nov: garantía de un familiar (para arrendar): Bci presta 95 % y el familiar deja 10 % en garantía.
+  familiar: { credito: 0.95, usuario: 0.05, inversionistas: 0 }
 };
 function modoDe(modo) { return MODOS[modo] || MODOS.arrendar; }
 
@@ -730,6 +732,8 @@ var CAMINOS = {
     ficha: true, existeHoy: true },
   // 20-nov: la garantía de un familiar es un camino para vivir (Bci presta 95 %, el familiar deja 10 % en garantía; RESPALDO).
   'familiar-vivir': { nombre: 'Garantía de un familiar', corto: 'Garantía de un familiar', modo: 'vivir', grupo: false, familiar: true,
+    credito: 0.95, usuario: 0.05, inversionistas: 0, existeHoy: false },
+  'familiar-invertir': { nombre: 'Garantía de un familiar', corto: 'Garantía de un familiar', modo: 'arrendar', grupo: false, familiar: true,
     credito: 0.95, usuario: 0.05, inversionistas: 0, existeHoy: false },
   'respaldo-familiar': { nombre: 'Garantía de un familiar', corto: 'Garantía de un familiar', modo: 'ambos',
     ficha: true, existeHoy: false }
@@ -1689,6 +1693,7 @@ function misiones(s, hoy) {
   // 11-nov: "Completa tus datos y documentos" ya no es misión: es el mismo paso de la preaprobación (Tus datos → Tus documentos).
   // 20-nov: con la garantía de un familiar, tu familiar deja el 10 % antes de pedir el crédito.
   // 20-nov: revisar si calificas a la garantía del Estado (FOGAES), sumado desde el detalle de un departamento.
+  if (s.tasa) m('tasa', 'Pide el subsidio a la tasa', 'Dividendo', 'preaprobacion', s.tasaPedido);
   if (s.fogaes) m('fogaes', 'Revisa si calificas a la garantía del Estado', 'Pie del 10 %', 'preaprobacion', s.fogaesCalifica);
   if (s.familiar) m('familiar', 'Tu familiar deja su garantía', 'Pie del 5 %', 'preaprobacion', s.garantiaFamiliar);
   m('ahorro-auto', 'Activa el ahorro automático', 'Pie', 'pie', s.ahorroAutomatico);

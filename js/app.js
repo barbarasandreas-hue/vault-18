@@ -594,6 +594,7 @@
   // en grupo pone el 20 % y no hay inversionistas. El pie compartido siempre lleva inversionistas.
   var CAMINOS_PROPIOS = ['grupo-invertir', 'individual-invertir'];
   function modoFinanciero(proyecto) {
+    if (estado.modo === 'arrendar' && estado.caminoElegido === 'familiar-invertir') return 'familiar';
     if (estado.modo === 'arrendar' && proyecto.tipo === 'conjunto' && CAMINOS_PROPIOS.indexOf(estado.caminoElegido) !== -1) return 'propio';
     return estado.modo;
   }
@@ -2621,7 +2622,7 @@
       '<div class="mc-cab"><h2 class="h5" id="titulo-mc">Misiones</h2><a class="enlace" href="#compra/misiones">Ver todas ›</a></div>' +
       '<ul class="mc-lista">' + filas + '</ul></section>';
   }
-  var ICONO_MISION_ID = { fogaes: 'i-escudo', familiar: 'i-grupo', ds1: 'i-casa', rsh: 'i-documento', 'ahorro-auto': 'i-calendario', 'bajo-llave': 'i-candado', equipo: 'i-grupo', cuota: 'i-alcancia' };
+  var ICONO_MISION_ID = { tasa: 'i-sube', fogaes: 'i-escudo', familiar: 'i-grupo', ds1: 'i-casa', rsh: 'i-documento', 'ahorro-auto': 'i-calendario', 'bajo-llave': 'i-candado', equipo: 'i-grupo', cuota: 'i-alcancia' };
   // Lo que va bajo la fecha en Tu compra.
   function bloqueRecorrido(extra) {
     var s = fotoPasos(), h = hitoActual(s), hoy = hoyDemo();
@@ -3422,9 +3423,11 @@
       req: [['Departamento de hasta UF 4.000', precio <= 4000], ['Tu sueldo bajo el tope del tramo', !(bloq && /sueldo/i.test(bloq.razon))],
         ['Registro Social de Hogares', ps.rsh ? true : null], ['No tener otra vivienda', null]],
       enPasos: !!(conDS1 || ps.ds1Agregado || ps.ds1Postulado), lista: !!ps.ds1Postulado });
-    // Subsidio a la tasa: ya va en el dividendo.
-    formas.push({ id: 'tasa', sigla: '%', nombre: 'Subsidio a la tasa', que: 'Baja la tasa de tu crédito en un departamento nuevo. Ya va en tu dividendo, mientras queden cupos.',
-      juntas: 0, pagas: pd.dividendo - pd.dividendoSinSubsidio, incluido: true, auto: true, req: [] });
+    // 20-nov (Bárbara): el subsidio a la tasa no se da por sentado: depende de los cupos cuando Bci apruebe tu crédito.
+    formas.push({ id: 'tasa', sigla: '%', nombre: 'Subsidio a la tasa', que: 'Baja la tasa de tu crédito en un departamento nuevo. No es seguro: depende de los cupos que queden cuando Bci apruebe tu crédito.',
+      juntas: 0, pagas: pd.dividendo - pd.dividendoSinSubsidio, soloPagas: true,
+      req: [['Departamento nuevo, en primera venta', true], ['De hasta UF 4.000', precio <= 4000], ['Que queden cupos', null]],
+      enPasos: !!ps.tasaAgregado, lista: !!ps.tasaPedido });
     return formas;
   }
   function efectoPill(etq, v, alMes) {
@@ -3441,13 +3444,14 @@
       '<ul class="fp-lista">' + formas.map(function (f) {
         var estadoF = f.auto ? '<span class="fp-chip">Va incluido</span>'
           : f.bloqueo ? '<span class="fp-chip gris">' + f.bloqueo.razon + '</span>'
+          : f.id === 'tasa' && !f.enPasos ? '<span class="fp-chip gris">Si quedan cupos</span>'
           : f.lista ? '<span class="fp-chip verde">' + icono('i-check') + 'Lista</span>'
           : f.enPasos ? '<span class="fp-chip verde">' + icono('i-check') + 'En tus pasos</span>' : '';
         return '<li class="fp-forma"><div class="fp-cab"><span class="fp-sigla" aria-hidden="true">' + f.sigla + '</span><h3 class="h6">' + f.nombre + '</h3>' + estadoF + '</div>' +
           '<p class="fp-que">' + f.que + '</p>' +
           (f.bloqueo ? '<p class="fp-bloqueo">' + icono('i-info') + '<span>' + f.bloqueo.como + '</span></p>'
-            : '<div class="fp-efectos">' + (f.auto ? '' : efectoPill(f.incluido && f.id === 'fogaes' ? 'Juntas, frente al 20' + NBSP + '%' : 'Juntas', f.juntas)) +
-              efectoPill(f.auto ? 'Tu dividendo baja' : 'Pagas', f.auto ? -Math.abs(f.pagas) : f.pagas, true) + '</div>') +
+            : '<div class="fp-efectos">' + (f.soloPagas ? '' : efectoPill(f.id === 'fogaes' ? 'Juntas, frente al 20' + NBSP + '%' : 'Juntas', f.juntas)) +
+              efectoPill(f.soloPagas ? 'Si te lo dan, pagas' : 'Pagas', f.soloPagas ? -Math.abs(f.pagas) : f.pagas, true) + '</div>') +
           (f.espera ? '<p class="fp-espera">' + icono('i-calendario') + f.espera + '</p>' : '') +
           (f.req.length ? '<ul class="fp-req">' + f.req.map(function (r) { return '<li>' + marca(r[1]) + '<span>' + r[0] + (r[1] === null ? ' <small>(lo revisas en la misión)</small>' : '') + '</span></li>'; }).join('') + '</ul>' : '') +
           (f.auto || f.bloqueo || f.enPasos ? '' : '<button type="button" class="btn btn-secundario btn-bloque" data-sumar-forma="' + f.id + '">Agregar a mis pasos</button>') +
@@ -3459,11 +3463,12 @@
         b.addEventListener('click', function () {
           var id = b.dataset.sumarForma;
           if (id === 'fogaes') estado.pasos.fogaesAgregado = true;
+          if (id === 'tasa') estado.pasos.tasaAgregado = true;
           if (id === 'ds1') { estado.pasos.ds1Agregado = true; if (estado.modo === 'vivir') estado.piezas = Object.assign({}, estado.piezas, { subsidio: true }); }
           guardarEstado();
           cerrarHoja(false);
           mostrar();
-          toast(id === 'fogaes' ? 'Se sumó a tus pasos: revisa si calificas a la garantía del Estado.' : 'Se sumó a tus pasos: postula al DS1.');
+          toast(id === 'fogaes' ? 'Se sumó a tus pasos: revisa si calificas a la garantía del Estado.' : id === 'tasa' ? 'Se sumó a tus pasos: pide el subsidio a la tasa.' : 'Se sumó a tus pasos: postula al DS1.');
         });
       });
     });
@@ -5991,14 +5996,15 @@
       arriendo: esArriendo(), entrada: esArriendo() ? arriendoActual().a.entrada : 0,
       contratoArriendo: !!ps.contratoArriendo,
       // 20-nov: garantía de un familiar.
-      familiar: estado.modo === 'vivir' && estado.caminoElegido === 'familiar-vivir' && !esArriendo(), garantiaFamiliar: !!ps.garantiaFamiliar,
+      familiar: !!(CAMINOS[estado.caminoElegido] && CAMINOS[estado.caminoElegido].familiar) && !esArriendo(),
+      tasa: !!ps.tasaAgregado && estado.modo === 'vivir', tasaPedido: !!ps.tasaPedido || preaprobado, garantiaFamiliar: !!ps.garantiaFamiliar,
       // S28: con el camino ya elegido, la misión pide solo el departamento.
       caminoElegido: !!estado.caminoElegido
     };
   }
   function nombreCaminoActual() {
     var p = proyectoCompra();
-    if (p) return enGrupoDe(p) ? CAMINOS['grupo-' + (estado.modo === 'vivir' ? 'vivir' : 'invertir')].corto : CAMINOS[estado.modo === 'vivir' ? (estado.caminoElegido === 'familiar-vivir' ? 'familiar-vivir' : 'individual-vivir') : 'individual-invertir'].corto;
+    if (p) return enGrupoDe(p) ? CAMINOS['grupo-' + (estado.modo === 'vivir' ? 'vivir' : 'invertir')].corto : CAMINOS[(CAMINOS[estado.caminoElegido] && CAMINOS[estado.caminoElegido].familiar) ? estado.caminoElegido : estado.modo === 'vivir' ? 'individual-vivir' : 'individual-invertir'].corto;
     return estado.caminoElegido && CAMINOS[estado.caminoElegido] ? CAMINOS[estado.caminoElegido].corto : null;
   }
   function listosDe(h) { return h.hitos.filter(function (x) { return x.estado === 'hecho'; }).length; }
@@ -6117,7 +6123,7 @@
   // 11-nov: Tus pasos dice, explícito, qué camino sigues (o cuál se usa si aún no eliges).
   function idCaminoPasos() {
     var p = proyectoCompra();
-    if (p) return enGrupoDe(p) ? (estado.modo === 'vivir' ? 'grupo-vivir' : 'grupo-invertir') : (estado.modo === 'vivir' ? (estado.caminoElegido === 'familiar-vivir' ? 'familiar-vivir' : 'individual-vivir') : 'individual-invertir');
+    if (p) return enGrupoDe(p) ? (estado.modo === 'vivir' ? 'grupo-vivir' : 'grupo-invertir') : ((CAMINOS[estado.caminoElegido] && CAMINOS[estado.caminoElegido].familiar) ? estado.caminoElegido : estado.modo === 'vivir' ? 'individual-vivir' : 'individual-invertir');
     if (estado.caminoElegido && CAMINOS[estado.caminoElegido]) return estado.caminoElegido;
     return null;
   }
@@ -6751,11 +6757,12 @@
     'ahorro-auto': ['Bci pasa tu cuota a tu cuenta de vivienda el día de pago.', 'Activar'],
     equipo: ['Suma a tu pareja, tu familia o tu bebé para que te acompañen.', null],
     elegir: ['Mira tus caminos y elige un departamento.', null],
+    tasa: ['Lo pides junto con tu crédito, al pedir tu preaprobación. Baja tu dividendo si quedan cupos cuando Bci lo apruebe.', 'Ya lo pedí'],
     fogaes: ['La garantía del Estado (FOGAES) deja que Bci te preste hasta el 90' + NBSP + '%: juntas un pie del 10' + NBSP + '%. Es para departamentos nuevos y se usa una sola vez.', null],
     familiar: ['Tu familiar deja el 10' + NBSP + '% en una cuenta Bci, con intereses. Lo recupera cuando tu deuda baja al 80' + NBSP + '%.', 'Ya la dejó']
   };
-  var MISION_CLAVE = { ds1: 'ds1Postulado', rsh: 'rsh', documentos: 'documentos', 'bajo-llave': 'bajoLlave', familiar: 'garantiaFamiliar' };
-  var MISION_LISTA = { ds1: 'Listo: postulaste al DS1.', rsh: 'Listo: te inscribiste en el Registro Social.',
+  var MISION_CLAVE = { tasa: 'tasaPedido', ds1: 'ds1Postulado', rsh: 'rsh', documentos: 'documentos', 'bajo-llave': 'bajoLlave', familiar: 'garantiaFamiliar' };
+  var MISION_LISTA = { tasa: 'Listo: pediste el subsidio a la tasa.', ds1: 'Listo: postulaste al DS1.', rsh: 'Listo: te inscribiste en el Registro Social.',
     documentos: 'Tus documentos están listos.', 'bajo-llave': 'Tu pie quedó bajo llave.', familiar: 'Listo: tu familiar dejó su garantía.' };
   // S29 (13-nov, Bárbara): las misiones llevan a hacer la acción, no la marcan como hecha.
   // DS1 y Registro Social se hacen en los sitios del Estado (con ClaveÚnica); al volver, la persona confirma.
@@ -6811,7 +6818,7 @@
   }
   // 10-nov: "Ver todas" lleva a una pantalla con todas las misiones separadas por etapa.
   // S33-C3: Misiones, más visual y con menos texto: lo que vence primero, las que faltan en mosaico y las fechas en una línea de tiempo.
-  var COLOR_MISION_ID = { fogaes: 'azul', familiar: 'azul', ds1: 'rojo', rsh: 'azul', 'ahorro-auto': 'verde', 'bajo-llave': 'azul', equipo: 'verde', cuota: 'verde' };
+  var COLOR_MISION_ID = { tasa: 'verde', fogaes: 'azul', familiar: 'azul', ds1: 'rojo', rsh: 'azul', 'ahorro-auto': 'verde', 'bajo-llave': 'azul', equipo: 'verde', cuota: 'verde' };
   function renderTodasMisiones() {
     var cont = $('pasos-contenido');
     var s = fotoPasos(), hoy = hoyDemo();
@@ -6878,6 +6885,7 @@
     'grupo-vivir': 'Te unes a otras personas para comprar; cada uno con su departamento.',
     'individual-vivir': 'Bci te presta hasta el 90' + NBSP + '% con la garantía del Estado.',
     'familiar-vivir': 'Un familiar deja una garantía y Bci te presta el 95' + NBSP + '%.',
+    'familiar-invertir': 'Un familiar deja una garantía y Bci te presta el 95' + NBSP + '%.',
     'grupo-pie-compartido': 'Compras en grupo y unos inversionistas ponen parte del pie.',
     'pie-compartido': 'Pones el 5' + NBSP + '% y unos inversionistas ponen el 15' + NBSP + '%.',
     'grupo-invertir': 'Te unes a otras personas para comprar; cada uno con su departamento.',
@@ -6896,7 +6904,7 @@
     var d = id.indexOf('grupo') === 0
       ? 'M9 7.5a3 3 0 1 0 6 0 3 3 0 0 0-6 0M6.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6M2.7 9.5a2.3 2.3 0 1 0 4.6 0 2.3 2.3 0 0 0-4.6 0M16.7 9.5a2.3 2.3 0 1 0 4.6 0 2.3 2.3 0 0 0-4.6 0M1.5 18.5c0-2.4 1.5-4.3 3.5-4.3M22.5 18.5c0-2.4-1.5-4.3-3.5-4.3'
       : id === 'arriendo-opcion' ? 'M7.5 15a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM11 11.5h10M18 11.5v3M21 11.5v2.5'
-      : id === 'familiar-vivir' ? 'M12 20.5S3.5 15.3 3.5 9.2A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.5 2.6c0 6.1-8.5 11.3-8.5 11.3z'
+      : id.indexOf('familiar') === 0 ? 'M12 20.5S3.5 15.3 3.5 9.2A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.5 2.6c0 6.1-8.5 11.3-8.5 11.3z'
       : (id === 'individual-vivir' ? 'M3 9.5L12 4l9 5.5zM5 10v7.5M9.7 10v7.5M14.3 10v7.5M19 10v7.5M3 20.5h18'
         : 'M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6zM8.5 12.2l2.4 2.4 4.6-4.8');
     return '<svg class="camino-dibujo" viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
@@ -6986,6 +6994,7 @@
     'grupo-vivir': 'Compras con otros y pagas menos.',
     usados: 'Pie del 20' + NBSP + '%, para departamentos usados.',
     'familiar-vivir': 'Pie del 5' + NBSP + '%, con la garantía de un familiar.',
+    'familiar-invertir': 'Pones el 5' + NBSP + '%; un familiar deja una garantía.',
     'arriendo-opcion': 'Te mudas ya; tu arriendo va al pie.',
     'pie-compartido': 'Pones el 5' + NBSP + '%; inversionistas, el 15' + NBSP + '%.',
     'grupo-pie-compartido': 'En grupo, con inversionistas en el pie.',
@@ -7027,7 +7036,7 @@
   var DATOS_CAMINO = {
     'individual-vivir': ['Pie 10' + NBSP + '%', 'Nuevos'], 'grupo-vivir': ['Pagan menos', 'En obra'], usados: ['Pie 20' + NBSP + '%', 'Usados'],
     'arriendo-opcion': ['Entras con 5' + NBSP + '%', 'Propuesta'],
-    'familiar-vivir': ['Pie 5' + NBSP + '%', 'Propuesta'],
+    'familiar-vivir': ['Pie 5' + NBSP + '%', 'Propuesta'], 'familiar-invertir': ['Pie 5' + NBSP + '%', 'Propuesta'],
     'pie-compartido': ['Pie 5' + NBSP + '%', 'Para arrendar'], 'grupo-pie-compartido': ['Pie 5' + NBSP + '%', 'En grupo'],
     'grupo-invertir': ['Pagan menos', 'En obra'], 'individual-invertir': ['Pie 20' + NBSP + '%']
   };
@@ -7824,7 +7833,7 @@
   // Los cuatro caminos para vivir, con los números que ya calcula la app (D13: nada del prototipo).
   var CAMINOS_COMPARAR = ['grupo-vivir', 'individual-vivir', 'familiar-vivir', 'usados', 'arriendo-opcion'];
   // S35: los caminos para arrendar, en el mismo Comparar (el grupo y el pie compartido ya no van juntos, S26).
-  var CAMINOS_ARRENDAR = ['pie-compartido', 'grupo-invertir', 'individual-invertir'];
+  var CAMINOS_ARRENDAR = ['pie-compartido', 'grupo-invertir', 'individual-invertir', 'familiar-invertir'];
   function esArrendarCamino(id) { return CAMINOS_ARRENDAR.indexOf(id) !== -1; }
   // S31: del sí del banco a las llaves son «2 a 3 meses» (TOTAL_SI_A_LLAVES); para comparar, el caso conservador.
   var MESES_SI_A_LLAVES = 3;
@@ -7861,6 +7870,12 @@
       como: ['Eliges el edificio y aseguras tu cupo con tu preaprobación Bci.', 'Pagas tu pie del 20' + NBSP + '% en cuotas mientras se construye.', 'Bci confirma tu crédito, firmas y lo arriendas.'],
       para: 'Si quieres pagar menos y puedes esperar la obra.',
       cuidado: 'Esperas que terminen la obra para firmar y arrendarlo.' },
+    // 20-nov: la garantía de un familiar también para arrendar (el departamento es todo tuyo, sin inversionistas).
+    'familiar-invertir': { bueno: 'Pones solo el 5' + NBSP + '%', ojo: 'Depende de tu familiar', depto: 'Nuevo',
+      que: 'Un familiar deja el 10' + NBSP + '% del precio en una cuenta Bci, como garantía. Bci te presta el 95' + NBSP + '% y el departamento es todo tuyo, sin inversionistas.',
+      como: ['Tu familiar deja el 10' + NBSP + '% en una cuenta Bci, con intereses.', 'Juntas el 5' + NBSP + '% y Bci te presta el 95' + NBSP + '%.', 'Lo arriendas y, cuando tu deuda baja al 80' + NBSP + '%, el dinero vuelve a tu familiar.'],
+      para: 'Si quieres invertir con poco ahorro y un familiar puede dejar dinero guardado unos años.',
+      cuidado: 'Es una propuesta: hoy no existe en Chile. Si un mes no lo arriendas, el dividendo lo pagas tú; si no pagas y hay remate, tu familiar puede perder su garantía.' },
     'individual-invertir': { bueno: 'Sirve para nuevos y usados', ojo: 'Pie del 20' + NBSP + '%: tardas más', depto: 'Nuevo o usado',
       que: 'El crédito de siempre: Bci te presta el 80' + NBSP + '% y tú juntas el 20' + NBSP + '% y los gastos.',
       como: ['Eliges un departamento nuevo o usado.', 'Juntas el 20' + NBSP + '% en tu cuenta de vivienda.', 'Bci te preaprueba; firmas y lo arriendas.'],
@@ -7917,6 +7932,7 @@
   // S35: los caminos para arrendar. El grupo y el crédito al 80 % usan el dibujo de su par para vivir.
   DIBUJO_CAMINO['grupo-invertir'] = DIBUJO_CAMINO['grupo-vivir'];
   DIBUJO_CAMINO['individual-invertir'] = DIBUJO_CAMINO.usados;
+  DIBUJO_CAMINO['familiar-invertir'] = DIBUJO_CAMINO['familiar-vivir'];
   DIBUJO_CAMINO['pie-compartido'] = function () {
     return edificioDibujo(116, 30, 80, 90, '#2772CC', '#FFF9CC') + personita(70, 122, '#28892B') +
       personita(240, 122, '#546E7A') + personita(264, 122, '#28652B') +
@@ -7934,7 +7950,7 @@
     'grupo-vivir': ['i-grupo', 'i-alcancia', 'i-llave'],
     'individual-vivir': ['i-casa', 'i-alcancia', 'i-llave'],
     usados: ['i-casa', 'i-alcancia', 'i-llave'],
-    'familiar-vivir': ['i-grupo', 'i-alcancia', 'i-llave'],
+    'familiar-vivir': ['i-grupo', 'i-alcancia', 'i-llave'], 'familiar-invertir': ['i-grupo', 'i-alcancia', 'i-llave'],
     'arriendo-opcion': ['i-alcancia', 'i-documento', 'i-llave'],
     'pie-compartido': ['i-casa', 'i-grupo', 'i-llave'],
     'grupo-invertir': ['i-grupo', 'i-alcancia', 'i-llave'],
@@ -8212,7 +8228,7 @@
   // La «i» de cada camino: qué es, cómo funciona, tus pasos, tus números, para quién y qué tener en cuenta.
   // S36 (lienzo P14): la ficha de un camino tiene todo; ya no hay «Ver todo sobre este camino».
   var CAMINO_TERMINOS = { 'grupo-vivir': 'Grupo, cuota del pie, preaprobación', 'individual-vivir': 'Garantía del Estado, pie, dividendo',
-    usados: 'Pie, tasación, escritura', 'arriendo-opcion': 'Entrada, aporte al pie, opción de compra', 'familiar-vivir': 'Garantía, pie, dividendo' };
+    usados: 'Pie, tasación, escritura', 'arriendo-opcion': 'Entrada, aporte al pie, opción de compra', 'familiar-vivir': 'Garantía, pie, dividendo', 'familiar-invertir': 'Garantía, pie, dividendo' };
   function fichaCaminoHtml(id) {
     var inf = INFO_CAMINO[id], n = numerosComparar(id), h = pasosDeCamino(id);
     var c = COLOR_CAMINO[id] || COLOR_CAMINO.todos;
@@ -8236,7 +8252,7 @@
       '<section class="fc-tarjeta fc-para"><span class="fc-para-icono" aria-hidden="true">' + icono('i-persona') + '</span><span><strong>Para quién</strong><small>' + inf.para + '</small></span></section>' +
       '<nav class="fc-mas" aria-label="Más sobre este camino">' +
         (esArrendarCamino(id) ? '' : '<a href="#departamentos/camino/' + id + '"><span class="fc-mas-icono verde" aria-hidden="true">' + icono('i-casa') + '</span><span><strong>Ver sus departamentos</strong><small>' + plural(k, 'departamento', 'departamentos') + (filtrosDeptos.rango && rangoActual() ? ' en tu rango' : '') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>') +
-        (id === 'familiar-vivir' ? (function () { var rf = respaldoFamiliar(listaMeta()); return '<a href="#compra/ficha/respaldo-familiar/familiar"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-grupo') + '</span><span><strong>Cómo lo vive tu familiar</strong><small>Deja ' + formatoRedondeado(rf.deposito) + ' y lo recupera en ' + (rf.mesesLibera / 12).toFixed(0) + ' años</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>'; })() : '') +
+        (CAMINOS[id] && CAMINOS[id].familiar ? (function () { var rf = respaldoFamiliar(listaMeta()); return '<a href="#compra/ficha/respaldo-familiar/familiar"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-grupo') + '</span><span><strong>Cómo lo vive tu familiar</strong><small>Deja ' + formatoRedondeado(rf.deposito) + ' y lo recupera en ' + (rf.mesesLibera / 12).toFixed(0) + ' años</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>'; })() : '') +
         (id === 'individual-vivir' ? '<a href="#compra/caminos/individual-vivir/califica"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-escudo') + '</span><span><strong>¿Calificas?</strong><small>Revisa los requisitos con tus datos</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
         (estado.modo === 'vivir' ? '<a href="#compra/caminos/' + id + '/como"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-pronto') + '</span><span><strong>Ayudas para llegar antes</strong><small>Lo que puede acercar tu fecha</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
         '<a href="#perfil/ayuda"><span class="fc-mas-icono gris" aria-hidden="true">' + icono('i-info') + '</span><span><strong>Qué significan estos términos</strong><small>' + (CAMINO_TERMINOS[id] || 'Pie, dividendo, preaprobación') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' +
@@ -8420,7 +8436,7 @@
   var deptosAbierto = false;
   function nombreCaminoD(id) { return id === 'todos' ? 'Todos los caminos' : id === 'usados' ? NOMBRE_USADOS : nombreCamino(id); }
   // S36: el mismo ícono por camino en toda la app: grupo, escudo (garantía), casa (tradicional) y llave (arriendo).
-  var ICONO_CAMINO_D = { 'familiar-vivir': 'M12 20.5S3.5 15.3 3.5 9.2A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.5 2.6c0 6.1-8.5 11.3-8.5 11.3z', 'individual-vivir': 'M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3zM8.5 12l2.5 2.5 4.5-5', usados: 'M3.5 11L12 4l8.5 7M5.5 9.5V20h13V9.5M10 20v-5h4v5' };
+  var ICONO_CAMINO_D = { 'familiar-invertir': 'M12 20.5S3.5 15.3 3.5 9.2A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.5 2.6c0 6.1-8.5 11.3-8.5 11.3z', 'familiar-vivir': 'M12 20.5S3.5 15.3 3.5 9.2A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.5 2.6c0 6.1-8.5 11.3-8.5 11.3z', 'individual-vivir': 'M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3zM8.5 12l2.5 2.5 4.5-5', usados: 'M3.5 11L12 4l8.5 7M5.5 9.5V20h13V9.5M10 20v-5h4v5' };
   function iconoCaminoD(id) {
     if (id === 'todos') return icono('i-proyectos');
     if (ICONO_CAMINO_D[id]) return '<svg class="camino-dibujo" viewBox="0 0 24 24" aria-hidden="true"><path d="' + ICONO_CAMINO_D[id] + '"/></svg>';
@@ -8428,7 +8444,7 @@
   }
   // S36 (20-nov, Claude Design): colores de cada camino (sin rojo ni amarillo): suave, fuerte e ícono.
   var COLOR_CAMINO = { 'grupo-vivir': ['#D4E7D5', '#28892B', '#28652B'], 'individual-vivir': ['#D4E3F5', '#2772CC', '#1D5699'],
-    usados: ['#E2E8EA', '#546E7A', '#37474F'], 'arriendo-opcion': ['#E4EEFA', '#7DAAE0', '#2772CC'], 'familiar-vivir': ['#DCE2F0', '#3B5A9A', '#243B6B'], todos: ['#E2E8EA', '#546E7A', '#37474F'] };
+    usados: ['#E2E8EA', '#546E7A', '#37474F'], 'arriendo-opcion': ['#E4EEFA', '#7DAAE0', '#2772CC'], 'familiar-vivir': ['#DCE2F0', '#3B5A9A', '#243B6B'], 'familiar-invertir': ['#DCE2F0', '#3B5A9A', '#243B6B'], todos: ['#E2E8EA', '#546E7A', '#37474F'] };
   function varsCamino(id) { var c = COLOR_CAMINO[id] || COLOR_CAMINO.todos; return '--cs:' + c[0] + ';--cf:' + c[1] + ';--ci:' + c[2]; }
   // S36: «¿Qué quieres explorar?» lleva a conocer los caminos para elegir uno (lienzo P20).
   function renderExplorarDeptos(cont) {
@@ -8494,7 +8510,7 @@
   }
   // S36 (lienzo P23 y P24): el camino como una tarjeta de su color; «Cambiar» abre una grilla de 2 columnas adentro.
   var DEGRADE_CAMINO = { 'grupo-vivir': ['#28652B', '#28892B'], 'individual-vivir': ['#1D5699', '#2772CC'], usados: ['#37474F', '#546E7A'],
-    'arriendo-opcion': ['#1D5699', '#2772CC'], 'familiar-vivir': ['#243B6B', '#3B5A9A'], todos: ['#37474F', '#546E7A'] };
+    'arriendo-opcion': ['#1D5699', '#2772CC'], 'familiar-vivir': ['#243B6B', '#3B5A9A'], 'familiar-invertir': ['#243B6B', '#3B5A9A'], todos: ['#37474F', '#546E7A'] };
   function bannerCaminoHtml(cam) {
     var tuyo = cam === estado.caminoElegido;
     var ids = ['todos'].concat(idsComparar());
@@ -8920,8 +8936,7 @@
       ['Bci te presta el 95' + NBSP + '%: tú pones el 5' + NBSP + '%', '', 'verde'],
       ['Le vuelve cuando tu deuda baja al 80' + NBSP + '%', '', 'azul-oscuro']];
     cont.innerHTML =
-      (estado.modo === 'vivir' ? '<a href="#compra/caminos/familiar-vivir" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>' + CAMINOS['familiar-vivir'].nombre + '</a>'
-        : '<a href="#compra/caminos" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Comparar caminos</a>') +
+      '<a href="#compra/caminos/familiar-' + (estado.modo === 'vivir' ? 'vivir' : 'invertir') + '" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>' + CAMINOS['familiar-vivir'].nombre + '</a>' +
       '<section class="respaldo-heroe" aria-labelledby="titulo-ficha">' +
         '<span class="respaldo-chip">Propuesta' + SEP + 'aún no existe en Chile</span>' +
         '<h1 id="titulo-ficha" class="h2">Garantía de un familiar</h1>' +
@@ -8967,9 +8982,9 @@
       '<p class="respaldo-riesgo">' + icono('i-alerta') + '<span><strong>Lo que hay que saber</strong><small>Si no pagas y hay remate, tu familiar puede perder su depósito.</small></span></p>' +
       '<p class="respaldo-inspira"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Inspirado en Barclays (Reino Unido).</p>' +
       // 20-nov: para vivir es un camino: lleva a su ficha (o a tu compra, si ya es el tuyo).
-      '<div class="respaldo-accion" id="rf-accion">' + (estado.modo === 'vivir'
-        ? (estado.caminoElegido === 'familiar-vivir' ? '<a class="btn btn-primario btn-lg btn-bloque" href="#compra">Ver tu compra</a>'
-          : '<a class="btn btn-primario btn-lg btn-bloque" href="#compra/caminos/familiar-vivir">Ver el camino</a>')
+      '<div class="respaldo-accion" id="rf-accion">' + (true
+        ? ((CAMINOS[estado.caminoElegido] && CAMINOS[estado.caminoElegido].familiar) ? '<a class="btn btn-primario btn-lg btn-bloque" href="#compra">Ver tu compra</a>'
+          : '<a class="btn btn-primario btn-lg btn-bloque" href="#compra/caminos/familiar-' + (estado.modo === 'vivir' ? 'vivir' : 'invertir') + '">Ver el camino</a>')
         : interesa
         ? '<p class="respaldo-anotado" role="status">' + icono('i-check') + '<span><strong>¡Anotado!</strong><small>Te avisamos si Bci lo lanza.</small></span></p>'
         : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-me-interesa">Me interesa</button>') + '</div>';
