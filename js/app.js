@@ -2074,7 +2074,7 @@
             // S29 (opción B, 13-nov): el edificio grande, a todo el ancho, y el botón debajo de la obra.
             // S32-B3: la obra vive en Tu pie (D7). Aquí, comparar caminos.
             // S34: sin camino, «Ahora» ya dice «Comparar caminos»: no se repite arriba.
-            (estado.caminoElegido ? '<a class="btn btn-secundario-light btn-comparar" href="#compra/caminos">Comparar caminos ›</a>' : '') +
+            // 20-nov: con camino elegido ya no se muestra «Comparar caminos» aquí (sigue en Departamentos y en la ficha).
           '</section>') +
       // S32-B3: el deslizador pasa a Tu pie y al comparador (D9); «¿Te parece mucho tiempo?» lo reemplaza «Ahora» (D8).
       animosInicio() +
@@ -2356,8 +2356,7 @@
             '<p class="noche-etiqueta" id="titulo-plazo">' + etiqueta + '</p>' +
             '<strong class="numero noche-plazo' + claseLargo(plazoTxt) + '" id="numero-plazo">' + plazoTxt + '</strong>' +
             '<span class="noche-aprox" id="plazo-aprox">' + aproxRango(desde, x.techo) + '</span>' +
-            (x.eligio ? '<p class="noche-sub">Tu camino: ' + primeraMinuscula(CAMINOS[x.id].corto) + '</p>' +
-              '<a class="btn btn-secundario-light btn-comparar" href="#compra/caminos">Comparar caminos ›</a>' : '') +
+            (x.eligio ? '<p class="noche-sub">Tu camino: ' + primeraMinuscula(CAMINOS[x.id].corto) + '</p>' : '') +
           '</section>') +
       animosInicio() +
       bloqueRecorrido();
@@ -7466,7 +7465,6 @@
             '<p class="noche-etiqueta" id="titulo-plazo">' + etq(a) + '</p>' +
             '<strong class="numero noche-plazo' + claseLargo(num(a)) + '" id="numero-plazo" aria-live="polite">' + num(a) + '</strong>' +
             '<span class="freno-llaves" id="freno-llaves">' + sub(a) + '</span>' +
-            '<a class="btn btn-secundario-light btn-comparar" href="#compra/caminos">Comparar caminos ›</a>' +
           '</section>') +
       animosInicio() +
       // 20-nov: el departamento, sin píldora: una tarjeta con su foto, como «Tu edificio real» en los otros caminos.
