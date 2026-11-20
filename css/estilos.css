@@ -4838,3 +4838,10 @@ img { color: transparent; }
 
 .pa .si-juntas-fila { display: flex; justify-content: space-between; align-items: baseline; margin: 0; }
 .pa .si-juntas-fila strong { font-size: 20px; color: var(--gray-dark); }
+/* 20-nov (Bárbara): la barra blanca de arriba (56 px, fija) ya no tapa los títulos al enfocarlos o al llevar la vista a una sección */
+html { scroll-padding-top: 72px; }
+.hoja-inferior.hoja-pantalla { scroll-padding-top: 72px; }
+.ayuda-info, .ayuda-fila, .ayuda-tema { scroll-margin-top: 72px; }
+.det-panel, .det-tabs + .det-panel { scroll-margin-top: 128px; }
+h1[tabindex="-1"], h2[tabindex="-1"] { scroll-margin-top: 72px; }
+.hoja-inferior.hoja-pantalla .pantalla-cab { margin: -8px -20px 12px; top: -8px; }

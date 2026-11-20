@@ -3046,7 +3046,8 @@
     $('btn-cerrar-hoja').addEventListener('click', function () { cerrarHoja(true); });
     document.addEventListener('keydown', escHoja);
     if (alAbrir) alAbrir(hoja);
-    if (pantalla) { hoja.scrollTop = 0; $('hoja-titulo').focus(); return; }
+    // 20-nov: el foco no mueve la pantalla (antes el título quedaba bajo la barra «Volver»).
+    if (pantalla) { $('hoja-titulo').focus({ preventScroll: true }); hoja.scrollTop = 0; return; }
     var primero = hoja.querySelector('input, button:not(.btn-ayuda), a');
     if (primero) primero.focus();
   }
@@ -7436,6 +7437,12 @@
       detPestana.tab = k;
       tabs.forEach(function (b) { var on = b.dataset.detTab === k; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; if (on && foco) b.focus(); });
       cont.querySelectorAll('.det-panel').forEach(function (pn) { pn.hidden = pn.id !== 'det-panel-' + k; });
+      // 20-nov: si las pestañas ya están pegadas arriba, la sección nueva empieza justo bajo ellas (no bajo la barra blanca).
+      var barra = cont.querySelector('.det-tabs'), panel = $('det-panel-' + k);
+      if (barra && panel) {
+        var bajo = barra.getBoundingClientRect().bottom + 8, arriba = panel.getBoundingClientRect().top;
+        if (arriba < bajo) window.scrollBy(0, arriba - bajo);
+      }
     };
     tabs.forEach(function (b, i) {
       b.addEventListener('click', function () { mostrar(b.dataset.detTab); });
