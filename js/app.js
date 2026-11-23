@@ -4753,6 +4753,48 @@
     }
   }
 
+  // B2 (23-nov): lectura de papeles SIMULADA. No se lee nada del archivo: son datos de ejemplo, sin nombres ni RUT.
+  // «falta» solo avisa: el documento queda listo igual.
+  function lecturaDocumento(id, archivo) {
+    var sueldo = formatoPesos(estado.sueldoPropio > 0 ? estado.sueldoPropio : 1900000);
+    var contrato = estado.contrato === 'plazo-fijo' ? 'a plazo fijo' : (estado.contrato === 'independiente' ? 'independiente' : 'indefinido');
+    var L = {
+      'liquidacion_septiembre.pdf': { leido: ['Sueldo líquido: ' + sueldo, 'Mes: septiembre', 'Contrato: ' + contrato] },
+      'liquidacion_agosto.pdf': { leido: ['Sueldo líquido: ' + sueldo, 'Mes: agosto', 'Contrato: ' + contrato] },
+      'liquidacion_julio.pdf': { leido: ['Sueldo líquido: ' + sueldo, 'Mes: julio', 'Contrato: ' + contrato] },
+      'certificado_cotizaciones_12_meses.pdf': { leido: ['12 meses cotizados seguidos', 'Ingreso estable'] },
+      'certificado_cotizaciones_24_meses.pdf': { leido: ['24 meses cotizados seguidos', 'Ingreso estable'] },
+      'contrato_de_trabajo.pdf': { leido: ['Contrato: ' + contrato, 'Trabajas desde marzo de 2021'] },
+      'certificado_de_antiguedad.pdf': { leido: ['Trabajas desde marzo de 2021'], falta: 'Este certificado no dice si tu contrato es indefinido o a plazo fijo. Puedes subir también tu contrato.' },
+      'carnet_ambos_lados.pdf': { leido: ['Frente y reverso legibles', 'Carnet vigente'] },
+      'carnet_frente_y_reverso.jpg': { leido: ['Frente y reverso legibles'], falta: 'La foto se ve algo borrosa. Si el banco no la lee, súbela de nuevo.' },
+      'carpeta_tributaria_sii.pdf': { leido: ['Renta de los últimos 2 años', 'Boletas al día'] },
+      'declaracion_jurada_comprador.pdf': { leido: ['Declaras que es tu primera vivienda'], falta: 'Falta tu firma. Se firma al pedir el crédito.' }
+    };
+    return L[archivo] || { leido: ['Documento recibido'] };
+  }
+  function abrirLecturaDocumento(x, archivo, boton) {
+    var r = lecturaDocumento(x.id, archivo);
+    abrirHojaContenido('Esto leímos de tu documento',
+      '<p><span class="chip chip-ia">' + icono('i-escudo') + 'Simulado en la demo</span></p>' +
+      '<p class="texto-apoyo"><strong>' + esc(x.corto) + '</strong>' + SEP + esc(archivo) + '</p>' +
+      '<ul class="lectura-lista">' + r.leido.map(function (t) {
+        return '<li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 12.5l3.6 3.6L17.5 8.8"/></svg><span>' + esc(t) + '</span></li>';
+      }).join('') + '</ul>' +
+      '<p class="lectura-falta' + (r.falta ? '' : ' ok') + '"><strong>' + (r.falta ? 'Te falta' : 'No te falta nada') + '</strong>' +
+        (r.falta ? '<span>' + esc(r.falta) + '</span>' : '') + '</p>' +
+      '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-lectura-ok">Se ve bien</button>' +
+        '<button type="button" class="btn btn-terciario btn-bloque" id="btn-lectura-otro">Subir otro archivo</button></div>',
+      boton, function () {
+        $('btn-lectura-ok').addEventListener('click', function () { cerrarHoja(true); });
+        $('btn-lectura-otro').addEventListener('click', function () {
+          cerrarHoja(false);
+          var b = document.querySelector('.btn-subir[data-doc="' + x.id + '"]');
+          if (b) abrirHoja(estado.compra, b);
+        });
+      }, { hoja: true });
+  }
+
   // S12-F3: el check se dibuja en el documento que se acaba de subir.
   var docRecien = null;
   function checkDibujado(animar) {
@@ -4850,6 +4892,7 @@
             var sig = document.querySelector('.doc-boton.falta'); if (sig) sig.focus();
             anunciar(x.nombre + ': listo.');
           }
+          abrirLecturaDocumento(x, nombre, document.querySelector('.btn-subir[data-doc="' + id + '"]'));
         }, ESPERA_CARGA);
       });
     });
@@ -6680,6 +6723,7 @@
       // S32-B7: con departamento meta (D5) también se muestra la lista antes de postular.
       if (!hecho) {
         texto += '</p><h3 class="h4 banco-titulo">¿Listo para el banco?</h3>' + listaBanco(rb, s.documentos) +
+          (!s.documentos && estado.compra && estado.compra.carga && !documentosListos() ? '<button type="button" class="btn btn-secundario btn-bloque" id="btn-subir-docs">Subir mis documentos</button>' : '') +
           (rb.falta ? '<p class="aviso aviso-alerta aviso-icono">' + icono('i-alerta') + 'Hoy el banco te diría que no. ' +
             (rb.cumpleEnMeses ? 'Pídela en ' + plural(rb.cumpleEnMeses, 'mes', 'meses') + '.' : 'Resuelve lo marcado primero.') + '</p>' : '') +
           '<p class="texto-apoyo">';
@@ -6708,6 +6752,9 @@
       '<p class="texto-apoyo">' + texto + '</p>' +
       (!hecho && h.estado === 'pendiente' ? '<p class="texto-apoyo"><small>Va después de ' + hitoActual(s).nombre.toLowerCase() + '.</small></p>' : '') +
       (accion ? '<div class="acciones">' + accion + '</div>' : ''), boton, function () {
+        if ($('btn-subir-docs')) $('btn-subir-docs').addEventListener('click', function () {
+          guardarSubpaso('documentos'); cerrarHoja(false); location.hash = '#compra/postular/documentos';
+        });
         var b = $('btn-hito-accion');
         if (!b) return;
         b.addEventListener('click', function () {
@@ -6734,6 +6781,12 @@
             if (!s.numeros) { cerrarHoja(false); abrirMisDatos(boton); return; }
             var rbb = revisarBanco();
             if (rbb.pendiente) { cerrarHoja(false); abrirMisDatos(boton); return; }
+            if (!s.documentos && estado.compra && !documentosListos()) {
+              // B2: «Subir mis documentos» lleva a la ventana de documentos.
+              guardarSubpaso('documentos'); cerrarHoja(false);
+              location.hash = '#compra/postular/documentos';
+              return;
+            }
             if (!s.documentos) {
               estado.pasos.documentos = true; guardarEstado();
               mostrar();

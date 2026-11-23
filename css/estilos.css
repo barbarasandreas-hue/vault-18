@@ -4983,3 +4983,10 @@ h1[tabindex="-1"], h2[tabindex="-1"] { scroll-margin-top: 72px; }
 .acel-titulo[aria-expanded="true"] .acel-flecha { transform: rotate(180deg); }
 .acel-bloque { margin-top: 12px; }
 .acel-bloque[hidden] { display: none; }
+
+/* B2: lectura de papeles simulada */
+.lectura-lista { list-style: none; margin: var(--space-3, 12px) 0; padding: 0; display: grid; gap: 8px; }
+.lectura-lista li { display: flex; gap: 8px; align-items: flex-start; }
+.lectura-lista svg { flex: none; width: 20px; height: 20px; fill: none; stroke: #28652B; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.lectura-falta { display: grid; gap: 4px; margin: 12px 0; padding: 12px; border-radius: 12px; background: #FFF4D6; color: #3d2f00; }
+.lectura-falta.ok { background: #E4F2E5; color: #1f4d22; }
