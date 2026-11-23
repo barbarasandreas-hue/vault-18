@@ -40,7 +40,7 @@ test('La app tiene el ancho de un iPhone (393 px)', () => {
 
 test('E4: ficha estándar de la compra en grupo marcada como ejemplo simulado', () => {
   assert.match(app, /function fichaGrupoHtml/);
-  assert.match(app, /Necesitas 10 compradores/);
+  assert.match(app, /Necesitas ' \+ \(p\.cupos \|\| 10\) \+ ' compradores/);
   assert.match(app, /nadie queda amarrado/);
   assert.match(app, /Ejemplo simulado/);
 });
@@ -95,4 +95,12 @@ test('Las fechas dicen «Recibes tus llaves» y no «Es tuyo» (23-nov)', () => 
 test('Tu compra lleva a Departamentos para elegir el camino (para vivir)', () => {
   assert.match(app, /'Elegir en Departamentos'/);
   assert.match(app, /if \(sp\.id === 'camino'\) return estado\.modo === 'vivir' \? '#departamentos'/);
+});
+
+test('Cuatro arreglos pequeños (23-nov): pregunta guardada, ayudas que aplican, datos del grupo, un solo volver', () => {
+  assert.match(app, /if \(estado\.prioridad\) estado\.prioridadRespondida = true;/);
+  assert.match(app, /'usados': \['ds1', 'regalo'\]/);
+  assert.match(app, /Postulaciones abiertas/);
+  assert.match(app, /Postulaciones cerradas/);
+  assert.doesNotMatch(app, /\n\s+ponerVolverAbajo\(visible\);/);
 });

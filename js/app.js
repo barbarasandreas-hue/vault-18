@@ -2198,7 +2198,8 @@
   var AYUDAS_CAMINO = {
     'individual-vivir': ['ds1', 'ds19', 'iva', 'regalo'],
     'familiar-vivir': ['ds1', 'ds19', 'iva', 'regalo'],
-    'grupo-vivir': ['ds1', 'ds19', 'regalo']
+    'grupo-vivir': ['ds1', 'ds19', 'regalo'],
+    'usados': ['ds1', 'regalo'] // 23-nov: sin IVA ni DS19 (son para departamentos nuevos)
   };
   function mesesQueAcerca(pieza) {
     try {
@@ -2293,7 +2294,7 @@
       return '<li class="ayuda-fila" id="ayuda-' + id + '">' +
         '<h2 class="ayuda-fila-titulo"><button type="button" class="ayuda-cab" data-ayuda="' + id + '" aria-expanded="' + (abierta ? 'true' : 'false') + '" aria-controls="ayuda-cuerpo-' + id + '">' +
           '<span class="ayuda-sigla" aria-hidden="true">' + a.sigla + '</span>' +
-          '<span class="ayuda-nombre"><span>' + a.nombre + '</span><span class="chip ' + (a.hoy ? 'chip-existe' : 'chip-propuesta') + '">' + (a.hoy ? 'Existe hoy' : 'Propuesta para Bci') + '</span>' + (id === 'ds19' ? '' : '<span class="chip chip-existe">Acelerador</span>') + '</span>' +
+          '<span class="ayuda-nombre"><span>' + a.nombre + '</span><span class="chip ' + (a.hoy ? 'chip-existe' : 'chip-propuesta') + '">' + (a.hoy ? 'Existe hoy' : 'Propuesta para Bci') + '</span>' + (id === 'ds19' ? '' : '<span class="chip chip-existe">Acelerador</span>') + (id === 'ds1' ? (diasEntre(hoyDemo(), cierreDS1) > 0 ? '<span class="chip chip-existe">Postulaciones abiertas</span>' : '<span class="chip chip-propuesta">Postulaciones cerradas</span>') : '') + '</span>' +
           '<span class="ayuda-impacto">' + impacto + '</span>' +
           icono('i-flecha', 'ayuda-flecha') +
         '</button></h2>' +
@@ -2474,7 +2475,7 @@
     var pct = Math.round(SUPUESTOS_PIEZAS.descuentoGrupo * 100);
     return '<section class="ficha-grupo" aria-labelledby="ficha-grupo-titulo">' +
       '<h3 class="h6" id="ficha-grupo-titulo">Reglas de este grupo <span class="chip chip-propuesta">Ejemplo simulado</span></h3>' +
-      '<p class="ficha-grupo-linea">Necesitas 10 compradores' + SEP + cierre + SEP + 'beneficio: ' + pct + NBSP + '% menos en el precio' + SEP + 'si no se llega al mínimo, nadie queda amarrado.</p>' +
+      '<p class="ficha-grupo-linea">Necesitas ' + (p.cupos || 10) + ' compradores' + SEP + cierre + SEP + 'beneficio: ' + pct + NBSP + '% menos en el precio' + SEP + 'si no se llega al mínimo, nadie queda amarrado.</p>' +
       '<ul class="ficha-grupo-lista">' +
         '<li>' + icono('i-check') + 'Cada persona tiene su cuenta, su promesa y su crédito en Bci.</li>' +
         '<li>' + icono('i-check') + 'No hay fondo común: tu dinero es solo tuyo.</li>' +
@@ -8473,6 +8474,7 @@
     cont.querySelectorAll('[data-prioridad]').forEach(function (b) {
       b.addEventListener('click', function () {
         estado.prioridad = estado.prioridad === b.dataset.prioridad ? null : b.dataset.prioridad;
+        if (estado.prioridad) estado.prioridadRespondida = true; // 23-nov: responder aquí cuenta como responder en Departamentos
         guardarEstado();
         renderComparar();
         var nb = cont.querySelector('[data-prioridad="' + b.dataset.prioridad + '"]'); if (nb) nb.focus();
@@ -10280,7 +10282,6 @@
     pilaRutas[pilaRutas.length - 1].titulo = h1 ? h1.textContent.trim() : '';
     volverAlAnterior(visible, hashNuevo);
     ponerAvatarPerfil(visible, hashNuevo);
-    ponerVolverAbajo(visible);
     // Al cambiar de pantalla, el foco va a su título: así el lector de pantalla anuncia dónde llegó.
     if (!primeraPantalla) {
       var titulo = visible.querySelector('h1');
