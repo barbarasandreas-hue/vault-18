@@ -1071,12 +1071,12 @@
       limite: 'Solo para tu primera vivienda, para vivir en ella. Se pide hasta el ' + formatoFecha(FECHAS_IMPORTAN[2].fecha) + '.' },
     ds1: { nombre: 'Subsidio DS1', pregunta: '¿Qué es el DS1?',
       que: 'Dinero del Estado que se suma a tu pie para tu primera vivienda. No se devuelve.',
-      combina: 'Crédito con garantía del Estado y compra en grupo.',
+      combina: 'Es un acelerador: se suma a un camino (compra directa o compra en grupo); no es un camino ni un tipo de departamento.',
       limite: PIEZAS_VIVIR.subsidio.cond, mas: 'ds1' },
     ds19: { nombre: 'Proyectos DS19', pregunta: '¿Qué es el DS19?',
-      que: 'Edificios nuevos con apoyo del Estado: al comprar en uno, recibes un subsidio.',
-      combina: 'Crédito con garantía del Estado y compra en grupo. También con el DS1.',
-      limite: 'Solo en proyectos DS19, con Registro Social de Hogares. El precio tope depende de la comuna.', mas: 'ds19' },
+      que: 'Un subsidio del Estado para tu primera vivienda, pero solo en proyectos DS19 específicos, que tienen cupos limitados. No sirve para cualquier departamento: primero revisas si el proyecto es DS19.',
+      combina: 'Se puede sumar al DS1.',
+      limite: 'Para postular necesitas estar en el Registro Social de Hogares. El precio tope depende de la comuna y el tramo.', mas: 'ds19' },
     rsh: { nombre: 'Registro Social de Hogares', pregunta: '¿Qué es el Registro Social?',
       que: 'El registro del Estado sobre la situación de tu hogar. Te inscribes en línea con tu ClaveÚnica.',
       combina: 'Lo piden el DS1 y los proyectos DS19.',
@@ -2209,14 +2209,14 @@
     // al tocarla se abre lo esencial (para quién, cuánto, hasta cuándo, cómo pedirlo) y dos acciones. Cifras y fechas salen de los datos.
     var AYUDA = {
       ds1: { sigla: 'DS1', nombre: 'Subsidio DS1', hoy: true, pieza: 'subsidio', filtro: 'ds1',
-        quien: 'Primera vivienda, con Registro Social de Hogares',
+        quien: 'Primera vivienda, solo en proyectos DS19 con cupos limitados, y con Registro Social de Hogares',
         cuanto: 'UF 250 a 410 a tu pie (deptos hasta UF 4.000)',
         hasta: 'Llamado cierra el ' + formatoFecha(cierreDS1),
         suma: ['Garantía del Estado', 'Compra en grupo'],
         pasos: ['Inscríbete en el Registro Social', 'Junta el ahorro en tu cuenta', 'Postula en el sitio del Minvu'] },
       ds19: { sigla: 'DS19', nombre: 'Proyectos DS19', hoy: true, filtro: 'ds19',
-        quien: 'Primera vivienda, con Registro Social de Hogares',
-        cuanto: 'Desde UF 350; el tope depende del tramo y la comuna',
+        quien: 'Primera vivienda, solo en proyectos DS19 con cupos limitados, y con Registro Social de Hogares',
+        cuanto: 'Un subsidio del Estado; el monto depende del tramo y la comuna (por confirmar)',
         hasta: 'Según el proyecto',
         suma: ['Garantía del Estado', 'Compra en grupo', 'DS1'],
         pasos: ['Elige un proyecto DS19', 'La inmobiliaria te ayuda a postular', 'Confirma los montos con ella o el Serviu'] },
@@ -2261,6 +2261,8 @@
         ? '<span class="ayuda-barra" aria-hidden="true"><i style="--w:' + (a.meses / maxMeses).toFixed(2) + '"></i></span><strong><span aria-hidden="true">−</span>' + textoMeses(a.meses) + '<span class="oculto-visual"> antes</span></strong>'
         : '<strong>' + a.cifra + '</strong>';
       var cuerpo =
+        (id === 'ds1' ? '<p class="ayuda-tu">' + icono('i-info') + 'Es un acelerador: se suma a un camino. No es un camino ni un tipo de departamento.</p>' : '') +
+        (id === 'ds19' ? '<p class="ayuda-tu">' + icono('i-info') + 'DS19 es un camino aparte: solo sirve en proyectos DS19 específicos. Si eliges uno, tu elección se limita a esos proyectos.</p>' : '') +
         '<dl class="ayuda-datos">' +
           '<div>' + icono('i-persona') + '<dt>Para quién</dt><dd>' + a.quien + '</dd></div>' +
           '<div>' + icono('i-alcancia') + '<dt>Cuánto</dt><dd>' + a.cuanto + '</dd></div>' +
@@ -2278,7 +2280,7 @@
       return '<li class="ayuda-fila" id="ayuda-' + id + '">' +
         '<h2 class="ayuda-fila-titulo"><button type="button" class="ayuda-cab" data-ayuda="' + id + '" aria-expanded="' + (abierta ? 'true' : 'false') + '" aria-controls="ayuda-cuerpo-' + id + '">' +
           '<span class="ayuda-sigla" aria-hidden="true">' + a.sigla + '</span>' +
-          '<span class="ayuda-nombre"><span>' + a.nombre + '</span><span class="chip ' + (a.hoy ? 'chip-existe' : 'chip-propuesta') + '">' + (a.hoy ? 'Existe hoy' : 'Propuesta para Bci') + '</span></span>' +
+          '<span class="ayuda-nombre"><span>' + a.nombre + '</span><span class="chip ' + (a.hoy ? 'chip-existe' : 'chip-propuesta') + '">' + (a.hoy ? 'Existe hoy' : 'Propuesta para Bci') + '</span>' + (id === 'ds19' ? '' : '<span class="chip chip-existe">Acelerador</span>') + '</span>' +
           '<span class="ayuda-impacto">' + impacto + '</span>' +
           icono('i-flecha', 'ayuda-flecha') +
         '</button></h2>' +
