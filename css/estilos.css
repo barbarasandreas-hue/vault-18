@@ -4898,3 +4898,7 @@ h1[tabindex="-1"], h2[tabindex="-1"] { scroll-margin-top: 72px; }
   .app { background: var(--gray-light); box-shadow: 0 0 0 1px rgba(0,0,0,.08), 0 8px 32px rgba(0,0,0,.18); }
   .barra { left: 50%; right: auto; width: var(--ancho-telefono); transform: translateX(-50%); border-left: 1px solid var(--gray-semilight); border-right: 1px solid var(--gray-semilight); }
 }
+
+/* 23-nov: Tu compra sin camino: «Entre [mes] y [mes]» */
+.mi-compra-fecha .noche-plazo.noche-plazo-rango { font-size: 32px; line-height: 1.15; }
+.sin-corte { white-space: nowrap; }

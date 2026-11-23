@@ -2048,6 +2048,14 @@
     };
     return { desde: uno(d.desde), hasta: uno(d.hasta), deptos: d };
   }
+  // 23-nov: sin camino elegido, Tu compra muestra «Entre [mes] y [mes], según el camino» (llaves del más rápido y del más lento que te alcanzan).
+  function rangoLlavesCaminos() {
+    var ms = idsComparar().map(function (id) { try { return numerosComparar(id); } catch (e) { return null; } })
+      .filter(function (n) { return n && n.cumple && n.tuyo !== null && isFinite(n.tuyo); })
+      .map(function (n) { return n.tuyo; });
+    if (!ms.length) return null;
+    return { desde: Math.min.apply(null, ms), hasta: Math.max.apply(null, ms) };
+  }
   function etiquetaTradicional(m) {
     // S29 (13-nov, Bárbara): más corto, sin "para un crédito tradicional".
     // S31 (18-nov, Bárbara): se mantiene arriba, pero dice claro que es el crédito tradicional.
@@ -2070,7 +2078,8 @@
     var techoJusto = !justo && !!razonJusto(x.hasta);
     // S27-B2 (pedido de Bárbara, 12-nov): sin camino elegido, arriba va el crédito tradicional (pie del 20 %),
     // y debajo, "¿Te parece mucho tiempo?" con los caminos que te hacen llegar antes.
-    var trad = (!eligio || estado.caminoElegido === 'usados') && !justo;
+    var rc = !eligio && !justo ? rangoLlavesCaminos() : null;
+    var trad = (!eligio || estado.caminoElegido === 'usados') && !justo && !rc;
     var h = trad ? plazoTradicional(mensual) : x;
     var etiqueta = function (m) { return trad ? etiquetaTradicional(m) : etiquetaLlaves(m); };
 
@@ -2085,6 +2094,13 @@
       (justo
         ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
             '<h2 class="h3" id="titulo-plazo">' + razon + ' ' + ayuda('tu-limite') + '</h2>' + salidaPrincipalHtml() + '</section>'
+        : rc
+        ? '<section class="noche mi-compra-fecha" aria-labelledby="titulo-plazo">' +
+            '<span class="noche-luna" aria-hidden="true"></span>' +
+            '<p class="noche-etiqueta" id="titulo-plazo">Recibes tus llaves</p>' +
+            '<strong class="numero noche-plazo noche-plazo-rango" id="numero-plazo">' + (rc.desde === rc.hasta ? 'En <span class="sin-corte">' + mesCorto(rc.desde) + '</span>' : 'Entre <span class="sin-corte">' + mesCorto(rc.desde) + '</span> y <span class="sin-corte">' + mesCorto(rc.hasta) + '</span>') + '</strong>' +
+            '<span class="noche-aprox" id="plazo-aprox">según el camino que elijas</span>' +
+          '</section>'
         : '<section class="noche mi-compra-fecha" aria-labelledby="titulo-plazo">' +
             '<span class="noche-luna" aria-hidden="true"></span>' +
             '<p class="noche-etiqueta" id="titulo-plazo">' + etiqueta(h.hasta.meses) + '</p>' +
