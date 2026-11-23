@@ -70,3 +70,25 @@ test('Las marcas de aceleradores y misiones se guardan al recargar', () => {
   ['ds1Agregado', 'tasaAgregado', 'fogaesAgregado', 'tasaPedido', 'garantiaFamiliar', 'fogaesCalifica', 'acuerdoFirmado', 'informeDeudas']
     .forEach((k) => assert.ok(app.slice(0, app.indexOf('];', app.indexOf('var CLAVES_PASOS'))).includes("'" + k + "'"), k));
 });
+
+test('Misiones: la frase dice que no hay orden fijo y que se empieza por la que vence', () => {
+  assert.match(app, /Puedes hacerlas en el orden que quieras\. Empieza por la que vence\./);
+  assert.doesNotMatch(app, /Hazlas en cualquier orden/);
+});
+
+test('Misiones: al completarlas todas hay festejo (confeti y mensaje), una vez por conjunto', () => {
+  assert.match(app, /function festejarMisiones\(ms\)/);
+  assert.match(app, /¡Completaste todas tus misiones!/);
+  assert.match(app, /'usadoElegido', 'misionesFestejo'\]/);
+});
+
+test('Aceleradores de Tu compra: dicen «Está en tus misiones» y el DS1 coincide con su misión', () => {
+  assert.match(app, /'Está en tus misiones'/);
+  assert.match(app, /ps\.ds1Agregado \|\| ps\.ds1Postulado \|\| ps\.rsh\), lista: !!ps\.ds1Postulado/);
+});
+
+test('La sigla FOGAES solo queda en el glosario', () => {
+  const visibles = app.split('\n').filter((l) => /FOGAES/.test(l) && !/^\s*\/\//.test(l) && !/sigla: 'FOGAES'/.test(l));
+  assert.strictEqual(visibles.length, 1);
+  assert.match(visibles[0], /garantia: \{ nombre: 'Garantía del Estado \(FOGAES\)'/);
+});

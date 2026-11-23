@@ -75,6 +75,7 @@
     prioridadRespondida: false, // 23-nov: ya contestó «¿Qué es lo que más te importa?» en Departamentos (también si dijo «No estoy seguro»)
     prioridad: null,         // S32-B4: lo que más le importa al comparar: 'antes', 'menos' o 'ya'
     respaldoAceptado: false, // 23-nov: el familiar aceptó ser el respaldo (pantalla de consentimiento, simulada)
+    misionesFestejo: '',     // 23-nov: las misiones que ya se festejaron completas (ids ordenados), para no repetir el festejo
     acuerdoCredito: null,    // 23-nov: acuerdo de «Sumar a alguien al crédito»: { con, tuParte, quienPaga, siSale }
     usadoElegido: null,      // S32-B5: el usado elegido como meta en el crédito tradicional (USADOS)
     trabajo: '',             // 9-nov: dónde trabaja (para ver cómo llegar en el mapa, dentro de la app)
@@ -89,9 +90,9 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo', 'presentacion', 'muro', 'visitaGrupo', 'saldoCorriente', 'mesesTrabajo', 'deudasAtrasadas', 'rshTramo', 'caminoAnterior', 'prioridad', 'prioridadRespondida', 'acuerdoCredito', 'respaldoAceptado', 'usadoElegido'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo', 'presentacion', 'muro', 'visitaGrupo', 'saldoCorriente', 'mesesTrabajo', 'deudasAtrasadas', 'rshTramo', 'caminoAnterior', 'prioridad', 'prioridadRespondida', 'acuerdoCredito', 'respaldoAceptado', 'usadoElegido', 'misionesFestejo'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
-    otrasCuotas: null, contrato: 'indefinido', mesesTrabajo: null, deudasAtrasadas: null, rshTramo: null, caminoAnterior: null, prioridad: null, prioridadRespondida: false, acuerdoCredito: null, respaldoAceptado: false, usadoElegido: null,
+    otrasCuotas: null, contrato: 'indefinido', mesesTrabajo: null, deudasAtrasadas: null, rshTramo: null, caminoAnterior: null, prioridad: null, prioridadRespondida: false, acuerdoCredito: null, respaldoAceptado: false, usadoElegido: null, misionesFestejo: '',
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
@@ -435,6 +436,7 @@
       if (['antes', 'menos', 'ya'].indexOf(g.prioridad) !== -1) estado.prioridad = g.prioridad;
       estado.prioridadRespondida = g.prioridadRespondida === true || estado.prioridad !== null;
       estado.respaldoAceptado = g.respaldoAceptado === true;
+      estado.misionesFestejo = typeof g.misionesFestejo === 'string' ? g.misionesFestejo.slice(0, 300) : '';
       if (g.acuerdoCredito && typeof g.acuerdoCredito === 'object' && ACUERDO_CON.indexOf(g.acuerdoCredito.con) !== -1 && ACUERDO_PAGA.indexOf(g.acuerdoCredito.quienPaga) !== -1 && ACUERDO_SALE.indexOf(g.acuerdoCredito.siSale) !== -1) {
         var tp = Math.round(Number(g.acuerdoCredito.tuParte));
         estado.acuerdoCredito = { con: g.acuerdoCredito.con, tuParte: tp >= 10 && tp <= 90 ? tp : 50, quienPaga: g.acuerdoCredito.quienPaga, siSale: g.acuerdoCredito.siSale };
@@ -1002,7 +1004,7 @@
     'protector': { termino: 'Protector de racha', pregunta: '¿Qué es el protector de racha?',
       texto: 'Si un mes no puedes pagar tu cuota, tu racha sigue, una vez cada 6 meses. Lo ahorrado nunca se pierde.' },
     'garantia': { termino: 'Garantía del Estado', pregunta: '¿Qué es la garantía del Estado?',
-      texto: 'Con la garantía FOGAES, Bci te presta el 90 % y pones solo el 10 % de pie. Sin ella, Bci presta el 80 % y juntas más tiempo.' },
+      texto: 'Con la garantía del Estado, Bci te presta el 90 % y pones solo el 10 % de pie. Sin ella, Bci presta el 80 % y juntas más tiempo.' },
     'tasa-ejemplo': { termino: 'Tasa de ejemplo', pregunta: 'Qué significa tasa de ejemplo',
       texto: 'Cada banco fija su tasa según tu caso. Se fija el día que firmas.' },
     'dividendo': { termino: 'Dividendo', pregunta: '¿Qué es el dividendo?',
@@ -2666,6 +2668,19 @@
   function piePasaObra(p, mE) {
     try { var pl = plazoTuPie(p, metaCompra(p)); return pl.meses !== null && pl.meses > (mE || 0); } catch (e) { return false; }
   }
+  // 23-nov (Bárbara): al completar todas las misiones, un festejo (confeti y mensaje), sin premio.
+  // Se festeja una vez por conjunto de misiones: si después aparece una nueva y la completas, se festeja de nuevo.
+  function festejarMisiones(ms) {
+    if (!ms.length || ms.some(function (x) { return !x.hecho; })) return;
+    var firma = ms.map(function (x) { return x.id; }).sort().join(',');
+    if (estado.misionesFestejo === firma) return;
+    estado.misionesFestejo = firma;
+    guardarEstado();
+    setTimeout(function () {
+      confeti();
+      toast('¡Completaste todas tus misiones! Cada una te acercó a tu departamento.');
+    }, 400);
+  }
   // S33-C2: las misiones en una sola tarjeta ordenada: lo que vence primero arriba y dos más.
   function misionesCompraHtml(ms, hoy) {
     var conFecha = misionesConFecha(ms, hoy);
@@ -2703,13 +2718,13 @@
     if (!elegidos.length && !elegibles.length) return '';
     var fila = function (f, clase, marca) {
       return '<li><button type="button" class="ac-fila ' + clase + '" data-aceleradores-abrir>' +
-        '<span class="ac-sigla" aria-hidden="true">' + f.sigla + '</span>' +
+        '<span class="ac-sigla" aria-hidden="true">' + siglaForma(f) + '</span>' +
         '<span class="ac-texto"><strong>' + f.nombre + '</strong><small>' + marca + '</small></span>' +
         icono('i-flecha', 'ac-flecha') + '</button></li>';
     };
     return '<section class="tarjeta aceleradores-compra" aria-labelledby="titulo-ac">' +
       '<div class="mc-cab"><h2 class="h5" id="titulo-ac">¿Cómo puedes llegar antes?</h2></div>' +
-      (elegidos.length ? '<p class="ac-sub">Ya los sumaste</p><ul class="mc-lista">' + elegidos.map(function (f) { return fila(f, 'ac-elegido', f.auto ? 'Va incluido en tu camino' : 'En tus pasos'); }).join('') + '</ul>' : '') +
+      (elegidos.length ? '<p class="ac-sub">Ya los sumaste</p><ul class="mc-lista">' + elegidos.map(function (f) { return fila(f, 'ac-elegido', f.auto ? 'Va incluido en tu camino' : f.lista ? 'Listo' : 'Está en tus misiones'); }).join('') + '</ul>' : '') +
       (elegibles.length ? '<p class="ac-sub">Puedes sumar</p><ul class="mc-lista">' + elegibles.map(function (f) { return fila(f, 'ac-elegible', 'Sin sumar todavía'); }).join('') + '</ul>' : '') +
       '</section>';
   }
@@ -2721,6 +2736,7 @@
     listosVistos = listos;
     celebraInicio = celebra;
     var ms = misiones(s, hoy);
+    festejarMisiones(ms);
     return barraCaminoAnterior() + caminoJuego(h, celebra) + tuEdificioHtml(s) + (extra || '') + misionesCompraHtml(ms, hoy) + aceleradoresCompraHtml();
   }
   // S32-B3: la fecha aproximada de cada paso, con los plazos que ya calcula la app (D13: nada del prototipo).
@@ -3659,7 +3675,7 @@
       espera: !bloq && ds1.mesesCuenta ? 'Tu cuenta de vivienda debe tener ' + ds1.mesesCuenta + ' meses' : '',
       req: [['Departamento de hasta UF 4.000', precio <= 4000], ['Tu sueldo bajo el tope del tramo', !(bloq && /sueldo/i.test(bloq.razon))],
         ['Registro Social de Hogares', ps.rsh ? true : null], ['No tener otra vivienda', null]],
-      enPasos: !!(conDS1 || ps.ds1Agregado || ps.ds1Postulado), lista: !!ps.ds1Postulado });
+      enPasos: !!(conDS1 || ps.ds1Agregado || ps.ds1Postulado || ps.rsh), lista: !!ps.ds1Postulado });
     // 20-nov (Bárbara): el subsidio a la tasa no se da por sentado: depende de los cupos cuando Bci apruebe tu crédito.
     formas.push({ id: 'tasa', sigla: '%', nombre: 'Subsidio a la tasa', que: 'Baja la tasa de tu crédito en un departamento nuevo. No es seguro: depende de los cupos que queden cuando Bci apruebe tu crédito.',
       juntas: 0, pagas: pd.dividendo - pd.dividendoSinSubsidio, soloPagas: true,
@@ -5398,7 +5414,7 @@
           '15 % (' + formatoPesos(e.reparto.inversionistas) + '). Sin cuota para ti: el arriendo les paga 6 % al año en UF y recompra su parte.') +
         filaFirma('Cuenta custodia Bci ' + ayuda('cuenta-custodia'),
           'Recibe el arriendo y paga a los inversionistas.')
-      : filaFirma(e.conPiezas && e.conPiezas.respaldo ? 'Garantía de un familiar · propuesta' : 'Garantía del Estado (FOGAES)',
+      : filaFirma(e.conPiezas && e.conPiezas.respaldo ? 'Garantía de un familiar · propuesta' : 'Garantía del Estado',
           e.conPiezas && e.conPiezas.respaldo ? 'Un familiar deja una garantía en Bci.' : 'Departamentos nuevos de hasta UF 6.000. Bci te presta hasta el 90 %.');
 
     var hp = hitoActual(fotoPasos());
@@ -7189,7 +7205,7 @@
     deudas: ['Muestra tus deudas con bancos y cooperativas. Si hay algo atrasado, lo ves antes que el banco.', 'Ya lo revisé'],
     visita: ['Con la mitad de tu pie agendas una visita con la corredora. Así conoces el departamento antes de elegirlo.', null],
     tasa: ['Lo pides junto con tu crédito, al pedir tu preaprobación. Baja tu dividendo si quedan cupos cuando Bci lo apruebe.', 'Ya lo pedí'],
-    fogaes: ['La garantía del Estado (FOGAES) deja que Bci te preste hasta el 90' + NBSP + '%: juntas un pie del 10' + NBSP + '%. Es para departamentos nuevos y se usa una sola vez.', null],
+    fogaes: ['La garantía del Estado deja que Bci te preste hasta el 90' + NBSP + '%: juntas un pie del 10' + NBSP + '%. Es para departamentos nuevos y se usa una sola vez.', null],
     familiar: ['Tu familiar deja el 10' + NBSP + '% en una cuenta Bci, con intereses. Lo recupera cuando tu deuda baja al 80' + NBSP + '%.', 'Ya la dejó']
   };
   var MISION_CLAVE = { tasa: 'tasaPedido', ds1: 'ds1Postulado', rsh: 'rsh', 'bajo-llave': 'bajoLlave', familiar: 'garantiaFamiliar', acuerdo: 'acuerdoFirmado', deudas: 'informeDeudas' };
@@ -7259,6 +7275,7 @@
     var cont = $('pasos-contenido');
     var s = fotoPasos(), hoy = hoyDemo();
     var todas = misiones(s, hoy), conFecha = misionesConFecha(todas, hoy);
+    festejarMisiones(todas);
     var idsFecha = conFecha.map(function (x) { return x.id; });
     var faltan = todas.filter(function (x) { return !x.hecho && idsFecha.indexOf(x.id) === -1; });
     var listas = todas.filter(function (x) { return x.hecho; });
@@ -7274,7 +7291,7 @@
       '<a href="#compra" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Tu compra</a>' +
       '<header class="encabezado misiones-cabeza"><h1 id="titulo-pasos" class="h2" tabindex="-1">Misiones</h1>' +
         '<span class="misiones-anillo" style="--p:' + (total ? Math.round(hechas / total * 100) : 0) + '" aria-label="' + hechas + ' de ' + total + ' listas"><strong>' + hechas + '/' + total + '</strong></span></header>' +
-      '<p class="texto-apoyo">Hazlas en cualquier orden: cada una te acerca a tu fecha.</p>' +
+      '<p class="texto-apoyo">Puedes hacerlas en el orden que quieras. Empieza por la que vence.</p>' +
       bloqueConFecha(conFecha) +
       (faltan.length ? '<h2 class="h5 misiones-sub">Por hacer</h2><ul class="mosaico-misiones">' + faltan.map(mosaico).join('') + '</ul>' : '') +
       (listas.length ? '<h2 class="h5 misiones-sub">Listas</h2><ul class="mosaico-misiones">' + listas.map(mosaico).join('') + '</ul>' : '') +
@@ -8290,7 +8307,7 @@
       para: 'Si quieres pagar menos y puedes esperar la obra.',
       cuidado: 'Esperas que terminen la obra para firmar.' },
     'individual-vivir': { bueno: 'Pie de solo 10' + NBSP + '%', ojo: 'Solo departamentos nuevos', depto: 'Nuevo',
-      que: 'El crédito de siempre: compras solo, un departamento nuevo o usado. La garantía del Estado (FOGAES) es una ayuda: en uno nuevo, Bci te presta hasta el 90' + NBSP + '% y juntas el 10' + NBSP + '%.',
+      que: 'El crédito de siempre: compras solo, un departamento nuevo o usado. La garantía del Estado es una ayuda: en uno nuevo, Bci te presta hasta el 90' + NBSP + '% y juntas el 10' + NBSP + '%.',
       como: ['Eliges un departamento nuevo.', 'Juntas el 10' + NBSP + '% en tu cuenta de vivienda.', 'Bci te preaprueba; reservas, firmas y recibes tus llaves.'],
       para: 'Si quieres un departamento nuevo y juntar menos pie.',
       cuidado: 'Solo departamentos nuevos, de hasta ' + formatoUF(SUPUESTOS.topeFogaesUF) + '.' },
