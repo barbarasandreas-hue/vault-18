@@ -3699,8 +3699,14 @@
     var formas;
     try { formas = formasParaVista(p, solo, caminoVista); } catch (e) { return ''; }
     var avisa = !!estado.pasos.avisoAceleradores;
-    return '<section class="tarjeta acel-detalle" aria-labelledby="titulo-acel">' +
-      '<h2 class="h5" id="titulo-acel">¿Cómo puedes llegar antes?</h2>' +
+    var abiertas = formas.filter(function (f) { return f.abierto; }).length;
+    // 23-nov (Bárbara): el título es un desplegable; por dentro, las ayudas con su estado.
+    return '<section class="tarjeta acel-detalle">' +
+      '<button type="button" class="acel-titulo" id="btn-acel-titulo" aria-expanded="false" aria-controls="acel-bloque">' +
+        '<span class="acel-titulo-texto"><strong>¿Cómo puedes llegar antes?</strong><small>' + formas.length + ' ayudas · ' + abiertas + ' abiertas</small></span>' +
+        '<svg class="acel-flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>' +
+      '</button>' +
+      '<div class="acel-bloque" id="acel-bloque" hidden>' +
       '<ul class="acel-lista">' + formas.map(function (f) {
         return '<li class="acel-item"><button type="button" class="acel-fila" data-acel="' + f.id + '" aria-expanded="false" aria-controls="acel-cuerpo-' + f.id + '">' +
           '<span class="fp-sigla" aria-hidden="true">' + siglaForma(f) + '</span>' +
@@ -3712,6 +3718,7 @@
       '<p class="fp-sello">' + icono('i-escudo') + 'Lo confirma Bci al aprobar tu crédito.</p>' +
       '<button type="button" class="enlace acel-avisos" id="btn-acel-avisos" aria-pressed="' + avisa + '">' + icono('i-campana') +
         (avisa ? 'Te avisamos de novedades' : 'Avísame si abren, cierran o cambian') + '</button>' +
+      '</div>' +
     '</section>';
   }
   // 23-nov: el acuerdo entre quienes comparten el crédito: con quién, qué parte del departamento es de cada uno,
@@ -4056,6 +4063,12 @@
     iniciarPestanasDetalle(contenedor);
     iniciarPagoAntes();
     iniciarVisita(p);
+    var tituloAcel = document.getElementById('btn-acel-titulo');
+    if (tituloAcel) tituloAcel.addEventListener('click', function () {
+      var abre = this.getAttribute('aria-expanded') !== 'true';
+      this.setAttribute('aria-expanded', String(abre));
+      document.getElementById('acel-bloque').hidden = !abre;
+    });
     document.querySelectorAll('[data-acel]').forEach(function (b) {
       b.addEventListener('click', function () {
         var abrir = b.getAttribute('aria-expanded') !== 'true';

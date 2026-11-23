@@ -203,3 +203,9 @@ test('23-nov: los filtros de Departamentos son desplegables con su valor actual'
   assert.match(app32, /var resumenFiltro = function \(g\)/);
   assert.match(app32, /id="filtro-cuerpo-'/);
 });
+
+test('23-nov: «¿Cómo puedes llegar antes?» es un desplegable que muestra cuántas ayudas están abiertas', () => {
+  assert.match(app32, /id="btn-acel-titulo" aria-expanded="false" aria-controls="acel-bloque"/);
+  assert.match(app32, /id="acel-bloque" hidden>/);
+  assert.match(app32, /abiertas<\/small>/);
+});
