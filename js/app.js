@@ -9134,17 +9134,70 @@
           estado.caminoAnterior = anterior && anterior !== id ? { id: anterior, listos: listosDe(hitoActual(fotoPasos())) } : null;
           guardarEstado();
           caminoRecien = id; pasoElegido = null;
+          // 23-nov: después de elegir, una pantalla de confirmación y, como primer paso, «Abrir mi cuenta».
+          caminoConfirmado = { id: id, anterior: anterior };
           cerrarHoja(false);
-          location.hash = '#compra';
-          toastAccion('Ahora vas por ' + primeraMinuscula(CAMINOS[id].corto) + '.', 'Deshacer', function () {
-            aplicarCamino(anterior);
-            estado.caminoAnterior = null;
-            guardarEstado();
-            mostrar();
-            toast(anterior && CAMINOS[anterior] ? 'Volviste a ' + primeraMinuscula(CAMINOS[anterior].corto) + '.' : 'Listo: todavía no eliges camino.');
-          });
+          location.hash = '#compra/elegido';
         });
       }, { confirmacion: true });
+  }
+  var caminoConfirmado = null;
+  // Las fechas que importan del camino recién elegido, con las palabras de siempre.
+  function hitosElegido(id) {
+    var vivir4 = (estado.modo === 'vivir' && CAMINOS_COMPARAR.indexOf(id) !== -1) || (estado.modo === 'arrendar' && esArrendarCamino(id));
+    if (!vivir4) return null;
+    var n = numerosComparar(id), t = n.tuyo;
+    if (t === null || t === undefined) return null;
+    var f = function (m) { return m === null ? '' : 'aprox. ' + fechaLlaves(Math.max(0, m), hoyDemo()); };
+    if (id === 'arriendo-opcion') return [['Te mudas', f(n.mudas)], ['Es tuyo', f(t)]];
+    if (esArrendarCamino(id)) return [['Pie listo', f(t - MESES_SI_A_LLAVES)], ['Firmas', f(t)]];
+    if (CAMINOS[id].grupo) return [['Pie listo', 'En cuotas, mientras se construye'], ['Firmas y recibes tus llaves', f(t)]];
+    return [['Pie listo', f(t - MESES_SI_A_LLAVES)], ['Firmas y recibes tus llaves', f(t)]];
+  }
+  function renderCaminoElegido() {
+    var cont = $('pasos-contenido');
+    var cc = caminoConfirmado;
+    if (!cc || estado.caminoElegido !== cc.id) { location.replace('#compra'); return; }
+    var id = cc.id, c = CAMINOS[id], h = pasosDeCamino(id), hitos = hitosElegido(id);
+    var cuenta = id !== 'arriendo-opcion' && !estado.pasos.cuentaVivienda;
+    cont.innerHTML =
+      '<section class="elegido" aria-labelledby="titulo-pasos">' +
+        '<div class="elegido-dibujo" style="' + varsCamino(id) + '">' + ilustracionCamino(id) +
+          '<span class="elegido-sello" aria-hidden="true">' + icono('i-check') + '</span></div>' +
+        '<p class="elegido-etq">Tu camino</p>' +
+        '<h1 id="titulo-pasos" class="h2" tabindex="-1">' + c.nombre + '</h1>' +
+        '<p class="texto-apoyo">' + plural(h.total, 'paso', 'pasos') + ' hasta tus llaves. Lo que ya hiciste se mantiene.</p>' +
+        (hitos ? '<ol class="elegido-hitos">' + hitos.map(function (x, i) {
+          return '<li class="' + (i === hitos.length - 1 ? 'meta' : '') + '"><span class="elegido-punto" aria-hidden="true"></span><span><strong>' + x[0] + '</strong><small>' + x[1] + '</small></span></li>';
+        }).join('') + '</ol>' : '') +
+      '</section>' +
+      (cuenta
+        ? '<section class="tarjeta elegido-sigue" aria-labelledby="titulo-sigue">' +
+            '<p class="elegido-etq">Tu primer paso</p>' +
+            '<h2 class="h4" id="titulo-sigue">Abre tu cuenta de vivienda</h2>' +
+            '<p class="texto-apoyo">Ahí juntas tu pie, en UF. Se abre en minutos y no tiene costo (simulado).</p>' +
+            '<button type="button" class="btn btn-primario btn-bloque" id="btn-elegido-cuenta">Abrir mi cuenta</button>' +
+            '<a class="btn btn-terciario btn-bloque" href="#compra">Ahora no, ver mis pasos</a>' +
+          '</section>'
+        : '<div class="acciones"><a class="btn btn-primario btn-bloque" href="#compra">Ver mis pasos</a></div>') +
+      '<p class="texto-centro"><button type="button" class="enlace" id="btn-elegido-deshacer">' +
+        (cc.anterior && CAMINOS[cc.anterior] ? 'Volver a ' + primeraMinuscula(CAMINOS[cc.anterior].corto) : 'Deshacer: todavía no elijo') + '</button></p>';
+    if ($('btn-elegido-cuenta')) $('btn-elegido-cuenta').addEventListener('click', function () {
+      estado.pasos.cuentaVivienda = true;
+      guardarEstado();
+      caminoConfirmado = null;
+      location.hash = '#pie';
+      toast(textoCuentaAbierta());
+    });
+    $('btn-elegido-deshacer').addEventListener('click', function () {
+      var anterior = cc.anterior;
+      aplicarCamino(anterior);
+      estado.caminoAnterior = null;
+      guardarEstado();
+      caminoConfirmado = null;
+      location.hash = anterior ? '#compra' : '#departamentos/caminos';
+      toast(anterior && CAMINOS[anterior] ? 'Volviste a ' + primeraMinuscula(CAMINOS[anterior].corto) + '.' : 'Listo: todavía no eliges camino.');
+    });
   }
 
 
@@ -10226,6 +10279,7 @@
     // #compra/…: todo vive en Tu compra.
     if (p[1] === 'misiones') return r('pasos', 'compra', renderTodasMisiones);
     if (p[1] === 'recorrido') return r('pasos', 'compra', renderRecorrido);
+    if (p[1] === 'elegido') return r('pasos', 'compra', renderCaminoElegido);
     if (p[1] === 'caminos') {
       var q = p.slice(1);
       if (q[1] === 'cambia') return r('caminos', 'deptos', function () { cambiosActivos = {}; renderCaminos(); });

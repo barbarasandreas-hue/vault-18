@@ -4918,3 +4918,22 @@ h1[tabindex="-1"], h2[tabindex="-1"] { scroll-margin-top: 72px; }
 .fp-cab .acel-estado { margin-left: auto; }
 .acel-detalle .acel-avisos { display: flex; align-items: center; justify-content: flex-start; gap: 8px; width: 100%; margin-top: 12px; min-height: 44px; text-align: left; }
 .acel-avisos .icono { flex: none; width: 18px; height: 18px; }
+
+/* 23-nov: confirmación al elegir camino */
+.elegido { text-align: center; padding: 8px 0 4px; }
+.elegido-dibujo { position: relative; max-width: 260px; margin: 8px auto 12px; border-radius: 20px; overflow: hidden; background: var(--cs, #D4E3F5); }
+.elegido-dibujo svg { display: block; width: 100%; height: auto; }
+.elegido-sello { position: absolute; right: 10px; bottom: 10px; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--green-dark); color: var(--white); box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+.elegido-sello .icono { width: 24px; height: 24px; }
+.elegido-etq { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--gray-semidark); }
+.elegido h1 { margin: 2px 0 6px; }
+.elegido-hitos { list-style: none; margin: 16px 0 8px; padding: 0; text-align: left; display: grid; gap: 0; }
+.elegido-hitos li { position: relative; display: flex; gap: 12px; align-items: flex-start; padding: 0 0 16px 0; }
+.elegido-hitos li:not(:last-child)::before { content: ''; position: absolute; left: 9px; top: 20px; bottom: 0; width: 2px; background: var(--gray-semilight); }
+.elegido-punto { flex: none; width: 20px; height: 20px; margin-top: 2px; border-radius: 50%; border: 3px solid var(--blue-dark, #1D5699); background: var(--white); }
+.elegido-hitos li.meta .elegido-punto { background: var(--green-dark); border-color: var(--green-dark); }
+.elegido-hitos span:last-child { display: grid; gap: 2px; }
+.elegido-hitos strong { font-size: 16px; color: var(--gray-dark); }
+.elegido-hitos small { font-size: 14px; color: var(--gray-semidark); }
+.elegido-sigue { margin: 8px 0 12px; display: grid; gap: 8px; }
+.elegido-sigue h2 { margin: 0; }

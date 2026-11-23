@@ -78,7 +78,7 @@ test('S32-B4: comparar caminos: prioridades, carrera, lado a lado, «i» y Desha
   assert.match(app32, /¿Cuándo recibes tus llaves con cada camino\?/); // S34: antes «Carrera hacia tus llaves»
   assert.match(app32, /class="lado-a-lado"/);
   assert.match(app32, /function abrirInfoCamino\(id, boton\)/);
-  assert.match(app32, /toastAccion\('Ahora vas por '/);
+  assert.match(app32, /id="btn-elegido-deshacer"/); // 23-nov: Deshacer vive en la confirmación
   assert.match(app32, /Antes ibas por <strong>/);
   assert.match(app32, /'caminoAnterior', 'prioridad'/);
 });
@@ -174,4 +174,10 @@ test('23-nov: aceleradores a la vista en el detalle, con estado abierto/cerrado 
   assert.match(app32, /nombre: 'Sumar a alguien al crédito'/);
   assert.match(app32, /No es el DS19/);
   assert.match(app32, /id="btn-acel-avisos"/);
+});
+
+test('23-nov: al elegir camino se ve una confirmación y luego «Abrir mi cuenta»', () => {
+  assert.match(app32, /location\.hash = '#compra\/elegido'/);
+  assert.match(app32, /if \(p\[1\] === 'elegido'\) return r\('pasos', 'compra', renderCaminoElegido\)/);
+  assert.match(app32, /id="btn-elegido-cuenta">Abrir mi cuenta</);
 });
