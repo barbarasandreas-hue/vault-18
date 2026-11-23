@@ -5040,3 +5040,57 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .hoja-inferior #btn-cerrar-hoja.btn-terciario {
   border: 0; background: transparent; min-height: 44px; color: var(--blue-dark); text-decoration: underline; text-underline-offset: 3px;
 }
+
+/* ===== S39b (23-nov) · Menos texto, más tarjetitas con íconos (referente Uber) ===== */
+
+/* Caminos: una fila por camino (ícono, nombre, cuándo y cuánto al mes, flecha) */
+.ex-grupo ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.cam-fila {
+  display: grid; grid-template-columns: 48px minmax(0, 1fr) 20px; align-items: center; gap: 14px;
+  padding: 14px 14px 14px 12px; border-radius: 18px; background: var(--white); color: #1F2A30; text-decoration: none;
+  box-shadow: 0 1px 2px rgba(55, 71, 79, .06), 0 6px 18px rgba(55, 71, 79, .07);
+  transition: transform var(--dur-micro) var(--ease-salida);
+}
+.cam-fila:active { transform: scale(.98); }
+.cam-icono { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: var(--cs); color: var(--ci); }
+.cam-icono svg { width: 26px; height: 26px; }
+.cam-texto { display: grid; gap: 4px; }
+.cam-texto strong { font-size: 16px; font-weight: 700; line-height: 1.2; }
+.cam-datos { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 14px; color: var(--gray-semidark); }
+.cam-dato { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.cam-dato svg { width: 16px; height: 16px; flex: none; color: var(--gray-semidark); }
+.cam-flecha { width: 20px; height: 20px; fill: none; stroke: var(--gray-semidark); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.cam-reco { box-shadow: 0 0 0 2px var(--green-normal), 0 6px 18px rgba(40, 137, 43, .15); }
+.cam-sello { justify-self: start; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: var(--green-20); color: var(--green-dark); font-size: 12px; font-weight: 700; }
+.cam-sello svg { width: 14px; height: 14px; }
+.ex-grupo { margin-top: 20px; }
+.pregunta-prioridad .texto-apoyo { margin: 2px 0 10px; }
+
+/* Tu equipo te anima: una sola fila */
+.animos-fila { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 12px 14px; }
+.animos-fila p { margin: 0; font-size: 14px; line-height: 1.35; }
+.animos-fila small { color: var(--gray-semidark); font-weight: 600; }
+.animos-avs { display: flex; }
+.animos-avs .animo-av { width: 32px; height: 32px; border-radius: 50%; background: var(--white); box-shadow: 0 0 0 2px var(--yellow-20); }
+.animos-avs .animo-av + .animo-av { margin-left: -10px; }
+.animos-fila .enlace { justify-self: end; font-size: 14px; }
+
+/* En el azul de Tu compra: la fecha del cupo en una línea y el cuadro claro con lo que falta para tu pie */
+.cierre-linea { position: relative; z-index: 1; display: flex; align-items: center; gap: 6px; margin: 8px 0 0; font-size: 14px; color: rgba(255, 255, 255, .92); }
+.cierre-linea svg { width: 16px; height: 16px; flex: none; }
+.cierre-linea.pronto { font-weight: 700; }
+.falta-pie { margin-top: 14px; padding: 12px 14px; }
+.falta-pie span { gap: 2px; }
+.falta-pie b { font-weight: 600; opacity: .95; }
+
+/* ¿Cómo puedes llegar antes? como desplegable */
+.ac-desplegable { padding: 0 18px; }
+.ac-desplegable > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; min-height: 44px; cursor: pointer; }
+.ac-desplegable > summary::-webkit-details-marker { display: none; }
+.ac-sum-texto { display: grid; gap: 2px; }
+.ac-sum-texto small { color: var(--gray-semidark); font-size: 14px; }
+.ac-sum-flecha { width: 20px; height: 20px; flex: none; transition: transform var(--dur-corta) var(--ease-salida); color: var(--gray-semidark); }
+.ac-desplegable[open] .ac-sum-flecha { transform: rotate(180deg); }
+.ac-desplegable > ul:last-child { margin-bottom: 16px; }
+
+.noche .cierre-linea svg, .noche .falta-pie svg { color: var(--white) !important; stroke: currentColor; opacity: .95; }

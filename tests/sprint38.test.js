@@ -100,3 +100,22 @@ test('S39: barra inferior flotante con solo íconos; los nombres siguen para el 
   assert.match(css, /border-radius: 999px; background: var\(--white\) !important;/);
   ['Tu compra', 'Tu pie', 'Departamentos', 'Perfil'].forEach((t) => assert.ok(html.includes('</svg>' + t + '</a>'), t));
 });
+
+test('S39b: el azul de Tu compra dice cuánto falta para tu pie en todos los caminos; el cupo va en una línea', () => {
+  assert.match(app, /function faltaPieHtml\(falta, linea\)/);
+  assert.match(app, /'Te faltan ' \+ formatoRedondeado\(falta\) \+ ' para tu pie'/);
+  assert.match(app, /sinObra \? cierreLineaHtml\(p\) \+ faltaPieHtml\(g\.falta/);
+  assert.match(app, /sinObra \? faltaPieHtml\(Math\.max\(0, meta - ahorradoTuPie\(meta\)\)/);
+});
+
+test('S39b: Tu equipo te anima en una fila; ¿Cómo puedes llegar antes? es un desplegable', () => {
+  assert.match(app, /class="tarjeta animos animos-fila" aria-label="Tu equipo te anima"/);
+  assert.match(app, /<details class="tarjeta aceleradores-compra ac-desplegable">/);
+});
+
+test('S39b: Caminos en filas con íconos, sin textos de relleno; Edificios sin «en tu rango»', () => {
+  assert.match(app, /class="cam-fila/);
+  assert.doesNotMatch(app, /caminos para llegar a tu departamento\. Conoce cada uno/);
+  assert.doesNotMatch(app, /Con tu respuesta te recomendamos uno de estos caminos/);
+  assert.doesNotMatch(app, /' en tu rango'/);
+});
