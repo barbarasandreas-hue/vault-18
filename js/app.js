@@ -2310,7 +2310,7 @@
       return '<li class="ayuda-fila" id="ayuda-' + id + '">' +
         '<h2 class="ayuda-fila-titulo"><button type="button" class="ayuda-cab" data-ayuda="' + id + '" aria-expanded="' + (abierta ? 'true' : 'false') + '" aria-controls="ayuda-cuerpo-' + id + '">' +
           '<span class="ayuda-sigla" aria-hidden="true">' + a.sigla + '</span>' +
-          '<span class="ayuda-nombre"><span>' + a.nombre + '</span><span class="chip ' + (a.hoy ? 'chip-existe' : 'chip-propuesta') + '">' + (a.hoy ? 'Existe hoy' : 'Propuesta para Bci') + '</span>' + (id === 'ds19' ? '' : '<span class="chip chip-existe">Acelerador</span>') + (id === 'ds1' ? (diasEntre(hoyDemo(), cierreDS1) > 0 ? '<span class="chip chip-existe">Postulaciones abiertas</span>' : '<span class="chip chip-propuesta">Postulaciones cerradas</span>') : '') + '</span>' +
+          '<span class="ayuda-nombre"><span>' + a.nombre + '</span><span class="chip ' + (a.hoy ? 'chip-existe' : 'chip-propuesta') + '">' + (a.hoy ? 'Existe hoy' : 'Propuesta para Bci') + '</span>' + (id === 'ds19' ? '' : '<span class="chip chip-existe">Acelerador</span>') + (id === 'ds1' ? (ACELERADORES_ABIERTOS_DEMO || diasEntre(hoyDemo(), cierreDS1) > 0 ? '<span class="chip chip-existe">Postulaciones abiertas</span>' : '<span class="chip chip-propuesta">Postulaciones cerradas</span>') : '') + '</span>' +
           '<span class="ayuda-impacto">' + impacto + '</span>' +
           icono('i-flecha', 'ayuda-flecha') +
         '</button></h2>' +
@@ -3621,6 +3621,8 @@
   // 20-nov (Bárbara): «Formas de pagar menos» en el detalle de un departamento: la garantía del Estado (FOGAES)
   // y el subsidio DS1, con cuánto cambian lo que juntas y lo que pagas al mes, tus requisitos y un botón
   // para sumarlos a tus pasos como misión.
+  // 23-nov (Bárbara): en el simulador los aceleradores aparecen abiertos. Si uno cierra, sigue visible con «Cerrado».
+  var ACELERADORES_ABIERTOS_DEMO = true;
   function formasPagarMenos(p, solo) {
     var pd = plazoDepartamento(p, null, solo);
     var perfil = perfilPiezas(), depto = deptoDeProyecto(p), hoy = hoyDemo();
@@ -3640,7 +3642,7 @@
     var otro = calcularPiezas(perfil, Object.assign({}, pd.on, { subsidio: !conDS1 }), depto, hoy);
     var con = conDS1 ? pd : otro, sin = conDS1 ? otro : pd;
     var ds1 = ds1Para(precio, perfil);
-    formas.push({ id: 'ds1', sigla: 'DS1', nombre: 'Subsidio DS1', que: 'El Estado pone dinero en tu pie' + (ds1.montoUF ? ': unas ' + formatoUF(Math.round(ds1.montoUF)) + ' para este departamento' : '') + '. Se postula en el Minvu.',
+    formas.push({ id: 'ds1', sigla: 'DS1', nombre: 'Subsidio DS1', que: 'El Estado pone dinero en tu pie' + (ds1.montoUF ? ': unas ' + formatoUF(Math.round(ds1.montoUF)) + ' para este departamento' : '') + '. Se postula en el Minvu. No es el DS19: el DS1 sirve en cualquier departamento bajo el tope; el DS19 solo en proyectos DS19.',
       juntas: bloq ? null : con.meta - sin.meta, pagas: bloq ? null : con.dividendo - sin.dividendo, incluido: conDS1, bloqueo: bloq,
       espera: !bloq && ds1.mesesCuenta ? 'Tu cuenta de vivienda debe tener ' + ds1.mesesCuenta + ' meses' : '',
       req: [['Departamento de hasta UF 4.000', precio <= 4000], ['Tu sueldo bajo el tope del tramo', !(bloq && /sueldo/i.test(bloq.razon))],
@@ -3658,7 +3660,43 @@
       req: [['Con familiar directo o pareja legal: tu renta desde 23 UF y la de la otra persona desde 16 UF (según Bci)', null],
             ['Con otra persona: tu renta desde 50 UF y la de ambos desde 70 UF; hasta 80 % a 25 años (según Bci)', null]],
       enPasos: !!ps.sumarAgregado, lista: !!ps.sumarAgregado });
+    formas.forEach(function (f) { f.abierto = ACELERADORES_ABIERTOS_DEMO; });
     return formas;
+  }
+  // 23-nov (Bárbara): en el detalle, «¿Cómo puedes llegar antes?» es una sección con los aceleradores a la vista,
+  // cada uno con su estado (abierto o cerrado); tocar uno abre la hoja con cuánto cambia y los requisitos.
+  function formasParaVista(p, solo, caminoVista) {
+    var c = caminoVista && CAMINOS[caminoVista], antes = estado.piezas;
+    if (c && !c.grupo && estado.modo === 'vivir') estado.piezas = Object.assign({}, antes, { respaldo: !!c.familiar });
+    try { return formasPagarMenos(p, solo); } finally { estado.piezas = antes; }
+  }
+  function efectoCortoForma(f) {
+    if (f.lista) return 'Lista';
+    if (f.enPasos) return 'En tus pasos';
+    if (f.bloqueo) return 'Hoy no te sirve: ' + primeraMinuscula(f.bloqueo.razon);
+    if (f.sinEfecto) return 'Suma la renta de otra persona';
+    if (f.soloPagas) return Math.abs(f.pagas) >= 1000 ? 'Si te lo dan, pagas ' + formatoRedondeado(Math.abs(f.pagas)) + ' menos al mes' : 'Baja tu tasa si quedan cupos';
+    if (f.juntas !== null && f.juntas < -1000) return 'Juntas ' + formatoRedondeado(Math.abs(f.juntas)) + ' menos' + (f.id === 'fogaes' ? ' que con pie del 20' + NBSP + '%' : '');
+    if (f.incluido) return 'Ya va en tus números';
+    return 'Cuánto cambia: ver detalle';
+  }
+  function aceleradoresDetalleHtml(p, solo, caminoVista) {
+    var formas;
+    try { formas = formasParaVista(p, solo, caminoVista); } catch (e) { return ''; }
+    var avisa = !!estado.pasos.avisoAceleradores;
+    return '<section class="tarjeta acel-detalle" aria-labelledby="titulo-acel">' +
+      '<h2 class="h5" id="titulo-acel">¿Cómo puedes llegar antes?</h2>' +
+      '<p class="texto-apoyo"><small>Aceleradores para este departamento. Toca uno para ver cuánto cambia y si calificas.</small></p>' +
+      '<ul class="acel-lista">' + formas.map(function (f) {
+        return '<li><button type="button" class="acel-fila" data-acel="' + f.id + '" aria-haspopup="dialog">' +
+          '<span class="fp-sigla" aria-hidden="true">' + f.sigla + '</span>' +
+          '<span class="acel-texto"><strong>' + f.nombre + '</strong><small>' + efectoCortoForma(f) + '</small></span>' +
+          '<span class="acel-estado ' + (f.abierto ? 'abierto' : 'cerrado') + '">' + (f.abierto ? 'Abierto' : 'Cerrado') + '</span>' +
+        '</button></li>';
+      }).join('') + '</ul>' +
+      '<button type="button" class="enlace acel-avisos" id="btn-acel-avisos" aria-pressed="' + avisa + '">' + icono('i-campana') +
+        (avisa ? 'Te avisamos de novedades' : 'Avísame si abren, cierran o cambian') + '</button>' +
+    '</section>';
   }
   // 23-nov: el acuerdo entre quienes comparten el crédito: con quién, qué parte del departamento es de cada uno,
   // quién paga la cuota y qué pasa si alguien sale. Es un borrador de la app: no reemplaza un contrato ni asesoría legal.
@@ -3694,10 +3732,8 @@
     var baja = v < 0;
     return '<span class="fp-efecto ' + (baja ? 'baja' : 'sube') + '"><small>' + etq + '</small><strong>' + (baja ? '−' : '+') + formatoRedondeado(Math.abs(v)) + (alMes ? ' al mes' : '') + '</strong></span>';
   }
-  function abrirBajarPrecio(p, solo, caminoVista, boton) {
-    var c = caminoVista && CAMINOS[caminoVista], antes = estado.piezas, formas;
-    if (c && !c.grupo && estado.modo === 'vivir') estado.piezas = Object.assign({}, antes, { respaldo: !!c.familiar });
-    try { formas = formasPagarMenos(p, solo); } finally { estado.piezas = antes; }
+  function abrirBajarPrecio(p, solo, caminoVista, boton, foco) {
+    var formas = formasParaVista(p, solo, caminoVista);
     var marca = function (ok) { return '<span class="fp-marca ' + (ok === true ? 'ok' : ok === false ? 'no' : 'q') + '" aria-hidden="true">' + (ok === true ? icono('i-check') : ok === false ? '✕' : '?') + '</span>'; };
     var html = '<p class="texto-apoyo">Cuánto cambia lo que juntas y lo que pagas al mes en este departamento. Súmalas a tus pasos para revisar si cumples y pedirlas.</p>' +
       '<ul class="fp-lista">' + formas.map(function (f) {
@@ -3706,7 +3742,8 @@
           : f.id === 'tasa' && !f.enPasos ? '<span class="fp-chip gris">Si quedan cupos</span>'
           : f.lista ? '<span class="fp-chip verde">' + icono('i-check') + 'Lista</span>'
           : f.enPasos ? '<span class="fp-chip verde">' + icono('i-check') + 'En tus pasos</span>' : '';
-        return '<li class="fp-forma"><div class="fp-cab"><span class="fp-sigla" aria-hidden="true">' + f.sigla + '</span><h3 class="h6">' + f.nombre + '</h3>' + estadoF + '</div>' +
+        return '<li class="fp-forma" id="fp-' + f.id + '"><div class="fp-cab"><span class="fp-sigla" aria-hidden="true">' + f.sigla + '</span><h3 class="h6">' + f.nombre + '</h3>' +
+          '<span class="acel-estado ' + (f.abierto ? 'abierto' : 'cerrado') + '">' + (f.abierto ? 'Abierto' : 'Cerrado') + '</span>' + estadoF + '</div>' +
           '<p class="fp-que">' + f.que + '</p>' +
           (f.bloqueo ? '<p class="fp-bloqueo">' + icono('i-info') + '<span>' + f.bloqueo.como + '</span></p>'
             : f.sinEfecto ? '<p class="fp-espera">' + icono('i-info') + 'No cambia el monto del pie: suma renta para que te aprueben el crédito.</p>'
@@ -3720,6 +3757,7 @@
       }).join('') + '</ul>' +
       '<p class="fp-sello">' + icono('i-escudo') + 'Lo confirma Bci al aprobar tu crédito.</p>';
     abrirHojaContenido('¿Cómo puedes llegar antes?', html, boton, function () {
+      if (foco) setTimeout(function () { var fo = document.getElementById('fp-' + foco); if (fo) fo.scrollIntoView({ block: 'start' }); }, 60);
       document.querySelectorAll('[data-sumar-forma]').forEach(function (b) {
         b.addEventListener('click', function () {
           var id = b.dataset.sumarForma;
@@ -3939,8 +3977,7 @@
                 '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(pd.dividendo) + '</strong><small>' + (pd.on.respaldo ? 'crédito del 95' + NBSP + '%' : 'con seguros' + SEP + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2)) + '</small></div></div>' +
               '<p class="det-subsidio">' + icono('i-info') + '<span>Si se acaba el subsidio a la tasa, el dividendo sube a <strong>' + formatoRedondeado(pd.dividendoSinSubsidio) + '</strong> (' + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + ').</span></p>' +
               grupoPosible +
-              '<button type="button" class="tarjeta dueno-card bajar-card" id="btn-bajar-precio" aria-haspopup="dialog"><span class="circulo-icono verde" aria-hidden="true">' + icono('i-alcancia') + '</span>' +
-                '<span><strong>¿Cómo puedes llegar antes?</strong><small>Garantía del Estado y subsidio: cuánto cambian tus números</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
+              aceleradoresDetalleHtml(p, solo, caminoVista) +
               '<a class="tarjeta dueno-card" href="#compra/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
                 '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para tus gastos</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
               soloPosible +
@@ -3995,7 +4032,17 @@
     iniciarPestanasDetalle(contenedor);
     iniciarPagoAntes();
     iniciarVisita(p);
-    if ($('btn-bajar-precio')) $('btn-bajar-precio').addEventListener('click', function () { abrirBajarPrecio(p, solo, caminoVista, $('btn-bajar-precio')); });
+    document.querySelectorAll('[data-acel]').forEach(function (b) {
+      b.addEventListener('click', function () { abrirBajarPrecio(p, solo, caminoVista, b, b.dataset.acel); });
+    });
+    if ($('btn-acel-avisos')) $('btn-acel-avisos').addEventListener('click', function () {
+      var on = !estado.pasos.avisoAceleradores;
+      estado.pasos.avisoAceleradores = on;
+      guardarEstado();
+      this.setAttribute('aria-pressed', on);
+      this.innerHTML = icono('i-campana') + (on ? 'Te avisamos de novedades' : 'Avísame si abren, cierran o cambian');
+      toast(on ? 'Listo: te avisamos si un acelerador abre, cierra o cambia (simulado).' : 'Ya no te avisamos de los aceleradores.');
+    });
     if ($('btn-detalle-credito')) $('btn-detalle-credito').addEventListener('click', function () {
       abrirHojaContenido('Detalle del crédito', repartoCasa(partesPiezas(pd), formatoRedondeado) +
         '<ul class="datos-inversion"><li><span>Gastos al firmar</span><strong>' + formatoRedondeado(pd.gastos) + '</strong></li>' +

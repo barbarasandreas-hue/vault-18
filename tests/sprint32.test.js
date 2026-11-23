@@ -166,3 +166,12 @@ test('23-nov: tres hitos: Tu pie y Tus pasos muestran «Pie listo» aparte de la
   assert.match(app32, /x\.id === 'pie' && x\.estado === 'hecho' \? 'Pie listo'/);
   assert.match(app32, /'Pie listo ' \+ f\.pie/);
 });
+
+test('23-nov: aceleradores a la vista en el detalle, con estado abierto/cerrado y avisos', () => {
+  assert.match(app32, /var ACELERADORES_ABIERTOS_DEMO = true/);
+  assert.match(app32, /function aceleradoresDetalleHtml\(p, solo, caminoVista\)/);
+  assert.match(app32, /aceleradoresDetalleHtml\(p, solo, caminoVista\) \+/);
+  assert.match(app32, /nombre: 'Sumar a alguien al crédito'/);
+  assert.match(app32, /No es el DS19/);
+  assert.match(app32, /id="btn-acel-avisos"/);
+});
