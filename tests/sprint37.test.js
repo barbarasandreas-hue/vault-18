@@ -49,3 +49,13 @@ test('E5: el detalle se llama «¿Cómo puedes llegar antes?» y Tu compra separ
   assert.match(app, /Puedes sumar/);
   assert.match(app, /!f\.bloqueo/);
 });
+
+test('E6: Sumar a alguien al crédito es un acelerador con acuerdo entre personas, que se guarda', () => {
+  assert.match(app, /nombre: 'Sumar a alguien al crédito'/);
+  assert.match(app, /function abrirAcuerdoCredito/);
+  assert.match(app, /Cada uno según su parte/);
+  assert.match(app, /El otro compra su parte/);
+  assert.match(app, /'acuerdoCredito'/);
+  assert.match(app, /no reemplaza un contrato ni asesoría legal/);
+  assert.doesNotMatch(app, /mancomunad/i);
+});

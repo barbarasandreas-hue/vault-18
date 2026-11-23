@@ -10,7 +10,11 @@
   };
 
   // S21-B3: hitos y misiones que se marcan como hechos (simulado).
-  var CLAVES_PASOS = ['cuentaVivienda', 'rsh', 'ds1Postulado', 'documentos', 'bajoLlave', 'preaprobado', 'contratoArriendo', 'arriendoTuyo', 'usadoReservado', 'usadoTuyo'];
+  // 23-nov: «Sumar a alguien al crédito»: opciones válidas del acuerdo.
+  var ACUERDO_CON = ['pareja', 'familiar', 'otra'];
+  var ACUERDO_PAGA = ['parte', 'mitad'];
+  var ACUERDO_SALE = ['vende', 'compra'];
+  var CLAVES_PASOS = ['cuentaVivienda', 'rsh', 'ds1Postulado', 'documentos', 'bajoLlave', 'preaprobado', 'contratoArriendo', 'arriendoTuyo', 'usadoReservado', 'usadoTuyo', 'sumarAgregado'];
   var CLAVE_COMPRA = 'primer-peldano-compra';
   var CLAVE_INVERSIONES = 'primer-peldano-inversiones';
 
@@ -66,6 +70,7 @@
     caminoAnterior: null,    // S32-B4: { id, listos } el camino de antes, para «Volver» hasta el siguiente paso
     prioridadRespondida: false, // 23-nov: ya contestó «¿Qué es lo que más te importa?» en Departamentos (también si dijo «No estoy seguro»)
     prioridad: null,         // S32-B4: lo que más le importa al comparar: 'antes', 'menos' o 'ya'
+    acuerdoCredito: null,    // 23-nov: acuerdo de «Sumar a alguien al crédito»: { con, tuParte, quienPaga, siSale }
     usadoElegido: null,      // S32-B5: el usado elegido como meta en el crédito tradicional (USADOS)
     trabajo: '',             // 9-nov: dónde trabaja (para ver cómo llegar en el mapa, dentro de la app)
     arriendoElegido: null,   // 9-nov: el departamento elegido en el arriendo con opción de compra (ARRIENDOS_OPCION)
@@ -79,9 +84,9 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo', 'presentacion', 'muro', 'visitaGrupo', 'saldoCorriente', 'mesesTrabajo', 'deudasAtrasadas', 'rshTramo', 'caminoAnterior', 'prioridad', 'prioridadRespondida', 'usadoElegido'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo', 'presentacion', 'muro', 'visitaGrupo', 'saldoCorriente', 'mesesTrabajo', 'deudasAtrasadas', 'rshTramo', 'caminoAnterior', 'prioridad', 'prioridadRespondida', 'acuerdoCredito', 'usadoElegido'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
-    otrasCuotas: null, contrato: 'indefinido', mesesTrabajo: null, deudasAtrasadas: null, rshTramo: null, caminoAnterior: null, prioridad: null, prioridadRespondida: false, usadoElegido: null,
+    otrasCuotas: null, contrato: 'indefinido', mesesTrabajo: null, deudasAtrasadas: null, rshTramo: null, caminoAnterior: null, prioridad: null, prioridadRespondida: false, acuerdoCredito: null, usadoElegido: null,
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
@@ -424,6 +429,10 @@
         estado.caminoAnterior = { id: g.caminoAnterior.id, listos: Number(g.caminoAnterior.listos) || 0 };
       if (['antes', 'menos', 'ya'].indexOf(g.prioridad) !== -1) estado.prioridad = g.prioridad;
       estado.prioridadRespondida = g.prioridadRespondida === true || estado.prioridad !== null;
+      if (g.acuerdoCredito && typeof g.acuerdoCredito === 'object' && ACUERDO_CON.indexOf(g.acuerdoCredito.con) !== -1 && ACUERDO_PAGA.indexOf(g.acuerdoCredito.quienPaga) !== -1 && ACUERDO_SALE.indexOf(g.acuerdoCredito.siSale) !== -1) {
+        var tp = Math.round(Number(g.acuerdoCredito.tuParte));
+        estado.acuerdoCredito = { con: g.acuerdoCredito.con, tuParte: tp >= 10 && tp <= 90 ? tp : 50, quienPaga: g.acuerdoCredito.quienPaga, siSale: g.acuerdoCredito.siSale };
+      }
       if (USADOS.some(function (u) { return u.id === g.usadoElegido; })) estado.usadoElegido = g.usadoElegido;
     } catch (e) { /* sin localStorage: valores por defecto */ }
   }
@@ -3622,7 +3631,43 @@
       juntas: 0, pagas: pd.dividendo - pd.dividendoSinSubsidio, soloPagas: true,
       req: [['Departamento nuevo, en primera venta', true], ['De hasta UF 4.000', precio <= 4000], ['Que queden cupos', null]],
       enPasos: !!ps.tasaAgregado, lista: !!ps.tasaPedido });
+    // 23-nov: sumar a alguien al crédito (en Bci, complementar renta con un codeudor). No cambia los montos: suma renta.
+    formas.push({ id: 'sumar', sigla: '+1', nombre: 'Sumar a alguien al crédito', sinEfecto: true,
+      que: 'Tu pareja, un familiar u otra persona aparece en el mismo crédito y suma su renta. La app te ayuda a dejar por escrito el acuerdo entre ustedes.',
+      juntas: 0, pagas: 0,
+      req: [['Con familiar directo o pareja legal: tu renta desde 23 UF y la de la otra persona desde 16 UF (según Bci)', null],
+            ['Con otra persona: tu renta desde 50 UF y la de ambos desde 70 UF; hasta 80 % a 25 años (según Bci)', null]],
+      enPasos: !!ps.sumarAgregado, lista: !!ps.sumarAgregado });
     return formas;
+  }
+  // 23-nov: el acuerdo entre quienes comparten el crédito: con quién, qué parte del departamento es de cada uno,
+  // quién paga la cuota y qué pasa si alguien sale. Es un borrador de la app: no reemplaza un contrato ni asesoría legal.
+  function abrirAcuerdoCredito(boton) {
+    var a = estado.acuerdoCredito || { con: 'pareja', tuParte: 50, quienPaga: 'parte', siSale: 'compra' };
+    var opt = function (v, t, sel) { return '<option value="' + v + '"' + (sel === v ? ' selected' : '') + '>' + t + '</option>'; };
+    var html = '<p class="texto-apoyo">Dejen escrito el acuerdo antes de pedir el crédito juntos. Es un borrador de la app: no reemplaza un contrato ni asesoría legal.</p>' +
+      '<form class="form-acuerdo" id="form-acuerdo">' +
+        '<label class="campo"><span>¿Con quién?</span><select id="ac-con">' + opt('pareja', 'Mi pareja', a.con) + opt('familiar', 'Un familiar directo', a.con) + opt('otra', 'Otra persona', a.con) + '</select></label>' +
+        '<label class="campo"><span>Tu parte del departamento: <strong id="ac-parte-val">' + a.tuParte + NBSP + '%</strong></span>' +
+          '<input type="range" id="ac-parte" min="10" max="90" step="5" value="' + a.tuParte + '"></label>' +
+        '<label class="campo"><span>¿Quién paga la cuota?</span><select id="ac-paga">' + opt('parte', 'Cada uno según su parte', a.quienPaga) + opt('mitad', 'Mitad y mitad', a.quienPaga) + '</select></label>' +
+        '<label class="campo"><span>Si uno quiere salir</span><select id="ac-sale">' + opt('compra', 'El otro compra su parte', a.siSale) + opt('vende', 'Se vende y se reparte según la parte', a.siSale) + '</select></label>' +
+        '<p class="fp-sello">' + icono('i-escudo') + 'Si alguien deja de pagar, el banco puede cobrarle la cuota completa a cualquiera de los dos. Revísenlo con Bci.</p>' +
+        '<button type="submit" class="btn btn-primario btn-bloque">Guardar el acuerdo</button>' +
+      '</form>';
+    abrirHojaContenido('Acuerdo para comprar juntos', html, boton, function () {
+      var r = document.getElementById('ac-parte'), v = document.getElementById('ac-parte-val');
+      r.addEventListener('input', function () { v.textContent = r.value + NBSP + '%'; });
+      document.getElementById('form-acuerdo').addEventListener('submit', function (e) {
+        e.preventDefault();
+        estado.acuerdoCredito = { con: document.getElementById('ac-con').value, tuParte: Number(r.value), quienPaga: document.getElementById('ac-paga').value, siSale: document.getElementById('ac-sale').value };
+        estado.pasos.sumarAgregado = true;
+        guardarEstado();
+        cerrarHoja(false);
+        mostrar();
+        toast('Guardaste el acuerdo para comprar juntos.');
+      });
+    });
   }
   function efectoPill(etq, v, alMes) {
     if (v === null || v === undefined || Math.abs(v) < 1000) return '<span class="fp-efecto igual"><small>' + etq + '</small><strong>Igual</strong></span>';
@@ -3644,11 +3689,13 @@
         return '<li class="fp-forma"><div class="fp-cab"><span class="fp-sigla" aria-hidden="true">' + f.sigla + '</span><h3 class="h6">' + f.nombre + '</h3>' + estadoF + '</div>' +
           '<p class="fp-que">' + f.que + '</p>' +
           (f.bloqueo ? '<p class="fp-bloqueo">' + icono('i-info') + '<span>' + f.bloqueo.como + '</span></p>'
+            : f.sinEfecto ? '<p class="fp-espera">' + icono('i-info') + 'No cambia el monto del pie: suma renta para que te aprueben el crédito.</p>'
             : '<div class="fp-efectos">' + (f.soloPagas ? '' : efectoPill(f.id === 'fogaes' ? 'Juntas, frente al 20' + NBSP + '%' : 'Juntas', f.juntas)) +
               efectoPill(f.soloPagas ? 'Si te lo dan, pagas' : 'Pagas', f.soloPagas ? -Math.abs(f.pagas) : f.pagas, true) + '</div>') +
           (f.espera ? '<p class="fp-espera">' + icono('i-calendario') + f.espera + '</p>' : '') +
           (f.req.length ? '<ul class="fp-req">' + f.req.map(function (r) { return '<li>' + marca(r[1]) + '<span>' + r[0] + (r[1] === null ? ' <small>(lo revisas en la misión)</small>' : '') + '</span></li>'; }).join('') + '</ul>' : '') +
-          (f.auto || f.bloqueo || f.enPasos ? '' : '<button type="button" class="btn btn-secundario btn-bloque" data-sumar-forma="' + f.id + '">Agregar a mis pasos</button>') +
+          (f.auto || f.bloqueo ? '' : f.id === 'sumar' ? '<button type="button" class="btn btn-secundario btn-bloque" data-sumar-forma="sumar">' + (f.enPasos ? 'Cambiar el acuerdo' : 'Armar el acuerdo') + '</button>'
+            : f.enPasos ? '' : '<button type="button" class="btn btn-secundario btn-bloque" data-sumar-forma="' + f.id + '">Agregar a mis pasos</button>') +
         '</li>';
       }).join('') + '</ul>' +
       '<p class="fp-sello">' + icono('i-escudo') + 'Lo confirma Bci al aprobar tu crédito.</p>';
@@ -3656,6 +3703,7 @@
       document.querySelectorAll('[data-sumar-forma]').forEach(function (b) {
         b.addEventListener('click', function () {
           var id = b.dataset.sumarForma;
+          if (id === 'sumar') { abrirAcuerdoCredito(b); return; }
           if (id === 'fogaes') estado.pasos.fogaesAgregado = true;
           if (id === 'tasa') estado.pasos.tasaAgregado = true;
           if (id === 'ds1') { estado.pasos.ds1Agregado = true; if (estado.modo === 'vivir') estado.piezas = Object.assign({}, estado.piezas, { subsidio: true }); }
