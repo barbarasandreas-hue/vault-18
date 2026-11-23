@@ -32,3 +32,11 @@ test('B2: «Subir mis documentos» en Pedir preaprobación lleva a la ventana de
   assert.match(app, /id="btn-subir-docs">Subir mis documentos/);
   assert.match(app, /guardarSubpaso\('documentos'\); cerrarHoja\(false\); location\.hash = '#compra\/postular\/documentos'/);
 });
+
+test('Misiones: «documentos» y «elegir» ya no son misiones y no quedan restos en el código', () => {
+  const calc = fs.readFileSync(path.join(__dirname, '..', 'js', 'calculos.js'), 'utf8');
+  const textos = app.slice(app.indexOf('var MISIONES_TEXTO'), app.indexOf('var MISION_SITIO'));
+  assert.doesNotMatch(textos, /documentos:|elegir:/);
+  assert.doesNotMatch(app, /id === 'elegir'/);
+  assert.doesNotMatch(calc, /documentos: '5 minutos'|elegir: '10 minutos'|elegir: 'elegir tu departamento'/);
+});

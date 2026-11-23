@@ -2569,7 +2569,7 @@
   // Adónde lleva la tarjeta: una dirección, o null si se abre la hoja del hito o la misión.
   function destinoSiguiente(sp) {
     if (sp.tipo === 'cuota') return '#pie';
-    if (sp.tipo === 'mision') return sp.id === 'equipo' ? '#perfil' : (sp.id === 'elegir' ? (esArriendo() ? '#compra/caminos/arriendo-opcion' : rutaElegir()) : null);
+    if (sp.tipo === 'mision') return sp.id === 'equipo' ? '#perfil' : null;
     if (sp.id === 'numeros') return '#compra';
     // S32-B3: los pasos nuevos del camino.
     if (sp.id === 'camino') return estado.modo === 'vivir' ? '#departamentos' : '#departamentos/comparar';
@@ -7173,18 +7173,16 @@
   var MISIONES_TEXTO = {
     ds1: ['Subsidio del Estado para tu primera vivienda. Se postula en línea en el Minvu, con tu ClaveÚnica.', 'Ya postulé'],
     rsh: ['Lo pide el DS1. Te inscribes en línea con tu ClaveÚnica.', 'Ya me inscribí'],
-    documentos: ['Liquidaciones de sueldo, cotizaciones y carnet. Si eres cliente Bci, ya los tenemos.', 'Completar'],
     'bajo-llave': ['Para sacar dinero de tu pie avisas 30 días antes. Así no se gasta.', 'Guardar bajo llave'],
     'ahorro-auto': ['Bci pasa tu cuota a tu cuenta de vivienda el día de pago.', 'Activar'],
     equipo: ['Suma a tu pareja, tu familia o tu bebé para que te acompañen.', null],
-    elegir: ['Mira tus caminos y elige un departamento.', null],
     tasa: ['Lo pides junto con tu crédito, al pedir tu preaprobación. Baja tu dividendo si quedan cupos cuando Bci lo apruebe.', 'Ya lo pedí'],
     fogaes: ['La garantía del Estado (FOGAES) deja que Bci te preste hasta el 90' + NBSP + '%: juntas un pie del 10' + NBSP + '%. Es para departamentos nuevos y se usa una sola vez.', null],
     familiar: ['Tu familiar deja el 10' + NBSP + '% en una cuenta Bci, con intereses. Lo recupera cuando tu deuda baja al 80' + NBSP + '%.', 'Ya la dejó']
   };
-  var MISION_CLAVE = { tasa: 'tasaPedido', ds1: 'ds1Postulado', rsh: 'rsh', documentos: 'documentos', 'bajo-llave': 'bajoLlave', familiar: 'garantiaFamiliar' };
+  var MISION_CLAVE = { tasa: 'tasaPedido', ds1: 'ds1Postulado', rsh: 'rsh', 'bajo-llave': 'bajoLlave', familiar: 'garantiaFamiliar' };
   var MISION_LISTA = { tasa: 'Listo: pediste el subsidio a la tasa.', ds1: 'Listo: postulaste al DS1.', rsh: 'Listo: te inscribiste en el Registro Social.',
-    documentos: 'Tus documentos están listos.', 'bajo-llave': 'Tu pie quedó bajo llave.', familiar: 'Listo: tu familiar dejó su garantía.' };
+    'bajo-llave': 'Tu pie quedó bajo llave.', familiar: 'Listo: tu familiar dejó su garantía.' };
   // S29 (13-nov, Bárbara): las misiones llevan a hacer la acción, no la marcan como hecha.
   // DS1 y Registro Social se hacen en los sitios del Estado (con ClaveÚnica); al volver, la persona confirma.
   var MISION_SITIO = {
@@ -7208,7 +7206,6 @@
       id === 'fogaes' ? enlaceHoja('#compra/caminos/individual-vivir/califica', 'Revisar si califico') :
       id === 'familiar' ? enlaceHoja('#compra/ficha/respaldo-familiar/familiar', 'Ver cómo lo vive tu familiar') +
           '<button type="button" class="btn btn-terciario btn-bloque" id="btn-mision-accion">' + t[1] + '</button>' :
-      id === 'elegir' ? enlaceHoja(esArriendo() ? '#compra/caminos/arriendo-opcion' : rutaElegir(), estado.caminoElegido ? 'Elegir departamento' : 'Comparar caminos') :
       sitio ? '<a class="btn btn-primario btn-bloque" href="' + sitio.url + '" target="_blank" rel="noopener">' + sitio.texto + '<span class="oculto-visual"> (se abre en otra pestaña)</span> ↗</a>' +
           '<p class="texto-apoyo mision-nota"><small>' + sitio.nota + '</small></p>' +
           '<button type="button" class="btn btn-terciario btn-bloque" id="btn-mision-accion">' + t[1] + '</button>' :

@@ -1762,7 +1762,7 @@ function siguientePaso(s, hoy) {
   var ayuda = pend.filter(function (x) { return x.ayudaA === 'pie'; })[0] || pend[0];
   return ayuda ? deMision(ayuda) : deHito('pie');
 }
-var CUESTA_MISION = { ds1: '20 minutos', rsh: '15 minutos', documentos: '5 minutos', 'bajo-llave': '1 minuto', 'ahorro-auto': '1 minuto', equipo: '2 minutos', elegir: '10 minutos' };
+var CUESTA_MISION = { ds1: '20 minutos', rsh: '15 minutos', 'bajo-llave': '1 minuto', 'ahorro-auto': '1 minuto', equipo: '2 minutos' };
 
 
 // S21-B5: "Tu pie está protegido": solo las capas reales para ese camino y esa etapa.
@@ -1819,8 +1819,8 @@ function chipsDelModo(modo) {
 var MOTIVO_ANIMO = {
   cuenta: 'abrir tu cuenta de vivienda', pie: 'juntar tu pie', preaprobacion: 'tu preaprobación',
   asegurar: 'asegurar tu departamento', aprobacion: 'tu aprobación final', 'es-tuyo': 'tu departamento',
-  ds1: 'postular al DS1', rsh: 'inscribirte en el Registro Social', documentos: 'completar tus documentos',
-  'bajo-llave': 'guardar tu pie bajo llave', 'ahorro-auto': 'activar el ahorro automático', elegir: 'elegir tu departamento'
+  ds1: 'postular al DS1', rsh: 'inscribirte en el Registro Social',
+  'bajo-llave': 'guardar tu pie bajo llave', 'ahorro-auto': 'activar el ahorro automático'
 };
 var MAXIMO_ANIMOS = 2;
 // hechos: claves de hitos y misiones hechos hoy; dados: las que ya recibieron su "¡Bien!"; equipo: Tu equipo.
