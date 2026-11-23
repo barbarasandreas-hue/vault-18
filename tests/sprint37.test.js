@@ -29,3 +29,14 @@ test('E3: la pregunta de Departamentos aparece una vez y la respuesta se guarda'
   assert.match(app, /Cambiar mi respuesta/);
   assert.match(app, /btn-cambiar-prioridad-perfil/);
 });
+
+test('E4: ficha estándar de la compra en grupo marcada como ejemplo simulado', () => {
+  assert.match(app, /function fichaGrupoHtml/);
+  assert.match(app, /Necesitas 10 compradores/);
+  assert.match(app, /nadie queda amarrado/);
+  assert.match(app, /Ejemplo simulado/);
+});
+
+test('E4: el filtro del estado del edificio dice Terminado', () => {
+  assert.match(app, /chip\('estado', 'nuevo', 'Terminado'\)/);
+});

@@ -2454,6 +2454,23 @@
     return '<p class="cierre-grupo ' + (clase || '') + (d > 0 && d <= 14 ? ' pronto' : '') + '">' + icono('i-pronto') +
       '<span>' + texto + (d > 0 ? '<b>' + (d === 1 ? 'Queda 1 día' : 'Quedan ' + d + ' días') + '</b>' : '') + '</span></p>';
   }
+  // 23-nov: ficha estándar de la compra en grupo. Cada inmobiliaria define sus reglas; lo fijo lo pone Bci.
+  // Las cifras son de ejemplo (simuladas): no están validadas con inmobiliarias.
+  function fichaGrupoHtml(p) {
+    if (!p || p.tipo !== 'conjunto') return '';
+    var d = p.cierre ? diasEntre(hoyDemo(), p.cierre) : 0;
+    var cierre = p.cierre ? (d > 0 ? 'cierra el ' + formatoFecha(p.cierre) : 'cerró el ' + formatoFecha(p.cierre)) : 'cierra pronto';
+    var pct = Math.round(SUPUESTOS_PIEZAS.descuentoGrupo * 100);
+    return '<section class="ficha-grupo" aria-labelledby="ficha-grupo-titulo">' +
+      '<h3 class="h6" id="ficha-grupo-titulo">Reglas de este grupo <span class="chip chip-propuesta">Ejemplo simulado</span></h3>' +
+      '<p class="ficha-grupo-linea">Necesitas 10 compradores' + SEP + cierre + SEP + 'beneficio: ' + pct + NBSP + '% menos en el precio' + SEP + 'si no se llega al mínimo, nadie queda amarrado.</p>' +
+      '<ul class="ficha-grupo-lista">' +
+        '<li>' + icono('i-check') + 'Cada persona tiene su cuenta, su promesa y su crédito en Bci.</li>' +
+        '<li>' + icono('i-check') + 'No hay fondo común: tu dinero es solo tuyo.</li>' +
+        '<li>' + icono('i-check') + 'Puedes salir sin costo antes de la fecha de cierre.</li>' +
+      '</ul>' +
+      '<p class="ficha-grupo-nota">Cada inmobiliaria define sus reglas. Estas son de ejemplo.</p></section>';
+  }
   function cuandoLlegasCompra(p, sinObra) {
     if (estado.modo === 'vivir' && p.tipo === 'conjunto' && !compraSinGrupo(p) && mesesParaEntrega(p) > 0) {
       var g = planGrupo(p);
@@ -3819,6 +3836,7 @@
               : '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>' + (pd.meses === null || pd.meses === undefined ? 'Todavía no te alcanza' : 'Sería tuyo <strong>aprox. ' + fechaLlaves(pd.meses + MESES_SI_A_LLAVES, hoyDemo()) + '</strong>') + '</span></p>' +
                 '<p class="det-freno">' + FRENO[pd.freno] + '</p>') +
             (conjunto && !pd.on.respaldo ? cierreGrupoHtml(p, 'en-azul') : '') + '</section>' +
+          (conjunto && !pd.on.respaldo ? fichaGrupoHtml(p) : '') +
           pestanasDetalle(p, [
             ['numeros', 'Números',
               (pd.on.respaldo ? garantiaFamiliarDetalle(pd) : '') +
@@ -8820,7 +8838,7 @@
       '<p class="etiqueta">Comuna</p><div class="chips-filtros">' + chip('comuna', '', 'Todas') + comunas.map(function (c) { return chip('comuna', esc(c), esc(c)); }).join('') + '</div>' +
       (rango ? '<p class="etiqueta">Precio</p><div class="chips-filtros">' + chip('rango', '1', 'Tu rango' + SEP + textoRango(rango)) + chip('rango', '0', 'Todos los precios') + '</div>' : '') +
       '<p class="etiqueta">Dormitorios</p><div class="chips-filtros">' + chip('dormitorios', '', 'Todos') + chip('dormitorios', '0', 'Estudio') + chip('dormitorios', '1', '1') + chip('dormitorios', '2', '2') + '</div>' +
-      '<p class="etiqueta">Estado</p><div class="chips-filtros">' + chip('estado', '', 'Todos') + chip('estado', 'obra', 'En obra') + chip('estado', 'nuevo', 'Nuevo') + chip('estado', 'usado', 'Usado') + '</div>' +
+      '<p class="etiqueta">Estado</p><div class="chips-filtros">' + chip('estado', '', 'Todos') + chip('estado', 'obra', 'En obra') + chip('estado', 'nuevo', 'Terminado') + chip('estado', 'usado', 'Usado') + '</div>' +
       '<p class="etiqueta">Ordenar por</p><div class="chips-filtros">' + chip('orden', 'antes', 'Es tuyo antes') + chip('orden', 'precio', 'Menor precio') + '</div>' +
       '<button type="button" class="interruptor bloque-chico" role="switch" id="filtro-favoritos" aria-checked="' + f.favoritos + '">' +
         '<span>Solo mis favoritos</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
