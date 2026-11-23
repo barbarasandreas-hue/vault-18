@@ -189,3 +189,8 @@ test('23-nov: caminos en «Tú solo / Con otras personas», usados dentro de Com
   assert.match(app32, /estado\.pasos\.facilitadora \?/);
   assert.match(app32, /estado\.modo === 'arrendar' \|\| estado\.inversiones\.length \? fila\('a', '#inversiones'/);
 });
+
+test('23-nov: los días que quedan para que cierre un grupo cuentan desde la fecha real', () => {
+  assert.match(app32, /function hoyGrupo\(\)/);
+  assert.doesNotMatch(app32, /diasEntre\(hoyDemo\(\), p\.cierre\)/);
+});

@@ -650,7 +650,14 @@
   }
   // S18-F2: un solo reloj. Cada "mes" de la demo mueve la fecha de hoy para el ahorro, la obra, el cierre y los avisos.
   function hoyDemo() { return fechaMasMeses(FECHA_REFERENCIA, estado.mesAhorro || 0); }
-  function grupoCerrado(p) { return p.tipo === 'conjunto' && !!p.cierre && diasEntre(hoyDemo(), p.cierre) <= 0; }
+  // 23-nov: los datos del grupo (cuántos días quedan para que cierre, si ya cerró) usan la fecha real de hoy,
+  // no la fecha fija de la demo. Si la demo avanza meses, también avanzan.
+  function hoyReal() {
+    var d = new Date(), z = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate());
+  }
+  function hoyGrupo() { var r = hoyReal(); return fechaMasMeses(r > FECHA_REFERENCIA ? r : FECHA_REFERENCIA, estado.mesAhorro || 0); }
+  function grupoCerrado(p) { return p.tipo === 'conjunto' && !!p.cierre && diasEntre(hoyGrupo(), p.cierre) <= 0; }
   // Meses que faltan para la entrega del edificio (0 si ya se entregó o no es en obra).
   function mesesParaEntrega(p) {
     if (p.tipo !== 'conjunto' || !p.entregaEstimada || (p.etapaObra || 0) >= 4) return 0;
@@ -1351,7 +1358,7 @@
     var p = x.p;
     var r = resumen(p);
     var avisos = [];
-    var dias = p.cierre ? diasEntre(hoyDemo(), p.cierre) : 0;
+    var dias = p.cierre ? diasEntre(hoyGrupo(), p.cierre) : 0;
     var aviso = {
       cierre: dias > 0 ? 'El proyecto cierra en ' + plural(dias, 'día', 'días') + ', el ' + formatoFecha(p.cierre) + '.' : null,
       cupos: enGrupoDe(p)
@@ -2476,7 +2483,7 @@
   // 20-nov: la compra en grupo tiene una fecha fija; se ve siempre (en Tu compra y en el detalle).
   function cierreGrupoHtml(p, clase) {
     if (!p || p.tipo !== 'conjunto' || !p.cierre) return '';
-    var d = diasEntre(hoyDemo(), p.cierre);
+    var d = diasEntre(hoyGrupo(), p.cierre);
     var asegurado = !!(estado.pasos && estado.pasos.preaprobado);
     var texto = d <= 0 ? 'El grupo ya cerró el ' + formatoFecha(p.cierre)
       : (asegurado ? 'El grupo cierra el ' : 'Asegura tu cupo antes del ') + formatoFecha(p.cierre);
@@ -2487,7 +2494,7 @@
   // Las cifras son de ejemplo (simuladas): no están validadas con inmobiliarias.
   function fichaGrupoHtml(p) {
     if (!p || p.tipo !== 'conjunto') return '';
-    var d = p.cierre ? diasEntre(hoyDemo(), p.cierre) : 0;
+    var d = p.cierre ? diasEntre(hoyGrupo(), p.cierre) : 0;
     var cierre = p.cierre ? (d > 0 ? 'cierra el ' + formatoFecha(p.cierre) : 'cerró el ' + formatoFecha(p.cierre)) : 'cierra pronto';
     var pct = Math.round(SUPUESTOS_PIEZAS.descuentoGrupo * 100);
     return '<section class="ficha-grupo" aria-labelledby="ficha-grupo-titulo">' +
