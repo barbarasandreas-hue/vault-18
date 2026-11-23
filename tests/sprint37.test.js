@@ -40,3 +40,12 @@ test('E4: ficha estándar de la compra en grupo marcada como ejemplo simulado', 
 test('E4: el filtro del estado del edificio dice Terminado', () => {
   assert.match(app, /chip\('estado', 'nuevo', 'Terminado'\)/);
 });
+
+test('E5: el detalle se llama «¿Cómo puedes llegar antes?» y Tu compra separa elegidos de los que puedes sumar', () => {
+  assert.match(app, /abrirHojaContenido\('¿Cómo puedes llegar antes\?'/);
+  assert.doesNotMatch(app, /<strong>Formas de pagar menos<\/strong>/);
+  assert.match(app, /function aceleradoresCompraHtml/);
+  assert.match(app, /Ya los sumaste/);
+  assert.match(app, /Puedes sumar/);
+  assert.match(app, /!f\.bloqueo/);
+});

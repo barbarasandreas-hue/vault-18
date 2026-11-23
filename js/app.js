@@ -2649,6 +2649,30 @@
       '<ul class="mc-lista">' + filas + '</ul></section>';
   }
   var ICONO_MISION_ID = { tasa: 'i-sube', fogaes: 'i-escudo', familiar: 'i-grupo', ds1: 'i-casa', rsh: 'i-documento', 'ahorro-auto': 'i-calendario', 'bajo-llave': 'i-candado', equipo: 'i-grupo', cuota: 'i-alcancia' };
+  // 23-nov: los aceleradores en Tu compra, con departamento elegido: los que ya sumaste y los que puedes sumar.
+  // Si un acelerador no sirve para este departamento (bloqueado), no aparece.
+  function aceleradoresCompraHtml() {
+    if (estado.modo !== 'vivir') return '';
+    var p = proyectoCompra();
+    if (!p) return '';
+    var formas;
+    try { formas = formasPagarMenos(p, compraSinGrupo(p)); } catch (e) { return ''; }
+    var aplican = formas.filter(function (f) { return !f.bloqueo; });
+    var elegidos = aplican.filter(function (f) { return f.auto || f.enPasos; });
+    var elegibles = aplican.filter(function (f) { return !(f.auto || f.enPasos); });
+    if (!elegidos.length && !elegibles.length) return '';
+    var fila = function (f, clase, marca) {
+      return '<li><button type="button" class="ac-fila ' + clase + '" data-aceleradores-abrir>' +
+        '<span class="ac-sigla" aria-hidden="true">' + f.sigla + '</span>' +
+        '<span class="ac-texto"><strong>' + f.nombre + '</strong><small>' + marca + '</small></span>' +
+        icono('i-flecha', 'ac-flecha') + '</button></li>';
+    };
+    return '<section class="tarjeta aceleradores-compra" aria-labelledby="titulo-ac">' +
+      '<div class="mc-cab"><h2 class="h5" id="titulo-ac">¿Cómo puedes llegar antes?</h2></div>' +
+      (elegidos.length ? '<p class="ac-sub">Ya los sumaste</p><ul class="mc-lista">' + elegidos.map(function (f) { return fila(f, 'ac-elegido', f.auto ? 'Va incluido en tu camino' : 'En tus pasos'); }).join('') + '</ul>' : '') +
+      (elegibles.length ? '<p class="ac-sub">Puedes sumar</p><ul class="mc-lista">' + elegibles.map(function (f) { return fila(f, 'ac-elegible', 'Sin sumar todavía'); }).join('') + '</ul>' : '') +
+      '</section>';
+  }
   // Lo que va bajo la fecha en Tu compra.
   function bloqueRecorrido(extra) {
     var s = fotoPasos(), h = hitoActual(s), hoy = hoyDemo();
@@ -2657,7 +2681,7 @@
     listosVistos = listos;
     celebraInicio = celebra;
     var ms = misiones(s, hoy);
-    return barraCaminoAnterior() + caminoJuego(h, celebra) + tuEdificioHtml(s) + (extra || '') + misionesCompraHtml(ms, hoy);
+    return barraCaminoAnterior() + caminoJuego(h, celebra) + tuEdificioHtml(s) + (extra || '') + misionesCompraHtml(ms, hoy) + aceleradoresCompraHtml();
   }
   // S32-B3: la fecha aproximada de cada paso, con los plazos que ya calcula la app (D13: nada del prototipo).
   function fechasRecorrido() {
@@ -2717,6 +2741,9 @@
     var ip = $('inicio-principal');
     if (ip) {
       ip.querySelectorAll('[data-cj-hito]').forEach(function (b) { b.addEventListener('click', function () { abrirHito(b.dataset.cjHito, b); }); });
+      ip.querySelectorAll('[data-aceleradores-abrir]').forEach(function (b) {
+        b.addEventListener('click', function () { var pc = proyectoCompra(); if (pc) abrirBajarPrecio(pc, compraSinGrupo(pc), null, b); });
+      });
       ip.querySelectorAll('.misiones-compra [data-mision], .con-fecha [data-mision]').forEach(function (b) { b.addEventListener('click', function () { abrirMision(b.dataset.mision, b); }); });
       // S33-C2: el azul de la fecha lleva a Tu pie (con un enlace visible y el bloque entero tocable).
       ip.querySelectorAll('.mi-compra-fecha').forEach(function (sec) {
@@ -3625,7 +3652,7 @@
         '</li>';
       }).join('') + '</ul>' +
       '<p class="fp-sello">' + icono('i-escudo') + 'Lo confirma Bci al aprobar tu crédito.</p>';
-    abrirHojaContenido('Formas de pagar menos', html, boton, function () {
+    abrirHojaContenido('¿Cómo puedes llegar antes?', html, boton, function () {
       document.querySelectorAll('[data-sumar-forma]').forEach(function (b) {
         b.addEventListener('click', function () {
           var id = b.dataset.sumarForma;
@@ -3845,7 +3872,7 @@
               '<p class="det-subsidio">' + icono('i-info') + '<span>Si se acaba el subsidio a la tasa, el dividendo sube a <strong>' + formatoRedondeado(pd.dividendoSinSubsidio) + '</strong> (' + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + ').</span></p>' +
               grupoPosible +
               '<button type="button" class="tarjeta dueno-card bajar-card" id="btn-bajar-precio" aria-haspopup="dialog"><span class="circulo-icono verde" aria-hidden="true">' + icono('i-alcancia') + '</span>' +
-                '<span><strong>Formas de pagar menos</strong><small>Garantía del Estado y subsidio: cuánto cambian tus números</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
+                '<span><strong>¿Cómo puedes llegar antes?</strong><small>Garantía del Estado y subsidio: cuánto cambian tus números</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></button>' +
               '<a class="tarjeta dueno-card" href="#compra/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
                 '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para tus gastos</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
               soloPosible +
