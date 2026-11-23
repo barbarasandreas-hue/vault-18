@@ -59,3 +59,13 @@ test('E6: Sumar a alguien al crédito es un acelerador con acuerdo entre persona
   assert.match(app, /no reemplaza un contrato ni asesoría legal/);
   assert.doesNotMatch(app, /mancomunad/i);
 });
+
+test('E7: el familiar ve cuánto puede perder como máximo y acepta con casilla antes de ser respaldo', () => {
+  assert.match(app, /Lo máximo que puedes perder/);
+  assert.match(app, /Lo esperable si todo sigue bien/);
+  assert.match(app, /id="cf-acepto"/);
+  assert.match(app, /Acepto ser su respaldo/);
+  assert.match(app, /aria-disabled/);
+  assert.match(app, /'respaldoAceptado'/);
+  assert.match(app, /propuesta a validar con Bci/);
+});

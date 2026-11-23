@@ -70,6 +70,7 @@
     caminoAnterior: null,    // S32-B4: { id, listos } el camino de antes, para «Volver» hasta el siguiente paso
     prioridadRespondida: false, // 23-nov: ya contestó «¿Qué es lo que más te importa?» en Departamentos (también si dijo «No estoy seguro»)
     prioridad: null,         // S32-B4: lo que más le importa al comparar: 'antes', 'menos' o 'ya'
+    respaldoAceptado: false, // 23-nov: el familiar aceptó ser el respaldo (pantalla de consentimiento, simulada)
     acuerdoCredito: null,    // 23-nov: acuerdo de «Sumar a alguien al crédito»: { con, tuParte, quienPaga, siSale }
     usadoElegido: null,      // S32-B5: el usado elegido como meta en el crédito tradicional (USADOS)
     trabajo: '',             // 9-nov: dónde trabaja (para ver cómo llegar en el mapa, dentro de la app)
@@ -84,9 +85,9 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo', 'presentacion', 'muro', 'visitaGrupo', 'saldoCorriente', 'mesesTrabajo', 'deudasAtrasadas', 'rshTramo', 'caminoAnterior', 'prioridad', 'prioridadRespondida', 'acuerdoCredito', 'usadoElegido'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo', 'presentacion', 'muro', 'visitaGrupo', 'saldoCorriente', 'mesesTrabajo', 'deudasAtrasadas', 'rshTramo', 'caminoAnterior', 'prioridad', 'prioridadRespondida', 'acuerdoCredito', 'respaldoAceptado', 'usadoElegido'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
-    otrasCuotas: null, contrato: 'indefinido', mesesTrabajo: null, deudasAtrasadas: null, rshTramo: null, caminoAnterior: null, prioridad: null, prioridadRespondida: false, acuerdoCredito: null, usadoElegido: null,
+    otrasCuotas: null, contrato: 'indefinido', mesesTrabajo: null, deudasAtrasadas: null, rshTramo: null, caminoAnterior: null, prioridad: null, prioridadRespondida: false, acuerdoCredito: null, respaldoAceptado: false, usadoElegido: null,
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
@@ -429,6 +430,7 @@
         estado.caminoAnterior = { id: g.caminoAnterior.id, listos: Number(g.caminoAnterior.listos) || 0 };
       if (['antes', 'menos', 'ya'].indexOf(g.prioridad) !== -1) estado.prioridad = g.prioridad;
       estado.prioridadRespondida = g.prioridadRespondida === true || estado.prioridad !== null;
+      estado.respaldoAceptado = g.respaldoAceptado === true;
       if (g.acuerdoCredito && typeof g.acuerdoCredito === 'object' && ACUERDO_CON.indexOf(g.acuerdoCredito.con) !== -1 && ACUERDO_PAGA.indexOf(g.acuerdoCredito.quienPaga) !== -1 && ACUERDO_SALE.indexOf(g.acuerdoCredito.siSale) !== -1) {
         var tp = Math.round(Number(g.acuerdoCredito.tuParte));
         estado.acuerdoCredito = { con: g.acuerdoCredito.con, tuParte: tp >= 10 && tp <= 90 ? tp : 50, quienPaga: g.acuerdoCredito.quienPaga, siSale: g.acuerdoCredito.siSale };
@@ -9267,6 +9269,18 @@
           '<p class="respaldo-deposito"><span><small>Deja en Bci</small><strong id="rf-deposito">' + formatoRedondeado(f.deposito) + '</strong></span><small>10' + NBSP + '%' + SEP + 'con intereses</small></p>' +
           '<p class="respaldo-dividendo"><span>La recupera en</span><strong>' + (f.mesesLibera / 12).toFixed(1).replace('.', ',') + ' años</strong></p>' +
           '<p class="texto-apoyo"><small>Cuando tu deuda baja al 80' + NBSP + '%</small></p>' +
+          // 23-nov: consentimiento claro del familiar. Aquí sí se dice «perder»; en el uso diario se habla de «respaldo».
+          '<section class="consentimiento-familiar" aria-labelledby="cf-titulo">' +
+            '<h3 class="h5" id="cf-titulo">Antes de aceptar</h3>' +
+            '<p>Si ' + 'quien compra' + ' deja de pagar su crédito y no hay otra forma de cubrir la deuda, el banco puede usar tu depósito para pagar lo que falte. Ese dinero no se recupera.</p>' +
+            '<p class="cf-cifra"><small>Lo máximo que puedes perder</small><strong id="rf-maximo">' + formatoRedondeado(f.deposito) + '</strong></p>' +
+            '<p class="cf-cifra cf-ok"><small>Lo esperable si todo sigue bien</small><strong>$0, y se te libera de a poco</strong></p>' +
+            '<p class="texto-apoyo"><small>Puedes perder tu depósito, hasta ese monto. Esto es una propuesta a validar con Bci: hoy no existe.</small></p>' +
+            (estado.respaldoAceptado
+              ? '<p class="cf-semaforo" role="status"><span class="cf-luz verde" aria-hidden="true"></span><span><strong>Todo al día</strong><small>Tu semáforo está en verde. Si cambia, te avisamos antes de que se use tu respaldo.</small></span></p>'
+              : '<label class="cf-casilla"><input type="checkbox" id="cf-acepto"> <span>Entiendo que puedo perder hasta <strong id="cf-monto">' + formatoRedondeado(f.deposito) + '</strong> si el crédito no se paga.</span></label>' +
+                '<button type="button" class="btn btn-primario btn-bloque" id="btn-acepto-respaldo" aria-disabled="true">Acepto ser su respaldo</button>') +
+          '</section>' +
         '</div>' +
       '</section>' +
       '<section class="tarjeta bloque si-juntas" aria-labelledby="rf-precio">' +
@@ -9312,9 +9326,18 @@
       $('rf-div-uf').textContent = ufDecimales(g.dividendo / SUPUESTOS.uf, 2);
       $('rf-div').textContent = formatoPesos(g.dividendo);
       $('rf-deposito').textContent = formatoRedondeado(g.deposito);
+      if ($('rf-maximo')) $('rf-maximo').textContent = formatoRedondeado(g.deposito);
+      if ($('cf-monto')) $('cf-monto').textContent = formatoRedondeado(g.deposito);
       rango.setAttribute('aria-valuetext', formatoUF(respaldoUF) + ': pones ' + formatoRedondeado(g.pie));
       pintar();
     });
+    if ($('cf-acepto')) {
+      $('cf-acepto').addEventListener('change', function () { $('btn-acepto-respaldo').setAttribute('aria-disabled', this.checked ? 'false' : 'true'); });
+      $('btn-acepto-respaldo').addEventListener('click', function () {
+        if (!$('cf-acepto').checked) { toast('Marca la casilla para aceptar.'); return; }
+        estado.respaldoAceptado = true; guardarEstado(); renderRespaldo(cont); toast('Quedaste como respaldo. Es una simulación.');
+      });
+    }
     $('btn-enviar-enlace').addEventListener('click', function () {
       var url = enlaceRespaldo(), texto = 'Mira cómo me podrías ayudar con el pie de mi departamento, sin regalarme el dinero:';
       if (navigator.share) { navigator.share({ title: 'Garantía de un familiar', text: texto, url: url }).catch(function () {}); return; }

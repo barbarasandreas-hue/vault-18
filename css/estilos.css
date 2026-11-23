@@ -4868,3 +4868,14 @@ h1[tabindex="-1"], h2[tabindex="-1"] { scroll-margin-top: 72px; }
 .ac-texto { flex: 1; display: flex; flex-direction: column; }
 .ac-texto small { font-size: 12px; }
 .ac-flecha { width: 16px; height: 16px; flex: none; }
+
+/* 23-nov: consentimiento y semáforo del familiar (respaldo) */
+.consentimiento-familiar { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--gray-200, #CFD8DC); }
+.cf-cifra { display: flex; flex-direction: column; margin: 8px 0; }
+.cf-cifra strong { font-size: 22px; }
+.cf-casilla { display: flex; gap: 10px; align-items: flex-start; min-height: 44px; margin: 12px 0; font-size: 14px; }
+.cf-casilla input { width: 24px; height: 24px; flex: none; }
+#btn-acepto-respaldo[aria-disabled="true"] { opacity: .5; }
+.cf-semaforo { display: flex; gap: 12px; align-items: center; margin: 12px 0 0; }
+.cf-semaforo small { display: block; font-size: 12px; }
+.cf-luz { width: 20px; height: 20px; border-radius: 50%; flex: none; background: #28892B; box-shadow: 0 0 0 3px #CBE6CC; }
