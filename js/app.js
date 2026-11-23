@@ -2489,7 +2489,7 @@
         '<span class="noche-luna" aria-hidden="true"></span>' +
         '<p class="noche-etiqueta" id="titulo-cuando">Firman todos en</p>' +
         '<strong class="numero noche-plazo' + claseLargo(textoMeses(g.meses)) + '">' + textoMeses(g.meses) + '</strong>' +
-        '<p class="noche-sub">Es tuyo en ' + g.fecha + ': el mismo día para todo el grupo</p>' +
+        '<p class="noche-sub">Recibes tus llaves en ' + g.fecha + ': el mismo día para todo el grupo</p>' +
         '<p class="plan-grupo' + (g.alcanza ? ' ok' : g.posible ? ' sube' : ' no') + '">' + icono(g.alcanza ? 'i-check' : 'i-info') + '<span>' + textoPlanGrupo(g) + '</span></p>' +
         cierreGrupoHtml(p, 'en-azul') +
         (sinObra ? '' : tarjetaObra(true)) +
@@ -2506,7 +2506,7 @@
       '<p class="noche-etiqueta" id="titulo-cuando">' + (mesesPie === 0 ? 'Tu pie' : 'Logras tu pie en') + '</p>' +
       '<strong class="numero noche-plazo">' + (mesesPie === 0 ? '¡Listo!' : mesesRango(mesesPie, mesesPie)) + '</strong>' +
       (aproxRango(mesesPie, mesesPie) ? '<span class="noche-aprox">' + aproxRango(mesesPie, mesesPie) + '</span>' : '') +
-      '<p class="noche-sub">' + (sinObra ? 'Es tuyo aprox. en ' + fechaLlaves(pl.meses + MESES_SI_A_LLAVES, hoyDemo()) : 'Tus llaves: ' + fechaLlaves(pl.meses, hoyDemo())) + '</p>' +
+      '<p class="noche-sub">' + (sinObra ? 'Recibes tus llaves aprox. en ' + fechaLlaves(pl.meses + MESES_SI_A_LLAVES, hoyDemo()) : 'Tus llaves: ' + fechaLlaves(pl.meses, hoyDemo())) + '</p>' +
       cierreGrupoHtml(p, 'en-azul') +
       (sinObra ? '' : tarjetaObra(true)) +
     '</section>';
@@ -2531,7 +2531,7 @@
     var esPaso = sp.tipo === 'hito' && hitoActual(s).id === sp.id;
     var chip = esPaso ? 'Ahora' + SEP + 'paso ' + sp.hito.indice + (conCamino ? ' de ' + sp.hito.total : '')
       : sp.plazo ? 'Ahora' + SEP + 'vence pronto' : 'Ahora' + SEP + (sp.tipo === 'mision' ? 'misión' : 'antes de seguir');
-    var boton = sp.id === 'pie' && !s.cuentaVivienda ? 'Abrir mi cuenta' : (BOTON_AHORA[sp.id] || 'Empezar');
+    var boton = sp.id === 'pie' && !s.cuentaVivienda ? 'Abrir mi cuenta' : (sp.id === 'camino' && estado.modo === 'vivir' ? 'Elegir en Departamentos' : (BOTON_AHORA[sp.id] || 'Empezar'));
     return '<section class="' + (dentro ? 'ahora-dentro' : 'tarjeta siguiente-paso ahora') + '" aria-labelledby="titulo-siguiente">' +
       '<p class="chip chip-ahora">' + chip + '</p>' +
       '<h2 class="h3" id="titulo-siguiente">' + sp.titulo + '</h2>' +
@@ -2547,7 +2547,7 @@
     if (sp.tipo === 'mision') return sp.id === 'equipo' ? '#perfil' : (sp.id === 'elegir' ? (esArriendo() ? '#compra/caminos/arriendo-opcion' : rutaElegir()) : null);
     if (sp.id === 'numeros') return '#compra';
     // S32-B3: los pasos nuevos del camino.
-    if (sp.id === 'camino') return '#compra/caminos';
+    if (sp.id === 'camino') return estado.modo === 'vivir' ? '#departamentos' : '#compra/caminos';
     if (sp.id === 'depto') return rutaElegir();
     // D3: sin cuenta, «Juntar el pie» parte por abrirla (en su hoja).
     if (sp.id === 'pie') return fotoPasos().cuentaVivienda ? '#pie' : null;
@@ -2740,7 +2740,7 @@
               // S32-B8 (dieta de texto): la explicación solo en el paso de ahora; el resto, en su hoja.
               (x.estado === 'actual' ? '<small>' + textoHito(x.id, s.grupo) + '</small>' : '') + '</span></button></li>';
       }).join('') + '</ol>' +
-      (sinCamino ? '<a class="btn btn-primario btn-bloque" href="#compra/caminos">Comparar caminos</a>' : '') +
+      (sinCamino ? (estado.modo === 'vivir' ? '<a class="btn btn-primario btn-bloque" href="#departamentos">Elegir en Departamentos</a>' : '<a class="btn btn-primario btn-bloque" href="#compra/caminos">Comparar caminos</a>') : '') +
       '<p class="texto-apoyo recorrido-nota"><small>Del sí del banco a las llaves: unos ' + TOTAL_SI_A_LLAVES + '. Las fechas cambian con lo que juntas al mes.</small></p>' +
       '<a class="dueno-link" href="#compra/dueno">Ver todo lo que pagarías como dueño ›</a>';
     cont.querySelectorAll('[data-hito]').forEach(function (b) {
@@ -3908,9 +3908,9 @@
             '<div class="det-precio-fila"><strong class="det-precio-num">' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong>' +
               (enGrupo && r.ahorro > 0 ? '<span class="det-ahorras">Ahorras ' + formatoRedondeado(r.ahorro) + '</span>' : '') + '</div>' +
             (enGrupo && mesesParaEntrega(p) > 0
-              ? (function () { var g = planGrupo(p); return '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>Firman todos en <strong>' + g.fecha + '</strong>: ese día es tuyo</span></p>' +
+              ? (function () { var g = planGrupo(p); return '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>Firman todos en <strong>' + g.fecha + '</strong>: ese día recibes tus llaves</span></p>' +
                   '<p class="det-freno">' + textoPlanGrupo(g) + '</p>'; })()
-              : '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>' + (pd.meses === null || pd.meses === undefined ? 'Todavía no te alcanza' : 'Sería tuyo <strong>aprox. ' + fechaLlaves(pd.meses + MESES_SI_A_LLAVES, hoyDemo()) + '</strong>') + '</span></p>' +
+              : '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>' + (pd.meses === null || pd.meses === undefined ? 'Todavía no te alcanza' : 'Recibirías tus llaves <strong>aprox. ' + fechaLlaves(pd.meses + MESES_SI_A_LLAVES, hoyDemo()) + '</strong>') + '</span></p>' +
                 '<p class="det-freno">' + FRENO[pd.freno] + '</p>') +
             (conjunto && !pd.on.respaldo ? cierreGrupoHtml(p, 'en-azul') : '') + '</section>' +
           (conjunto && !pd.on.respaldo ? fichaGrupoHtml(p) : '') +
@@ -6538,7 +6538,7 @@
       var cc = estado.caminoElegido && CAMINOS[estado.caminoElegido];
       texto = hecho && cc ? 'Vas por ' + primeraMinuscula(cc.corto) + '. Puedes compararlo con los otros cuando quieras.'
         : 'Hay varios caminos para tu primera vivienda. Compáralos con tus números y elige uno: tus pasos se arman según el camino.';
-      accion = enlaceHoja('#compra/caminos', hecho ? 'Comparar caminos' : 'Comparar y elegir');
+      accion = estado.modo === 'vivir' ? enlaceHoja('#departamentos', hecho ? 'Ver los caminos en Departamentos' : 'Elegir en Departamentos') : enlaceHoja('#compra/caminos', hecho ? 'Comparar caminos' : 'Comparar y elegir');
     } else if (id === 'depto') {
       // D5: el departamento que eliges aquí es tu meta; reservarlo es un paso después.
       var uz = USADOS.filter(function (u) { return u.id === estado.usadoElegido; })[0];
@@ -6700,7 +6700,7 @@
       return g.falta === 0 || v >= g.cuota ? 'Llegas con tu pie a la firma: <strong>' + g.fecha + '</strong>'
         : 'No llegas a la firma de ' + g.fecha + ': junta <strong>' + formatoRedondeado(g.cuota) + '</strong> al mes';
     }
-    return m === null ? 'Todavía no te alcanza' : 'Es tuyo <strong>' + mesTuyo(m) + '</strong>';
+    return m === null ? 'Todavía no te alcanza' : 'Recibes tus llaves <strong>' + mesTuyo(m) + '</strong>';
   }
   function deslizadorPie(dentro) {
     if (estado.modo !== 'vivir' || esArriendo()) return '';
@@ -6708,7 +6708,7 @@
     var m = tuyoConMensual(l.valor);
     return '<' + (dentro ? 'div class="si-juntas pie-si-juntas dentro"' : 'section class="tarjeta bloque si-juntas pie-si-juntas" aria-labelledby="titulo-si-juntas"') + '>' +
       '<p class="si-juntas-fila"><label for="rango-mensual" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-mensual">' + formatoRedondeado(l.valor) + '</strong></p>' +
-      '<input type="range" id="rango-mensual" min="' + l.minimo + '" max="' + l.maximo + '" step="' + l.paso + '" value="' + l.valor + '" aria-valuetext="' + formatoRedondeado(l.valor) + ' al mes: es tuyo ' + mesTuyo(m) + '">' +
+      '<input type="range" id="rango-mensual" min="' + l.minimo + '" max="' + l.maximo + '" step="' + l.paso + '" value="' + l.valor + '" aria-valuetext="' + formatoRedondeado(l.valor) + ' al mes: recibes tus llaves ' + mesTuyo(m) + '">' +
       '<p class="pie-tuyo" id="pie-tuyo" aria-live="polite">' + icono('i-calendario') + '<span>' + textoPieTuyo(l.valor, m) +
         (estado.caminoElegido && CAMINOS_COMPARAR.indexOf(estado.caminoElegido) !== -1 ? '' : '<small>Con crédito tradicional</small>') + '</span></p>' +
       '<p class="delta-plazo" id="delta-plazo" aria-live="polite"></p>' +
@@ -6727,7 +6727,7 @@
       $('pie-tuyo').querySelector('span').innerHTML = textoPieTuyo(v, m);
       var dp = $('delta-plazo'); dp.innerHTML = grupoDelPie() ? '' : textoDelta(base, m);
       dp.className = 'delta-plazo' + (m !== null && base !== null && m < base ? ' sube' : m !== null && base !== null && m > base ? ' baja' : '');
-      rm.setAttribute('aria-valuetext', formatoRedondeado(v) + ' al mes: es tuyo ' + mesTuyo(m));
+      rm.setAttribute('aria-valuetext', formatoRedondeado(v) + ' al mes: recibes tus llaves ' + mesTuyo(m));
     });
     rm.addEventListener('change', function () {
       estado.ahorroMensual = Number(rm.value);
@@ -7417,7 +7417,7 @@
         '<p class="texto-apoyo"><strong>Para quién:</strong> ' + INFO_CAMINO[id].para + '</p>' +
         '<p class="aviso aviso-icono">' + icono('i-alerta') + '<span><strong>Ten en cuenta:</strong> ' + INFO_CAMINO[id].cuidado + '</span></p></section>' : '')) +
       (elegir ? '' : esTuyo ? '<a class="camino-es-tuyo" href="#compra">' + icono('i-check') + 'Es tu camino' + SEP + 'ver tus pasos</a>'
-        : '<p class="camino-llegada">' + icono('i-calendario') + (vivir ? (numerosComparar(id).tuyo === null ? 'Todavía no te alcanza' : 'Es tuyo <strong>' + mesTuyo(numerosComparar(id).tuyo) + '</strong>')
+        : '<p class="camino-llegada">' + icono('i-calendario') + (vivir ? (numerosComparar(id).tuyo === null ? 'Todavía no te alcanza' : 'Recibes tus llaves <strong>' + mesTuyo(numerosComparar(id).tuyo) + '</strong>')
             : (m === null || m === undefined ? 'Todavía no llegas' : 'Llegas en <strong>' + textoLlegada(m) + '</strong>')) + '</p>' +
           '<button type="button" class="btn btn-mi-camino" id="btn-mi-camino" aria-haspopup="dialog">Elegir este camino</button>') +
       (vivir && id === 'arriendo-opcion' ? '' : vivir ? '<a class="tarjeta fila como-funciona" href="#compra/caminos/' + id + '/como"><span class="circulo-icono verde" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg></span>' +
@@ -7813,7 +7813,7 @@
       // S36 (lienzo P22): el mismo sistema del detalle, también para los usados.
       '<section class="det-precio" aria-labelledby="usado-llaves"><p class="det-etq">Precio</p>' +
         '<div class="det-precio-fila"><strong class="det-precio-num">' + formatoRedondeado(ufAPesos(u.listaUF)) + '</strong></div>' +
-        (vivir ? '<p class="det-tuyo" id="usado-llaves">' + icono('i-calendario') + '<span>' + (!isFinite(meses) || meses === null ? 'Todavía no te alcanza' : meses === 0 ? 'Ya tienes lo que se junta antes de firmar' : 'Sería tuyo <strong>aprox. ' + fechaLlaves(meses + MESES_SI_A_LLAVES, hoyDemo()) + '</strong>') + '</span></p>' : '<p class="oculto-visual" id="usado-llaves">Precio</p>') + '</section>' +
+        (vivir ? '<p class="det-tuyo" id="usado-llaves">' + icono('i-calendario') + '<span>' + (!isFinite(meses) || meses === null ? 'Todavía no te alcanza' : meses === 0 ? 'Ya tienes lo que se junta antes de firmar' : 'Recibirías tus llaves <strong>aprox. ' + fechaLlaves(meses + MESES_SI_A_LLAVES, hoyDemo()) + '</strong>') + '</span></p>' : '<p class="oculto-visual" id="usado-llaves">Precio</p>') + '</section>' +
       (vivir ? pestanasDetalle(u, [
           ['numeros', 'Números', '<div class="det-cifras"><div><small>Pie (20' + NBSP + '%)</small><strong>' + formatoRedondeado(pie) + '</strong><small>más ' + formatoRedondeado(gastos) + ' de gastos</small></div>' +
             '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(dividendo) + '</strong><small>con seguros' + SEP + ufDecimales(dividendo / SUPUESTOS.uf, 2) + '</small></div></div>' +
@@ -7853,7 +7853,7 @@
     var ya = estado.caminoElegido === 'arriendo-opcion';
     abrirHojaContenido(u ? '¿Quieres este departamento?' : 'Tus pasos con arriendo con opción de compra',
       (a ? '<p class="texto-apoyo">' + esc(u.nombre) + ': ' + (a.cumple ? 'es tuyo en ' + textoMeses(a.mesesTuyo) + (a.mesesEntrada ? ' y te mudas en ' + textoMeses(a.mesesEntrada) : ' y te mudas ya') + '.' : primeraMinuscula(a.razon) + '.') + '</p>' : '') +
-      (ya || u ? '' : '<p class="texto-apoyo">Si sigues este camino, estos son tus pasos hasta que el departamento es tuyo.</p>' + listaPasosPrevia(pasosDeCamino('arriendo-opcion'))) +
+      (ya || u ? '' : '<p class="texto-apoyo">Si sigues este camino, estos son tus pasos hasta que recibes tus llaves.</p>' + listaPasosPrevia(pasosDeCamino('arriendo-opcion'))) +
       (ya ? '' : '<p class="texto-apoyo"><small>Tu cuenta, tu ahorro y tus misiones se mantienen.</small></p>') +
       '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-confirmar-arriendo">' + (u ? 'Sí, quiero este departamento' : 'Seguir este camino') + '</button></div>', boton,
       function () {
@@ -8339,7 +8339,7 @@
             (sel ? '<span class="cr-check" aria-hidden="true">' + icono('i-check') + '</span>' : '') + '</span>' +
           '<span class="cr-pista" aria-hidden="true"><i style="width:' + (n.tuyo === null ? 0 : pct(n.tuyo)) + '"></i>' +
             (n.id === 'arriendo-opcion' && n.mudas !== null ? '<b style="left:' + pct(Math.max(0, n.mudas)) + '"></b>' : '') + '</span>' +
-          '<span class="carrera-pie"><span class="carrera-fecha">' + (n.tuyo === null ? 'Todavía no te alcanza' : (esArrendarCamino(n.id) ? 'Firmas ' : 'Es tuyo ') + mesTuyo(n.tuyo)) + '</span></span>' +
+          '<span class="carrera-pie"><span class="carrera-fecha">' + (n.tuyo === null ? 'Todavía no te alcanza' : (esArrendarCamino(n.id) ? 'Firmas ' : 'Recibes tus llaves ') + mesTuyo(n.tuyo)) + '</span></span>' +
         '</button>' +
         '<button type="button" class="carrera-info" data-info-camino="' + n.id + '" aria-haspopup="dialog" aria-label="Cómo funciona ' + nombreCamino(n.id) + '">' +
           '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5h.01"/></svg></button>' +
@@ -8357,7 +8357,7 @@
       var c = COLOR_CAMINO[n.id] || COLOR_CAMINO.todos;
       return '<div class="ll-col" style="border-top-color:' + c[1] + '">' +
         '<strong class="ll-nombre">' + nombreCamino(n.id) + '</strong>' +
-        dato(estado.modo === 'arrendar' ? 'Firmas' : 'Es tuyo', mesTuyo(n.tuyo).replace('aprox. ', ''), '', 'fuerte') +
+        dato(estado.modo === 'arrendar' ? 'Firmas' : 'Llaves', mesTuyo(n.tuyo).replace('aprox. ', ''), '', 'fuerte') +
         (n.id === 'arriendo-opcion' ? dato('Te mudas', n.mudas !== null && n.mudas <= 0 ? 'Ya' : mesPlazo(n.mudas).replace('aprox. ', '')) : '') +
         dato('Juntas', plata(n.pie), n.pieNota || 'pie y gastos') +
         dato('Pagas al mes', plata(n.pagas), n.pagasNota || 'dividendo') +
@@ -8436,7 +8436,7 @@
         '<p class="si-juntas-fila"><label for="rango-comparar" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-comparar">' + formatoRedondeado(mensual) + '</strong></p>' +
         '<input type="range" id="rango-comparar" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '" aria-valuetext="' + formatoRedondeado(mensual) + ' al mes">' +
       '</section>' +
-      '<section class="carrera" aria-labelledby="titulo-carrera"><h2 class="h5" id="titulo-carrera">' + (arrendar ? '¿Cuándo firmas con cada camino?' : '¿Cuándo es tuyo con cada camino?') + '</h2>' +
+      '<section class="carrera" aria-labelledby="titulo-carrera"><h2 class="h5" id="titulo-carrera">' + (arrendar ? '¿Cuándo firmas con cada camino?' : '¿Cuándo recibes tus llaves con cada camino?') + '</h2>' +
         // 20-nov: sin la descripción bajo el título.
         '<div id="carrera-cuerpo" aria-live="polite">' + carreraHtml(nums, paraTi) + '</div></section>' +
       '<section class="lado" aria-labelledby="titulo-lado"><h2 class="h5" id="titulo-lado">Lado a lado</h2>' +
@@ -8508,7 +8508,7 @@
         '<p class="fc-que">' + inf.que + '</p></section>' +
       '<section class="fc-tarjeta" aria-labelledby="fc-num"><h2 class="h5" id="fc-num">Con tus números</h2><div class="fc-numeros">' +
         celda('Juntas', n.pie ? formatoRedondeado(n.pie) : '—', n.pieNota || 'pie y gastos') +
-        (esArrendarCamino(id) ? celda('Firmas', mesCorto(n.tuyo), 'aprox.') : id === 'arriendo-opcion' ? celda('Te mudas', n.mudas !== null && n.mudas <= 0 ? 'Ya' : mesCorto(n.mudas), 'aprox.') : celda('Es tuyo', mesCorto(n.tuyo), 'aprox.')) +
+        (esArrendarCamino(id) ? celda('Firmas', mesCorto(n.tuyo), 'aprox.') : id === 'arriendo-opcion' ? celda('Te mudas', n.mudas !== null && n.mudas <= 0 ? 'Ya' : mesCorto(n.mudas), 'aprox.') : celda('Llaves', mesCorto(n.tuyo), 'aprox.')) +
         celda('Pagas al mes', n.pagas ? formatoRedondeado(n.pagas) : '—', n.pagasNota || 'dividendo') +
         '</div><p class="fc-sello">' + icono('i-escudo') + 'Sin contar que el departamento suba de precio</p></section>' +
       '<section class="fc-tarjeta" aria-labelledby="fc-como"><h2 class="h5" id="fc-como">Cómo funciona</h2>' + pasosVisuales(id) +
@@ -8684,7 +8684,7 @@
     return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + 'Firman todos en ' + g.fecha + '</p>' +
       (g.falta && !g.alcanza ? '<p class="tp-linea tp-cuota' + (g.posible ? '' : ' no') + '">' + (g.posible ? 'Junta ' + formatoRedondeado(g.cuota) + ' al mes para llegar' : 'No te alcanza: necesitarías ' + formatoRedondeado(g.cuota) + ' al mes') + '</p>' : '');
   }
-  function lineaTuyo(m) { return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + (m === null ? 'Todavía no te alcanza' : (estado.modo === 'arrendar' ? 'Firmas ' : 'Sería tuyo ') + mesTuyo(m)) + '</p>'; }
+  function lineaTuyo(m) { return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + (m === null ? 'Todavía no te alcanza' : (estado.modo === 'arrendar' ? 'Firmas ' : 'Recibirías tus llaves ') + mesTuyo(m)) + '</p>'; }
   function tarjetaDepto(x, i) {
     if (x.tipo === 'proyecto') {
       var html = tarjetaProyecto(x.p, '#departamentos/', false, estado.modo === 'arrendar' ? '/' + x.camino : x.camino === 'familiar-vivir' ? '/familiar-vivir' : x.solo ? '/individual-vivir' : '');
@@ -8749,7 +8749,7 @@
     var chips = function (id) { return (DATOS_CAMINO[id] || []).map(function (t) { return '<span class="ex-chip">' + t + '</span>'; }).join(''); };
     var linea = function (id) {
       var n = porId[id] || {};
-      var etq = id === 'arriendo-opcion' ? 'Te mudas' : esArrendarCamino(id) ? 'Firmas' : 'Es tuyo';
+      var etq = id === 'arriendo-opcion' ? 'Te mudas' : esArrendarCamino(id) ? 'Firmas' : 'Recibes tus llaves';
       var f = id === 'arriendo-opcion' ? n.mudas : n.tuyo;
       return etq + ' <b>' + mesCorto(f) + '</b>' + (n.pagas ? SEP + formatoRedondeado(n.pagas) + ' al mes' : '');
     };
@@ -8920,7 +8920,7 @@
       (rango ? '<p class="etiqueta">Precio</p><div class="chips-filtros">' + chip('rango', '1', 'Tu rango' + SEP + textoRango(rango)) + chip('rango', '0', 'Todos los precios') + '</div>' : '') +
       '<p class="etiqueta">Dormitorios</p><div class="chips-filtros">' + chip('dormitorios', '', 'Todos') + chip('dormitorios', '0', 'Estudio') + chip('dormitorios', '1', '1') + chip('dormitorios', '2', '2') + '</div>' +
       '<p class="etiqueta">Estado</p><div class="chips-filtros">' + chip('estado', '', 'Todos') + chip('estado', 'obra', 'En obra') + chip('estado', 'nuevo', 'Terminado') + chip('estado', 'usado', 'Usado') + '</div>' +
-      '<p class="etiqueta">Ordenar por</p><div class="chips-filtros">' + chip('orden', 'antes', 'Es tuyo antes') + chip('orden', 'precio', 'Menor precio') + '</div>' +
+      '<p class="etiqueta">Ordenar por</p><div class="chips-filtros">' + chip('orden', 'antes', 'Llaves antes') + chip('orden', 'precio', 'Menor precio') + '</div>' +
       '<button type="button" class="interruptor bloque-chico" role="switch" id="filtro-favoritos" aria-checked="' + f.favoritos + '">' +
         '<span>Solo mis favoritos</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
       '<button type="button" class="btn btn-primario btn-bloque bloque-chico" id="btn-ver-deptos"></button>';
@@ -9021,7 +9021,7 @@
     var cambio = dif === 0 ? '' : SEP + (dif > 0 ? 'se suma ' + plural(dif, 'paso', 'pasos') : 'se va ' + plural(-dif, 'paso', 'pasos'));
     // S30-B3: la hoja dice una cosa: cómo cambia tu fecha y tus pasos. La lista completa queda plegada.
     var fecha = actual && actual !== id && antes !== despues ? 'Tu fecha pasa de <strong>' + textoDe(actual, antes) + '</strong> a <strong>' + textoDe(id, despues) + '</strong>' + cambio
-      : (vivir4(id) ? (esArrendarCamino(id) ? 'Firmas en <strong>' : 'Es tuyo en <strong>') + textoDe(id, despues) + '</strong> (aprox.)' : 'Llegas en <strong>' + textoLlegada(despues) + '</strong>') +
+      : (vivir4(id) ? (esArrendarCamino(id) ? 'Firmas en <strong>' : 'Recibes tus llaves en <strong>') + textoDe(id, despues) + '</strong> (aprox.)' : 'Llegas en <strong>' + textoLlegada(despues) + '</strong>') +
         (pasosAntes === null ? SEP + plural(h.total, 'paso', 'pasos') : cambio);
     abrirHojaContenido('Elegir este camino',
       '<p class="camino-cambio">' + fecha + '</p>' +

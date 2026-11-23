@@ -83,3 +83,16 @@ test('Arriendo con opción de compra no tiene «Ayudas para llegar antes» y su 
   assert.match(app, /estado\.modo === 'vivir' && id !== 'arriendo-opcion'/);
   assert.match(app, /q\[2\] === 'como'\) location\.replace\('#compra\/caminos\/arriendo-opcion'\)/);
 });
+
+test('Las fechas dicen «Recibes tus llaves» y no «Es tuyo» (23-nov)', () => {
+  assert.match(app, /Recibes tus llaves <strong>/);
+  assert.match(app, /¿Cuándo recibes tus llaves con cada camino\?/);
+  assert.match(app, /'Firmas' : 'Recibes tus llaves'/);
+  assert.doesNotMatch(app, /'Todavía no te alcanza' : 'Es tuyo <strong>/);
+  assert.doesNotMatch(app, /chip\('orden', 'antes', 'Es tuyo antes'\)/);
+});
+
+test('Tu compra lleva a Departamentos para elegir el camino (para vivir)', () => {
+  assert.match(app, /'Elegir en Departamentos'/);
+  assert.match(app, /if \(sp\.id === 'camino'\) return estado\.modo === 'vivir' \? '#departamentos'/);
+});

@@ -29,7 +29,7 @@ test('2: un nombre por paso, igual en la hoja y en «Ahora»', () => {
 
 test('3: fechas y montos con su nombre', () => {
   assert.match(app, /estado\.ahorroIniciado \? estado\.ahorrado : estado\.ahorroActual/);
-  assert.match(app, /¿Cuándo es tuyo con cada camino\?/);
+  assert.match(app, /¿Cuándo recibes tus llaves con cada camino\?/);
   assert.match(calc, /meses para juntar el pie de tu departamento/);
   assert.match(app, /Dividendo al mes \(con seguros\)/);
   assert.match(app, /Lo máximo que Bci acepta/);
