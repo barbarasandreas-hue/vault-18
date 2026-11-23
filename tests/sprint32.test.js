@@ -197,3 +197,9 @@ test('23-nov: los días que quedan para que cierre un grupo cuentan desde la fec
   assert.match(app32, /function hoyGrupo\(\)/);
   assert.doesNotMatch(app32, /diasEntre\(hoyDemo\(\), p\.cierre\)/);
 });
+
+test('23-nov: los filtros de Departamentos son desplegables con su valor actual', () => {
+  assert.match(app32, /data-filtro-grupo="/);
+  assert.match(app32, /var resumenFiltro = function \(g\)/);
+  assert.match(app32, /id="filtro-cuerpo-'/);
+});

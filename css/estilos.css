@@ -4964,3 +4964,13 @@ h1[tabindex="-1"], h2[tabindex="-1"] { scroll-margin-top: 72px; }
 .acel-cuerpo .fp-req { margin: 0; }
 .fp-sigla svg { width: 20px; height: 20px; }
 @media (prefers-reduced-motion: reduce) { .acel-flecha { transition: none; } }
+
+/* 23-nov: filtros como desplegables */
+.filtros-lista { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.filtro-item { border: 1px solid var(--gray-semilight); border-radius: 12px; background: var(--white); overflow: hidden; }
+.filtro-cab { width: 100%; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 10px 12px; border: 0; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.filtro-nombre { font-weight: 700; color: var(--gray-dark); font-size: 15px; }
+.filtro-valor { flex: 1; text-align: right; font-size: 14px; color: var(--blue-dark, #1D5699); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filtro-cab[aria-expanded="true"] .acel-flecha { transform: rotate(180deg); }
+.filtro-cuerpo { padding: 12px 12px 14px; border-top: 1px solid #ECEFF1; }
+.filtro-cuerpo[hidden] { display: none; }

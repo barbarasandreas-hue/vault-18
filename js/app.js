@@ -9107,12 +9107,28 @@
     var chip = function (grupo, valor, texto) {
       return '<button type="button" class="chip chip-filtro" data-f="' + grupo + '" data-v="' + valor + '">' + texto + '</button>';
     };
+    // 23-nov (Bárbara): cada filtro es un desplegable que muestra su valor actual; se abre uno a la vez.
+    var grupos = [
+      ['comuna', 'Comuna', chip('comuna', '', 'Todas') + comunas.map(function (c) { return chip('comuna', esc(c), esc(c)); }).join('')],
+      rango ? ['rango', 'Precio', chip('rango', '1', 'Tu rango' + SEP + textoRango(rango)) + chip('rango', '0', 'Todos los precios')] : null,
+      ['dormitorios', 'Dormitorios', chip('dormitorios', '', 'Todos') + chip('dormitorios', '0', 'Estudio') + chip('dormitorios', '1', '1') + chip('dormitorios', '2', '2')],
+      ['estado', 'Estado', chip('estado', '', 'Todos') + chip('estado', 'obra', 'En obra') + chip('estado', 'nuevo', 'Terminado') + chip('estado', 'usado', 'Usado')],
+      ['orden', 'Ordenar por', chip('orden', 'antes', 'Llaves antes') + chip('orden', 'precio', 'Menor precio')]
+    ].filter(Boolean);
+    var resumenFiltro = function (g) {
+      if (g === 'comuna') return f.comuna || 'Todas';
+      if (g === 'rango') return f.rango ? 'Tu rango' : 'Todos los precios';
+      if (g === 'dormitorios') return f.dormitorios === null ? 'Todos' : f.dormitorios === 0 ? 'Estudio' : String(f.dormitorios);
+      if (g === 'estado') return { obra: 'En obra', nuevo: 'Terminado', usado: 'Usado' }[f.estado] || 'Todos';
+      return f.orden === 'precio' ? 'Menor precio' : 'Llaves antes';
+    };
     var html =
-      '<p class="etiqueta">Comuna</p><div class="chips-filtros">' + chip('comuna', '', 'Todas') + comunas.map(function (c) { return chip('comuna', esc(c), esc(c)); }).join('') + '</div>' +
-      (rango ? '<p class="etiqueta">Precio</p><div class="chips-filtros">' + chip('rango', '1', 'Tu rango' + SEP + textoRango(rango)) + chip('rango', '0', 'Todos los precios') + '</div>' : '') +
-      '<p class="etiqueta">Dormitorios</p><div class="chips-filtros">' + chip('dormitorios', '', 'Todos') + chip('dormitorios', '0', 'Estudio') + chip('dormitorios', '1', '1') + chip('dormitorios', '2', '2') + '</div>' +
-      '<p class="etiqueta">Estado</p><div class="chips-filtros">' + chip('estado', '', 'Todos') + chip('estado', 'obra', 'En obra') + chip('estado', 'nuevo', 'Terminado') + chip('estado', 'usado', 'Usado') + '</div>' +
-      '<p class="etiqueta">Ordenar por</p><div class="chips-filtros">' + chip('orden', 'antes', 'Llaves antes') + chip('orden', 'precio', 'Menor precio') + '</div>' +
+      '<ul class="filtros-lista">' + grupos.map(function (g) {
+        return '<li class="filtro-item"><button type="button" class="filtro-cab" data-filtro-grupo="' + g[0] + '" aria-expanded="false" aria-controls="filtro-cuerpo-' + g[0] + '">' +
+          '<span class="filtro-nombre">' + g[1] + '</span><span class="filtro-valor" id="filtro-valor-' + g[0] + '"></span>' +
+          '<svg class="acel-flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>' +
+          '<div class="filtro-cuerpo" id="filtro-cuerpo-' + g[0] + '" hidden><div class="chips-filtros">' + g[2] + '</div></div></li>';
+      }).join('') + '</ul>' +
       '<button type="button" class="interruptor bloque-chico" role="switch" id="filtro-favoritos" aria-checked="' + f.favoritos + '">' +
         '<span>Solo mis favoritos</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
       '<button type="button" class="btn btn-primario btn-bloque bloque-chico" id="btn-ver-deptos"></button>';
@@ -9120,10 +9136,21 @@
       var valorDe = function (g) { return g === 'rango' ? (f.rango ? '1' : '0') : f[g] === null ? '' : String(f[g]); };
       var actualizar = function () {
         hoja.querySelectorAll('[data-f]').forEach(function (b) { b.setAttribute('aria-pressed', String(valorDe(b.dataset.f) === b.dataset.v)); });
+        grupos.forEach(function (g) { var el = $('filtro-valor-' + g[0]); if (el) el.textContent = resumenFiltro(g[0]); });
         $('filtro-favoritos').setAttribute('aria-checked', String(f.favoritos));
         var k = filtrarDeptos(itemsDeptos(cam), f).length;
         $('btn-ver-deptos').textContent = k ? 'Ver ' + plural(k, 'departamento', 'departamentos') : 'Ninguno con estos filtros';
       };
+      hoja.querySelectorAll('[data-filtro-grupo]').forEach(function (cab) {
+        cab.addEventListener('click', function () {
+          var abrir = cab.getAttribute('aria-expanded') !== 'true';
+          hoja.querySelectorAll('[data-filtro-grupo]').forEach(function (o) {
+            o.setAttribute('aria-expanded', 'false');
+            var c = $('filtro-cuerpo-' + o.dataset.filtroGrupo); if (c) c.hidden = true;
+          });
+          if (abrir) { cab.setAttribute('aria-expanded', 'true'); $('filtro-cuerpo-' + cab.dataset.filtroGrupo).hidden = false; }
+        });
+      });
       hoja.querySelectorAll('[data-f]').forEach(function (b) {
         b.addEventListener('click', function () {
           var g = b.dataset.f, v = b.dataset.v;
