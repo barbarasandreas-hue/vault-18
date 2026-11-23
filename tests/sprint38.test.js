@@ -92,3 +92,11 @@ test('La sigla FOGAES solo queda en el glosario', () => {
   assert.strictEqual(visibles.length, 1);
   assert.match(visibles[0], /garantia: \{ nombre: 'Garantía del Estado \(FOGAES\)'/);
 });
+
+test('S39: barra inferior flotante con solo íconos; los nombres siguen para el lector de pantalla', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'css', 'estilos.css'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.match(css, /\.barra a \{ height: 62px; gap: 0; font-size: 0 !important;/);
+  assert.match(css, /border-radius: 999px; background: var\(--white\) !important;/);
+  ['Tu compra', 'Tu pie', 'Departamentos', 'Perfil'].forEach((t) => assert.ok(html.includes('</svg>' + t + '</a>'), t));
+});

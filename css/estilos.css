@@ -4990,3 +4990,53 @@ h1[tabindex="-1"], h2[tabindex="-1"] { scroll-margin-top: 72px; }
 .lectura-lista svg { flex: none; width: 20px; height: 20px; fill: none; stroke: #28652B; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .lectura-falta { display: grid; gap: 4px; margin: 12px 0; padding: 12px; border-radius: 12px; background: #FFF4D6; color: #3d2f00; }
 .lectura-falta.ok { background: #E4F2E5; color: #1f4d22; }
+
+/* ===== S39 (23-nov) · Estilo más moderno dentro del Bci Kit =====
+   Referente: minimalismo de Uber. Solo apariencia: nada cambia de lugar ni de texto.
+   Los botones siguen en MAYÚSCULAS (Bci Kit). */
+
+/* Títulos de pantalla firmes */
+.encabezado h1, .encabezado .h1, .encabezado .h2 { font-size: 28px; line-height: 1.15; font-weight: 700; letter-spacing: -.02em; color: #1F2A30; }
+h2.h5, .h5 { font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+/* Los títulos reciben el foco para el lector de pantalla; no son botones, así que no muestran recuadro. */
+h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
+
+/* Barra superior más liviana */
+.marca-app { border-bottom: 0; box-shadow: 0 1px 0 rgba(55, 71, 79, .06); }
+
+/* Barra inferior flotante: una píldora blanca con sombra y solo íconos (como la referencia de Bárbara).
+   El nombre de cada pestaña sigue en el enlace para el lector de pantalla (texto en tamaño 0). */
+.barra {
+  left: 50%; right: auto; bottom: calc(12px + env(safe-area-inset-bottom));
+  width: min(calc(var(--ancho-telefono) - 24px), calc(100% - 24px)); transform: translateX(-50%);
+  padding: 0 10px; border: 0 !important; border-radius: 999px; background: var(--white) !important;
+  box-shadow: 0 10px 30px rgba(31, 42, 48, .16), 0 1px 3px rgba(31, 42, 48, .10) !important;
+}
+.barra ul { max-width: none; }
+.barra a { height: 62px; gap: 0; font-size: 0 !important; color: #1F2A30 !important; }
+.barra svg { width: 27px; height: 27px; }
+.barra a[aria-current="page"] { color: var(--green-dark) !important; }
+.barra a[aria-current="page"]::before {
+  top: auto; bottom: 9px; left: 50%; right: auto; width: 5px; height: 5px; border-radius: 50%;
+  transform: translateX(-50%); background: var(--green-normal);
+}
+.barra a:active svg { transform: scale(.92); transition: transform var(--dur-micro) var(--ease-salida); }
+
+/* Selector Caminos | Edificios: riel gris con la opción elegida en blanco */
+.pestanas { background: var(--gray-semilight); border: 0; border-radius: 14px; padding: 4px; }
+.pestanas a, .pestanas button { border-radius: 10px; color: var(--gray-semidark); }
+.pestanas a[aria-current="page"], .pestanas button[aria-selected="true"] {
+  background: var(--white); color: #1F2A30; font-weight: 700;
+  box-shadow: 0 1px 2px rgba(55, 71, 79, .12), 0 2px 8px rgba(55, 71, 79, .08);
+}
+
+/* Etiquetas pequeñas sin MAYÚSCULAS (los botones sí las mantienen) */
+.dc-texto small, .camino-pasos-ceja, .pasos-detalle-ceja, .grupo-piezas { text-transform: none; letter-spacing: 0; font-size: 13px; }
+
+/* Esquinas parejas */
+.tarjeta { border-radius: 20px; }
+
+/* Hojas: «Cerrar» como enlace, no como tercer botón grande */
+.hoja-inferior #btn-cerrar-hoja.btn-terciario {
+  border: 0; background: transparent; min-height: 44px; color: var(--blue-dark); text-decoration: underline; text-underline-offset: 3px;
+}
