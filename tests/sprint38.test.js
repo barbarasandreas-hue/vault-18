@@ -117,5 +117,5 @@ test('S39b: Caminos en filas con Ã­conos, sin textos de relleno; Edificios sin Â
   assert.match(app, /class="cam-fila/);
   assert.doesNotMatch(app, /caminos para llegar a tu departamento\. Conoce cada uno/);
   assert.doesNotMatch(app, /Con tu respuesta te recomendamos uno de estos caminos/);
-  assert.doesNotMatch(app, /' en tu rango'/);
+  assert.doesNotMatch(app, /plural\(lista\.length, 'departamento', 'departamentos'\) \+ \(filtrosDeptos\.rango && rango \? ' en tu rango'/);
 });
