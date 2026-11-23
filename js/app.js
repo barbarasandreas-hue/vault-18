@@ -2608,7 +2608,7 @@
       return '<li class="metro-parada ' + x.estado + (ultimo ? ' meta' : '') + '"' + (actual ? ' aria-current="step"' : '') + '>' +
         '<button type="button" class="cj-parada ' + x.estado + '" data-cj-hito="' + x.id + '" aria-haspopup="dialog"' +
           ' aria-label="Paso ' + (i + 1) + ' de ' + N + ': ' + x.nombre + (x.estado === 'hecho' ? ', listo' : actual ? ', ahora' : '') + '">' + dentro + '</button>' +
-        '<span class="metro-nombre" aria-hidden="true">' + (ultimo ? '¡Llaves!' : (CORTO_HITO[x.id] || x.nombre)) + '</span></li>';
+        '<span class="metro-nombre" aria-hidden="true">' + (ultimo ? '¡Llaves!' : x.id === 'pie' && x.estado === 'hecho' ? 'Pie listo' : (CORTO_HITO[x.id] || x.nombre)) + '</span></li>';
     }).join('');
     var ahora = h.terminado ? '' : tarjetaSiguientePaso(true);
     return '<section class="camino-juego metro" aria-labelledby="titulo-recorrido">' +
@@ -2749,7 +2749,8 @@
         '<p class="texto-apoyo">' + (sinCamino ? 'Elige tu camino y aquí verás tus pasos con fechas.'
           : (cid && CAMINOS[cid] ? CAMINOS[cid].corto + SEP : '') + h.total + ' pasos' + SEP + 'fechas aproximadas') + '</p></header>' +
       '<ol class="recorrido-lista">' + h.hitos.map(function (x, i) {
-        var fecha = x.estado === 'hecho' ? 'Listo' : (f[x.id] || '');
+        var fecha = x.id === 'pie' ? (x.estado === 'hecho' ? 'Pie listo' : f.pie ? 'Pie listo ' + f.pie : '')
+          : x.estado === 'hecho' ? 'Listo' : (f[x.id] || '');
         return '<li class="' + x.estado + '"' + (x.estado === 'actual' ? ' aria-current="step"' : '') + '>' +
           '<button type="button" class="recorrido-fila" data-hito="' + x.id + '" aria-haspopup="dialog">' +
             '<span class="recorrido-punto" aria-hidden="true">' + (x.estado === 'hecho' ? '✓' : i + 1) + '</span>' +
@@ -6717,7 +6718,12 @@
       return g.falta === 0 || v >= g.cuota ? 'Llegas con tu pie a la firma: <strong>' + g.fecha + '</strong>'
         : 'No llegas a la firma de ' + g.fecha + ': junta <strong>' + formatoRedondeado(g.cuota) + '</strong> al mes';
     }
-    return m === null ? 'Todavía no te alcanza' : 'Recibes tus llaves <strong>' + mesTuyo(m) + '</strong>';
+    // 23-nov: tres hitos. El deslizador mueve «Pie listo» (cuando terminas de juntar); las llaves, 3 meses después.
+    var trad = !(estado.caminoElegido && CAMINOS_COMPARAR.indexOf(estado.caminoElegido) !== -1);
+    if (m === null) return 'Todavía no te alcanza';
+    var pl = Math.max(0, m - MESES_SI_A_LLAVES);
+    return 'Pie listo <strong>' + (pl === 0 ? 'ya' : mesTuyo(pl)) + '</strong>' +
+      '<small>Recibes tus llaves ' + mesTuyo(m) + '</small>' + (trad ? '<small>Con crédito tradicional</small>' : '');
   }
   function deslizadorPie(dentro) {
     if (estado.modo !== 'vivir' || esArriendo()) return '';
@@ -6725,9 +6731,8 @@
     var m = tuyoConMensual(l.valor);
     return '<' + (dentro ? 'div class="si-juntas pie-si-juntas dentro"' : 'section class="tarjeta bloque si-juntas pie-si-juntas" aria-labelledby="titulo-si-juntas"') + '>' +
       '<p class="si-juntas-fila"><label for="rango-mensual" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-mensual">' + formatoRedondeado(l.valor) + '</strong></p>' +
-      '<input type="range" id="rango-mensual" min="' + l.minimo + '" max="' + l.maximo + '" step="' + l.paso + '" value="' + l.valor + '" aria-valuetext="' + formatoRedondeado(l.valor) + ' al mes: recibes tus llaves ' + mesTuyo(m) + '">' +
-      '<p class="pie-tuyo" id="pie-tuyo" aria-live="polite">' + icono('i-calendario') + '<span>' + textoPieTuyo(l.valor, m) +
-        (estado.caminoElegido && CAMINOS_COMPARAR.indexOf(estado.caminoElegido) !== -1 ? '' : '<small>Con crédito tradicional</small>') + '</span></p>' +
+      '<input type="range" id="rango-mensual" min="' + l.minimo + '" max="' + l.maximo + '" step="' + l.paso + '" value="' + l.valor + '" aria-valuetext="' + formatoRedondeado(l.valor) + ' al mes: pie listo ' + mesTuyo(m === null ? null : Math.max(0, m - MESES_SI_A_LLAVES)) + '">' +
+      '<p class="pie-tuyo" id="pie-tuyo" aria-live="polite">' + icono('i-calendario') + '<span>' + textoPieTuyo(l.valor, m) + '</span></p>' +
       '<p class="delta-plazo" id="delta-plazo" aria-live="polite"></p>' +
     (dentro ? '</div>' : '</section>');
   }
@@ -6744,7 +6749,7 @@
       $('pie-tuyo').querySelector('span').innerHTML = textoPieTuyo(v, m);
       var dp = $('delta-plazo'); dp.innerHTML = grupoDelPie() ? '' : textoDelta(base, m);
       dp.className = 'delta-plazo' + (m !== null && base !== null && m < base ? ' sube' : m !== null && base !== null && m > base ? ' baja' : '');
-      rm.setAttribute('aria-valuetext', formatoRedondeado(v) + ' al mes: recibes tus llaves ' + mesTuyo(m));
+      rm.setAttribute('aria-valuetext', formatoRedondeado(v) + ' al mes: pie listo ' + mesTuyo(m === null ? null : Math.max(0, m - MESES_SI_A_LLAVES)));
     });
     rm.addEventListener('change', function () {
       estado.ahorroMensual = Number(rm.value);

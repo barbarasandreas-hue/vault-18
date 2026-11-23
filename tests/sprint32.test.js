@@ -159,3 +159,10 @@ test('23-nov: Tu compra sin camino muestra «Entre [mes] y [mes]», según el ca
   assert.match(app32, /'Entre <span class="sin-corte">'/);
   assert.match(app32, /según el camino que elijas/);
 });
+
+test('23-nov: tres hitos: Tu pie y Tus pasos muestran «Pie listo» aparte de las llaves', () => {
+  assert.match(app32, /'Pie listo <strong>'/);
+  assert.match(app32, /m - MESES_SI_A_LLAVES/);
+  assert.match(app32, /x\.id === 'pie' && x\.estado === 'hecho' \? 'Pie listo'/);
+  assert.match(app32, /'Pie listo ' \+ f\.pie/);
+});
