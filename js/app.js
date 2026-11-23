@@ -7420,7 +7420,7 @@
         : '<p class="camino-llegada">' + icono('i-calendario') + (vivir ? (numerosComparar(id).tuyo === null ? 'Todavía no te alcanza' : 'Es tuyo <strong>' + mesTuyo(numerosComparar(id).tuyo) + '</strong>')
             : (m === null || m === undefined ? 'Todavía no llegas' : 'Llegas en <strong>' + textoLlegada(m) + '</strong>')) + '</p>' +
           '<button type="button" class="btn btn-mi-camino" id="btn-mi-camino" aria-haspopup="dialog">Elegir este camino</button>') +
-      (vivir ? '<a class="tarjeta fila como-funciona" href="#compra/caminos/' + id + '/como"><span class="circulo-icono verde" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg></span>' +
+      (vivir && id === 'arriendo-opcion' ? '' : vivir ? '<a class="tarjeta fila como-funciona" href="#compra/caminos/' + id + '/como"><span class="circulo-icono verde" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg></span>' +
           '<span><strong>Ayudas para llegar antes</strong><small>' + vistaAyudas(id) + '</small></span>' +
           '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>'
         : '<button type="button" class="tarjeta fila como-funciona" data-simular="' + id + '" aria-haspopup="dialog">' + icono('i-ayuda', 'icono-grande') +
@@ -8518,7 +8518,7 @@
         (esArrendarCamino(id) ? '' : '<a href="#departamentos/camino/' + id + '"><span class="fc-mas-icono verde" aria-hidden="true">' + icono('i-casa') + '</span><span><strong>Ver sus departamentos</strong><small>' + plural(k, 'departamento', 'departamentos') + (filtrosDeptos.rango && rangoActual() ? ' en tu rango' : '') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>') +
         (CAMINOS[id] && CAMINOS[id].familiar ? (function () { var rf = respaldoFamiliar(listaMeta()); return '<a href="#compra/ficha/respaldo-familiar/familiar"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-grupo') + '</span><span><strong>Cómo lo vive tu familiar</strong><small>Deja ' + formatoRedondeado(rf.deposito) + ' y lo recupera en ' + (rf.mesesLibera / 12).toFixed(0) + ' años</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>'; })() : '') +
         (id === 'individual-vivir' ? '<a href="#compra/caminos/individual-vivir/califica"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-escudo') + '</span><span><strong>¿Calificas?</strong><small>Revisa los requisitos con tus datos</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
-        (estado.modo === 'vivir' ? '<a href="#compra/caminos/' + id + '/como"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-pronto') + '</span><span><strong>Ayudas para llegar antes</strong><small>Lo que puede acercar tu fecha</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
+        (estado.modo === 'vivir' && id !== 'arriendo-opcion' ? '<a href="#compra/caminos/' + id + '/como"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-pronto') + '</span><span><strong>Ayudas para llegar antes</strong><small>Lo que puede acercar tu fecha</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
         '<a href="#perfil/ayuda"><span class="fc-mas-icono gris" aria-hidden="true">' + icono('i-info') + '</span><span><strong>Qué significan estos términos</strong><small>' + (CAMINO_TERMINOS[id] || 'Pie, dividendo, preaprobación') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' +
       '</nav>' +
       '<p class="fc-cuidado">' + icono('i-alerta') + '<span><strong>Ten en cuenta:</strong> ' + inf.cuidado + '</span></p>' +
@@ -8754,7 +8754,7 @@
       return etq + ' <b>' + mesCorto(f) + '</b>' + (n.pagas ? SEP + formatoRedondeado(n.pagas) + ' al mes' : '');
     };
     var favs = guardadosProyectos();
-    // 23-nov: primero se ven los caminos; después, una tarjeta pregunta qué te importa para recomendarte uno.
+    // 23-nov: arriba, una tarjeta pregunta qué te importa para recomendarte uno.
     // La respuesta se guarda. «Ahora no» también se guarda, para que la tarjeta no vuelva a insistir.
     var conReco = !!estado.prioridad;
     var preguntando = !estado.prioridadRespondida || cambiandoPrioridad;
@@ -8789,11 +8789,10 @@
     cont.innerHTML =
       '<header class="encabezado">' + MARCA + '<h1 id="titulo-proyectos" class="h2" tabindex="-1">¿Qué quieres explorar?</h1>' +
         '<p class="texto-apoyo">Hay ' + ids.length + ' caminos para llegar a tu departamento. Conoce cada uno y elige el tuyo.</p></header>' +
-      lineaPrioridad + heroHtml +
+      lineaPrioridad + preguntaHtml + heroHtml +
       '<section class="ex-otros" aria-labelledby="ex-otros-titulo"><h2 class="h5" id="ex-otros-titulo">' + (conReco ? 'Otros caminos' : 'Los caminos') + '</h2><ul>' +
         ids.filter(function (id) { return !conReco || id !== reco; }).map(itemCamino).join('') + '</ul>' +
         '<a class="btn btn-secundario btn-bloque ex-comparar" href="#compra/caminos">Comparar los ' + ids.length + ' caminos</a></section>' +
-      preguntaHtml +
       (favs.length ? '<section class="ex-favs" aria-labelledby="ex-favs-titulo"><div class="ex-favs-cab"><h2 class="h5" id="ex-favs-titulo">' + icono('i-corazon') + 'Tus favoritos</h2>' +
           '<a class="enlace" href="#compra/caminos/guardados">Ver todos ›</a></div><ul class="ex-favs-pista">' +
         favs.map(function (p) {
@@ -10137,7 +10136,7 @@
     if (p[1] === 'caminos') {
       var q = p.slice(1);
       if (q[1] === 'cambia') return r('caminos', 'compra', function () { cambiosActivos = {}; renderCaminos(); });
-      if (q[1] === 'arriendo-opcion') return r('caminos', 'compra', function () { if (q[2]) location.replace('#departamentos/arriendo/' + q[2]); else if (estado.modo === 'vivir') renderCaminoInfo('arriendo-opcion'); else renderArriendoCamino(); });
+      if (q[1] === 'arriendo-opcion') return r('caminos', 'compra', function () { if (q[2] === 'como') location.replace('#compra/caminos/arriendo-opcion'); else if (q[2]) location.replace('#departamentos/arriendo/' + q[2]); else if (estado.modo === 'vivir') renderCaminoInfo('arriendo-opcion'); else renderArriendoCamino(); });
       if (q[1] && q[2] === 'como') return r('caminos', 'compra', function () { renderLlegaAntes(q[1]); });
       if (q[1] === 'individual-vivir' && q[2] === 'califica') return r('caminos', 'compra', renderCalifica);
       if (q[1] === 'usados' && q[2]) return r('caminos', 'deptos', function () { location.replace('#departamentos/usado/' + q[2]); });

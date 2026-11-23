@@ -21,9 +21,9 @@ test('E2: el DS1 se marca como acelerador', () => {
   assert.match(app, /Es un acelerador: se suma a un camino/);
 });
 
-test('E3: primero se ven los caminos y después una tarjeta pregunta qué te importa; la respuesta se guarda', () => {
+test('E3: arriba de la lista de caminos una tarjeta pregunta qué te importa; la respuesta se guarda', () => {
   assert.match(app, /¿Qué es lo que más te importa\?/);
-  assert.match(app, /primero se ven los caminos; después, una tarjeta pregunta/);
+  assert.match(app, /lineaPrioridad \+ preguntaHtml \+ heroHtml/);
   assert.doesNotMatch(app, /if \(!estado\.prioridadRespondida\) \{\n      cont\.innerHTML/);
   assert.match(app, /'prioridad', 'prioridadRespondida'/);
   assert.match(app, /Ahora no/);
@@ -76,4 +76,10 @@ test('E7: el familiar ve cuánto puede perder como máximo y acepta con casilla 
   assert.match(app, /aria-disabled/);
   assert.match(app, /'respaldoAceptado'/);
   assert.match(app, /propuesta a validar con Bci/);
+});
+
+test('Arriendo con opción de compra no tiene «Ayudas para llegar antes» y su ruta /como no vuelve en bucle', () => {
+  assert.match(app, /vivir && id === 'arriendo-opcion' \? ''/);
+  assert.match(app, /estado\.modo === 'vivir' && id !== 'arriendo-opcion'/);
+  assert.match(app, /q\[2\] === 'como'\) location\.replace\('#compra\/caminos\/arriendo-opcion'\)/);
 });
