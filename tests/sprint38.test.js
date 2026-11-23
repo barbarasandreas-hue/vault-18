@@ -40,3 +40,33 @@ test('Misiones: «documentos» y «elegir» ya no son misiones y no quedan resto
   assert.doesNotMatch(app, /id === 'elegir'/);
   assert.doesNotMatch(calc, /documentos: '5 minutos'|elegir: '10 minutos'|elegir: 'elegir tu departamento'/);
 });
+
+const c = require('../js/calculos.js');
+const fotoBase = (x) => Object.assign({ caminoElegido: true, grupo: false, arriendo: false, cuentaVivienda: true, equipo: false, ahorroAutomatico: false }, x);
+const ids = (s) => c.misiones(s, '2026-11-03').map((m) => m.id);
+
+test('Misión nueva: firmar el acuerdo aparece solo si sumaste a alguien al crédito', () => {
+  assert.ok(!ids(fotoBase({})).includes('acuerdo'));
+  const ms = c.misiones(fotoBase({ acuerdo: true }), '2026-11-03');
+  assert.ok(ms.some((m) => m.id === 'acuerdo' && !m.hecho));
+  assert.ok(c.misiones(fotoBase({ acuerdo: true, acuerdoFirmado: true }), '2026-11-03').find((m) => m.id === 'acuerdo').hecho);
+});
+
+test('Misión nueva: el informe de deudas aparece con camino elegido y se marca con la preaprobación', () => {
+  assert.ok(!ids(fotoBase({ caminoElegido: false })).includes('deudas'));
+  assert.ok(ids(fotoBase({})).includes('deudas'));
+  assert.ok(c.misiones(fotoBase({ informeDeudas: true }), '2026-11-03').find((m) => m.id === 'deudas').hecho);
+  assert.match(app, /fichas\/2614-informe-de-deudas/);
+});
+
+test('Misión nueva: visitar el departamento, solo sin grupo; queda hecha al visitar o al elegir', () => {
+  assert.ok(ids(fotoBase({ visitar: true })).includes('visita'));
+  assert.ok(!ids(fotoBase({ visitar: false })).includes('visita'));
+  assert.ok(c.misiones(fotoBase({ visitar: true, visito: true }), '2026-11-03').find((m) => m.id === 'visita').hecho);
+  assert.match(app, /visitar: !!estado\.caminoElegido && !esArriendo\(\) && !esGrupo\(\)/);
+});
+
+test('Las marcas de aceleradores y misiones se guardan al recargar', () => {
+  ['ds1Agregado', 'tasaAgregado', 'fogaesAgregado', 'tasaPedido', 'garantiaFamiliar', 'fogaesCalifica', 'acuerdoFirmado', 'informeDeudas']
+    .forEach((k) => assert.ok(app.slice(0, app.indexOf('];', app.indexOf('var CLAVES_PASOS'))).includes("'" + k + "'"), k));
+});

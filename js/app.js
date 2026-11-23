@@ -14,7 +14,11 @@
   var ACUERDO_CON = ['pareja', 'familiar', 'otra'];
   var ACUERDO_PAGA = ['parte', 'mitad'];
   var ACUERDO_SALE = ['vende', 'compra'];
-  var CLAVES_PASOS = ['cuentaVivienda', 'rsh', 'ds1Postulado', 'documentos', 'bajoLlave', 'preaprobado', 'contratoArriendo', 'arriendoTuyo', 'usadoReservado', 'usadoTuyo', 'sumarAgregado'];
+  var CLAVES_PASOS = ['cuentaVivienda', 'rsh', 'ds1Postulado', 'documentos', 'bajoLlave', 'preaprobado', 'contratoArriendo', 'arriendoTuyo', 'usadoReservado', 'usadoTuyo', 'sumarAgregado',
+    // 23-nov: estas marcas ya se usaban pero no se guardaban al recargar.
+    'ds1Agregado', 'tasaAgregado', 'fogaesAgregado', 'tasaPedido', 'garantiaFamiliar', 'fogaesCalifica',
+    // 23-nov: misiones nuevas.
+    'acuerdoFirmado', 'informeDeudas'];
   var CLAVE_COMPRA = 'primer-peldano-compra';
   var CLAVE_INVERSIONES = 'primer-peldano-inversiones';
 
@@ -2684,7 +2688,7 @@
       '<div class="mc-cab"><h2 class="h5" id="titulo-mc">Misiones</h2><a class="enlace" href="#compra/misiones">Ver todas ›</a></div>' +
       '<ul class="mc-lista">' + filas + '</ul></section>';
   }
-  var ICONO_MISION_ID = { tasa: 'i-sube', fogaes: 'i-escudo', familiar: 'i-grupo', ds1: 'i-casa', rsh: 'i-documento', 'ahorro-auto': 'i-calendario', 'bajo-llave': 'i-candado', equipo: 'i-grupo', cuota: 'i-alcancia' };
+  var ICONO_MISION_ID = { tasa: 'i-sube', fogaes: 'i-escudo', familiar: 'i-grupo', ds1: 'i-casa', rsh: 'i-documento', 'ahorro-auto': 'i-calendario', 'bajo-llave': 'i-candado', equipo: 'i-grupo', cuota: 'i-alcancia', acuerdo: 'i-documento', deudas: 'i-banco', visita: 'i-llave' };
   // 23-nov: los aceleradores en Tu compra, con departamento elegido: los que ya sumaste y los que puedes sumar.
   // Si un acelerador no sirve para este departamento (bloqueado), no aparece.
   function aceleradoresCompraHtml() {
@@ -6406,7 +6410,12 @@
       familiar: !!(CAMINOS[estado.caminoElegido] && CAMINOS[estado.caminoElegido].familiar) && !esArriendo(),
       tasa: !!ps.tasaAgregado && estado.modo === 'vivir', tasaPedido: !!ps.tasaPedido || preaprobado, garantiaFamiliar: !!ps.garantiaFamiliar,
       // S28: con el camino ya elegido, la misión pide solo el departamento.
-      caminoElegido: !!estado.caminoElegido
+      caminoElegido: !!estado.caminoElegido,
+      // 23-nov: misiones nuevas: firmar el acuerdo de quien suma su renta, revisar el informe de deudas y visitar el departamento.
+      acuerdo: !!ps.sumarAgregado, acuerdoFirmado: !!ps.acuerdoFirmado,
+      informeDeudas: !!ps.informeDeudas || preaprobado,
+      visitar: !!estado.caminoElegido && !esArriendo() && !esGrupo(),
+      visito: Object.keys(estado.visitas || {}).some(function (k) { return estado.visitas[k] && estado.visitas[k].fue; }) || !!c || (estado.caminoElegido === 'usados' && !!estado.usadoElegido)
     };
   }
   function nombreCaminoActual() {
@@ -7176,18 +7185,23 @@
     'bajo-llave': ['Para sacar dinero de tu pie avisas 30 días antes. Así no se gasta.', 'Guardar bajo llave'],
     'ahorro-auto': ['Bci pasa tu cuota a tu cuenta de vivienda el día de pago.', 'Activar'],
     equipo: ['Suma a tu pareja, tu familia o tu bebé para que te acompañen.', null],
+    acuerdo: ['Ya guardaste el borrador del acuerdo en la app. Revísenlo juntos y fírmenlo antes de pedir el crédito. La app no reemplaza un contrato.', 'Ya lo firmamos'],
+    deudas: ['Muestra tus deudas con bancos y cooperativas. Si hay algo atrasado, lo ves antes que el banco.', 'Ya lo revisé'],
+    visita: ['Con la mitad de tu pie agendas una visita con la corredora. Así conoces el departamento antes de elegirlo.', null],
     tasa: ['Lo pides junto con tu crédito, al pedir tu preaprobación. Baja tu dividendo si quedan cupos cuando Bci lo apruebe.', 'Ya lo pedí'],
     fogaes: ['La garantía del Estado (FOGAES) deja que Bci te preste hasta el 90' + NBSP + '%: juntas un pie del 10' + NBSP + '%. Es para departamentos nuevos y se usa una sola vez.', null],
     familiar: ['Tu familiar deja el 10' + NBSP + '% en una cuenta Bci, con intereses. Lo recupera cuando tu deuda baja al 80' + NBSP + '%.', 'Ya la dejó']
   };
-  var MISION_CLAVE = { tasa: 'tasaPedido', ds1: 'ds1Postulado', rsh: 'rsh', 'bajo-llave': 'bajoLlave', familiar: 'garantiaFamiliar' };
+  var MISION_CLAVE = { tasa: 'tasaPedido', ds1: 'ds1Postulado', rsh: 'rsh', 'bajo-llave': 'bajoLlave', familiar: 'garantiaFamiliar', acuerdo: 'acuerdoFirmado', deudas: 'informeDeudas' };
   var MISION_LISTA = { tasa: 'Listo: pediste el subsidio a la tasa.', ds1: 'Listo: postulaste al DS1.', rsh: 'Listo: te inscribiste en el Registro Social.',
-    'bajo-llave': 'Tu pie quedó bajo llave.', familiar: 'Listo: tu familiar dejó su garantía.' };
+    'bajo-llave': 'Tu pie quedó bajo llave.', familiar: 'Listo: tu familiar dejó su garantía.',
+    acuerdo: 'Listo: firmaron su acuerdo.', deudas: 'Listo: revisaste tu informe de deudas.' };
   // S29 (13-nov, Bárbara): las misiones llevan a hacer la acción, no la marcan como hecha.
   // DS1 y Registro Social se hacen en los sitios del Estado (con ClaveÚnica); al volver, la persona confirma.
   var MISION_SITIO = {
     ds1: { url: 'https://www.chileatiende.gob.cl/fichas/19094', texto: 'Postular en el sitio del Minvu', nota: 'Se abre ChileAtiende, con el trámite del Minvu. Necesitas tu ClaveÚnica.' },
-    rsh: { url: 'https://www.registrosocial.gob.cl', texto: 'Inscribirme en el Registro Social', nota: 'Necesitas tu ClaveÚnica.' }
+    rsh: { url: 'https://www.registrosocial.gob.cl', texto: 'Inscribirme en el Registro Social', nota: 'Necesitas tu ClaveÚnica.' },
+    deudas: { url: 'https://www.chileatiende.gob.cl/fichas/2614-informe-de-deudas', texto: 'Ver mi informe en la CMF', nota: 'Es gratis. Se abre ChileAtiende; necesitas tu ClaveÚnica.' }
   };
   // Ahorro automático y bajo llave se activan en Tu pie → Tu cuota: la misión te lleva ahí con el interruptor a la vista.
   var cuotaAlLlegar = null;
@@ -7203,6 +7217,9 @@
       falta === 'cuenta' ? '<p class="texto-apoyo">' + icono('i-alerta') + ' Primero abre tu cuenta de vivienda: el DS1 pide ahorrar en ella.</p>' + enlaceHoja('#pie', 'Abrir mi cuenta') :
       falta === 'rsh' ? '<p class="texto-apoyo">' + icono('i-alerta') + ' Primero: el Registro Social de Hogares.</p>' + botonEnHoja('btn-mision-rsh', 'Ir a inscribirme en el Registro Social') :
       id === 'equipo' ? enlaceHoja('#perfil/equipo', 'Ir a Tu equipo') :
+      id === 'visita' ? enlaceHoja(rutaElegir(), 'Ver departamentos') :
+      id === 'acuerdo' ? '<button type="button" class="btn btn-secundario btn-bloque" id="btn-mision-acuerdo">Ver el acuerdo</button>' +
+          '<button type="button" class="btn btn-primario btn-bloque" id="btn-mision-accion">' + t[1] + '</button>' :
       id === 'fogaes' ? enlaceHoja('#compra/caminos/individual-vivir/califica', 'Revisar si califico') :
       id === 'familiar' ? enlaceHoja('#compra/ficha/respaldo-familiar/familiar', 'Ver cómo lo vive tu familiar') +
           '<button type="button" class="btn btn-terciario btn-bloque" id="btn-mision-accion">' + t[1] + '</button>' :
@@ -7217,6 +7234,7 @@
       (id === 'ds1' ? terminoDesplegable('ds1') : id === 'rsh' ? terminoDesplegable('rsh') : '') +
       (accion ? '<div class="acciones">' + accion + '</div>' : ''), boton, function () {
         if ($('btn-mision-rsh')) $('btn-mision-rsh').addEventListener('click', function () { abrirMision('rsh', boton); });
+        if ($('btn-mision-acuerdo')) $('btn-mision-acuerdo').addEventListener('click', function () { cerrarHoja(false); abrirAcuerdoCredito(boton); });
         if ($('btn-mision-ir')) $('btn-mision-ir').addEventListener('click', function () {
           cuotaAlLlegar = id; cerrarHoja(false);
           if (location.hash === '#pie') mostrar(); else location.hash = '#pie';
@@ -7236,7 +7254,7 @@
   }
   // 10-nov: "Ver todas" lleva a una pantalla con todas las misiones separadas por etapa.
   // S33-C3: Misiones, más visual y con menos texto: lo que vence primero, las que faltan en mosaico y las fechas en una línea de tiempo.
-  var COLOR_MISION_ID = { tasa: 'verde', fogaes: 'azul', familiar: 'azul', ds1: 'rojo', rsh: 'azul', 'ahorro-auto': 'verde', 'bajo-llave': 'azul', equipo: 'verde', cuota: 'verde' };
+  var COLOR_MISION_ID = { tasa: 'verde', fogaes: 'azul', familiar: 'azul', ds1: 'rojo', rsh: 'azul', 'ahorro-auto': 'verde', 'bajo-llave': 'azul', equipo: 'verde', cuota: 'verde', acuerdo: 'azul', deudas: 'azul', visita: 'verde' };
   function renderTodasMisiones() {
     var cont = $('pasos-contenido');
     var s = fotoPasos(), hoy = hoyDemo();

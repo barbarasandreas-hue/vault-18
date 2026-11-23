@@ -1700,6 +1700,11 @@ function misiones(s, hoy) {
   // S34: en grupo la cuenta ya está bloqueada hasta la firma; «bajo llave» es para quien junta solo.
   if (s.cuentaVivienda && !s.grupo) m('bajo-llave', 'Guarda tu pie bajo llave', 'Protege', 'pie', s.bajoLlave);
   m('equipo', 'Suma a tu equipo', 'Te acompañan', null, s.equipo);
+  // 23-nov: quien suma su renta al crédito firma el acuerdo; todos revisan su informe de deudas antes del banco;
+  // sin grupo, se visita el departamento antes de elegirlo.
+  if (s.acuerdo) m('acuerdo', 'Firmen su acuerdo para comprar juntos', 'Tu crédito', 'preaprobacion', s.acuerdoFirmado);
+  if (s.caminoElegido) m('deudas', 'Revisa tu informe de deudas', 'Tu preaprobación', 'preaprobacion', s.informeDeudas);
+  if (s.visitar) m('visita', 'Visita tu departamento', 'Elegir bien', 'depto', s.visito);
   // S32-B1: elegir camino y departamento ya no son misiones: son los dos primeros pasos.
   var actual = hitoActual(s).id;
   var peso = function (x) {
@@ -1762,7 +1767,7 @@ function siguientePaso(s, hoy) {
   var ayuda = pend.filter(function (x) { return x.ayudaA === 'pie'; })[0] || pend[0];
   return ayuda ? deMision(ayuda) : deHito('pie');
 }
-var CUESTA_MISION = { ds1: '20 minutos', rsh: '15 minutos', 'bajo-llave': '1 minuto', 'ahorro-auto': '1 minuto', equipo: '2 minutos' };
+var CUESTA_MISION = { ds1: '20 minutos', rsh: '15 minutos', 'bajo-llave': '1 minuto', 'ahorro-auto': '1 minuto', equipo: '2 minutos', acuerdo: '15 minutos', deudas: '5 minutos', visita: '1 hora' };
 
 
 // S21-B5: "Tu pie está protegido": solo las capas reales para ese camino y esa etapa.
@@ -1820,7 +1825,8 @@ var MOTIVO_ANIMO = {
   cuenta: 'abrir tu cuenta de vivienda', pie: 'juntar tu pie', preaprobacion: 'tu preaprobación',
   asegurar: 'asegurar tu departamento', aprobacion: 'tu aprobación final', 'es-tuyo': 'tu departamento',
   ds1: 'postular al DS1', rsh: 'inscribirte en el Registro Social',
-  'bajo-llave': 'guardar tu pie bajo llave', 'ahorro-auto': 'activar el ahorro automático'
+  'bajo-llave': 'guardar tu pie bajo llave', 'ahorro-auto': 'activar el ahorro automático',
+  acuerdo: 'firmar su acuerdo', deudas: 'revisar tu informe de deudas', visita: 'visitar tu departamento'
 };
 var MAXIMO_ANIMOS = 2;
 // hechos: claves de hitos y misiones hechos hoy; dados: las que ya recibieron su "¡Bien!"; equipo: Tu equipo.
