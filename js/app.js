@@ -1067,7 +1067,7 @@
   var TERMINOS = {
     garantia: { nombre: 'Garantía del Estado (FOGAES)', pregunta: '¿Qué es la garantía del Estado?',
       que: 'El Estado respalda tu crédito: Bci te presta el 90' + NBSP + '% y pones solo el 10' + NBSP + '% de pie.',
-      combina: 'Crédito con garantía del Estado y compra en grupo. Se suma al DS1.',
+      combina: 'Compra directa y compra en grupo. Se suma al DS1.',
       limite: 'Solo para tu primera vivienda, para vivir en ella. Se pide hasta el ' + formatoFecha(FECHAS_IMPORTAN[2].fecha) + '.' },
     ds1: { nombre: 'Subsidio DS1', pregunta: '¿Qué es el DS1?',
       que: 'Dinero del Estado que se suma a tu pie para tu primera vivienda. No se devuelve.',
@@ -1940,7 +1940,7 @@
     return (a === 0 ? 'Ya' : a) + ' a ' + textoMeses(b);
   }
   // Comentario 9-nov: "Tu pie para … en", según tu camino. Evaluación heurística: un solo nombre por crédito.
-  var PIE_PARA = { 'grupo-vivir': 'compra en grupo', 'individual-vivir': 'crédito con garantía del Estado', 'arriendo-opcion': 'arriendo con opción', 'respaldo-familiar': 'garantía de un familiar', 'familiar-vivir': 'garantía de un familiar' };
+  var PIE_PARA = { 'grupo-vivir': 'compra en grupo', 'individual-vivir': 'compra directa', 'arriendo-opcion': 'arriendo con opción', 'respaldo-familiar': 'garantía de un familiar', 'familiar-vivir': 'garantía de un familiar' };
   function etiquetaLlaves(hasta) {
     var para = PIE_PARA[estado.caminoElegido] || PIE_PARA['individual-vivir'];
     return hasta === 0 ? 'Ya tienes tu pie para ' + para : 'Tu pie para ' + para + ' en';
@@ -7038,7 +7038,7 @@
   // ---------- S21-B4: Explorar, caminos primero ----------
   var LINEA_CAMINO = {
     'grupo-vivir': 'Te unes a otras personas para comprar; cada uno con su departamento.',
-    'individual-vivir': 'Bci te presta hasta el 90' + NBSP + '% con la garantía del Estado.',
+    'individual-vivir': 'El crédito de siempre. Si es nuevo, la garantía del Estado te acerca al 90' + NBSP + '%.',
     'familiar-vivir': 'Un familiar deja una garantía y Bci te presta el 95' + NBSP + '%.',
     'familiar-invertir': 'Un familiar deja una garantía y Bci te presta el 95' + NBSP + '%.',
     'grupo-pie-compartido': 'Compras en grupo y unos inversionistas ponen parte del pie.',
@@ -7145,7 +7145,7 @@
   }
   // S30-B5 (test: "demasiados caminos"; solo 3 de 4 cabían en la pantalla): un camino destacado y los demás en filas de una línea.
   var TEXTO_CORTO_EXPLORAR = {
-    'individual-vivir': 'Pie del 10' + NBSP + '%, con garantía del Estado.',
+    'individual-vivir': 'El crédito de siempre; la garantía del Estado es una ayuda para llegar antes.',
     'grupo-vivir': 'Compras con otros y pagas menos.',
     usados: 'Pie del 20' + NBSP + '%, para departamentos usados.',
     'familiar-vivir': 'Pie del 5' + NBSP + '%, con la garantía de un familiar.',
@@ -7222,7 +7222,7 @@
   var DESCRIPCION_CAMINO = {
     // S30-B2: una línea (≤ 14 palabras); el detalle (5 % con 5 personas, crédito y escritura propios) está en "Qué significan".
     'grupo-vivir': 'Compras con otros en obra, cada uno con su crédito. Baja el precio.',
-    'individual-vivir': 'Bci te presta hasta el 90' + NBSP + '% con garantía del Estado. Tú juntas el 10' + NBSP + '%.'
+    'individual-vivir': 'El crédito de siempre. Si es nuevo, la garantía del Estado te permite pedir hasta el 90' + NBSP + '% y juntar solo el 10' + NBSP + '%.'
   };
   function chipsPiezas() {
     if (estado.modo !== 'vivir') return '';
@@ -8009,7 +8009,7 @@
       para: 'Si quieres pagar menos y puedes esperar la obra.',
       cuidado: 'Esperas que terminen la obra para firmar.' },
     'individual-vivir': { bueno: 'Pie de solo 10' + NBSP + '%', ojo: 'Solo departamentos nuevos', depto: 'Nuevo',
-      que: 'Bci te presta hasta el 90' + NBSP + '% con la garantía del Estado (FOGAES). Tú juntas el 10' + NBSP + '% y los gastos.',
+      que: 'El crédito de siempre: compras solo, un departamento nuevo o usado. La garantía del Estado (FOGAES) es una ayuda: en uno nuevo, Bci te presta hasta el 90' + NBSP + '% y juntas el 10' + NBSP + '%.',
       como: ['Eliges un departamento nuevo.', 'Juntas el 10' + NBSP + '% en tu cuenta de vivienda.', 'Bci te preaprueba; reservas, firmas y recibes tus llaves.'],
       para: 'Si quieres un departamento nuevo y juntar menos pie.',
       cuidado: 'Solo departamentos nuevos, de hasta ' + formatoUF(SUPUESTOS.topeFogaesUF) + '.' },
@@ -8023,7 +8023,7 @@
       que: 'El crédito de siempre: Bci te presta el 80' + NBSP + '% y tú juntas el 20' + NBSP + '%. Es el que sirve para departamentos usados.',
       como: ['Eliges un departamento nuevo o usado.', 'Juntas el 20' + NBSP + '% en tu cuenta de vivienda.', 'Bci te preaprueba; reservas, firmas y recibes tus llaves.'],
       para: 'Si buscas un usado, o un barrio sin proyectos nuevos.',
-      cuidado: 'Juntas el doble de pie que con garantía del Estado: llegas más tarde.' },
+      cuidado: 'Juntas el doble de pie que con la garantía del Estado (solo en nuevos): llegas más tarde.' },
     // S35: los caminos para arrendar, con la misma ficha.
     'pie-compartido': { bueno: 'Pones solo el 5' + NBSP + '%', ojo: 'Compartes una parte al principio', depto: 'Nuevo',
       que: 'Unos inversionistas ponen el 15' + NBSP + '% a cambio de una parte del departamento. Con el arriendo les compras su parte, mes a mes.',

@@ -715,10 +715,10 @@ var PEOR_CASO_ARRIENDO = 0.9;   // peor caso: arriendo 10 % más bajo
 var CAMINOS = {
   'grupo-vivir': { nombre: 'Compra en grupo', corto: 'Compra en grupo', modo: 'vivir', grupo: true,
     credito: 0.90, usuario: 0.10, inversionistas: 0, existeHoy: false },
-  'individual-vivir': { nombre: 'Crédito con garantía del Estado', corto: 'Crédito con garantía del Estado', modo: 'vivir', grupo: false,
+  'individual-vivir': { nombre: 'Compra directa', corto: 'Compra directa', modo: 'vivir', grupo: false,
     credito: 0.90, usuario: 0.10, inversionistas: 0, existeHoy: true },
   // S32-B4: el crédito tradicional (80 %) es un camino para vivir; es el que sirve para usados.
-  'usados': { nombre: 'Crédito tradicional', corto: 'Crédito tradicional', modo: 'vivir', grupo: false, tradicional: true,
+  'usados': { nombre: 'Compra directa de un usado', corto: 'Compra directa (usado)', modo: 'vivir', grupo: false, tradicional: true,
     credito: 0.80, usuario: 0.20, inversionistas: 0, existeHoy: true },
   'grupo-pie-compartido': { nombre: 'Grupo y pie compartido', corto: 'Grupo y pie compartido', modo: 'arrendar', grupo: true,
     credito: 0.80, usuario: 0.05, inversionistas: 0.15, existeHoy: false },
