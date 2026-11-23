@@ -4845,3 +4845,8 @@ html { scroll-padding-top: 72px; }
 .det-panel, .det-tabs + .det-panel { scroll-margin-top: 128px; }
 h1[tabindex="-1"], h2[tabindex="-1"] { scroll-margin-top: 72px; }
 .hoja-inferior.hoja-pantalla .pantalla-cab { margin: -8px -20px 12px; top: -8px; }
+
+/* 23-nov: pregunta «¿Qué es lo que más te importa?» en Departamentos */
+.pregunta-prioridad { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+.prioridad-guardada { margin: 12px 0 0; font-size: 14px; }
+.prioridad-guardada .enlace { min-height: 44px; padding: 0 4px; }

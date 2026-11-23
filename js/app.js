@@ -64,6 +64,7 @@
     deudasAtrasadas: null,   // S31-A: true / false; null = no lo ha dicho
     rshTramo: null,          // S31-D: tramo del Registro Social (40 a 100); null = no lo sabe
     caminoAnterior: null,    // S32-B4: { id, listos } el camino de antes, para «Volver» hasta el siguiente paso
+    prioridadRespondida: false, // 23-nov: ya contestó «¿Qué es lo que más te importa?» en Departamentos (también si dijo «No estoy seguro»)
     prioridad: null,         // S32-B4: lo que más le importa al comparar: 'antes', 'menos' o 'ya'
     usadoElegido: null,      // S32-B5: el usado elegido como meta en el crédito tradicional (USADOS)
     trabajo: '',             // 9-nov: dónde trabaja (para ver cómo llegar en el mapa, dentro de la app)
@@ -78,9 +79,9 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo', 'presentacion', 'muro', 'visitaGrupo', 'saldoCorriente', 'mesesTrabajo', 'deudasAtrasadas', 'rshTramo', 'caminoAnterior', 'prioridad', 'usadoElegido'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo', 'presentacion', 'muro', 'visitaGrupo', 'saldoCorriente', 'mesesTrabajo', 'deudasAtrasadas', 'rshTramo', 'caminoAnterior', 'prioridad', 'prioridadRespondida', 'usadoElegido'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
-    otrasCuotas: null, contrato: 'indefinido', mesesTrabajo: null, deudasAtrasadas: null, rshTramo: null, caminoAnterior: null, prioridad: null, usadoElegido: null,
+    otrasCuotas: null, contrato: 'indefinido', mesesTrabajo: null, deudasAtrasadas: null, rshTramo: null, caminoAnterior: null, prioridad: null, prioridadRespondida: false, usadoElegido: null,
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
@@ -422,6 +423,7 @@
       if (g.caminoAnterior && typeof g.caminoAnterior === 'object' && typeof CAMINOS !== 'undefined' && CAMINOS[g.caminoAnterior.id])
         estado.caminoAnterior = { id: g.caminoAnterior.id, listos: Number(g.caminoAnterior.listos) || 0 };
       if (['antes', 'menos', 'ya'].indexOf(g.prioridad) !== -1) estado.prioridad = g.prioridad;
+      estado.prioridadRespondida = g.prioridadRespondida === true || estado.prioridad !== null;
       if (USADOS.some(function (u) { return u.id === g.usadoElegido; })) estado.usadoElegido = g.usadoElegido;
     } catch (e) { /* sin localStorage: valores por defecto */ }
   }
@@ -8656,13 +8658,33 @@
       return etq + ' <b>' + mesCorto(f) + '</b>' + (n.pagas ? SEP + formatoRedondeado(n.pagas) + ' al mes' : '');
     };
     var favs = guardadosProyectos();
+    // 23-nov: la primera vez, una sola pregunta. La respuesta se guarda y no vuelve a preguntarse (se cambia con «Cambiar mi respuesta»).
+    if (!estado.prioridadRespondida) {
+      cont.innerHTML =
+        '<header class="encabezado">' + MARCA + '<h1 id="titulo-proyectos" class="h2" tabindex="-1">¿Qué es lo que más te importa?</h1>' +
+          '<p class="texto-apoyo">Con tu respuesta te mostramos el camino que más te acerca. Puedes cambiarla cuando quieras.</p></header>' +
+        '<div class="pregunta-prioridad">' +
+          PRIORIDADES.map(function (p) {
+            return '<button type="button" class="btn btn-secundario btn-bloque" data-prioridad-deptos="' + p[0] + '">' + p[1] + '</button>';
+          }).join('') +
+          '<button type="button" class="btn btn-terciario btn-bloque" data-prioridad-deptos="ninguna">No estoy seguro · ver todos</button>' +
+        '</div>';
+      cont.querySelectorAll('[data-prioridad-deptos]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          estado.prioridad = b.dataset.prioridadDeptos === 'ninguna' ? null : b.dataset.prioridadDeptos;
+          estado.prioridadRespondida = true;
+          guardarEstado();
+          renderDepartamentos();
+          var h = $('titulo-proyectos'); if (h) h.focus();
+        });
+      });
+      return;
+    }
     cont.innerHTML =
       '<header class="encabezado">' + MARCA + '<h1 id="titulo-proyectos" class="h2" tabindex="-1">¿Qué quieres explorar?</h1>' +
         '<p class="texto-apoyo">Hay ' + ids.length + ' caminos para llegar a tu departamento. Conoce cada uno y elige el tuyo.</p></header>' +
-      '<fieldset class="prioridades"><legend class="h6">¿Qué te importa más?</legend><div class="prioridades-chips">' +
-        PRIORIDADES.map(function (p) {
-          return '<button type="button" class="chip chip-filtro" data-prioridad-deptos="' + p[0] + '" aria-pressed="' + (estado.prioridad === p[0]) + '">' + p[1] + '</button>';
-        }).join('') + '</div></fieldset>' +
+      '<p class="prioridad-guardada">' + (estado.prioridad ? 'Lo que más te importa: <strong>' + PRIORIDADES.filter(function (p) { return p[0] === estado.prioridad; })[0][1] + '</strong>' : 'Todavía no elegiste qué te importa más.') +
+        ' <button type="button" class="enlace" id="btn-cambiar-prioridad">' + (estado.prioridad ? 'Cambiar mi respuesta' : 'Contestar ahora') + '</button></p>' +
       '<section class="ex-reco" aria-labelledby="ex-reco-nombre" style="' + varsCamino(reco) + '">' +
         '<div class="ex-reco-dibujo">' + ilustracionCamino(reco) +
           '<span class="ex-sello">' + icono('i-ok') + (paraTi ? (estado.prioridad ? 'Para ti: ' + porque[estado.prioridad] : 'Te lo recomendamos') : 'Para empezar') + '</span></div>' +
@@ -8693,13 +8715,9 @@
     cont.querySelectorAll('[data-explorar-camino]').forEach(function (b) {
       b.addEventListener('click', function () { deptoCamino = b.dataset.explorarCamino; deptosAbierto = false; renderDepartamentos(); $('titulo-proyectos').focus(); });
     });
-    cont.querySelectorAll('[data-prioridad-deptos]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        estado.prioridad = estado.prioridad === b.dataset.prioridadDeptos ? null : b.dataset.prioridadDeptos;
-        guardarEstado();
-        renderDepartamentos();
-        var nb = cont.querySelector('[data-prioridad-deptos="' + b.dataset.prioridadDeptos + '"]'); if (nb) nb.focus();
-      });
+    $('btn-cambiar-prioridad').addEventListener('click', function () {
+      estado.prioridadRespondida = false; guardarEstado(); renderDepartamentos();
+      var h = $('titulo-proyectos'); if (h) h.focus();
     });
   }
   // S36 (lienzo P23 y P24): el camino como una tarjeta de su color; «Cambiar» abre una grilla de 2 columnas adentro.
@@ -9874,6 +9892,7 @@
           '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>' +
         fila('b', '', 'i-persona', 'Mis datos', (estado.modo === 'vivir' ? 'Para vivir' : 'Para arrendar') + (ingreso ? SEP + formatoPesos(ingreso) + ' al mes' : ''), 'btn-mis-datos') +
         fila('a', '#perfil/avisos', 'i-campana', 'Avisos', activos + ' de ' + TIPOS_AVISO.length + ' activos') +
+        fila('b', '', 'i-buscar', 'Qué te importa más', estado.prioridad ? PRIORIDADES.filter(function (p) { return p[0] === estado.prioridad; })[0][1] : 'Sin elegir', 'btn-cambiar-prioridad-perfil') +
         fila('a', '#perfil/ayuda', 'i-ayuda', 'Ayuda', 'Qué significa cada término') +
       '</ul>' +
       // S34: lo que no es parte de tu compra va aparte (antes se mezclaba con tus datos).
@@ -9895,6 +9914,9 @@
         '</div>' +
       '</div>';
     $('btn-mis-datos').addEventListener('click', function () { abrirMisDatos($('btn-mis-datos')); });
+    $('btn-cambiar-prioridad-perfil').addEventListener('click', function () {
+      estado.prioridadRespondida = false; guardarEstado(); location.hash = '#departamentos';
+    });
     var confirmar = $('confirmar-reinicio');
     $('btn-reiniciar').addEventListener('click', function () {
       confirmar.hidden = false;
