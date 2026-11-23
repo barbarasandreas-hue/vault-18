@@ -174,6 +174,9 @@ test('23-nov: aceleradores a la vista en el detalle, con estado abierto/cerrado 
   assert.match(app32, /nombre: 'Sumar a alguien al crédito'/);
   assert.match(app32, /No es el DS19/);
   assert.match(app32, /id="btn-acel-avisos"/);
+  assert.match(app32, /function cuerpoFormaHtml\(f\)/); // 23-nov: desplegable dentro de Números
+  assert.match(app32, /aria-controls="acel-cuerpo-/);
+  assert.match(app32, /function siglaForma\(f\)/);
 });
 
 test('23-nov: al elegir camino se ve una confirmación y luego «Abrir mi cuenta»', () => {
