@@ -51,7 +51,7 @@ test('S32-B2: la barra tiene Mi compra, Mi pie, Departamentos y Perfil', () => {
 });
 test('S32-B2: el código ya no usa las direcciones viejas (solo las redirige)', () => {
   assert.doesNotMatch(app32, /['"]#(camino|pasos|explorar)(['"\/])/);
-  assert.match(app32, /case 'explorar': return '#compra\/caminos'/);
+  assert.match(app32, /case 'explorar': return '#departamentos\/comparar'/); // 23-nov: Comparar vive en Departamentos
 });
 test('S32-B3: Mi compra: camino horizontal, «Ahora», recorrido con fechas y sin obra ni deslizador', () => {
   assert.match(app32, /function caminoJuego\(h, celebra\)/);
@@ -73,7 +73,7 @@ test('S32-B3: sin camino, «Ahora» es elegirlo aunque una misión venza pronto'
 // ---------- B4 ----------
 test('S32-B4: comparar caminos: prioridades, carrera, lado a lado, «i» y Deshacer', () => {
   assert.match(app32, /function renderComparar\(\)/);
-  assert.match(app32, /return r\('caminos', 'compra', renderComparar\)/);
+  assert.match(app32, /if \(p\[1\] === 'comparar'\) return r\('caminos', 'deptos', renderComparar\)/); // 23-nov
   assert.match(app32, /¿Qué te importa más\?/);
   assert.match(app32, /¿Cuándo recibes tus llaves con cada camino\?/); // S34: antes «Carrera hacia tus llaves»
   assert.match(app32, /class="lado-a-lado"/);
@@ -92,7 +92,7 @@ test('S32-B4: el crédito tradicional es un camino para vivir (80 % de crédito,
 // ---------- B5 ----------
 test('S32-B5: Departamentos: una lista con Camino ▾ y Filtros; usados y arriendo adentro', () => {
   assert.match(app32, /function renderDepartamentos\(\)/);
-  assert.match(app32, /return r\('proyectos', 'deptos', renderDepartamentos\)/);
+  assert.match(app32, /return r\('proyectos', 'deptos', function \(\) \{ vistaDeptos = null; renderDepartamentos\(\); \}\)/); // 23-nov: Caminos | Edificios
   assert.match(app32, /function abrirCaminoDeptos\(boton\)/);
   assert.match(app32, /function abrirFiltrosDeptos\(boton\)/);
   ['Comuna', 'Precio', 'Dormitorios', 'Estado', 'Ordenar por', 'Solo mis favoritos'].forEach(t => assert.ok(app32.includes(t), t));
@@ -144,4 +144,12 @@ test('S32-B9: asegurar es después de la postulación; con el edificio en obra, 
   // S33-C9: ahora se puede avanzar hasta la entrega (simulación).
   assert.match(app32, /firmas cuando terminen tu edificio/); // S34: «terminen», como en Tu edificio real
   assert.match(app32, /Avanzar hasta la entrega \(simulación\)/);
+});
+
+test('23-nov: Departamentos tiene Caminos | Edificios; sin camino abre Caminos y con camino Edificios', () => {
+  assert.match(app32, /function tabsDeptos\(v\)/);
+  assert.match(app32, /var vista = vistaDeptos \|\| \(estado\.caminoElegido \? 'edificios' : 'caminos'\)/);
+  assert.match(app32, /p\[1\] === 'caminos' \|\| p\[1\] === 'edificios'/);
+  assert.match(app32, /location\.replace\('#departamentos\/comparar'\)/);
+  assert.doesNotMatch(app32, /href="#compra\/caminos"/);
 });

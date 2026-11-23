@@ -439,6 +439,15 @@ button { font: inherit; }
   cursor: pointer;
 }
 .pestanas button[aria-selected="true"] { background: var(--green-dark); color: var(--white); }
+/* 23-nov: Departamentos · Caminos | Edificios (enlaces con el mismo aspecto) */
+.pestanas a {
+  display: flex; align-items: center; justify-content: center;
+  min-height: var(--toque); border-radius: 8px;
+  color: var(--gray-semidark); font-weight: 600; font-size: 15px; line-height: 1.2;
+  padding: 6px 8px; text-decoration: none;
+}
+.pestanas a[aria-current="page"] { background: var(--green-dark); color: var(--white); }
+.deptos-vistas { margin: 8px 0 12px; }
 
 /* ---------- Filtro del modo ---------- */
 .filtro { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; margin-top: 4px; }
