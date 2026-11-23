@@ -4937,3 +4937,18 @@ h1[tabindex="-1"], h2[tabindex="-1"] { scroll-margin-top: 72px; }
 .elegido-hitos small { font-size: 14px; color: var(--gray-semidark); }
 .elegido-sigue { margin: 8px 0 12px; display: grid; gap: 8px; }
 .elegido-sigue h2 { margin: 0; }
+
+/* 23-nov: caminos agrupados, DS19 con «¿Calificas?», filtro activo y versión en Perfil */
+.ex-grupo h2 { margin-bottom: 0; }
+.ex-grupo-sub { margin: 2px 0 8px; }
+.ex-invertir { margin-top: 16px; }
+.filtro-activo { margin: 0 0 12px; }
+.ds19-califica { margin: 12px 0; }
+.ds19-lista { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 6px; }
+.ds19-req { width: 100%; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 8px 10px; border: 1px solid var(--gray-semilight); border-radius: 12px; background: var(--white); text-align: left; font: inherit; color: var(--gray-dark); cursor: pointer; }
+.ds19-req[aria-pressed="true"] { border-color: #28892B; background: #F1F8F1; }
+.ds19-req .fp-marca { flex: none; }
+.ds19-resultado { margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; font-size: 15px; }
+.ds19-resultado.ok { background: #D4E7D5; color: #28652B; }
+.ds19-resultado.falta { background: #FFF4E5; color: #6B4A00; }
+.perfil-version { margin: 24px 0 8px; text-align: center; font-size: 12px; color: var(--gray-semidark); min-height: 44px; display: flex; align-items: center; justify-content: center; cursor: default; user-select: none; }

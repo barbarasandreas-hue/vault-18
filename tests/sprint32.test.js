@@ -181,3 +181,11 @@ test('23-nov: al elegir camino se ve una confirmación y luego «Abrir mi cuenta
   assert.match(app32, /if \(p\[1\] === 'elegido'\) return r\('pasos', 'compra', renderCaminoElegido\)/);
   assert.match(app32, /id="btn-elegido-cuenta">Abrir mi cuenta</);
 });
+
+test('23-nov: caminos en «Tú solo / Con otras personas», usados dentro de Compra directa, DS19 propio, Perfil ordenado', () => {
+  assert.match(app32, /\['Tú solo', 'Con tu propio crédito\.', \['individual-vivir', 'arriendo-opcion', 'ds19'\]\]/);
+  assert.match(app32, /id !== 'usados' \|\| estado\.caminoElegido === 'usados'/);
+  assert.match(app32, /if \(p\[1\] === 'ds19'\) return r\('caminos', 'deptos', renderDS19\)/);
+  assert.match(app32, /estado\.pasos\.facilitadora \?/);
+  assert.match(app32, /estado\.modo === 'arrendar' \|\| estado\.inversiones\.length \? fila\('a', '#inversiones'/);
+});
