@@ -8738,6 +8738,7 @@
     'pie-compartido': ['#D4E3F5', '#2772CC', '#1D5699'], 'grupo-invertir': ['#D4E7D5', '#28892B', '#28652B'], 'individual-invertir': ['#E2E8EA', '#546E7A', '#37474F'], todos: ['#E2E8EA', '#546E7A', '#37474F'] };
   function varsCamino(id) { var c = COLOR_CAMINO[id] || COLOR_CAMINO.todos; return '--cs:' + c[0] + ';--cf:' + c[1] + ';--ci:' + c[2]; }
   // S36: «¿Qué quieres explorar?» lleva a conocer los caminos para elegir uno (lienzo P20).
+  var cambiandoPrioridad = false;
   function renderExplorarDeptos(cont) {
     var ids = idsComparar();
     var nums = ids.map(function (id) { return numerosComparar(id); });
@@ -8753,50 +8754,46 @@
       return etq + ' <b>' + mesCorto(f) + '</b>' + (n.pagas ? SEP + formatoRedondeado(n.pagas) + ' al mes' : '');
     };
     var favs = guardadosProyectos();
-    // 23-nov: la primera vez, una sola pregunta. La respuesta se guarda y no vuelve a preguntarse (se cambia con «Cambiar mi respuesta»).
-    if (!estado.prioridadRespondida) {
-      cont.innerHTML =
-        '<header class="encabezado">' + MARCA + '<h1 id="titulo-proyectos" class="h2" tabindex="-1">¿Qué es lo que más te importa?</h1>' +
-          '<p class="texto-apoyo">Con tu respuesta te mostramos el camino que más te acerca. Puedes cambiarla cuando quieras.</p></header>' +
-        '<div class="pregunta-prioridad">' +
-          PRIORIDADES.map(function (p) {
-            return '<button type="button" class="btn btn-secundario btn-bloque" data-prioridad-deptos="' + p[0] + '">' + p[1] + '</button>';
-          }).join('') +
-          '<button type="button" class="btn btn-terciario btn-bloque" data-prioridad-deptos="ninguna">No estoy seguro · ver todos</button>' +
-        '</div>';
-      cont.querySelectorAll('[data-prioridad-deptos]').forEach(function (b) {
-        b.addEventListener('click', function () {
-          estado.prioridad = b.dataset.prioridadDeptos === 'ninguna' ? null : b.dataset.prioridadDeptos;
-          estado.prioridadRespondida = true;
-          guardarEstado();
-          renderDepartamentos();
-          var h = $('titulo-proyectos'); if (h) h.focus();
-        });
-      });
-      return;
-    }
-    cont.innerHTML =
-      '<header class="encabezado">' + MARCA + '<h1 id="titulo-proyectos" class="h2" tabindex="-1">¿Qué quieres explorar?</h1>' +
-        '<p class="texto-apoyo">Hay ' + ids.length + ' caminos para llegar a tu departamento. Conoce cada uno y elige el tuyo.</p></header>' +
-      '<p class="prioridad-guardada">' + (estado.prioridad ? 'Lo que más te importa: <strong>' + PRIORIDADES.filter(function (p) { return p[0] === estado.prioridad; })[0][1] + '</strong>' : 'Todavía no elegiste qué te importa más.') +
-        ' <button type="button" class="enlace" id="btn-cambiar-prioridad">' + (estado.prioridad ? 'Cambiar mi respuesta' : 'Contestar ahora') + '</button></p>' +
+    // 23-nov: primero se ven los caminos; después, una tarjeta pregunta qué te importa para recomendarte uno.
+    // La respuesta se guarda. «Ahora no» también se guarda, para que la tarjeta no vuelva a insistir.
+    var conReco = !!estado.prioridad;
+    var preguntando = !estado.prioridadRespondida || cambiandoPrioridad;
+    var nombrePrioridad = conReco ? PRIORIDADES.filter(function (p) { return p[0] === estado.prioridad; })[0][1] : '';
+    var itemCamino = function (id) {
+      return '<li><a class="ex-camino" href="' + rutaCamino(id) + '" style="' + varsCamino(id) + '">' +
+        '<span class="ex-camino-franja" aria-hidden="true"><span class="ex-camino-icono">' + iconoCaminoD(id) + '</span></span>' +
+        '<span class="ex-camino-texto"><strong>' + nombreCaminoD(id) + '</strong><span class="ex-chips">' + chips(id) + '</span>' +
+          '<small>' + linea(id) + '</small></span>' +
+        '<span class="ex-conocer">Conocer<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></a></li>';
+    };
+    var heroHtml = !conReco ? '' :
       '<section class="ex-reco" aria-labelledby="ex-reco-nombre" style="' + varsCamino(reco) + '">' +
         '<div class="ex-reco-dibujo">' + ilustracionCamino(reco) +
-          '<span class="ex-sello">' + icono('i-ok') + (paraTi ? (estado.prioridad ? 'Para ti: ' + porque[estado.prioridad] : 'Te lo recomendamos') : 'Para empezar') + '</span></div>' +
+          '<span class="ex-sello">' + icono('i-ok') + 'Para ti: ' + porque[estado.prioridad] + '</span></div>' +
         '<div class="ex-reco-cuerpo"><div class="ex-chips">' + chips(reco) + '</div>' +
           '<h2 class="ex-reco-nombre" id="ex-reco-nombre">' + nombreCaminoD(reco) + '</h2>' +
           '<p class="ex-reco-texto">' + (TEXTO_EXPLORAR[reco] || '') + '</p>' +
           '<a class="btn btn-primario btn-bloque" href="' + rutaCamino(reco) + '">Conocer este camino</a>' +
-          '<button type="button" class="enlace ex-ver-deptos" data-explorar-camino="' + reco + '">Ver sus departamentos ›</button></div></section>' +
-      '<section class="ex-otros" aria-labelledby="ex-otros-titulo"><h2 class="h5" id="ex-otros-titulo">Otros caminos</h2><ul>' +
-        ids.filter(function (id) { return id !== reco; }).map(function (id) {
-          return '<li><a class="ex-camino" href="' + rutaCamino(id) + '" style="' + varsCamino(id) + '">' +
-            '<span class="ex-camino-franja" aria-hidden="true"><span class="ex-camino-icono">' + iconoCaminoD(id) + '</span></span>' +
-            '<span class="ex-camino-texto"><strong>' + nombreCaminoD(id) + '</strong><span class="ex-chips">' + chips(id) + '</span>' +
-              '<small>' + linea(id) + '</small></span>' +
-            '<span class="ex-conocer">Conocer<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></a></li>';
-        }).join('') + '</ul>' +
+          '<button type="button" class="enlace ex-ver-deptos" data-explorar-camino="' + reco + '">Ver sus departamentos ›</button></div></section>';
+    var lineaPrioridad = conReco && !preguntando
+      ? '<p class="prioridad-guardada">Lo que más te importa: <strong>' + nombrePrioridad + '</strong> <button type="button" class="enlace" id="btn-cambiar-prioridad">Cambiar mi respuesta</button></p>' : '';
+    var preguntaHtml = !preguntando ? '' :
+      '<section class="tarjeta pregunta-prioridad" aria-labelledby="titulo-pregunta-prioridad">' +
+        '<h2 class="h5" id="titulo-pregunta-prioridad">¿Qué es lo que más te importa?</h2>' +
+        '<p class="texto-apoyo">Con tu respuesta te recomendamos uno de estos caminos. Puedes cambiarla cuando quieras.</p>' +
+        '<div class="prioridades-chips">' + PRIORIDADES.map(function (p) {
+          return '<button type="button" class="chip chip-filtro" data-prioridad-deptos="' + p[0] + '" aria-pressed="' + (estado.prioridad === p[0]) + '">' + p[1] + '</button>';
+        }).join('') + '</div>' +
+        '<button type="button" class="enlace" data-prioridad-deptos="ninguna">Ahora no</button>' +
+      '</section>';
+    cont.innerHTML =
+      '<header class="encabezado">' + MARCA + '<h1 id="titulo-proyectos" class="h2" tabindex="-1">¿Qué quieres explorar?</h1>' +
+        '<p class="texto-apoyo">Hay ' + ids.length + ' caminos para llegar a tu departamento. Conoce cada uno y elige el tuyo.</p></header>' +
+      lineaPrioridad + heroHtml +
+      '<section class="ex-otros" aria-labelledby="ex-otros-titulo"><h2 class="h5" id="ex-otros-titulo">' + (conReco ? 'Otros caminos' : 'Los caminos') + '</h2><ul>' +
+        ids.filter(function (id) { return !conReco || id !== reco; }).map(itemCamino).join('') + '</ul>' +
         '<a class="btn btn-secundario btn-bloque ex-comparar" href="#compra/caminos">Comparar los ' + ids.length + ' caminos</a></section>' +
+      preguntaHtml +
       (favs.length ? '<section class="ex-favs" aria-labelledby="ex-favs-titulo"><div class="ex-favs-cab"><h2 class="h5" id="ex-favs-titulo">' + icono('i-corazon') + 'Tus favoritos</h2>' +
           '<a class="enlace" href="#compra/caminos/guardados">Ver todos ›</a></div><ul class="ex-favs-pista">' +
         favs.map(function (p) {
@@ -8810,10 +8807,18 @@
     cont.querySelectorAll('[data-explorar-camino]').forEach(function (b) {
       b.addEventListener('click', function () { deptoCamino = b.dataset.explorarCamino; deptosAbierto = false; renderDepartamentos(); $('titulo-proyectos').focus(); });
     });
-    $('btn-cambiar-prioridad').addEventListener('click', function () {
-      estado.prioridadRespondida = false; guardarEstado(); renderDepartamentos();
-      var h = $('titulo-proyectos'); if (h) h.focus();
+    cont.querySelectorAll('[data-prioridad-deptos]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (b.dataset.prioridadDeptos !== 'ninguna') estado.prioridad = b.dataset.prioridadDeptos;
+        estado.prioridadRespondida = true;
+        cambiandoPrioridad = false;
+        guardarEstado();
+        renderDepartamentos();
+        var h = $('titulo-proyectos'); if (h) h.focus();
+      });
     });
+    var bc = $('btn-cambiar-prioridad');
+    if (bc) bc.addEventListener('click', function () { cambiandoPrioridad = true; renderDepartamentos(); var t = $('titulo-pregunta-prioridad'); if (t) t.scrollIntoView(); });
   }
   // S36 (lienzo P23 y P24): el camino como una tarjeta de su color; «Cambiar» abre una grilla de 2 columnas adentro.
   var DEGRADE_CAMINO = { 'grupo-vivir': ['#28652B', '#28892B'], 'individual-vivir': ['#1D5699', '#2772CC'], usados: ['#37474F', '#546E7A'],

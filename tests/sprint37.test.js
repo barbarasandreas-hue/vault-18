@@ -21,13 +21,21 @@ test('E2: el DS1 se marca como acelerador', () => {
   assert.match(app, /Es un acelerador: se suma a un camino/);
 });
 
-test('E3: la pregunta de Departamentos aparece una vez y la respuesta se guarda', () => {
+test('E3: primero se ven los caminos y después una tarjeta pregunta qué te importa; la respuesta se guarda', () => {
   assert.match(app, /¿Qué es lo que más te importa\?/);
-  assert.match(app, /if \(!estado\.prioridadRespondida\)/);
+  assert.match(app, /primero se ven los caminos; después, una tarjeta pregunta/);
+  assert.doesNotMatch(app, /if \(!estado\.prioridadRespondida\) \{\n      cont\.innerHTML/);
   assert.match(app, /'prioridad', 'prioridadRespondida'/);
-  assert.match(app, /No estoy seguro · ver todos/);
+  assert.match(app, /Ahora no/);
   assert.match(app, /Cambiar mi respuesta/);
   assert.match(app, /btn-cambiar-prioridad-perfil/);
+  assert.match(app, /'Otros caminos' : 'Los caminos'/);
+});
+
+test('La app tiene el ancho de un iPhone (393 px)', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'css', 'estilos.css'), 'utf8');
+  assert.match(css, /--ancho-telefono: 393px/);
+  assert.doesNotMatch(css, /max-width: 480px/);
 });
 
 test('E4: ficha estándar de la compra en grupo marcada como ejemplo simulado', () => {
