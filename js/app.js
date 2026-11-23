@@ -2242,7 +2242,7 @@
     ids.forEach(function (id) {
       var a = AYUDA[id];
       a.meses = a.pieza ? mesesQueAcerca(a.pieza) : 0;
-      a.cifra = id === 'ds19' ? 'Desde UF 350' : (id === 'regalo' ? 'Lo que aporten' : (id === 'respaldo' ? 'Pie del 5' + NBSP + '%' : ''));
+      a.cifra = id === 'ds19' ? 'Subsidio del Estado' : (id === 'regalo' ? 'Lo que aporten' : (id === 'respaldo' ? 'Pie del 5' + NBSP + '%' : ''));
     });
     ids.sort(function (p, q) { return AYUDA[q].meses - AYUDA[p].meses; });
     var maxMeses = Math.max.apply(null, ids.map(function (id) { return AYUDA[id].meses; }).concat([1]));
