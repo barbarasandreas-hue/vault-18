@@ -5464,3 +5464,12 @@ body:has(.hoja-pantalla) .barra { z-index: 61; }
 .pc-opcion.pc-gris[aria-pressed="true"] { border-color: var(--gray-semidark); background: var(--gray-light); }
 .camt { background: var(--cs); background: color-mix(in srgb, var(--cs) 80%, var(--cf)); }
 .camt-reco { background: color-mix(in srgb, var(--cs) 75%, var(--cf)); }
+/* S43f (Bárbara): cuadros de caminos con los colores Bci (tonos claros de la familia azul, verde, amarillo y rojo) */
+.camt, .camt-reco { --bci-fondo: var(--blue-20); --bci-tinta: var(--blue-dark); background: var(--bci-fondo); }
+.camt .cam-icono, .camt-reco .cam-icono { color: var(--bci-tinta); }
+.camt-reco .camt-chip { color: var(--bci-tinta); }
+[href$="/individual-vivir"].camt, [href$="/individual-vivir"].camt-reco { --bci-fondo: #C3D8F2; --bci-tinta: var(--blue-dark); }
+[href$="/grupo-vivir"].camt, [href$="/grupo-vivir"].camt-reco { --bci-fondo: #C4DFC5; --bci-tinta: var(--green-dark); }
+[href$="/arriendo-opcion"].camt, [href$="/arriendo-opcion"].camt-reco { --bci-fondo: #FFF2A6; --bci-tinta: #5C5200; }
+[href$="/familiar-vivir"].camt, [href$="/familiar-vivir"].camt-reco { --bci-fondo: #F9D3D6; --bci-tinta: var(--red-dark); }
+[href$="/ds19"].camt, [href$="/ds19"].camt-reco { --bci-fondo: var(--blue-20); --bci-tinta: var(--blue-normal); }
