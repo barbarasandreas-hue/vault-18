@@ -23,7 +23,7 @@ test('E2: el DS1 se marca como acelerador', () => {
 
 test('E3: arriba de la lista de caminos una tarjeta pregunta qué te importa; la respuesta se guarda', () => {
   assert.match(app, /¿Qué es lo que más te importa\?/);
-  assert.match(app, /lineaPrioridad \+ preguntaHtml \+ heroHtml/);
+  assert.match(app, /lineaPrioridad \+ preguntaHtml \+ \(vivirEx \? .. : heroHtml\)/);
   assert.doesNotMatch(app, /if \(!estado\.prioridadRespondida\) \{\n      cont\.innerHTML/);
   assert.match(app, /'prioridad', 'prioridadRespondida'/);
   assert.match(app, /Ahora no/);
@@ -86,7 +86,7 @@ test('Arriendo con opción de compra no tiene «Ayudas para llegar antes» y su 
 
 test('Las fechas dicen «Recibes tus llaves» y no «Es tuyo» (23-nov)', () => {
   assert.match(app, /Recibes tus llaves <strong>/);
-  assert.match(app, /¿Cuándo recibes tus llaves con cada camino\?/);
+  assert.match(app, /Elige dos para verlos lado a lado/);
   assert.match(app, /'Firmas' : 'Recibes tus llaves'/);
   assert.doesNotMatch(app, /'Todavía no te alcanza' : 'Es tuyo <strong>/);
   assert.doesNotMatch(app, /chip\('orden', 'antes', 'Es tuyo antes'\)/);

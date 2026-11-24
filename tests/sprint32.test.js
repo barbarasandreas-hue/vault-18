@@ -75,7 +75,7 @@ test('S32-B4: comparar caminos: prioridades, carrera, lado a lado, «i» y Desha
   assert.match(app32, /function renderComparar\(\)/);
   assert.match(app32, /if \(p\[1\] === 'comparar'\) return r\('caminos', 'deptos', renderComparar\)/); // 23-nov
   assert.match(app32, /¿Qué te importa más\?/);
-  assert.match(app32, /¿Cuándo recibes tus llaves con cada camino\?/); // S34: antes «Carrera hacia tus llaves»
+  assert.match(app32, /Elige dos para verlos lado a lado/); // S34: antes «Carrera hacia tus llaves»
   assert.match(app32, /class="lado-a-lado"/);
   assert.match(app32, /function abrirInfoCamino\(id, boton\)/);
   assert.match(app32, /id="btn-elegido-deshacer"/); // 23-nov: Deshacer vive en la confirmación

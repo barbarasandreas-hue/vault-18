@@ -177,9 +177,9 @@ test('S39 2.5: las 3 preguntas recomiendan en el orden acordado y se usan en Cam
 });
 
 test('S39 3.1: Comparar con línea de tiempo y casillas para marcar dos', () => {
-  assert.match(app, /class="tl" aria-hidden="true"/);
-  assert.match(app, /Marca dos para verlos lado a lado/);
-  assert.match(app, /class="tl-sel-btn" data-comparar="/);
+  assert.match(app, /class="cmp-tl"/);
+  assert.match(app, /De hoy a tus llaves/);
+  assert.match(app, /class="cmp-btn" data-comparar="/);
   assert.doesNotMatch(app, /ojo: 'Solo departamentos nuevos'/);
 });
 

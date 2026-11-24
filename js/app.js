@@ -1445,7 +1445,7 @@
           '<ul class="tg-stats">' +
             '<li class="t-azul"><strong>' + r.cuposTomados + ' de ' + r.cupos + '</strong>personas</li>' +
             '<li class="t-verde"><strong>' + x.pagaron + ' de ' + r.cuposTomados + '</strong>pagaron ' + MESES[Number(hoyDemo().split('-')[1]) - 1] + '</li>' +
-            '<li class="t-amarillo"><strong>' + x.obra + NBSP + '%</strong>de la obra</li>' +
+            '<li class="t-amarillo"><strong>' + x.obra + NBSP + '%</strong>de la obra' + (p.entregaEstimada && mesesParaEntrega(p) > 0 ? '<small class="tg-termina">termina ' + fechaLlaves(0, p.entregaEstimada).replace(/^(\w{3})\w*\s+de\s+/, '$1 ') + '</small>' : '') + '</li>' +
           '</ul>' +
           '<div class="tg-avs" aria-label="' + r.cuposTomados + ' personas en el grupo">' + avs + '</div></div>' +
       '</section>' +
@@ -1461,8 +1461,8 @@
         fila('votos', 't-amarillo', 'i-ok', 'Votaciones', (voto ? '' : '1 abierta' + SEP) + '2 cerradas', 0) +
         fila('vocero', 't-verde', 'i-persona', 'Vocero', (estado.voceroYo ? 'Te ofreciste como vocero' : APODOS_GRUPO[0] + SEP + '3 de 4 votos'), 0) +
         fila('reglas', 't-rojo', 'i-documento', 'Reglas del grupo', (p.cupos || 10) + ' personas' + SEP + Math.round(SUPUESTOS_PIEZAS.descuentoGrupo * 100) + NBSP + '% menos' + SEP + 'sales gratis', 0) +
-      '</ul></section>' +
-      obraVisual(p);
+      '</ul></section>';
+    // S43 (Bárbara): sin el dibujo de la obra; la fecha de término va en el cuadro de la obra.
   }
   function abrirChatGrupo(p, boton) {
     var mios = estado.muro[p.id] || [];
@@ -8811,8 +8811,10 @@
       '<div class="pc-cab"><h2 class="h5" id="titulo-pregunta-prioridad" tabindex="-1">' + q.titulo + '</h2><small>' + (pasoPregunta + 1) + ' de ' + n + '</small></div>' +
       '<div class="pc-puntos" aria-hidden="true">' + PREGUNTAS_CAMINO.map(function (x, i) { return '<i' + (i <= pasoPregunta ? ' class="on"' : '') + '></i>'; }).join('') + '</div>' +
       '<div class="pc-opciones">' + q.opciones.map(function (o, i) {
-        return '<button type="button" class="pc-opcion" data-respuesta="' + o[0] + '" aria-pressed="' + (actual === o[0]) + '">' +
-          '<span class="pc-ic ' + TINTES_4[i % 4] + '" aria-hidden="true">' + icono(o[2]) + '</span><strong>' + o[1] + '</strong>' + (o[3] ? '<small>' + o[3] + '</small>' : '') + '</button>';
+        // S43 (Bárbara): cada respuesta es un botón de un color, sin ícono; «No sé» queda gris.
+        var tinte = o[0] === 'nose' ? 'pc-gris' : ['t-azul', 't-verde', 't-amarillo'][i % 3];
+        return '<button type="button" class="pc-opcion ' + tinte + '" data-respuesta="' + o[0] + '" aria-pressed="' + (actual === o[0]) + '">' +
+          '<strong>' + o[1] + '</strong>' + (o[3] ? '<small>' + o[3] + '</small>' : '') + '</button>';
       }).join('') + '</div>' +
       '<div class="pc-pie">' + (pasoPregunta ? '<button type="button" class="enlace" data-respuesta-atras>‹ Atrás</button>' : '<span></span>') +
         '<button type="button" class="enlace" data-respuesta-ahora-no>Ahora no</button></div>' +
@@ -8861,24 +8863,34 @@
     var pasoA = anioFin - hoy.getFullYear() > 6 ? 2 : 1, anios = [];
     for (var y = hoy.getFullYear() + 1; y <= anioFin; y += pasoA) anios.push('<span style="left:' + (((y - hoy.getFullYear()) * 12 - mes0) / total * 100).toFixed(1) + '%">' + y + '</span>');
     var pct = function (m) { return Math.max(4, Math.min(100, Math.round(m / total * 100))) + '%'; };
-    // S39 3.1 (Bárbara, opción C): arriba una línea de tiempo con un punto por camino; abajo, la lista para marcar dos.
+    // S43 (Bárbara): cada camino con su propia línea de tiempo; el arriendo con opción marca cuándo te mudas y cuándo es tuyo.
     var mesC = function (m) { return m === null ? 'Aún no' : mesCorto(m); };
-    var puntos = nums.filter(function (n) { return n.tuyo !== null; }).map(function (n) {
-      var x = Math.max(3, Math.min(97, n.tuyo / total * 100));
-      return '<div class="tl-fila"><span class="tl-punto' + (n.id === paraTi ? ' reco' : '') + (x > 62 ? ' der' : '') + '" style="' + varsCamino(n.id) + ';left:' + x.toFixed(1) + '%"><i></i>' + mesC(n.tuyo) + '</span></div>';
-    }).join('');
-    return '<div class="tl" aria-hidden="true">' + puntos + '<div class="tl-eje"></div><div class="tl-anios">' + anios.join('') + '</div></div>' +
-      '<p class="tl-instr">' + icono('i-check') + 'Marca dos para verlos lado a lado</p>' +
-      '<ul class="tl-sel">' + nums.map(function (n) {
+    var px = function (m) { return Math.max(2, Math.min(98, m / total * 100)).toFixed(1); };
+    var marca = function (m, txt, clase) { return '<i class="cmp-mk' + (clase || '') + '" style="left:' + px(m) + '%"></i><span class="cmp-lb' + (Number(px(m)) > 70 ? ' der' : Number(px(m)) < 15 ? ' izq' : '') + '" style="left:' + px(m) + '%">' + txt + '</span>'; };
+    var linea = function (n) {
+      if (n.tuyo === null) return '<div class="cmp-tl vacia"><span class="cmp-tr"></span></div>';
+      if (n.id === 'arriendo-opcion' && n.mudas !== null && n.mudas < n.tuyo) {
+        var a = Math.max(0, n.mudas);
+        return '<div class="cmp-tl"><span class="cmp-tr"></span><span class="cmp-fi" style="width:' + px(a) + '%"></span>' +
+          '<span class="cmp-da" style="left:' + px(a) + '%;width:' + (px(n.tuyo) - px(a)).toFixed(1) + '%"></span>' +
+          marca(a, a <= 0 ? 'te mudas ya' : 'te mudas') + marca(n.tuyo, 'es tuyo ' + mesC(n.tuyo), ' hueco') + '</div>';
+      }
+      return '<div class="cmp-tl"><span class="cmp-tr"></span><span class="cmp-fi" style="width:' + px(n.tuyo) + '%"></span>' +
+        marca(n.tuyo, esArrendarCamino(n.id) ? 'firmas' : 'llaves') + '</div>';
+    };
+    var fechaDer = function (n) { return n.id === 'arriendo-opcion' && n.mudas !== null && n.mudas < (n.tuyo || 1e9) ? (n.mudas <= 0 ? 'Ya' : mesC(n.mudas)) : mesC(n.tuyo); };
+    return '<ul class="cmp-lista">' + nums.map(function (n) {
         var sel = comparaSel.indexOf(n.id) !== -1;
         return '<li class="' + (sel ? 'sel' : '') + '" style="' + varsCamino(n.id) + '">' +
-          '<button type="button" class="tl-sel-btn" data-comparar="' + n.id + '" aria-pressed="' + sel + '">' +
-            '<span class="ck" aria-hidden="true">' + (sel ? icono('i-check') : '') + '</span><i aria-hidden="true"></i>' +
+          '<div class="cmp-fila"><button type="button" class="cmp-btn" data-comparar="' + n.id + '" aria-pressed="' + sel + '">' +
+            '<span class="ck" aria-hidden="true">' + (sel ? icono('i-check') : '') + '</span>' +
             '<b>' + nombreCamino(n.id) + (n.id === paraTi ? ' <span class="tl-para-ti">Para ti</span>' : n.id === estado.caminoElegido ? ' <span class="tl-para-ti">Tu camino</span>' : '') + '</b>' +
-            '<span class="m"><span class="oculto-visual">' + (esArrendarCamino(n.id) ? 'Firmas ' : 'Recibes tus llaves ') + '</span>' + mesC(n.tuyo) + '</span></button>' +
+            '<span class="m"><span class="oculto-visual">' + (esArrendarCamino(n.id) ? 'Firmas ' : n.id === 'arriendo-opcion' ? 'Te mudas ' : 'Recibes tus llaves ') + '</span>' + fechaDer(n) + '</span></button>' +
           '<button type="button" class="carrera-info" data-info-camino="' + n.id + '" aria-haspopup="dialog" aria-label="Cómo funciona ' + nombreCamino(n.id) + '">' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5h.01"/></svg></button></li>';
-      }).join('') + '</ul>';
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5h.01"/></svg></button></div>' +
+          linea(n) + '</li>';
+      }).join('') + '</ul>' +
+      '<div class="cmp-anios" aria-hidden="true"><span style="left:0">Hoy</span>' + anios.filter(function (h) { return parseFloat(h.split('left:')[1]) > 12; }).join('') + '</div>';
   }
   function ladoALadoHtml(nums) {
     var dos = comparaSel.map(function (id) { return nums.filter(function (n) { return n.id === id; })[0]; }).filter(Boolean);
@@ -8890,10 +8902,11 @@
       var c = COLOR_CAMINO[n.id] || COLOR_CAMINO.todos;
       return '<div class="ll-col" style="border-top-color:' + c[1] + '">' +
         '<strong class="ll-nombre">' + nombreCamino(n.id) + '</strong>' +
-        dato(estado.modo === 'arrendar' ? 'Firmas' : 'Llaves', mesTuyo(n.tuyo).replace('aprox. ', ''), '', 'fuerte') +
-        (n.id === 'arriendo-opcion' ? dato('Te mudas', n.mudas !== null && n.mudas <= 0 ? 'Ya' : mesPlazo(n.mudas).replace('aprox. ', '')) : '') +
-        dato('Juntas', plata(n.pie), n.pieNota || 'pie y gastos') +
-        dato('Pagas al mes', plata(n.pagas), n.pagasNota || 'dividendo') +
+        // S43: mismo color para lo mismo: llaves/mudanza azul, juntas verde, pagas al mes amarillo.
+        (n.id === 'arriendo-opcion' ? dato('Te mudas', n.mudas !== null && n.mudas <= 0 ? 'Ya' : mesPlazo(n.mudas).replace('aprox. ', ''), '', 'c-azul') : '') +
+        dato(estado.modo === 'arrendar' ? 'Firmas' : n.id === 'arriendo-opcion' ? 'Es tuyo' : 'Llaves', mesTuyo(n.tuyo).replace('aprox. ', ''), '', 'c-azul') +
+        dato('Juntas', plata(n.pie), n.pieNota || 'pie y gastos', 'c-verde') +
+        dato('Pagas al mes', plata(n.pagas), n.pagasNota || 'dividendo', 'c-amarillo') +
         '<span class="ll-bueno">' + icono('i-check') + INFO_CAMINO[n.id].bueno + '</span>' +
         '<span class="ll-ojo">' + icono('i-info') + INFO_CAMINO[n.id].ojo + '</span>' +
         (n.id === estado.caminoElegido ? '<span class="lado-tuyo">' + icono('i-check') + 'Tu camino</span>'
@@ -8954,8 +8967,7 @@
     var prioridades = arrendar ? PRIORIDADES.filter(function (p) { return p[0] !== 'ya'; }) : PRIORIDADES;
     cont.innerHTML =
       '<a href="#departamentos/caminos" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Caminos</a>' + tabsDeptos('caminos') +
-      '<header class="encabezado"><h1 id="titulo-caminos" class="h2" tabindex="-1">Compara tus caminos</h1>' +
-        '<p class="texto-apoyo">Mirar no cambia tu plan.</p></header>' +
+      '<header class="encabezado"><h1 id="titulo-caminos" class="h2" tabindex="-1">Compara tus caminos</h1></header>' +
       '<fieldset class="selector explorar-modo"><legend class="oculto-visual">¿Para qué es el departamento?</legend><div class="selector-opciones">' +
         '<input type="radio" name="explorar-modo" id="explorar-vivir" value="vivir"' + (arrendar ? '' : ' checked') + '><label for="explorar-vivir">Para vivir</label>' +
         '<input type="radio" name="explorar-modo" id="explorar-arrendar" value="arrendar"' + (arrendar ? ' checked' : '') + '><label for="explorar-arrendar">Para arrendar</label>' +
@@ -8972,7 +8984,8 @@
         '<p class="si-juntas-fila"><label for="rango-comparar" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-comparar">' + formatoRedondeado(mensual) + '</strong></p>' +
         '<input type="range" id="rango-comparar" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '" aria-valuetext="' + formatoRedondeado(mensual) + ' al mes">' +
       '</section>' +
-      '<section class="carrera" aria-labelledby="titulo-carrera"><h2 class="h5" id="titulo-carrera">' + (arrendar ? '¿Cuándo firmas con cada camino?' : '¿Cuándo recibes tus llaves con cada camino?') + '</h2>' +
+      '<section class="carrera" aria-labelledby="titulo-carrera"><h2 class="h5" id="titulo-carrera">Elige dos para verlos lado a lado</h2>' +
+        '<p class="texto-apoyo cmp-sub"><small>' + (arrendar ? 'De hoy a cuando firmas' : 'De hoy a tus llaves') + '</small></p>' +
         // 20-nov: sin la descripción bajo el título.
         '<div id="carrera-cuerpo" aria-live="polite">' + carreraHtml(nums, paraTi) + '</div></section>' +
       '<section class="lado" aria-labelledby="titulo-lado"><h2 class="h5" id="titulo-lado">Lado a lado</h2>' +
@@ -9413,16 +9426,33 @@
         }).join('') + '</div>' +
         '<button type="button" class="enlace" data-prioridad-deptos="ninguna">Ahora no</button>' +
       '</section>';
+    // S43 (Bárbara, maqueta 13 derecha): el recomendado en una franja «Para ti» y los demás en cuadros con su dibujo.
+    var lineaCuadro = function (id) {
+      if (id === 'ds19') return 'Con subsidio';
+      var n = porId[id] || {};
+      if (id === 'arriendo-opcion') return 'Te mudas ' + (n.mudas !== null && n.mudas <= 0 ? 'ya' : mesCorto(n.mudas));
+      return mesCorto(n.tuyo) + (n.pagas ? SEP + formatoRedondeado(n.pagas) : '');
+    };
+    var cuadro = function (id) {
+      var href = id === 'ds19' ? '#departamentos/ds19' : rutaCamino(id);
+      return '<li><a class="camt" href="' + href + '" style="' + varsCamino(id) + '">' +
+        '<span class="camt-dib">' + ilustracionCamino(id) + '</span>' +
+        '<strong>' + (id === 'ds19' ? 'Proyectos DS19' : nombreCaminoD(id)) + '</strong><small>' + lineaCuadro(id) + '</small></a></li>';
+    };
+    var paraTiHtml = !conReco || preguntando ? '' :
+      '<a class="camt-reco" href="' + rutaCamino(reco) + '" style="' + varsCamino(reco) + '">' +
+        '<span class="camt-reco-dib">' + ilustracionCamino(reco) + '</span>' +
+        '<span class="camt-reco-texto"><span class="camt-chip">Para ti</span><strong>' + nombreCaminoD(reco) + '</strong>' +
+        '<small>' + (reco === 'arriendo-opcion' ? 'Te mudas ' + mesCorto((porId[reco] || {}).mudas) : 'Llaves ' + mesCorto((porId[reco] || {}).tuyo)) + ((porId[reco] || {}).pagas ? SEP + formatoRedondeado(porId[reco].pagas) + '/mes' : '') + '</small></span></a>';
+    var orden = GRUPOS_CAMINOS.reduce(function (a, g) { return a.concat(g[2]); }, []);
+    var cuadros = orden.filter(function (id) { return id === 'ds19' || (ids.indexOf(id) !== -1 && (!paraTiHtml || id !== reco)); });
     cont.innerHTML =
       '<header class="encabezado">' + MARCA + '<h1 id="titulo-proyectos" class="h2" tabindex="-1">Departamentos</h1>' + tabsDeptos('caminos') + '</header>' +
-      lineaPrioridad + preguntaHtml + heroHtml +
+      lineaPrioridad + preguntaHtml + (vivirEx ? '' : heroHtml) +
       (vivirEx
-        ? GRUPOS_CAMINOS.map(function (g, gi) {
-            var lista = g[2].filter(function (id) { return id === 'ds19' || (ids.indexOf(id) !== -1 && (!conReco || id !== reco)); });
-            if (!lista.length) return '';
-            return '<section class="ex-otros ex-grupo" aria-labelledby="ex-grupo-' + gi + '"><h2 class="h5" id="ex-grupo-' + gi + '">' + g[0] + '</h2><ul>' +
-              lista.map(function (id) { return id === 'ds19' ? itemDS19() : itemCamino(id); }).join('') + '</ul></section>';
-          }).join('') +
+        ? paraTiHtml +
+          '<section class="camt-sec" aria-labelledby="camt-titulo"><h2 class="h5" id="camt-titulo">' + (paraTiHtml ? 'Otros caminos' : 'Caminos') + '</h2>' +
+            '<ul class="camt-grilla">' + cuadros.map(cuadro).join('') + '</ul></section>' +
           '<a class="btn btn-secundario btn-bloque ex-comparar" href="#departamentos/comparar">Comparar los caminos</a>'
         : '<section class="ex-otros" aria-labelledby="ex-otros-titulo"><h2 class="h5" id="ex-otros-titulo">' + (conReco ? 'Otros caminos' : 'Los caminos') + '</h2><ul>' +
             ids.filter(function (id) { return !conReco || id !== reco; }).map(itemCamino).join('') + '</ul>' +

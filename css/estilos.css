@@ -5330,3 +5330,59 @@ body:has(.hoja-pantalla) .barra { z-index: 61; }
 /* S43: precio antes del descuento en la tarjeta de compra en grupo */
 .tp-antes { color: var(--gray-dark, #4a5a63); font-size: 14px; }
 .tp-antes s { text-decoration-thickness: 1.5px; }
+.tg-stats .tg-termina { display: block; font-size: 11px; opacity: .85; margin-top: 2px; }
+
+/* S43: preguntas de un color por botón, sin ícono */
+.pc-opcion { min-height: 64px; align-content: center; }
+.pc-opcion.t-azul { background: var(--blue-20); color: var(--blue-dark); }
+.pc-opcion.t-verde { background: var(--green-20); color: var(--green-dark); }
+.pc-opcion.t-amarillo { background: #FFF4B3; color: #5C5200; }
+.pc-opcion.pc-gris { background: var(--gray-light); color: var(--gray-semidark); }
+.pc-opcion[aria-pressed="true"] { border-color: currentColor; background: inherit; }
+.pc-opcion.t-azul[aria-pressed="true"] { background: var(--blue-20); } .pc-opcion.t-verde[aria-pressed="true"] { background: var(--green-20); }
+.pc-opcion.t-amarillo[aria-pressed="true"] { background: #FFF4B3; } .pc-opcion.pc-gris[aria-pressed="true"] { background: var(--gray-light); }
+.pc-opcion small { color: inherit; opacity: .8; }
+/* S43: comparar, una línea de tiempo por camino */
+.cmp-sub { margin: -6px 0 6px; }
+.cmp-lista { list-style: none; margin: 0; padding: 0; }
+.cmp-lista li { padding: 12px 0 14px; }
+.cmp-lista li + li { border-top: 1px solid var(--gray-semilight); }
+.cmp-fila { display: flex; align-items: center; gap: 6px; }
+.cmp-btn { flex: 1; display: flex; align-items: center; gap: 12px; background: none; border: 0; padding: 4px 0; font: inherit; color: var(--gray-dark); text-align: left; cursor: pointer; min-height: 44px; }
+.cmp-btn .ck { width: 24px; height: 24px; border-radius: 7px; border: 2px solid var(--gray-neutral); flex: none; display: grid; place-items: center; color: #fff; }
+.cmp-btn .ck svg { width: 16px; height: 16px; margin: 0; }
+.cmp-lista li.sel .ck { background: var(--cf); border-color: var(--cf); }
+.cmp-btn b { font-size: 16px; line-height: 1.25; }
+.cmp-btn .m { margin-left: auto; font-weight: 800; font-size: 15px; white-space: nowrap; }
+.cmp-tl { position: relative; height: 30px; margin: 6px 4px 0 36px; }
+.cmp-tr, .cmp-fi, .cmp-da { position: absolute; top: 8px; height: 4px; border-radius: 2px; }
+.cmp-tr { left: 0; right: 0; background: var(--gray-semilight); }
+.cmp-fi { left: 0; background: var(--cf); }
+.cmp-da { background: repeating-linear-gradient(90deg, var(--cf) 0 5px, transparent 5px 9px); }
+.cmp-mk { position: absolute; top: 3px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--cf); border: 2px solid #fff; box-shadow: 0 0 0 1.5px var(--cf); }
+.cmp-mk.hueco { background: #fff; }
+.cmp-lb { position: absolute; top: 18px; transform: translateX(-50%); font-size: 11.5px; color: var(--gray-semidark); white-space: nowrap; }
+.cmp-lb.der { transform: translateX(-100%); } .cmp-lb.izq { transform: none; }
+.cmp-anios { position: relative; height: 18px; margin: 2px 4px 8px 36px; font-size: 11px; font-weight: 700; color: var(--gray-neutral); }
+.cmp-anios span { position: absolute; transform: translateX(-50%); }
+.cmp-anios span:first-child { transform: none; }
+.ll-dato.c-azul strong { color: var(--blue-dark); font-size: 17px; }
+.ll-dato.c-verde strong { color: var(--green-dark); font-size: 17px; }
+.ll-dato.c-amarillo strong { color: #5C5200; font-size: 17px; }
+
+/* S43: Departamentos > Caminos en cuadros (referente Uber) */
+.camt-reco { display: flex; align-items: center; gap: 14px; padding: 14px; margin: 4px 0 8px; border-radius: 20px; background: var(--green-20); color: var(--gray-dark); text-decoration: none; }
+.camt-reco-dib { width: 112px; flex: none; border-radius: 14px; overflow: hidden; }
+.camt-reco-dib svg, .camt-dib svg { display: block; width: 100%; height: auto; margin: 0; }
+.camt-reco-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.camt-reco-texto strong { font-size: 18px; line-height: 1.2; }
+.camt-reco-texto small { font-size: 13px; color: var(--gray-semidark); }
+.camt-chip { align-self: flex-start; font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: var(--white); color: var(--green-dark); }
+.camt-sec { margin-top: 18px; }
+.camt-grilla { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.camt { display: flex; flex-direction: column; gap: 3px; height: 100%; padding: 10px 10px 12px; border-radius: 18px; background: var(--gray-light); color: var(--gray-dark); text-decoration: none; }
+.camt:active, .camt-reco:active { transform: scale(.98); }
+.camt-dib { border-radius: 12px; overflow: hidden; margin-bottom: 8px; }
+.camt strong { font-size: 15px; line-height: 1.2; }
+.camt small { font-size: 12.5px; color: var(--gray-semidark); }
+.explorar-porque summary small { display: block; font-weight: 400; }
