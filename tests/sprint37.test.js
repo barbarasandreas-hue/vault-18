@@ -23,7 +23,7 @@ test('E2: el DS1 se marca como acelerador', () => {
 
 test('E3: arriba de la lista de caminos una tarjeta pregunta qué te importa; la respuesta se guarda', () => {
   assert.match(app, /¿Qué es lo que más te importa\?/);
-  assert.match(app, /lineaPrioridad \+ preguntaHtml \+ heroHtml/);
+  assert.match(app, /lineaPrioridad \+ preguntaHtml \+ \(vivirEx \? .. : heroHtml\)/);
   assert.doesNotMatch(app, /if \(!estado\.prioridadRespondida\) \{\n      cont\.innerHTML/);
   assert.match(app, /'prioridad', 'prioridadRespondida'/);
   assert.match(app, /Ahora no/);
@@ -53,8 +53,8 @@ test('E5: el detalle se llama «Ayudas para tu compra» (S39, antes «¿Cómo pu
   assert.match(app, /abrirHojaContenido\('Ayudas para tu compra'/);
   assert.doesNotMatch(app, /<strong>Formas de pagar menos<\/strong>/);
   assert.match(app, /function aceleradoresCompraHtml/);
-  assert.match(app, /Ya los sumaste/);
-  assert.match(app, /Puedes sumar/);
+  assert.match(app, /'Sumaste ' \+ elegidos\.length/); // S43: una sola fila
+  assert.match(app, /Podrías juntar hasta/);
   assert.match(app, /!f\.bloqueo/);
 });
 

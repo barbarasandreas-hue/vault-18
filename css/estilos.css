@@ -5393,3 +5393,63 @@ body:has(.hoja-pantalla) .barra { z-index: 61; }
 .cmp-lista li.sel { border-color: var(--cf); }
 .cmp-anios { margin-left: 48px; margin-right: 16px; }
 .carrera + .si-juntas { margin-top: 4px; }
+
+/* S43d: Departamentos > Caminos en cuadros con ícono simple (referente Uber) */
+.camt-reco { display: flex; align-items: center; gap: 14px; padding: 16px; margin: 4px 0 8px; border-radius: 20px; background: var(--cs); color: var(--gray-dark); text-decoration: none; }
+.camt-reco-ic, .camt-ic { background: var(--white); }
+.camt-reco-ic { width: 64px; height: 64px; border-radius: 18px; flex: none; }
+.camt-reco-ic svg { width: 34px; height: 34px; }
+.camt-reco-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.camt-reco-texto strong { font-size: 18px; line-height: 1.2; }
+.camt-reco-texto small { font-size: 13px; color: var(--gray-semidark); }
+.camt-chip { align-self: flex-start; font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: var(--white); color: var(--ci); }
+.camt-sec { margin-top: 18px; }
+.camt-grilla { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.camt { display: flex; flex-direction: column; gap: 3px; height: 100%; min-height: 128px; padding: 14px; border-radius: 18px; background: var(--gray-light); background: color-mix(in srgb, var(--cs) 55%, white); color: var(--gray-dark); text-decoration: none; }
+.camt-ic { margin-bottom: auto; }
+.camt strong { font-size: 15px; line-height: 1.2; margin-top: 14px; }
+.camt small { font-size: 12.5px; color: var(--gray-semidark); }
+.camt:active, .camt-reco:active { transform: scale(.98); }
+
+/* S43e: Ayudas para tu compra (maqueta 17, sin color en las cifras) */
+.ay-fila-compra { display: flex; align-items: center; gap: 14px; width: 100%; margin-top: 16px; padding: 14px 16px; border: 0; font: inherit; text-align: left; color: var(--gray-dark); cursor: pointer; }
+.ay-ic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+.ay-ic svg { width: 22px; height: 22px; margin: 0; }
+.ay-txt { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.ay-txt strong { font-size: 16px; line-height: 1.25; }
+.ay-txt small { font-size: 13px; color: var(--gray-semidark); line-height: 1.3; }
+.ay-fila-compra .ac-flecha, .ay-item .ac-flecha { width: 18px; height: 18px; color: var(--gray-neutral); flex: none; }
+.ay-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; margin: 8px 0 12px; }
+.ay-tiles > div { background: var(--gray-light); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 2px; color: var(--gray-dark); }
+.ay-tiles small { font-size: 12.5px; color: var(--gray-semidark); }
+.ay-tiles strong { font-size: 19px; }
+.ay-t-ic svg { width: 20px; height: 20px; margin: 0 0 4px; color: var(--gray-semidark); }
+.ay-cuantas { margin: 0 0 4px; }
+.ay-lista, .ay-pasos { list-style: none; margin: 0; padding: 0; }
+.ay-lista li + li, .ay-pasos li + li { border-top: 1px solid var(--gray-semilight); }
+.ay-item { display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px 0; background: none; border: 0; font: inherit; text-align: left; color: var(--gray-dark); cursor: pointer; min-height: 64px; }
+.ay-chip { display: inline-flex; align-items: center; gap: 3px; flex: none; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 99px; background: var(--green-20); color: var(--green-dark); }
+.ay-chip svg { width: 13px; height: 13px; margin: 0; }
+.ay-detalle .pantalla-cab { background: var(--ay-fondo); }
+.ay-detalle { --ay-fondo: var(--blue-20); --ay-tinta: var(--blue-dark); }
+.ay-detalle.ay-verde { --ay-fondo: var(--green-20); --ay-tinta: var(--green-dark); }
+.ay-detalle.ay-amarillo { --ay-fondo: #FFF4B3; --ay-tinta: #5C5200; }
+.ay-detalle.ay-rojo { --ay-fondo: #FBDADD; --ay-tinta: var(--red-dark); }
+.ay-hero-ic { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; background: var(--white); color: var(--ay-tinta); margin-top: 4px; position: relative; z-index: 1; }
+.ay-hero-ic svg { width: 28px; height: 28px; margin: 0; }
+.ay-detalle .pantalla-cab { margin-bottom: 0; }
+.ay-hero { margin: -14px -20px 0; padding: 14px 20px 20px; background: var(--ay-fondo); border-radius: 0 0 24px 24px; }
+.ay-hero .ay-hero-ic { margin-top: 0; }
+.ay-detalle #hoja-titulo { margin: 12px 0 0; font-size: 26px; font-weight: 800; color: var(--gray-dark); }
+.ay-que { font-size: 15px; line-height: 1.5; margin: 14px 0 6px; }
+.ay-h { margin: 14px 0 4px; }
+.ay-pasos li { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.ay-paso-ic { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+.ay-paso-ic svg { width: 20px; height: 20px; margin: 0; }
+.ay-pie { position: sticky; bottom: -20px; margin: 16px -20px -20px; padding: 12px 20px 16px; background: var(--white); display: grid; grid-template-columns: 1fr 2fr; gap: 10px; box-shadow: 0 -8px 16px rgba(255,255,255,.9); }
+.ay-pie.solo { grid-template-columns: 1fr; }
+.ay-pie .btn { padding-left: 8px; padding-right: 8px; }
+.ay-ya { display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; color: var(--green-dark); }
+.ay-ya svg { width: 18px; height: 18px; margin: 0; }
+.ay-fila-compra .ac-flecha, .ay-item .ac-flecha { transform: rotate(-90deg); }
+.ay-tiles > div { background: var(--white); border: 1px solid var(--gray-semilight); }

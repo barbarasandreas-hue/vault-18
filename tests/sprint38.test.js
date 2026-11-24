@@ -83,7 +83,7 @@ test('Misiones: al completarlas todas hay festejo (confeti y mensaje), una vez p
 });
 
 test('Aceleradores de Tu compra: dicen «Está en tus misiones» y el DS1 coincide con su misión', () => {
-  assert.match(app, /'Está en tus misiones'/);
+  assert.match(app, /En tus misiones/); // S43
   assert.match(app, /ps\.ds1Agregado \|\| ps\.ds1Postulado \|\| ps\.rsh\), lista: !!ps\.ds1Postulado/);
 });
 
@@ -109,7 +109,7 @@ test('S39b: el azul de Tu compra dice cuánto falta para tu pie en todos los cam
 
 test('S39b: Tu equipo te anima en una fila; ¿Cómo puedes llegar antes? es un desplegable', () => {
   assert.match(app, /class="tarjeta animos animos-fila" aria-label="Tu equipo te anima"/);
-  assert.match(app, /<details class="tarjeta aceleradores-compra ac-desplegable">/);
+  assert.match(app, /class="tarjeta aceleradores-compra ay-fila-compra"/); // S43: una fila
 });
 
 test('S39b: Caminos en filas con íconos, sin textos de relleno; Edificios sin «en tu rango»', () => {
@@ -203,4 +203,12 @@ test('S42: la app no muestra mensajes de prototipo ni de «propuesta» y la barr
   assert.doesNotMatch(app, /hoy no existe/);
   assert.doesNotMatch(app, /Existe hoy/);
   assert.match(css, /body:has\(\.hoja-pantalla\) \.barra/);
+});
+
+test('S43: Ayudas con detalle (qué es, pasos como misiones, Volver abajo) y «primera compra»', () => {
+  assert.match(app, /function abrirAyuda\(f, p, solo, caminoVista, boton\)/);
+  assert.match(app, /Confirma que es tu primera compra/);
+  assert.doesNotMatch(app, /Confirma que es tu primera vez/);
+  assert.match(app, /data-ayuda-volver>Volver</);
+  assert.match(app, />Agregar a misiones</);
 });

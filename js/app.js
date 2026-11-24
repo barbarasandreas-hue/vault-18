@@ -2945,14 +2945,15 @@
         '<span class="ac-texto"><strong>' + f.nombre + '</strong><small>' + marca + '</small></span>' +
         icono('i-flecha', 'ac-flecha') + '</button></li>';
     };
-    // 23-nov (Bárbara): desplegable cerrado, como en el detalle del departamento.
-    return '<details class="tarjeta aceleradores-compra ac-desplegable"><summary><span class="ac-sum-texto"><strong class="h5" id="titulo-ac">Ayudas para tu compra</strong>' +
-        '<small>' + plural(aplican.length, 'ayuda', 'ayudas') + SEP + (elegidos.length ? plural(elegidos.length, 'sumada', 'sumadas') : 'ninguna sumada') + '</small></span>' +
-        icono('i-flecha', 'ac-sum-flecha') + '</summary>' +
-      (elegidos.length ? '<p class="ac-sub">Ya los sumaste</p><ul class="mc-lista">' + elegidos.map(function (f) { return fila(f, 'ac-elegido', f.auto ? 'Va incluido en tu camino' : f.lista ? 'Listo' : 'Está en tus misiones'); }).join('') + '</ul>' : '') +
-      (elegibles.length ? '<p class="ac-sub">Puedes sumar</p><ul class="mc-lista">' + elegibles.map(function (f) { return fila(f, 'ac-elegible', 'Sin sumar todavía'); }).join('') + '</ul>' : '') +
-      '</details>';
+    // S43 (Bárbara, maqueta 17): una sola fila con la etiqueta de descuento; adentro, cada ayuda con sus pasos.
+    var ahorro = elegibles.reduce(function (a, f) { return a + (f.juntas && f.juntas < 0 ? -f.juntas : 0); }, 0);
+    var sub = elegidos.length ? 'Sumaste ' + elegidos.length + ' de ' + aplican.length
+      : ahorro >= 100000 ? 'Podrías juntar hasta ' + formatoRedondeado(ahorro).replace(/\s*millones/, NBSP + 'M') + ' menos' : plural(aplican.length, 'ayuda', 'ayudas') + ' para ti';
+    return '<button type="button" class="tarjeta aceleradores-compra ay-fila-compra" data-aceleradores-abrir aria-haspopup="dialog">' +
+      '<span class="ay-ic t-amarillo" aria-hidden="true">' + ICONO_ETIQUETA + '</span>' +
+      '<span class="ay-txt"><strong id="titulo-ac">Ayudas para tu compra</strong><small>' + sub + '</small></span>' + icono('i-flecha', 'ac-flecha') + '</button>';
   }
+  var ICONO_ETIQUETA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8" r="1.5"/><path d="M10 15l5-5"/></svg>';
   // Lo que va bajo la fecha en Tu compra.
   function bloqueRecorrido(extra) {
     var s = fotoPasos(), h = hitoActual(s), hoy = hoyDemo();
@@ -4016,7 +4017,7 @@
         guardarEstado();
         cerrarHoja(false);
         mostrar();
-        toast(id === 'fogaes' ? 'Se sumó a tus pasos: revisa si calificas a la garantía del Estado.' : id === 'tasa' ? 'Se sumó a tus pasos: pide el subsidio a la tasa.' : 'Se sumó a tus pasos: postula al DS1.');
+        toast(id === 'fogaes' ? 'Se sumó a tus misiones: la garantía del Estado.' : id === 'tasa' ? 'Se sumó a tus misiones: el subsidio a la tasa.' : 'Se sumó a tus misiones: el subsidio DS1.');
       });
     });
   }
@@ -4025,23 +4026,96 @@
     var baja = v < 0;
     return '<span class="fp-efecto ' + (baja ? 'baja' : 'sube') + '"><small>' + etq + '</small><strong>' + (baja ? '−' : '+') + formatoRedondeado(Math.abs(v)) + (alMes ? ' al mes' : '') + '</strong></span>';
   }
+  // S43 (Bárbara, maqueta 17): la lista de ayudas y, al tocar una, qué es en simple y los pasos para conseguirla.
+  var AYUDA_VISTA = {
+    fogaes: { tinte: 'azul', ic: 'i-escudo',
+      que: 'El banco normalmente te presta el 80' + NBSP + '% del precio. Con esta garantía, <strong>el Estado respalda una parte de tu crédito</strong> y Bci te presta hasta el 90' + NBSP + '%. Así juntas menos pie.',
+      pasos: function (f, ps) { return [['i-llave', 'Departamento nuevo, hasta UF 6.000', 'En primera venta', f.req[0][1] === true && f.req[1][1] === true],
+        ['i-documento', 'Confirma que es tu primera compra', 'La garantía se usa una sola vez', !!ps.fogaesCalifica],
+        ['i-banco', 'Pídela al pedir tu crédito', 'Bci la solicita por ti', false]]; } },
+    ds1: { tinte: 'verde', ic: 'i-alcancia',
+      que: 'Es <strong>plata del Estado que se suma a tu pie</strong> y no se devuelve. Sirve en departamentos de hasta UF 4.000. La entrega el Minvu y hay que postular. No es el DS19.',
+      pasos: function (f, ps) { return [['i-documento', 'Inscríbete en el Registro Social de Hogares', 'En línea, en ChileAtiende', !!ps.rsh],
+        ['i-alcancia', 'Ten tu cuenta de vivienda con ahorro', f.espera || 'Con el ahorro mínimo de tu tramo', false],
+        ['i-calendario', 'Postula cuando abra el llamado', 'Te avisamos las fechas', !!ps.ds1Postulado],
+        ['i-llave', 'Usa el certificado al firmar', 'Se descuenta de tu pie', false]]; } },
+    tasa: { tinte: 'amarillo', ic: 'i-sube',
+      que: 'El Estado paga una parte de los intereses de tu crédito: <strong>baja la tasa y pagas menos al mes</strong>. Es para departamentos nuevos de hasta UF 4.000 y depende de los cupos que queden.',
+      pasos: function (f) { return [['i-casa', 'Departamento nuevo, hasta UF 4.000', 'En primera venta', f.req[0][1] === true && f.req[1][1] === true],
+        ['i-banco', 'Pídelo cuando Bci apruebe tu crédito', 'Bci revisa si quedan cupos', false],
+        ['i-calendario', 'Se aplica a tu dividendo', 'Desde la primera cuota', false]]; } },
+    sumar: { tinte: 'rojo', ic: 'i-grupo',
+      que: 'Tu pareja, un familiar u otra persona <strong>aparece en el mismo crédito y suma su sueldo</strong>. Así Bci puede prestarte más. Antes, dejen escrito el acuerdo entre ustedes.',
+      pasos: function (f, ps) { return [['i-persona', 'Elige con quién', 'Pareja, familiar u otra persona', false],
+        ['i-banco', 'Revisen la renta mínima', 'Pareja o familiar: tú desde 23 UF y la otra persona desde 16 UF', false],
+        ['i-documento', 'Armen el acuerdo', 'De quién es cada parte y quién paga', !!ps.sumarAgregado]]; } }
+  };
+  function efectoTextoAyuda(f) {
+    if (f.bloqueo) return 'Hoy no te sirve: ' + primeraMinuscula(f.bloqueo.razon);
+    if (f.sinEfecto) return 'Suma su sueldo a tu crédito';
+    if (f.soloPagas) return Math.abs(f.pagas) >= 1000 ? 'Pagas ' + formatoRedondeado(Math.abs(f.pagas)) + ' menos al mes' : 'Baja tu tasa si quedan cupos';
+    if (f.juntas !== null && f.juntas < -1000) return 'Juntas ' + formatoRedondeado(Math.abs(f.juntas)) + ' menos';
+    if (f.incluido) return 'Ya va en tus números';
+    return 'Mira cuánto cambia';
+  }
   function abrirBajarPrecio(p, solo, caminoVista, boton, foco) {
     var formas = formasParaVista(p, solo, caminoVista);
-    var html = '<p class="texto-apoyo">Cuánto cambia lo que juntas y lo que pagas al mes en este departamento. Súmalas a tus pasos para revisar si cumples y pedirlas.</p>' +
-      '<ul class="fp-lista">' + formas.map(function (f) {
-        var estadoF = f.auto ? '<span class="fp-chip">Va incluido</span>'
-          : f.bloqueo ? '<span class="fp-chip gris">' + f.bloqueo.razon + '</span>'
-          : f.id === 'tasa' && !f.enPasos ? '<span class="fp-chip gris">Si quedan cupos</span>'
-          : f.lista ? '<span class="fp-chip verde">' + icono('i-check') + 'Lista</span>'
-          : f.enPasos ? '<span class="fp-chip verde">' + icono('i-check') + 'En tus pasos</span>' : '';
-        return '<li class="fp-forma" id="fp-' + f.id + '"><div class="fp-cab"><span class="fp-sigla" aria-hidden="true">' + siglaForma(f) + '</span><h3 class="h6">' + f.nombre + '</h3>' +
-          '<span class="acel-estado ' + (f.abierto ? 'abierto' : 'cerrado') + '">' + (f.abierto ? 'Abierto' : 'Cerrado') + '</span>' + estadoF + '</div>' +
-          cuerpoFormaHtml(f) +
-        '</li>';
+    if (foco) { var ff = formas.filter(function (f) { return f.id === foco; })[0]; if (ff) { abrirAyuda(ff, p, solo, caminoVista, boton); return; } }
+    var pd = null; try { pd = plazoDepartamento(p, null, solo); } catch (e) { pd = null; }
+    var sumadas = formas.filter(function (f) { return f.auto || f.enPasos; }).length;
+    var html = (pd ? '<div class="ay-tiles"><div><span class="ay-t-ic" aria-hidden="true">' + icono('i-alcancia') + '</span><small>Juntas</small><strong>' + formatoRedondeado(pd.meta).replace(/\s*millones/, NBSP + 'M') + '</strong></div>' +
+        '<div><span class="ay-t-ic" aria-hidden="true">' + icono('i-calendario') + '</span><small>Pagas al mes</small><strong>' + formatoRedondeado(pd.dividendo) + '</strong></div></div>' : '') +
+      '<p class="texto-apoyo ay-cuantas"><small>' + (sumadas ? 'Con ' + plural(sumadas, 'ayuda sumada', 'ayudas sumadas') : 'Toca una ayuda para ver qué es y cómo conseguirla') + '</small></p>' +
+      '<ul class="ay-lista">' + formas.map(function (f) {
+        var v = AYUDA_VISTA[f.id] || { tinte: 'azul', ic: 'i-info' };
+        var marca = f.auto ? '<span class="ay-chip">Incluida</span>' : f.enPasos || f.lista ? '<span class="ay-chip">' + icono('i-check') + 'Sumada</span>' : icono('i-flecha', 'ac-flecha');
+        return '<li><button type="button" class="ay-item" data-ayuda="' + f.id + '">' +
+          '<span class="ay-ic t-' + v.tinte + '" aria-hidden="true">' + icono(v.ic) + '</span>' +
+          '<span class="ay-txt"><strong>' + f.nombre + '</strong><small>' + efectoTextoAyuda(f) + '</small></span>' + marca + '</button></li>';
       }).join('') + '</ul>' +
       '<p class="fp-sello">' + icono('i-escudo') + 'Lo confirma Bci al aprobar tu crédito.</p>';
-    abrirHojaContenido('Ayudas para tu compra', html, boton, function () {
-      if (foco) setTimeout(function () { var fo = document.getElementById('fp-' + foco); if (fo) fo.scrollIntoView({ block: 'start' }); }, 60);
+    abrirHojaContenido('Ayudas para tu compra', html, boton, function (hoja) {
+      hoja.querySelectorAll('[data-ayuda]').forEach(function (b) {
+        b.addEventListener('click', function () { abrirAyuda(formas.filter(function (f) { return f.id === b.dataset.ayuda; })[0], p, solo, caminoVista, boton); });
+      });
+    });
+  }
+  function abrirAyuda(f, p, solo, caminoVista, boton) {
+    var v = AYUDA_VISTA[f.id] || { tinte: 'azul', ic: 'i-info', que: f.corto, pasos: function () { return []; } };
+    var ps = estado.pasos;
+    var num = function (val, alMes) {
+      if (val === null || val === undefined || Math.abs(val) < 1000) return 'Igual';
+      return (val < 0 ? '−' : '+') + formatoRedondeado(Math.abs(val)).replace(/\s*millones/, NBSP + 'M') + (alMes ? ' al mes' : '');
+    };
+    var tiles = f.bloqueo || f.sinEfecto ? '' :
+      '<div class="ay-tiles">' + (f.soloPagas ? '' : '<div><span class="ay-t-ic" aria-hidden="true">' + icono('i-alcancia') + '</span><small>Juntas</small><strong>' + num(f.juntas) + '</strong></div>') +
+        '<div><span class="ay-t-ic" aria-hidden="true">' + icono('i-calendario') + '</span><small>' + (f.soloPagas ? 'Si te lo dan, pagas al mes' : 'Pagas al mes') + '</small><strong>' + num(f.soloPagas ? -Math.abs(f.pagas) : f.pagas) + '</strong></div></div>';
+    var pasos = v.pasos(f, ps);
+    var yaSumada = f.auto || f.enPasos || f.lista;
+    var principal = f.auto || f.bloqueo ? '' : f.id === 'sumar'
+      ? '<button type="button" class="btn btn-primario" data-sumar-forma="sumar">' + (f.enPasos ? 'Cambiar el acuerdo' : 'Armar el acuerdo') + '</button>'
+      : yaSumada ? '<span class="ay-ya">' + icono('i-check') + 'En tus misiones</span>'
+      : '<button type="button" class="btn btn-primario" data-sumar-forma="' + f.id + '">Agregar a misiones</button>';
+    var html = '<p class="ay-que">' + v.que + '</p>' +
+      (f.bloqueo ? '<p class="fp-bloqueo">' + icono('i-info') + '<span>' + f.bloqueo.como + '</span></p>' : '') +
+      tiles +
+      (pasos.length ? '<h3 class="h5 ay-h">Para conseguir' + (f.id === 'ds1' || f.id === 'tasa' ? 'lo' : 'la') + '</h3><ul class="ay-pasos">' + pasos.map(function (x, k) {
+        return '<li><span class="ay-paso-ic ' + ['t-verde', 't-azul', 't-amarillo'][k % 3] + '" aria-hidden="true">' + icono(x[0]) + '</span>' +
+          '<span class="ay-txt"><strong>' + x[1] + '</strong><small>' + x[2] + '</small></span>' + (x[3] ? '<span class="ay-chip">' + icono('i-check') + 'Listo</span>' : '') + '</li>';
+      }).join('') + '</ul>' : '') +
+      '<div class="ay-pie' + (principal ? '' : ' solo') + '"><button type="button" class="btn btn-secundario" data-ayuda-volver>Volver</button>' + principal + '</div>';
+    abrirHojaContenido(f.nombre, html, boton, function (hoja) {
+      hoja.classList.add('ay-detalle', 'ay-' + v.tinte);
+      var t = hoja.querySelector('#hoja-titulo');
+      var hero = document.createElement('div'); hero.className = 'ay-hero';
+      var ic = document.createElement('span'); ic.className = 'ay-hero-ic'; ic.setAttribute('aria-hidden', 'true'); ic.innerHTML = icono(v.ic);
+      t.parentNode.insertBefore(hero, t); hero.appendChild(ic); hero.appendChild(t);
+      var volver = function () { abrirBajarPrecio(p, solo, caminoVista, boton); };
+      hoja.querySelector('[data-ayuda-volver]').addEventListener('click', volver);
+      var arriba = $('btn-cerrar-hoja'), nuevo = arriba.cloneNode(true);
+      nuevo.lastChild.textContent = 'Ayudas';
+      arriba.parentNode.replaceChild(nuevo, arriba);
+      nuevo.addEventListener('click', volver);
       enlazarSumarFormas();
     });
   }
@@ -9427,16 +9501,33 @@
         }).join('') + '</div>' +
         '<button type="button" class="enlace" data-prioridad-deptos="ninguna">Ahora no</button>' +
       '</section>';
+    // S43 (Bárbara, maqueta 13 derecha, 24-nov): el recomendado en una franja «Para ti» y los demás en cuadros con un ícono simple.
+    var lineaCuadro = function (id) {
+      if (id === 'ds19') return 'Con subsidio';
+      var n = porId[id] || {};
+      if (id === 'arriendo-opcion') return 'Te mudas ' + (n.mudas !== null && n.mudas <= 0 ? 'ya' : mesCorto(n.mudas));
+      return mesCorto(n.tuyo) + (n.pagas ? SEP + formatoRedondeado(n.pagas) : '');
+    };
+    var cuadro = function (id) {
+      var href = id === 'ds19' ? '#departamentos/ds19' : rutaCamino(id);
+      return '<li><a class="camt" href="' + href + '" style="' + varsCamino(id) + '">' +
+        '<span class="cam-icono camt-ic" aria-hidden="true">' + (id === 'ds19' ? icono('i-casa') : iconoCaminoD(id)) + '</span>' +
+        '<strong>' + (id === 'ds19' ? 'Proyectos DS19' : nombreCaminoD(id)) + '</strong><small>' + lineaCuadro(id) + '</small></a></li>';
+    };
+    var paraTiHtml = !conReco || preguntando ? '' :
+      '<a class="camt-reco" href="' + rutaCamino(reco) + '" style="' + varsCamino(reco) + '">' +
+        '<span class="cam-icono camt-reco-ic" aria-hidden="true">' + iconoCaminoD(reco) + '</span>' +
+        '<span class="camt-reco-texto"><span class="camt-chip">Para ti</span><strong>' + nombreCaminoD(reco) + '</strong>' +
+        '<small>' + (reco === 'arriendo-opcion' ? 'Te mudas ' + mesCorto((porId[reco] || {}).mudas) : 'Llaves ' + mesCorto((porId[reco] || {}).tuyo)) + ((porId[reco] || {}).pagas ? SEP + formatoRedondeado(porId[reco].pagas) + '/mes' : '') + '</small></span></a>';
+    var orden = GRUPOS_CAMINOS.reduce(function (a, g) { return a.concat(g[2]); }, []);
+    var cuadros = orden.filter(function (id) { return id === 'ds19' || (ids.indexOf(id) !== -1 && (!paraTiHtml || id !== reco)); });
     cont.innerHTML =
       '<header class="encabezado">' + MARCA + '<h1 id="titulo-proyectos" class="h2" tabindex="-1">Departamentos</h1>' + tabsDeptos('caminos') + '</header>' +
-      lineaPrioridad + preguntaHtml + heroHtml +
+      lineaPrioridad + preguntaHtml + (vivirEx ? '' : heroHtml) +
       (vivirEx
-        ? GRUPOS_CAMINOS.map(function (g, gi) {
-            var lista = g[2].filter(function (id) { return id === 'ds19' || (ids.indexOf(id) !== -1 && (!conReco || id !== reco)); });
-            if (!lista.length) return '';
-            return '<section class="ex-otros ex-grupo" aria-labelledby="ex-grupo-' + gi + '"><h2 class="h5" id="ex-grupo-' + gi + '">' + g[0] + '</h2><ul>' +
-              lista.map(function (id) { return id === 'ds19' ? itemDS19() : itemCamino(id); }).join('') + '</ul></section>';
-          }).join('') +
+        ? paraTiHtml +
+          '<section class="camt-sec" aria-labelledby="camt-titulo"><h2 class="h5" id="camt-titulo">' + (paraTiHtml ? 'Otros caminos' : 'Caminos') + '</h2>' +
+            '<ul class="camt-grilla">' + cuadros.map(cuadro).join('') + '</ul></section>' +
           '<a class="btn btn-secundario btn-bloque ex-comparar" href="#departamentos/comparar">Comparar los caminos</a>'
         : '<section class="ex-otros" aria-labelledby="ex-otros-titulo"><h2 class="h5" id="ex-otros-titulo">' + (conReco ? 'Otros caminos' : 'Los caminos') + '</h2><ul>' +
             ids.filter(function (id) { return !conReco || id !== reco; }).map(itemCamino).join('') + '</ul>' +
