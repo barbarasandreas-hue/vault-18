@@ -41,8 +41,9 @@ var PROYECTOS = [
   { id: 'terrazas-quinta', fachada: { color: 'blue-normal', pisos: 7 }, clienteBci: false, grupo: { cuotaPromedio: 760000, mesesAhorrando: 5, unidoHaceDias: 1, pagaronMes: 6 }, etapaObra: 2, entregaEstimada: '2027-09-30', nombre: 'Edificio Terrazas Quinta Normal', comuna: 'Quinta Normal', tipo: 'conjunto',
     cupos: 10, cuposTomados: 7, ufFinanciadas: 0, cierre: '2026-12-20' },
   // 9-nov: más opciones para el test con usuarios, sobre todo en los precios más bajos (UF 1.100 a 2.000).
-  { id: 'brisas-independencia', ds19: true, fachada: { color: 'green-dark', pisos: 6 }, clienteBci: true, grupo: { cuotaPromedio: 360000, mesesAhorrando: 2, unidoHaceDias: 2, pagaronMes: 5 }, etapaObra: 0, entregaEstimada: '2028-04-30', nombre: 'Edificio Brisas Independencia', comuna: 'Independencia', tipo: 'conjunto',
-    cupos: 10, cuposTomados: 5, ufFinanciadas: 0, cierre: '2027-02-20' },
+  { id: 'brisas-independencia', ds19: true, recepcionDefinitiva: '2026-06-30', fachada: { color: 'green-dark', pisos: 6 }, clienteBci: true, etapaObra: 4, nombre: 'Edificio Brisas Independencia', comuna: 'Independencia', tipo: 'venta',
+    // S39 2.4 (Bárbara): no todos los DS19 son en obra ni en grupo: este está terminado y se compra solo.
+    cupos: 1, cuposTomados: 0, ufFinanciadas: 0, cierre: null },
   { id: 'andes-estacion', fachada: { color: 'blue-dark', pisos: 8 }, clienteBci: false, grupo: { cuotaPromedio: 420000, mesesAhorrando: 3, unidoHaceDias: 4, pagaronMes: 3 }, etapaObra: 1, entregaEstimada: '2027-12-31', nombre: 'Edificio Mirador Los Andes', comuna: 'Estación Central', tipo: 'conjunto',
     cupos: 8, cuposTomados: 4, ufFinanciadas: 0, cierre: '2027-01-25' },
   { id: 'cumbres-quinta', fachada: { color: 'blue-80', pisos: 5 }, clienteBci: true, grupo: { cuotaPromedio: 470000, mesesAhorrando: 4, unidoHaceDias: 3, pagaronMes: 4 }, etapaObra: 1, entregaEstimada: '2027-11-30', nombre: 'Edificio Cumbres de Quinta Normal', comuna: 'Quinta Normal', tipo: 'conjunto',

@@ -79,7 +79,7 @@ test('Misiones: la frase dice que no hay orden fijo y que se empieza por la que 
 test('Misiones: al completarlas todas hay festejo (confeti y mensaje), una vez por conjunto', () => {
   assert.match(app, /function festejarMisiones\(ms\)/);
   assert.match(app, /¡Completaste todas tus misiones!/);
-  assert.match(app, /'usadoElegido', 'misionesFestejo'\]/);
+  assert.match(app, /'usadoElegido', 'misionesFestejo'/);
 });
 
 test('Aceleradores de Tu compra: dicen «Está en tus misiones» y el DS1 coincide con su misión', () => {
@@ -133,4 +133,45 @@ test('S39c bloque 1: botón «Ver tu pie» con anillo, «Ver con fechas» junto 
   assert.match(css, /\.tarjeta-proyecto \.tp-ver \{ display: none; \}/);
   assert.match(app, /var TINTE_PERFIL = \{/);
   assert.match(html, /class="franja-bci"/);
+});
+
+const datos = fs.readFileSync(path.join(__dirname, '..', 'js', 'datos.js'), 'utf8');
+
+test('S39 2.1: detalle con reglas del grupo en 4 tarjetitas dentro de «Grupo» y «Más opciones»', () => {
+  assert.match(app, /regla\('t-azul', 'i-grupo'/);
+  assert.match(app, /regla\('t-rojo', 'i-ok', 'Sales gratis'/);
+  assert.match(app, /\['grupo', 'Grupo', \(pd\.on\.respaldo \? '' : fichaGrupoHtml\(p\)\)/);
+  assert.match(app, /<details class="tarjeta mas-opciones"><summary>Más opciones/);
+  assert.match(app, /Recibes tus llaves en <strong>' \+ g\.fecha \+ '<\/strong>, todos el mismo día/);
+});
+
+test('S39 2.3 y 2.4: DS19 con descripción corta y tarjetitas; sus proyectos no son todos en obra ni en grupo', () => {
+  assert.doesNotMatch(app, /En esta demo, los proyectos DS19/);
+  assert.match(app, /¿Y el DS1\? No es lo mismo/);
+  assert.match(app, /Te ' \+ \(faltan\.length === 1/);
+  const ds19 = datos.split('\n').filter((l) => /ds19: true/.test(l));
+  assert.ok(ds19.some((l) => /tipo: 'venta'/.test(l)), 'al menos un DS19 terminado y de compra individual');
+  assert.ok(ds19.some((l) => /tipo: 'conjunto'/.test(l)), 'al menos un DS19 en grupo');
+});
+
+test('S39 2.2: la ficha del camino tiene descripción corta, 3 tarjetitas y «Cómo funciona» en fila; sin «Para quién»', () => {
+  assert.match(app, /var FICHA_CORTA = \{/);
+  assert.match(app, /rasgosCaminoHtml\(id\)/);
+  assert.match(app, /pasosFilaHtml\(id\)/);
+  assert.doesNotMatch(app, /<strong>Para quién<\/strong>/);
+});
+
+test('S39 2.5: las 3 preguntas recomiendan en el orden acordado y se usan en Caminos y Comparar', () => {
+  assert.match(app, /¿Cuándo quieres mudarte\?/);
+  assert.match(app, /¿Te sirve un departamento en construcción\?/);
+  assert.match(app, /¿Tu familia te puede apoyar\?/);
+  assert.match(app, /Quedan guardados un tiempo y los recupera/);
+  const i = app.indexOf("estado.prioridad === 'ya' && hay('arriendo-opcion')");
+  const j = app.indexOf("estado.respFamilia === 'ahorros' && hay('familiar-vivir')");
+  const k = app.indexOf("(estado.respObra === 'si' || estado.prioridad === 'menos') && hay('grupo-vivir')");
+  const l = app.indexOf("estado.respObra === 'terminado' && hay('individual-vivir')");
+  assert.ok(i > 0 && i < j && j < k && k < l, 'orden de la regla');
+  assert.match(app, /enlazarPreguntasCamino\(cont, renderDepartamentos\)/);
+  assert.match(app, /enlazarPreguntasCamino\(cont, renderComparar\)/);
+  assert.match(app, /'respObra', 'respFamilia'\]/);
 });

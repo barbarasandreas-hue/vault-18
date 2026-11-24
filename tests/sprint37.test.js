@@ -40,7 +40,7 @@ test('La app tiene el ancho de un iPhone (393 px)', () => {
 
 test('E4: ficha estándar de la compra en grupo marcada como ejemplo simulado', () => {
   assert.match(app, /function fichaGrupoHtml/);
-  assert.match(app, /Necesitas ' \+ \(p\.cupos \|\| 10\) \+ ' compradores/);
+  assert.match(app, /\(p\.cupos \|\| 10\) \+ ' personas', 'para formar el grupo'/); // S39: en tarjetitas
   assert.match(app, /nadie queda amarrado/);
   assert.match(app, /Ejemplo simulado/);
 });

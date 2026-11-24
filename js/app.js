@@ -75,6 +75,8 @@
     prioridadRespondida: false, // 23-nov: ya contestó «¿Qué es lo que más te importa?» en Departamentos (también si dijo «No estoy seguro»)
     prioridad: null,         // S32-B4: lo que más le importa al comparar: 'antes', 'menos' o 'ya'
     respaldoAceptado: false, // 23-nov: el familiar aceptó ser el respaldo (pantalla de consentimiento, simulada)
+    respObra: null,          // S39 2.5: «¿Te sirve un departamento en construcción?»: 'si', 'terminado' o 'igual'
+    respFamilia: null,       // S39 2.5: «¿Tu familia te puede apoyar?»: 'ahorros', 'apoyo' o 'solo'
     misionesFestejo: '',     // 23-nov: las misiones que ya se festejaron completas (ids ordenados), para no repetir el festejo
     acuerdoCredito: null,    // 23-nov: acuerdo de «Sumar a alguien al crédito»: { con, tuParte, quienPaga, siSale }
     usadoElegido: null,      // S32-B5: el usado elegido como meta en el crédito tradicional (USADOS)
@@ -90,9 +92,9 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo', 'presentacion', 'muro', 'visitaGrupo', 'saldoCorriente', 'mesesTrabajo', 'deudasAtrasadas', 'rshTramo', 'caminoAnterior', 'prioridad', 'prioridadRespondida', 'acuerdoCredito', 'respaldoAceptado', 'usadoElegido', 'misionesFestejo'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo', 'presentacion', 'muro', 'visitaGrupo', 'saldoCorriente', 'mesesTrabajo', 'deudasAtrasadas', 'rshTramo', 'caminoAnterior', 'prioridad', 'prioridadRespondida', 'acuerdoCredito', 'respaldoAceptado', 'usadoElegido', 'misionesFestejo', 'respObra', 'respFamilia'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
-    otrasCuotas: null, contrato: 'indefinido', mesesTrabajo: null, deudasAtrasadas: null, rshTramo: null, caminoAnterior: null, prioridad: null, prioridadRespondida: false, acuerdoCredito: null, respaldoAceptado: false, usadoElegido: null, misionesFestejo: '',
+    otrasCuotas: null, contrato: 'indefinido', mesesTrabajo: null, deudasAtrasadas: null, rshTramo: null, caminoAnterior: null, prioridad: null, prioridadRespondida: false, acuerdoCredito: null, respaldoAceptado: false, usadoElegido: null, misionesFestejo: '', respObra: null, respFamilia: null,
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
@@ -436,6 +438,8 @@
       if (['antes', 'menos', 'ya'].indexOf(g.prioridad) !== -1) estado.prioridad = g.prioridad;
       estado.prioridadRespondida = g.prioridadRespondida === true || estado.prioridad !== null;
       estado.respaldoAceptado = g.respaldoAceptado === true;
+      estado.respObra = ['si', 'terminado', 'igual'].indexOf(g.respObra) !== -1 ? g.respObra : null;
+      estado.respFamilia = ['ahorros', 'apoyo', 'solo'].indexOf(g.respFamilia) !== -1 ? g.respFamilia : null;
       estado.misionesFestejo = typeof g.misionesFestejo === 'string' ? g.misionesFestejo.slice(0, 300) : '';
       if (g.acuerdoCredito && typeof g.acuerdoCredito === 'object' && ACUERDO_CON.indexOf(g.acuerdoCredito.con) !== -1 && ACUERDO_PAGA.indexOf(g.acuerdoCredito.quienPaga) !== -1 && ACUERDO_SALE.indexOf(g.acuerdoCredito.siSale) !== -1) {
         var tp = Math.round(Number(g.acuerdoCredito.tuParte));
@@ -2521,20 +2525,23 @@
   }
   // 23-nov: ficha estándar de la compra en grupo. Cada inmobiliaria define sus reglas; lo fijo lo pone Bci.
   // Las cifras son de ejemplo (simuladas): no están validadas con inmobiliarias.
+  // S39 2.1 (Bárbara): las reglas del grupo en 4 tarjetitas con los colores Bci (juntos, en tono claro), dentro de la pestaña «Grupo».
   function fichaGrupoHtml(p) {
     if (!p || p.tipo !== 'conjunto') return '';
     var d = p.cierre ? diasEntre(hoyGrupo(), p.cierre) : 0;
-    var cierre = p.cierre ? (d > 0 ? 'cierra el ' + formatoFecha(p.cierre) : 'cerró el ' + formatoFecha(p.cierre)) : 'cierra pronto';
     var pct = Math.round(SUPUESTOS_PIEZAS.descuentoGrupo * 100);
+    var regla = function (tinte, ic, dato, texto) {
+      return '<li class="regla-grupo ' + tinte + '"><span class="rg-ic" aria-hidden="true">' + icono(ic) + '</span><span><strong>' + dato + '</strong>' + texto + '</span></li>';
+    };
     return '<section class="ficha-grupo" aria-labelledby="ficha-grupo-titulo">' +
-      '<h3 class="h6" id="ficha-grupo-titulo">Reglas de este grupo <span class="chip chip-propuesta">Ejemplo simulado</span></h3>' +
-      '<p class="ficha-grupo-linea">Necesitas ' + (p.cupos || 10) + ' compradores' + SEP + cierre + SEP + 'beneficio: ' + pct + NBSP + '% menos en el precio' + SEP + 'si no se llega al mínimo, nadie queda amarrado.</p>' +
-      '<ul class="ficha-grupo-lista">' +
-        '<li>' + icono('i-check') + 'Cada persona tiene su cuenta, su promesa y su crédito en Bci.</li>' +
-        '<li>' + icono('i-check') + 'No hay fondo común: tu dinero es solo tuyo.</li>' +
-        '<li>' + icono('i-check') + 'Puedes salir sin costo antes de la fecha de cierre.</li>' +
+      '<h3 class="h5" id="ficha-grupo-titulo">Reglas de este grupo <span class="chip chip-propuesta">Ejemplo simulado</span></h3>' +
+      '<ul class="reglas-grupo">' +
+        regla('t-azul', 'i-grupo', (p.cupos || 10) + ' personas', 'para formar el grupo') +
+        regla('t-verde', 'i-sube', pct + NBSP + '% menos', 'en el precio') +
+        regla('t-amarillo', 'i-calendario', p.cierre ? fechaCorta(p.cierre) : 'Pronto', d > 0 || !p.cierre ? 'cierran los cupos' : 'cerraron los cupos') +
+        regla('t-rojo', 'i-ok', 'Sales gratis', 'antes del cierre') +
       '</ul>' +
-      '<p class="ficha-grupo-nota">Cada inmobiliaria define sus reglas. Estas son de ejemplo.</p></section>';
+      '<p class="ficha-grupo-nota">' + icono('i-escudo') + 'Cada uno con su cuenta y su crédito en Bci. No hay fondo común. Si no se llega al mínimo, nadie queda amarrado.</p></section>';
   }
   function cuandoLlegasCompra(p, sinObra) {
     if (estado.modo === 'vivir' && p.tipo === 'conjunto' && !compraSinGrupo(p) && mesesParaEntrega(p) > 0) {
@@ -4048,12 +4055,10 @@
             '<div class="det-precio-fila"><strong class="det-precio-num">' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong>' +
               (enGrupo && r.ahorro > 0 ? '<span class="det-ahorras">Ahorras ' + formatoRedondeado(r.ahorro) + '</span>' : '') + '</div>' +
             (enGrupo && mesesParaEntrega(p) > 0
-              ? (function () { var g = planGrupo(p); return '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>Firman todos en <strong>' + g.fecha + '</strong>: ese día recibes tus llaves</span></p>' +
-                  '<p class="det-freno">' + textoPlanGrupo(g) + '</p>'; })()
+              ? (function () { var g = planGrupo(p); return '<p class="det-tuyo" id="det-llaves">' + icono('i-llave') + '<span>Recibes tus llaves en <strong>' + g.fecha + '</strong>, todos el mismo día</span></p>'; })()
               : '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>' + (pd.meses === null || pd.meses === undefined ? 'Todavía no te alcanza' : 'Recibirías tus llaves <strong>aprox. ' + fechaLlaves(pd.meses + MESES_SI_A_LLAVES, hoyDemo()) + '</strong>') + '</span></p>' +
                 '<p class="det-freno">' + FRENO[pd.freno] + '</p>') +
-            (conjunto && !pd.on.respaldo ? cierreGrupoHtml(p, 'en-azul') : '') + '</section>' +
-          (conjunto && !pd.on.respaldo ? fichaGrupoHtml(p) : '') +
+            (conjunto && !pd.on.respaldo ? cierreLineaHtml(p) : '') + '</section>' +
           pestanasDetalle(p, [
             ['numeros', 'Números',
               (pd.on.respaldo ? garantiaFamiliarDetalle(pd) : '') +
@@ -4064,9 +4069,10 @@
               aceleradoresDetalleHtml(p, solo, caminoVista) +
               '<a class="tarjeta dueno-card" href="#compra/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
                 '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para tus gastos</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
-              soloPosible +
-              (pd.on.respaldo ? '' : '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>')],
-            conjunto && bloqueGrupo ? ['grupo', 'Grupo', bloqueGrupo + conoceGrupo] : null,
+              // S39 2.1: lo secundario, en un desplegable.
+              (soloPosible || !pd.on.respaldo ? '<details class="tarjeta mas-opciones"><summary>Más opciones' + icono('i-flecha', 'mo-flecha') + '</summary>' + soloPosible +
+                (pd.on.respaldo ? '' : '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>') + '</details>' : '')],
+            conjunto && (bloqueGrupo || !pd.on.respaldo) ? ['grupo', 'Grupo', (pd.on.respaldo ? '' : fichaGrupoHtml(p)) + bloqueGrupo + conoceGrupo] : null,
             BARRIOS[p.comuna] ? ['barrio', 'Barrio', barrioSolo(p)] : null,
             ['visita', 'Visita', visitaHtml(p)]
           ]) +
@@ -8343,7 +8349,7 @@
       que: 'El crédito de siempre: compras solo, un departamento nuevo o usado. La garantía del Estado es una ayuda: en uno nuevo, Bci te presta hasta el 90' + NBSP + '% y juntas el 10' + NBSP + '%.',
       como: ['Eliges un departamento nuevo.', 'Juntas el 10' + NBSP + '% en tu cuenta de vivienda.', 'Bci te preaprueba; reservas, firmas y recibes tus llaves.'],
       para: 'Si quieres un departamento nuevo y juntar menos pie.',
-      cuidado: 'Solo departamentos nuevos, de hasta ' + formatoUF(SUPUESTOS.topeFogaesUF) + '.' },
+      cuidado: 'El pie del 10' + NBSP + '% es solo en departamentos nuevos de hasta ' + formatoUF(SUPUESTOS.topeFogaesUF) + '. En un usado juntas el 20' + NBSP + '%.' },
     // 20-nov: la garantía de un familiar (propuesta; referente: Barclays Family Springboard).
     'familiar-vivir': { bueno: 'Pie de solo 5' + NBSP + '%', ojo: 'Depende de tu familiar', depto: 'Nuevo',
       que: 'Un familiar deja el 10' + NBSP + '% del precio en una cuenta Bci, como garantía. Bci te presta el 95' + NBSP + '% y tú juntas el 5' + NBSP + '% y los gastos.',
@@ -8452,6 +8458,43 @@
     'grupo-invertir': ['i-grupo', 'i-alcancia', 'i-llave'],
     'individual-invertir': ['i-casa', 'i-alcancia', 'i-llave']
   };
+  // S39 2.2 (Bárbara): en la ficha, una descripción corta, 3 tarjetitas con íconos y «Cómo funciona» en 3 pasos en fila.
+  var PCT_GRUPO = function () { return Math.round(SUPUESTOS_PIEZAS.descuentoGrupo * 100) + NBSP + '% menos'; };
+  var FICHA_CORTA = {
+    'grupo-vivir': ['Compras junto a otras personas en un edificio en obra, con descuento.', [['i-grupo', 'Con otras personas'], ['i-sube', 'GRUPO'], ['i-pronto', 'Edificio en obra']],
+      ['Aseguras tu cupo', 'Pagas tu pie en cuotas', 'Firmas y recibes tus llaves']],
+    'individual-vivir': ['El crédito de siempre: compras solo, un departamento nuevo o usado.', [['i-persona', 'Compras solo'], ['i-casa', 'Nuevo o usado'], ['i-alcancia', 'Pie desde 10' + NBSP + '%']],
+      ['Eliges tu departamento', 'Juntas tu pie', 'Bci te presta y firmas']],
+    'familiar-vivir': ['Un familiar deja una garantía en Bci y tú juntas menos pie.', [['i-grupo', 'Con tu familia'], ['i-alcancia', 'Pie del 5' + NBSP + '%'], ['i-escudo', 'La garantía vuelve']],
+      ['Tu familiar deja el 10' + NBSP + '%', 'Juntas el 5' + NBSP + '%', 'La garantía vuelve a tu familiar']],
+    usados: ['El crédito de siempre, que sirve también para departamentos usados.', [['i-persona', 'Compras solo'], ['i-casa', 'Nuevo o usado'], ['i-alcancia', 'Pie del 20' + NBSP + '%']],
+      ['Eliges nuevo o usado', 'Juntas el 20' + NBSP + '%', 'Bci te presta y firmas']],
+    'pie-compartido': ['Inversionistas ponen parte del pie y, con el arriendo, les compras su parte.', [['i-inversionistas', 'Con inversionistas'], ['i-alcancia', 'Pones el 5' + NBSP + '%'], ['i-llave', 'Lo arriendas']],
+      ['Eliges uno que rinda', 'Juntas el 5' + NBSP + '%', 'El arriendo recompra su parte']],
+    'grupo-invertir': ['Compras junto a otras personas en un edificio en obra, para arrendarlo.', [['i-grupo', 'Con otras personas'], ['i-sube', 'GRUPO'], ['i-llave', 'Lo arriendas']],
+      ['Aseguras tu cupo', 'Pagas tu pie en cuotas', 'Firmas y lo arriendas']],
+    'familiar-invertir': ['Un familiar deja una garantía en Bci y el departamento es todo tuyo.', [['i-grupo', 'Con tu familia'], ['i-alcancia', 'Pones el 5' + NBSP + '%'], ['i-llave', 'Lo arriendas']],
+      ['Tu familiar deja el 10' + NBSP + '%', 'Juntas el 5' + NBSP + '%', 'Lo arriendas']],
+    'individual-invertir': ['El crédito de siempre, para comprar y arrendar.', [['i-persona', 'Compras solo'], ['i-alcancia', 'Pie del 20' + NBSP + '%'], ['i-llave', 'Lo arriendas']],
+      ['Eliges tu departamento', 'Juntas el 20' + NBSP + '%', 'Firmas y lo arriendas']],
+    'arriendo-opcion': ['Te mudas ahora y parte de lo que pagas cada mes va a tu pie.', [['i-llave', 'Te mudas ya'], ['i-alcancia', 'Entrada del 5' + NBSP + '%'], ['i-casa', 'Tuyo desde el año 3']],
+      ['Juntas la entrada', 'Firmas y te mudas', 'Lo compras desde el año 3']]
+  };
+  var TINTES_3 = ['t-azul', 't-verde', 't-amarillo'];
+  function rasgosCaminoHtml(id) {
+    var f = FICHA_CORTA[id];
+    if (!f) return '';
+    return '<ul class="tiles-3 fc-rasgos">' + f[1].map(function (r, i) {
+      return '<li class="tile ' + TINTES_3[i] + '"><span class="tile-ic" aria-hidden="true">' + icono(r[0]) + '</span>' + (r[1] === 'GRUPO' ? PCT_GRUPO() : r[1]) + '</li>';
+    }).join('') + '</ul>';
+  }
+  function pasosFilaHtml(id) {
+    var f = FICHA_CORTA[id], ics = ICONOS_COMO[id];
+    if (!f || !ics) return pasosVisuales(id);
+    return '<ol class="como-fila">' + f[2].map(function (t, i) {
+      return '<li><span class="cf-ic" aria-hidden="true">' + icono(ics[i]) + '<b>' + (i + 1) + '</b></span><span>' + t + '</span></li>';
+    }).join('') + '</ol>';
+  }
   // Cómo funciona en 3 pasos, con un ícono por paso.
   function pasosVisuales(id) {
     var inf = INFO_CAMINO[id];
@@ -8540,13 +8583,79 @@
     return lista.filter(function (id) { return (!CAMINOS[id].grupo || pf.hayGrupo || estado.caminoElegido === id) && (estado.modo !== 'vivir' || id !== 'usados' || estado.caminoElegido === 'usados'); });
   }
   // «Para ti»: sin prioridad, el que recomienda la app; con prioridad, el mejor en eso.
+  // S39 2.5 (Bárbara): las 3 preguntas recomiendan en este orden: mudarse ya → arriendo con opción;
+  // familia con ahorros → garantía de un familiar; obra o «sin apuro» → compra en grupo; terminado → compra directa;
+  // si no, según la pregunta 1 (llaves antes) o la recomendación de siempre.
+  var porqueReco = '';
   function paraTiComparar(nums) {
     var ok = nums.filter(function (n) { return n.cumple && n.tuyo !== null; });
+    porqueReco = '';
     if (!ok.length) return null;
+    var hay = function (id) { return ok.some(function (n) { return n.id === id; }); };
+    if (estado.modo === 'vivir') {
+      var regla = estado.prioridad === 'ya' && hay('arriendo-opcion') ? ['arriendo-opcion', 'Te mudas antes']
+        : estado.respFamilia === 'ahorros' && hay('familiar-vivir') ? ['familiar-vivir', 'Tu familia te apoya y juntas menos']
+        : (estado.respObra === 'si' || estado.prioridad === 'menos') && hay('grupo-vivir') ? ['grupo-vivir', 'Pagas menos y esperas la obra']
+        : estado.respObra === 'terminado' && hay('individual-vivir') ? ['individual-vivir', 'Lo quieres terminado']
+        : null;
+      if (regla) { porqueReco = regla[1]; return regla[0]; }
+    }
     var p = estado.prioridad;
     if (!p) { var r = recomendadoParaTi(); return r && nums.some(function (n) { return n.id === r.id; }) ? r.id : null; }
     var clave = p === 'antes' ? 'tuyo' : p === 'menos' ? 'dividendo' : 'mudas';
+    porqueReco = { antes: 'Recibes tus llaves antes', menos: 'Pagas menos al mes', ya: 'Te mudas antes' }[p];
     return ok.slice().sort(function (a, b) { return (a[clave] === null ? 1e9 : a[clave]) - (b[clave] === null ? 1e9 : b[clave]); })[0].id;
+  }
+  var PREGUNTAS_CAMINO = [
+    { clave: 'prioridad', titulo: '¿Cuándo quieres mudarte?', opciones: [['ya', 'Ya, aunque primero arriende', 'i-llave'], ['antes', 'Cuando sea mío', 'i-casa'], ['menos', 'Sin apuro, si pago menos', 'i-alcancia'], ['nose', 'No sé', 'i-ayuda']] },
+    { clave: 'respObra', titulo: '¿Te sirve un departamento en construcción?', opciones: [['si', 'Sí, si pago menos', 'i-pronto'], ['terminado', 'Prefiero terminado', 'i-casa'], ['igual', 'Me da lo mismo', 'i-check']] },
+    { clave: 'respFamilia', titulo: '¿Tu familia te puede apoyar?', opciones: [['ahorros', 'Sí, con ahorros', 'i-alcancia', 'Quedan guardados un tiempo y los recupera'], ['apoyo', 'Sí, pero no con dinero', 'i-corazon'], ['solo', 'Prefiero solo', 'i-persona']] }
+  ];
+  var pasoPregunta = 0;
+  var TINTES_4 = ['t-azul', 't-verde', 't-amarillo', 't-rojo'];
+  function preguntasCaminoHtml() {
+    var q = PREGUNTAS_CAMINO[pasoPregunta], n = PREGUNTAS_CAMINO.length;
+    var actual = q.clave === 'prioridad' ? (estado.prioridadRespondida && !estado.prioridad ? 'nose' : estado.prioridad) : estado[q.clave];
+    return '<section class="tarjeta pregunta-prioridad preguntas-camino" aria-labelledby="titulo-pregunta-prioridad">' +
+      '<div class="pc-cab"><h2 class="h5" id="titulo-pregunta-prioridad" tabindex="-1">' + q.titulo + '</h2><small>' + (pasoPregunta + 1) + ' de ' + n + '</small></div>' +
+      '<div class="pc-puntos" aria-hidden="true">' + PREGUNTAS_CAMINO.map(function (x, i) { return '<i' + (i <= pasoPregunta ? ' class="on"' : '') + '></i>'; }).join('') + '</div>' +
+      '<div class="pc-opciones">' + q.opciones.map(function (o, i) {
+        return '<button type="button" class="pc-opcion" data-respuesta="' + o[0] + '" aria-pressed="' + (actual === o[0]) + '">' +
+          '<span class="pc-ic ' + TINTES_4[i % 4] + '" aria-hidden="true">' + icono(o[2]) + '</span><strong>' + o[1] + '</strong>' + (o[3] ? '<small>' + o[3] + '</small>' : '') + '</button>';
+      }).join('') + '</div>' +
+      '<div class="pc-pie">' + (pasoPregunta ? '<button type="button" class="enlace" data-respuesta-atras>‹ Atrás</button>' : '<span></span>') +
+        '<button type="button" class="enlace" data-respuesta-ahora-no>Ahora no</button></div>' +
+    '</section>';
+  }
+  function resumenRespuestas() {
+    var r = PREGUNTAS_CAMINO.map(function (q) {
+      var v = q.clave === 'prioridad' ? estado.prioridad : estado[q.clave];
+      var o = q.opciones.filter(function (x) { return x[0] === v; })[0];
+      return o ? o[1] : null;
+    }).filter(Boolean);
+    return r.length ? r.join(SEP) : '';
+  }
+  function enlazarPreguntasCamino(cont, repintar) {
+    cont.querySelectorAll('[data-respuesta]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var q = PREGUNTAS_CAMINO[pasoPregunta], v = b.dataset.respuesta;
+        if (q.clave === 'prioridad') estado.prioridad = v === 'nose' ? null : v;
+        else estado[q.clave] = v;
+        // «Prefiero terminado»: los edificios quedan filtrados en terminados.
+        if (q.clave === 'respObra') filtrosDeptos.estado = v === 'terminado' ? 'nuevo' : null;
+        if (pasoPregunta < PREGUNTAS_CAMINO.length - 1) pasoPregunta++;
+        else { pasoPregunta = 0; estado.prioridadRespondida = true; cambiandoPrioridad = false; }
+        guardarEstado();
+        repintar();
+        var t = $('titulo-pregunta-prioridad') || $('titulo-proyectos'); if (t) t.focus();
+      });
+    });
+    var at = cont.querySelector('[data-respuesta-atras]');
+    if (at) at.addEventListener('click', function () { pasoPregunta = Math.max(0, pasoPregunta - 1); repintar(); var t = $('titulo-pregunta-prioridad'); if (t) t.focus(); });
+    var no = cont.querySelector('[data-respuesta-ahora-no]');
+    if (no) no.addEventListener('click', function () { pasoPregunta = 0; estado.prioridadRespondida = true; cambiandoPrioridad = false; guardarEstado(); repintar(); });
+    var cb = cont.querySelector('[data-cambiar-respuestas]');
+    if (cb) cb.addEventListener('click', function () { cambiandoPrioridad = true; pasoPregunta = 0; repintar(); var t = $('titulo-pregunta-prioridad'); if (t) { t.scrollIntoView(); t.focus(); } });
   }
   function selloComparar(id, paraTi) {
     return id === estado.caminoElegido ? '<span class="sello-para-ti sello-tuyo">' + icono('i-check') + 'Tu camino</span>'
@@ -8661,10 +8770,13 @@
         '<input type="radio" name="explorar-modo" id="explorar-arrendar" value="arrendar"' + (arrendar ? ' checked' : '') + '><label for="explorar-arrendar">Para arrendar</label>' +
       '</div></fieldset>' +
       barraCaminoAnterior() +
-      '<fieldset class="prioridades cr-prioridades"><legend class="h6">¿Qué te importa más?</legend><div class="prioridades-chips">' +
+      (arrendar ? '<fieldset class="prioridades cr-prioridades"><legend class="h6">¿Qué te importa más?</legend><div class="prioridades-chips">' +
         prioridades.map(function (p) {
           return '<button type="button" class="chip chip-filtro" data-prioridad="' + p[0] + '" aria-pressed="' + (estado.prioridad === p[0]) + '">' + p[1] + '</button>';
-        }).join('') + '</div></fieldset>' +
+        }).join('') + '</div></fieldset>'
+        // S39 2.5: para vivir, las mismas 3 preguntas de Caminos (se responden una vez).
+        : (!estado.prioridadRespondida || cambiandoPrioridad ? preguntasCaminoHtml()
+          : '<p class="prioridad-guardada">Tus respuestas: <strong>' + (resumenRespuestas() || 'sin responder') + '</strong> <button type="button" class="enlace" data-cambiar-respuestas>Cambiar</button></p>')) +
       '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
         '<p class="si-juntas-fila"><label for="rango-comparar" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-comparar">' + formatoRedondeado(mensual) + '</strong></p>' +
         '<input type="range" id="rango-comparar" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '" aria-valuetext="' + formatoRedondeado(mensual) + ' al mes">' +
@@ -8703,6 +8815,7 @@
     };
     enlazar();
     iniciarCaminoAnterior(cont);
+    enlazarPreguntasCamino(cont, renderComparar);
     cont.querySelectorAll('[data-prioridad]').forEach(function (b) {
       b.addEventListener('click', function () {
         estado.prioridad = estado.prioridad === b.dataset.prioridad ? null : b.dataset.prioridad;
@@ -8740,15 +8853,15 @@
       '<section class="fc-cabeza" style="background: linear-gradient(180deg, ' + c[0] + ' 0%, var(--gray-light) 100%)">' +
         '<div class="fc-dibujo">' + ilustracionCamino(id) + '</div>' +
         (chips ? '<div class="fc-chips">' + chips + '</div>' : '') +
-        '<p class="fc-que">' + inf.que + '</p></section>' +
+        '<p class="fc-que">' + (FICHA_CORTA[id] ? FICHA_CORTA[id][0] : inf.que) + '</p></section>' +
+      rasgosCaminoHtml(id) +
       '<section class="fc-tarjeta" aria-labelledby="fc-num"><h2 class="h5" id="fc-num">Con tus números</h2><div class="fc-numeros">' +
         celda('Juntas', n.pie ? formatoRedondeado(n.pie) : '—', n.pieNota || 'pie y gastos') +
         (esArrendarCamino(id) ? celda('Firmas', mesCorto(n.tuyo), 'aprox.') : id === 'arriendo-opcion' ? celda('Te mudas', n.mudas !== null && n.mudas <= 0 ? 'Ya' : mesCorto(n.mudas), 'aprox.') : celda('Llaves', mesCorto(n.tuyo), 'aprox.')) +
         celda('Pagas al mes', n.pagas ? formatoRedondeado(n.pagas) : '—', n.pagasNota || 'dividendo') +
         '</div><p class="fc-sello">' + icono('i-escudo') + 'Sin contar que el departamento suba de precio</p></section>' +
-      '<section class="fc-tarjeta" aria-labelledby="fc-como"><h2 class="h5" id="fc-como">Cómo funciona</h2>' + pasosVisuales(id) +
+      '<section class="fc-tarjeta" aria-labelledby="fc-como"><h2 class="h5" id="fc-como">Cómo funciona</h2>' + pasosFilaHtml(id) +
         '<details class="fc-pasos"><summary>Ver tus ' + h.total + ' pasos</summary>' + listaPasosPrevia(h) + '</details></section>' +
-      '<section class="fc-tarjeta fc-para"><span class="fc-para-icono" aria-hidden="true">' + icono('i-persona') + '</span><span><strong>Para quién</strong><small>' + inf.para + '</small></span></section>' +
       '<nav class="fc-mas" aria-label="Más sobre este camino">' +
         (esArrendarCamino(id) ? '' : '<a href="#departamentos/camino/' + id + '"><span class="fc-mas-icono verde" aria-hidden="true">' + icono('i-casa') + '</span><span><strong>Ver sus departamentos</strong><small>' + plural(k, 'departamento', 'departamentos') + (filtrosDeptos.rango && rangoActual() ? ' en tu rango' : '') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>') +
         (CAMINOS[id] && CAMINOS[id].familiar ? (function () { var rf = respaldoFamiliar(listaMeta()); return '<a href="#compra/ficha/respaldo-familiar/familiar"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-grupo') + '</span><span><strong>Cómo lo vive tu familiar</strong><small>Deja ' + formatoRedondeado(rf.deposito) + ' y lo recupera en ' + (rf.mesesLibera / 12).toFixed(0) + ' años</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>'; })() : '') +
@@ -9012,8 +9125,16 @@
     cont.innerHTML =
       '<a href="#departamentos/caminos" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Caminos</a>' +
       '<header class="encabezado"><h1 id="titulo-caminos" class="h2" tabindex="-1">Proyectos DS19</h1>' +
-        '<p class="texto-apoyo">Un subsidio del Estado para tu primera vivienda, pero <strong>solo en proyectos DS19</strong>, que tienen cupos limitados. No sirve para cualquier departamento.</p></header>' +
-      '<p class="ayuda-tu">' + icono('i-info') + 'No es el DS1: el DS1 es un aporte para tu pie en cualquier departamento bajo el tope; el DS19 es un tipo de proyecto.</p>' +
+        '<div class="franja-bci" aria-hidden="true"></div>' +
+        // S39 2.3 (Bárbara): una descripción corta y tres tarjetitas; el DS1, en un desplegable.
+        '<p class="texto-apoyo">Un subsidio del Estado para tu primera vivienda en proyectos que lo tienen.</p></header>' +
+      '<ul class="tiles-3">' +
+        '<li class="tile t-azul"><span class="tile-ic" aria-hidden="true">' + icono('i-escudo') + '</span>Subsidio del Estado</li>' +
+        '<li class="tile t-verde"><span class="tile-ic" aria-hidden="true">' + icono('i-casa') + '</span>Solo proyectos DS19</li>' +
+        '<li class="tile t-amarillo"><span class="tile-ic" aria-hidden="true">' + icono('i-grupo') + '</span>Cupos limitados</li>' +
+      '</ul>' +
+      '<details class="tarjeta mas-opciones ds1-no-es"><summary>¿Y el DS1? No es lo mismo' + icono('i-flecha', 'mo-flecha') + '</summary>' +
+        '<p class="texto-apoyo">El DS1 es un aporte para tu pie en cualquier departamento bajo el tope. El DS19 es un tipo de proyecto.</p></details>' +
       '<section class="tarjeta ds19-califica" aria-labelledby="titulo-califica">' +
         '<h2 class="h5" id="titulo-califica">¿Calificas?</h2>' +
         '<p class="texto-apoyo"><small>Marca lo que ya tienes.</small></p>' +
@@ -9022,11 +9143,10 @@
           return '<li><button type="button" class="ds19-req" data-ds19="' + r[0] + '" aria-pressed="' + on + '"><span class="fp-marca ' + (on ? 'ok' : 'q') + '" aria-hidden="true">' + (on ? icono('i-check') : '') + '</span><span>' + r[1] + '</span></button></li>';
         }).join('') + '</ul>' +
         '<p class="ds19-resultado ' + (faltan.length ? 'falta' : 'ok') + '" aria-live="polite">' +
-          (faltan.length ? 'Te falta: ' + faltan.map(function (r) { return r[2]; }).join('; ') + '.'
-            : 'Podrías calificar. Lo confirman la inmobiliaria y el Minvu cuando postulas.') + '</p>' +
+          (faltan.length ? 'Te ' + (faltan.length === 1 ? 'falta 1' : 'faltan ' + faltan.length) + ' de ' + DS19_REQUISITOS.length + ' requisitos'
+            : 'Podrías calificar. Lo confirman la inmobiliaria y el Minvu.') + '</p>' +
       '</section>' +
-      '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-ver-ds19">Ver los proyectos DS19</button></div>' +
-      '<p class="texto-apoyo texto-centro"><small>En esta demo, los proyectos DS19 están en obra y se compran en grupo.</small></p>';
+      '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-ver-ds19">Ver los proyectos DS19</button></div>';
     cont.querySelectorAll('[data-ds19]').forEach(function (b) {
       b.addEventListener('click', function () {
         var c = Object.assign({}, estado.pasos.ds19Califica || {});
@@ -9037,7 +9157,7 @@
         var nb = cont.querySelector('[data-ds19="' + b.dataset.ds19 + '"]'); if (nb) nb.focus();
       });
     });
-    $('btn-ver-ds19').addEventListener('click', function () { filtrosDeptos.ds19 = true; deptoCamino = 'todos'; irVistaDeptos('edificios'); });
+    $('btn-ver-ds19').addEventListener('click', function () { filtrosDeptos.ds19 = true; filtrosDeptos.rango = false; deptoCamino = 'todos'; irVistaDeptos('edificios'); }); // S39: se ven todos los DS19, aunque estén fuera de tu rango.
   }
   function renderExplorarDeptos(cont) {
     var ids = idsComparar();
@@ -9056,9 +9176,10 @@
     var favs = guardadosProyectos();
     // 23-nov: arriba, una tarjeta pregunta qué te importa para recomendarte uno.
     // La respuesta se guarda. «Ahora no» también se guarda, para que la tarjeta no vuelva a insistir.
-    var conReco = !!estado.prioridad;
+    var vivirEx = estado.modo === 'vivir';
+    var conReco = !!estado.prioridad || (estado.modo === 'vivir' && !!(estado.respObra || estado.respFamilia));
     var preguntando = !estado.prioridadRespondida || cambiandoPrioridad;
-    var nombrePrioridad = conReco ? PRIORIDADES.filter(function (p) { return p[0] === estado.prioridad; })[0][1] : '';
+    var nombrePrioridad = estado.prioridad ? PRIORIDADES.filter(function (p) { return p[0] === estado.prioridad; })[0][1] : '';
     // 23-nov (Bárbara, referente Uber): cada camino es una fila corta: ícono, nombre, cuándo y cuánto al mes.
     var datosFila = function (id) {
       var n = porId[id] || {};
@@ -9074,17 +9195,17 @@
         '<svg class="cam-flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a></li>';
     };
     var itemCamino = function (id) { return filaCamino(rutaCamino(id), id, nombreCaminoD(id), datosFila(id)); };
-    var vivirEx = estado.modo === 'vivir';
     var itemDS19 = function () {
       return filaCamino('#departamentos/ds19', 'ds19', 'Proyectos DS19', '<span class="cam-dato">' + icono('i-escudo') + '<span>Con subsidio' + SEP + 'cupos limitados</span></span>');
     };
     // El recomendado va arriba, en la misma fila, con su sello «Para ti».
-    var heroHtml = !conReco ? '' :
+    var heroHtml = !conReco || (vivirEx && preguntando) ? '' :
       '<section class="ex-otros ex-grupo" aria-labelledby="ex-reco-titulo"><h2 class="h5" id="ex-reco-titulo">Para ti</h2><ul>' +
-        filaCamino(rutaCamino(reco), reco, nombreCaminoD(reco), datosFila(reco), icono('i-ok') + porque[estado.prioridad].charAt(0).toUpperCase() + porque[estado.prioridad].slice(1)) + '</ul></section>';
-    var lineaPrioridad = conReco && !preguntando
-      ? '<p class="prioridad-guardada">Lo que más te importa: <strong>' + nombrePrioridad + '</strong> <button type="button" class="enlace" id="btn-cambiar-prioridad">Cambiar mi respuesta</button></p>' : '';
-    var preguntaHtml = !preguntando ? '' :
+        filaCamino(rutaCamino(reco), reco, nombreCaminoD(reco), datosFila(reco), icono('i-ok') + (porqueReco || (estado.prioridad ? porque[estado.prioridad].charAt(0).toUpperCase() + porque[estado.prioridad].slice(1) : 'Te lo recomendamos'))) + '</ul></section>';
+    var lineaPrioridad = !preguntando && (vivirEx ? resumenRespuestas() : conReco)
+      ? (vivirEx ? '<p class="prioridad-guardada">Tus respuestas: <strong>' + resumenRespuestas() + '</strong> <button type="button" class="enlace" data-cambiar-respuestas>Cambiar</button></p>'
+        : '<p class="prioridad-guardada">Lo que más te importa: <strong>' + nombrePrioridad + '</strong> <button type="button" class="enlace" id="btn-cambiar-prioridad">Cambiar mi respuesta</button></p>') : '';
+    var preguntaHtml = !preguntando ? '' : vivirEx ? preguntasCaminoHtml() :
       '<section class="tarjeta pregunta-prioridad" aria-labelledby="titulo-pregunta-prioridad">' +
         '<h2 class="h5" id="titulo-pregunta-prioridad">¿Qué es lo que más te importa?</h2>' +
         '<p class="texto-apoyo"><small>Te recomendamos un camino.</small></p>' +
@@ -9136,6 +9257,7 @@
     });
     var bc = $('btn-cambiar-prioridad');
     if (bc) bc.addEventListener('click', function () { cambiandoPrioridad = true; renderDepartamentos(); var t = $('titulo-pregunta-prioridad'); if (t) t.scrollIntoView(); });
+    enlazarPreguntasCamino(cont, renderDepartamentos);
   }
   // S36 (lienzo P23 y P24): el camino como una tarjeta de su color; «Cambiar» abre una grilla de 2 columnas adentro.
   var DEGRADE_CAMINO = { 'grupo-vivir': ['#28652B', '#28892B'], 'individual-vivir': ['#1D5699', '#2772CC'], usados: ['#37474F', '#546E7A'],
@@ -10414,7 +10536,7 @@
           '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a></li>' +
         fila('b', '', 'i-persona', 'Mis datos', (estado.modo === 'vivir' ? 'Para vivir' : 'Para arrendar') + (ingreso ? SEP + formatoPesos(ingreso) + ' al mes' : ''), 'btn-mis-datos') +
         fila('a', '#perfil/avisos', 'i-campana', 'Avisos', activos + ' de ' + TIPOS_AVISO.length + ' activos') +
-        fila('b', '', 'i-buscar', 'Qué te importa más', estado.prioridad ? PRIORIDADES.filter(function (p) { return p[0] === estado.prioridad; })[0][1] : 'Sin elegir', 'btn-cambiar-prioridad-perfil') +
+        fila('b', '', 'i-buscar', 'Tus respuestas', estado.modo === 'vivir' ? (resumenRespuestas() || 'Sin responder') : estado.prioridad ? PRIORIDADES.filter(function (p) { return p[0] === estado.prioridad; })[0][1] : 'Sin elegir', 'btn-cambiar-prioridad-perfil') +
         fila('a', '#perfil/ayuda', 'i-ayuda', 'Ayuda', 'Qué significa cada término') +
       '</ul>' +
       // S34: lo que no es parte de tu compra va aparte (antes se mezclaba con tus datos).
