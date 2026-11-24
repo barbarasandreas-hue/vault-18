@@ -3368,7 +3368,9 @@
   // Hoja genérica. S33-C5 (E5): se abre como pantalla aparte, con «‹ Volver» y su título.
   // Solo las confirmaciones cortas ({ confirmacion: true }) siguen subiendo desde abajo.
   function abrirHojaContenido(titulo, html, boton, alAbrir, opciones) {
-    var pantalla = !(opciones && (opciones.confirmacion || opciones.hoja));
+    // S46 (Bárbara): algunas vuelven a ser ventanas emergentes (cortas, de una acción).
+    var EMERGENTES = ['Movimientos', 'Tu cuota', 'Transferir a tu pie', 'Transferencia exitosa', 'Regalo para tu pie'];
+    var pantalla = !(opciones && (opciones.confirmacion || opciones.hoja)) && EMERGENTES.indexOf(titulo) === -1;
     cerrarHoja(false);
     botonHoja = boton || null;
     var fondo = document.createElement('div');
