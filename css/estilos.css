@@ -5453,3 +5453,14 @@ body:has(.hoja-pantalla) .barra { z-index: 61; }
 .ay-ya svg { width: 18px; height: 18px; margin: 0; }
 .ay-fila-compra .ac-flecha, .ay-item .ac-flecha { transform: rotate(-90deg); }
 .ay-tiles > div { background: var(--white); border: 1px solid var(--gray-semilight); }
+/* S43e (Bárbara): respuestas blancas con solo el borde de color; caminos con color más intenso */
+.pc-opcion.t-azul, .pc-opcion.t-verde, .pc-opcion.t-amarillo, .pc-opcion.pc-gris,
+.pc-opcion.t-azul[aria-pressed="true"], .pc-opcion.t-verde[aria-pressed="true"], .pc-opcion.t-amarillo[aria-pressed="true"], .pc-opcion.pc-gris[aria-pressed="true"] { background: var(--white); color: var(--gray-dark); border: 2px solid; }
+.pc-opcion.t-azul { border-color: var(--blue-40); } .pc-opcion.t-verde { border-color: var(--green-40); }
+.pc-opcion.t-amarillo { border-color: #EEDD66; } .pc-opcion.pc-gris { border-color: var(--gray-semilight); color: var(--gray-semidark); }
+.pc-opcion.t-azul[aria-pressed="true"] { border-color: var(--blue-normal); background: var(--blue-20); }
+.pc-opcion.t-verde[aria-pressed="true"] { border-color: var(--green-normal); background: var(--green-20); }
+.pc-opcion.t-amarillo[aria-pressed="true"] { border-color: #C9B200; background: #FFF4B3; }
+.pc-opcion.pc-gris[aria-pressed="true"] { border-color: var(--gray-semidark); background: var(--gray-light); }
+.camt { background: var(--cs); background: color-mix(in srgb, var(--cs) 80%, var(--cf)); }
+.camt-reco { background: color-mix(in srgb, var(--cs) 75%, var(--cf)); }
