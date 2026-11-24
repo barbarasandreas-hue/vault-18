@@ -1462,8 +1462,7 @@
         fila('vocero', 't-verde', 'i-persona', 'Vocero', (estado.voceroYo ? 'Te ofreciste como vocero' : APODOS_GRUPO[0] + SEP + '3 de 4 votos'), 0) +
         fila('reglas', 't-rojo', 'i-documento', 'Reglas del grupo', (p.cupos || 10) + ' personas' + SEP + Math.round(SUPUESTOS_PIEZAS.descuentoGrupo * 100) + NBSP + '% menos' + SEP + 'sales gratis', 0) +
       '</ul></section>' +
-      obraVisual(p) +
-      '<p class="texto-apoyo texto-centro"><small>Ejemplo simulado' + SEP + 'apodos en vez de nombres</small></p>';
+      obraVisual(p);
   }
   function abrirChatGrupo(p, boton) {
     var mios = estado.muro[p.id] || [];
@@ -1561,7 +1560,6 @@
     if (!conGrupo) vistaCompra = 'compra';
     var cabeza = '<header class="encabezado">' + FIGURAS +
         campana() + '<h1 id="titulo-inicio" class="h2" tabindex="-1">Tu compra</h1>' +
-        '<p class="texto-apoyo">' + esc(x.p.nombre) + SEP + esc(x.p.comuna) + '</p>' +
         (conGrupo ? selectorGrupoHtml() : '') +
       '</header>';
     var enlazarSelector = function () {
@@ -2731,10 +2729,11 @@
       '<p class="ficha-grupo-nota">' + icono('i-escudo') + 'Cada uno con su cuenta y su crédito en Bci. No hay fondo común. Si no se llega al mínimo, nadie queda amarrado.</p></section>';
   }
   function cuandoLlegasCompra(p, sinObra) {
+    var edif = sinObra && p ? '<p class="noche-nombre">' + icono('i-casa') + '<span>' + esc(p.nombre) + '</span></p>' : '';
     if (estado.modo === 'vivir' && p.tipo === 'conjunto' && !compraSinGrupo(p) && mesesParaEntrega(p) > 0) {
       var g = planGrupo(p);
       return '<section class="noche sin-slider' + (sinObra ? ' mi-compra-fecha' : '') + '" aria-labelledby="titulo-cuando">' +
-        '<span class="noche-luna" aria-hidden="true"></span>' +
+        '<span class="noche-luna" aria-hidden="true"></span>' + edif +
         '<p class="noche-etiqueta" id="titulo-cuando">Firman todos en</p>' +
         '<strong class="numero noche-plazo' + claseLargo(textoMeses(g.meses)) + '">' + textoMeses(g.meses) + '</strong>' +
         '<p class="noche-sub">Recibes tus llaves en ' + g.fecha + (sinObra ? '' : ': el mismo día para todo el grupo') + '</p>' +
@@ -2749,7 +2748,7 @@
     var mesesPie = mesesParaMeta(Math.max(0, meta - ahorradoTuPie(meta)), estado.ahorroMensual) || 0;
     // Comentario 9-nov: como el canvas: tus llaves en el azul y tu pie adentro, arriba.
     return '<section class="noche sin-slider' + (sinObra ? ' mi-compra-fecha' : '') + '" aria-labelledby="titulo-cuando">' +
-      '<span class="noche-luna" aria-hidden="true"></span>' +
+      '<span class="noche-luna" aria-hidden="true"></span>' + edif +
       // Comentario 9-nov: la cifra es cuándo logras tu pie; las llaves (que pueden esperar la entrega) van debajo.
       // S33: con el pie ya juntado no se dice «Logras tu pie en Ya».
       '<p class="noche-etiqueta" id="titulo-cuando">' + (mesesPie === 0 ? 'Tu pie' : 'Logras tu pie en') + '</p>' +
@@ -7158,8 +7157,7 @@
     var pc = proyectoCompra();
     if (!pc || pc.tipo !== 'conjunto' || (estado.compra && estado.compra.sinGrupo)) return '';
     // S39 3.2: el edificio real y el grupo viven en «Tu grupo»; aquí queda un acceso.
-    if (enGrupoCompra()) return '<a class="tarjeta fila tu-grupo-pie tg-ir" href="#compra" data-ir-grupo><span class="tg-ic t-azul" aria-hidden="true">' + icono('i-grupo') + '</span>' +
-      '<span><strong>Tu grupo y tu edificio</strong><small>Cómo van los demás, la obra y la conversación</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>';
+    if (enGrupoCompra()) return '';
     return '<section class="tarjeta tu-grupo-pie" aria-labelledby="titulo-grupo-pie">' +
       '<h2 class="h5" id="titulo-grupo-pie">Tu edificio real y tu grupo</h2>' +
       '<p class="texto-apoyo"><small>Así va la obra donde vas a vivir.</small></p>' +
@@ -8622,6 +8620,13 @@
     }
   };
   // S35: los caminos para arrendar. El grupo y el crédito al 80 % usan el dibujo de su par para vivir.
+  DIBUJO_CAMINO.ds19 = function () {
+    return edificioDibujo(118, 26, 80, 94, '#2772CC', '#FFF9CC') +
+      '<circle cx="246" cy="48" r="20" fill="#FFE300"/><path d="M246 36v24M240 42c0-4 12-4 12 0s-12 4-12 8 12 4 12 0" stroke="#736600" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+      '<path d="M246 74v14m-7-6 7 7 7-7" stroke="#28892B" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<rect x="46" y="70" width="52" height="24" rx="12" fill="#28892B"/><text x="72" y="87" text-anchor="middle" font-size="14" font-weight="800" fill="#FFFFFF" font-family="sans-serif">DS19</text>' +
+      personita(82, 122, '#1D5699');
+  };
   DIBUJO_CAMINO['grupo-invertir'] = DIBUJO_CAMINO['grupo-vivir'];
   DIBUJO_CAMINO['individual-invertir'] = DIBUJO_CAMINO.usados;
   DIBUJO_CAMINO['familiar-invertir'] = DIBUJO_CAMINO['familiar-vivir'];
@@ -9038,7 +9043,7 @@
     var chips = (id === estado.caminoElegido ? '<span class="fc-chip fuerte">Tu camino</span>' : r && r.id === id ? '<span class="fc-chip fuerte">Te lo recomendamos</span>' : '') +
       (DATOS_CAMINO[id] || []).slice(-1).map(function (t) { return '<span class="fc-chip">' + t + '</span>'; }).join('');
     var ncel = 0, ICS_CEL = ['i-alcancia', 'i-llave', 'i-calendario'];
-    var celda = function (etq, val, nota) { var q = ncel++ % 3; return '<div class="' + TINTES_3[q] + '"><span class="fcn-ic" aria-hidden="true">' + icono(ICS_CEL[q]) + '</span><small>' + etq + '</small><strong>' + val + '</strong><small>' + nota + '</small></div>'; };
+    var celda = function (etq, val, nota) { var q = ncel++ % 3; val = String(val).replace(/\s*millones/, NBSP + 'M'); return '<div class="' + TINTES_3[q] + '"><span class="fcn-ic" aria-hidden="true">' + icono(ICS_CEL[q]) + '</span><small>' + etq + '</small><strong>' + val + '</strong><small>' + nota + '</small></div>'; };
     var k = filtrarDeptos(itemsDeptos(id), filtrosDeptos).length;
     return '<div class="fc" style="' + varsCamino(id) + '">' +
       '<section class="fc-cabeza" style="background: linear-gradient(180deg, ' + c[0] + ' 0%, var(--gray-light) 100%)">' +
@@ -9316,15 +9321,20 @@
     var faltan = DS19_REQUISITOS.filter(function (r) { return ck[r[0]] !== true; });
     cont.innerHTML =
       '<a href="#departamentos/caminos" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Caminos</a>' +
-      '<header class="encabezado"><h1 id="titulo-caminos" class="h2" tabindex="-1">Proyectos DS19</h1>' +
-        '<div class="franja-bci" aria-hidden="true"></div>' +
-        // S39 2.3 (Bárbara): una descripción corta y tres tarjetitas; el DS1, en un desplegable.
-        '<p class="texto-apoyo">Un subsidio del Estado para tu primera vivienda en proyectos que lo tienen.</p></header>' +
+      '<header class="encabezado"><h1 id="titulo-caminos" class="h2" tabindex="-1">Proyectos DS19</h1></header>' +
+      // S40 (Bárbara): con ilustración arriba, como los demás caminos, y una explicación de qué es el subsidio.
+      '<section class="fc-cabeza" style="background: linear-gradient(180deg, #D4E3F5 0%, var(--gray-light) 100%)"><div class="fc-dibujo">' + ilustracionCamino('ds19') + '</div>' +
+        '<p class="fc-que">Un subsidio del Estado para tu primera vivienda en proyectos que lo tienen.</p></section>' +
       '<ul class="tiles-3">' +
         '<li class="tile t-azul"><span class="tile-ic" aria-hidden="true">' + icono('i-escudo') + '</span>Subsidio del Estado</li>' +
         '<li class="tile t-verde"><span class="tile-ic" aria-hidden="true">' + icono('i-casa') + '</span>Solo proyectos DS19</li>' +
         '<li class="tile t-amarillo"><span class="tile-ic" aria-hidden="true">' + icono('i-grupo') + '</span>Cupos limitados</li>' +
       '</ul>' +
+      '<section class="tarjeta ds19-que" aria-labelledby="ds19-que-t"><h2 class="h5" id="ds19-que-t">¿Qué es el subsidio?</h2><ul class="ds19-que-filas">' +
+        '<li><span class="tg-ic t-azul" aria-hidden="true">' + icono('i-banco') + '</span><span><strong>Plata del Estado</strong><small>Un aporte para tu primera vivienda. No se devuelve.</small></span></li>' +
+        '<li><span class="tg-ic t-verde" aria-hidden="true">' + icono('i-alcancia') + '</span><span><strong>Baja lo que pagas</strong><small>Se descuenta del precio: juntas menos pie y pides menos crédito.</small></span></li>' +
+        '<li><span class="tg-ic t-amarillo" aria-hidden="true">' + icono('i-casa') + '</span><span><strong>Solo en proyectos DS19</strong><small>Hay cupos limitados. Se postula con la inmobiliaria y lo confirma el Minvu.</small></span></li>' +
+      '</ul><p class="texto-apoyo"><small>Monto de ejemplo: desde UF 350 (unos ' + formatoRedondeado(ufAPesos(350)) + '), según tu tramo.</small></p></section>' +
       '<details class="tarjeta mas-opciones ds1-no-es"><summary>¿Y el DS1? No es lo mismo' + icono('i-flecha', 'mo-flecha') + '</summary>' +
         '<p class="texto-apoyo">El DS1 es un aporte para tu pie en cualquier departamento bajo el tope. El DS19 es un tipo de proyecto.</p></details>' +
       '<section class="tarjeta ds19-califica" aria-labelledby="titulo-califica">' +
@@ -9395,7 +9405,7 @@
       '<section class="ex-otros ex-grupo" aria-labelledby="ex-reco-titulo"><h2 class="h5" id="ex-reco-titulo">Para ti</h2><ul>' +
         filaCamino(rutaCamino(reco), reco, nombreCaminoD(reco), datosFila(reco), icono('i-ok') + (porqueReco || (estado.prioridad ? porque[estado.prioridad].charAt(0).toUpperCase() + porque[estado.prioridad].slice(1) : 'Te lo recomendamos'))) + '</ul></section>';
     var lineaPrioridad = !preguntando && (vivirEx ? resumenRespuestas() : conReco)
-      ? (vivirEx ? '<p class="prioridad-guardada">Tus respuestas: <strong>' + resumenRespuestas() + '</strong> <button type="button" class="enlace" data-cambiar-respuestas>Cambiar</button></p>'
+      ? (vivirEx ? ''
         : '<p class="prioridad-guardada">Lo que más te importa: <strong>' + nombrePrioridad + '</strong> <button type="button" class="enlace" id="btn-cambiar-prioridad">Cambiar mi respuesta</button></p>') : '';
     var preguntaHtml = !preguntando ? '' : vivirEx ? preguntasCaminoHtml() :
       '<section class="tarjeta pregunta-prioridad" aria-labelledby="titulo-pregunta-prioridad">' +
@@ -9431,8 +9441,7 @@
             (foto ? '<img src="' + foto + '" alt="' + esc(p.nombre) + ' (foto referencial)" loading="lazy" width="800" height="600">' : '<span class="ex-fav-foto">' + fachada(p) + '</span>') +
             '<span class="ex-fav-texto"><small>' + (p.tipo === 'conjunto' ? 'Compra en grupo' : p.tipo === 'venta' ? 'Terminado' : NOMBRE_TIPO[p.tipo]) + '</small>' +
             '<strong>' + esc(p.nombre) + '</strong><span>' + (d ? formatoRedondeado(ufAPesos(d.listaUF)) : '') + '</span></span></a></li>';
-        }).join('') + '</ul></section>' : '') +
-      '<div class="acciones"><button type="button" class="btn btn-terciario btn-bloque" data-explorar-camino="todos">Ver todos los departamentos</button></div>';
+        }).join('') + '</ul></section>' : '') ;
     cont.querySelectorAll('[data-explorar-camino]').forEach(function (b) {
       b.addEventListener('click', function () { deptoCamino = b.dataset.explorarCamino; deptosAbierto = false; irVistaDeptos('edificios'); });
     });
