@@ -1108,7 +1108,7 @@
       que: 'Dinero del Estado que se suma a tu pie para tu primera vivienda. No se devuelve.',
       combina: 'Es un acelerador: se suma a un camino (compra directa o compra en grupo); no es un camino ni un tipo de departamento.',
       limite: PIEZAS_VIVIR.subsidio.cond, mas: 'ds1' },
-    ds19: { nombre: 'Proyectos DS19', pregunta: '¿Qué es el DS19?',
+    ds19: { nombre: 'Subsidio DS19', pregunta: '¿Qué es el DS19?',
       que: 'Un subsidio del Estado para tu primera vivienda, pero solo en proyectos DS19 específicos, que tienen cupos limitados. No sirve para cualquier departamento: primero revisas si el proyecto es DS19.',
       combina: 'Se puede sumar al DS1.',
       limite: 'Para postular necesitas estar en el Registro Social de Hogares. El precio tope depende de la comuna y el tramo.', mas: 'ds19' },
@@ -2447,7 +2447,7 @@
         hasta: 'Llamado cierra el ' + formatoFecha(cierreDS1),
         suma: ['Garantía del Estado', 'Compra en grupo'],
         pasos: ['Inscríbete en el Registro Social', 'Junta el ahorro en tu cuenta', 'Postula en el sitio del Minvu'] },
-      ds19: { sigla: 'DS19', nombre: 'Proyectos DS19', hoy: true, filtro: 'ds19',
+      ds19: { sigla: 'DS19', nombre: 'Subsidio DS19', hoy: true, filtro: 'ds19',
         quien: 'Primera vivienda, solo en proyectos DS19 con cupos limitados, y con Registro Social de Hogares',
         cuanto: 'Un subsidio del Estado; el monto depende del tramo y la comuna (por confirmar)',
         hasta: 'Según el proyecto',
@@ -8968,7 +8968,7 @@
       }).join('') +
       // S43 (Bárbara): DS19 también aparece en Comparar. Su fecha y cuota dependen del proyecto, así que no entra al lado a lado.
       (estado.modo === 'vivir' ? '<li class="cmp-ds19"><a href="#departamentos/ds19"><span class="cam-icono" aria-hidden="true">' + icono('i-casa') + '</span>' +
-        '<span class="cmp-ds19-txt"><b>Proyectos DS19</b><small>Con subsidio del Estado' + SEP + 'la fecha depende del proyecto</small></span>' +
+        '<span class="cmp-ds19-txt"><b>Subsidio DS19</b><small>Solo en proyectos DS19' + SEP + 'la fecha depende del proyecto</small></span>' +
         '<span class="cmp-ds19-ir">¿Calificas? ›</span></a></li>' : '') + '</ul>' +
       '<div class="cmp-anios" aria-hidden="true"><span style="left:0">Hoy</span>' + anios.filter(function (h) { return parseFloat(h.split('left:')[1]) > 12; }).join('') + '</div>';
   }
@@ -9415,7 +9415,7 @@
     var faltan = DS19_REQUISITOS.filter(function (r) { return ck[r[0]] !== true; });
     cont.innerHTML =
       '<a href="#departamentos/caminos" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Caminos</a>' +
-      '<header class="encabezado"><h1 id="titulo-caminos" class="h2" tabindex="-1">Proyectos DS19</h1></header>' +
+      '<header class="encabezado"><h1 id="titulo-caminos" class="h2" tabindex="-1">Subsidio DS19</h1></header>' +
       // S40 (Bárbara): con ilustración arriba, como los demás caminos, y una explicación de qué es el subsidio.
       '<section class="fc-cabeza" style="background: linear-gradient(180deg, #D4E3F5 0%, var(--gray-light) 100%)"><div class="fc-dibujo">' + ilustracionCamino('ds19') + '</div>' +
         '<p class="fc-que">Un subsidio del Estado para tu primera vivienda en proyectos que lo tienen.</p></section>' +
@@ -9492,7 +9492,7 @@
     };
     var itemCamino = function (id) { return filaCamino(rutaCamino(id), id, nombreCaminoD(id), datosFila(id)); };
     var itemDS19 = function () {
-      return filaCamino('#departamentos/ds19', 'ds19', 'Proyectos DS19', '<span class="cam-dato">' + icono('i-escudo') + '<span>Con subsidio' + SEP + 'cupos limitados</span></span>');
+      return filaCamino('#departamentos/ds19', 'ds19', 'Subsidio DS19', '<span class="cam-dato">' + icono('i-escudo') + '<span>Solo en proyectos DS19' + SEP + 'cupos limitados</span></span>');
     };
     // El recomendado va arriba, en la misma fila, con su sello «Para ti».
     var heroHtml = !conReco || (vivirEx && preguntando) ? '' :
@@ -9512,7 +9512,7 @@
       '</section>';
     // S43 (Bárbara, maqueta 13 derecha, 24-nov): el recomendado en una franja «Para ti» y los demás en cuadros con un ícono simple.
     var lineaCuadro = function (id) {
-      if (id === 'ds19') return 'Con subsidio';
+      if (id === 'ds19') return 'Solo en proyectos DS19';
       var n = porId[id] || {};
       if (id === 'arriendo-opcion') return 'Te mudas ' + (n.mudas !== null && n.mudas <= 0 ? 'ya' : mesCorto(n.mudas));
       return mesCorto(n.tuyo) + (n.pagas ? SEP + formatoRedondeado(n.pagas) : '');
@@ -9521,7 +9521,7 @@
       var href = id === 'ds19' ? '#departamentos/ds19' : rutaCamino(id);
       return '<li><a class="camt" href="' + href + '" style="' + varsCamino(id) + '">' +
         '<span class="cam-icono camt-ic" aria-hidden="true">' + (id === 'ds19' ? icono('i-casa') : iconoCaminoD(id)) + '</span>' +
-        '<strong>' + (id === 'ds19' ? 'Proyectos DS19' : nombreCaminoD(id)) + '</strong><small>' + lineaCuadro(id) + '</small></a></li>';
+        '<strong>' + (id === 'ds19' ? 'Subsidio DS19' : nombreCaminoD(id)) + '</strong><small>' + lineaCuadro(id) + '</small></a></li>';
     };
     var paraTiHtml = !conReco || preguntando ? '' :
       '<a class="camt-reco" href="' + rutaCamino(reco) + '" style="' + varsCamino(reco) + '">' +
