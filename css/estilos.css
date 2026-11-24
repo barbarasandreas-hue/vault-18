@@ -5489,3 +5489,14 @@ body:has(.hoja-pantalla) .barra { z-index: 61; }
 [href$="/grupo-invertir"].camt, [href$="/grupo-invertir"].camt-reco { --bci-fondo: #C4DFC5; --bci-tinta: var(--green-dark); }
 [href$="/individual-invertir"].camt, [href$="/individual-invertir"].camt-reco { --bci-fondo: #FFF2A6; --bci-tinta: #5C5200; }
 [href$="/familiar-invertir"].camt, [href$="/familiar-invertir"].camt-reco { --bci-fondo: #F9D3D6; --bci-tinta: var(--red-dark); }
+
+/* S43k: consejos de las ayudas y secciones de filtros */
+.ay-consejos { list-style: none; margin: 4px 0 0; padding: 12px; border-radius: 16px; background: var(--white); border: 1px solid var(--gray-semilight); }
+.ay-consejos li { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+.ay-consejos li + li { border-top: 1px solid var(--gray-semilight); }
+.ay-consejo-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; background: var(--green-20); color: var(--green-dark); }
+.ay-consejo-ic svg { width: 18px; height: 18px; margin: 0; }
+.ay-mas { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; flex: none; font-weight: 800; color: var(--green-dark); background: var(--green-20); }
+.filtro-seccion { list-style: none; margin: 16px 0 4px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--gray-semidark); }
+.filtro-seccion:first-child { margin-top: 4px; }
+.filtro-favs { margin-top: 16px; }

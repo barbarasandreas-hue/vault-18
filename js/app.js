@@ -4044,7 +4044,14 @@
       pasos: function (f, ps) { return [['i-documento', 'Inscríbete en el Registro Social de Hogares', 'En línea, en ChileAtiende', !!ps.rsh],
         ['i-alcancia', 'Junta el ahorro mínimo', 'Desde 80 UF (unos ' + formatoRedondeado(ufAPesos(80)) + '), con tu cuenta abierta hace 12 meses', false],
         ['i-calendario', 'Postula cuando abra el llamado', 'Te avisamos las fechas', !!ps.ds1Postulado],
-        ['i-llave', 'Usa el certificado al firmar', 'Se descuenta de tu pie', false]]; } },
+        ['i-llave', 'Usa el certificado al firmar', 'Se descuenta de tu pie', false]]; },
+      // S43 (Bárbara): asesoría para sumar más puntos (factores de puntaje del DS1 según el Minvu).
+      consejosTitulo: 'Cómo sumar más puntos',
+      consejos: [['i-alcancia', 'Ahorra más que el mínimo', 'Cada UF sobre las 80 te suma puntos'],
+        ['i-calendario', 'Deposita todos los meses y no gires', 'La constancia del ahorro suma puntos'],
+        ['i-candado', 'Abre tu cuenta de vivienda cuanto antes', 'Mientras más antigua, más puntos'],
+        ['i-grupo', 'Declara a todo tu grupo familiar', '40 puntos por cada integrante y más por menores de 5 años'],
+        ['i-documento', 'Si no sales, vuelve a postular', 'Cada llamado en que no te seleccionan suma 20 puntos']] },
     tasa: { tinte: 'amarillo', ic: 'i-sube',
       que: 'El Estado paga una parte de los intereses de tu crédito: <strong>baja la tasa y pagas menos al mes</strong>. Es para departamentos nuevos de hasta UF 4.000 y depende de los cupos que queden.',
       pasos: function (f) { return [['i-casa', 'Departamento nuevo, hasta UF 4.000', 'En primera venta', f.req[0][1] === true && f.req[1][1] === true],
@@ -4055,7 +4062,12 @@
       pasos: function (f, ps) { return [['i-documento', 'Inscríbete en el Registro Social de Hogares', 'En línea, en ChileAtiende', !!ps.rsh],
         ['i-alcancia', 'Junta el ahorro mínimo', 'Desde 80 UF (unos ' + formatoRedondeado(ufAPesos(80)) + ') en tu cuenta de vivienda', false],
         ['i-casa', 'Elige un proyecto DS19', 'Están marcados en Edificios', !!(f.req[0] && f.req[0][1])],
-        ['i-banco', 'Postula con la inmobiliaria', 'Lo confirma el Minvu', false]]; } },
+        ['i-banco', 'Postula con la inmobiliaria', 'Lo confirma el Minvu', false]]; },
+      consejosTitulo: 'Consejos para conseguirlo',
+      consejos: [['i-calendario', 'Pregunta apenas abra el proyecto', 'Los cupos son limitados y se acaban'],
+        ['i-documento', 'Ten tu Registro y tu ahorro listos', 'La inmobiliaria revisa que cumplas antes de reservar'],
+        ['i-banco', 'Pide tu preaprobación en Bci', 'Así puedes reservar sin esperar'],
+        ['i-alcancia', 'Ahorra más que el mínimo', 'Te ayuda a pagar menos crédito']] },
     sumar: { tinte: 'rojo', ic: 'i-grupo',
       que: 'Tu pareja, un familiar u otra persona <strong>aparece en el mismo crédito y suma su sueldo</strong>. Así Bci puede prestarte más. Antes, dejen escrito el acuerdo entre ustedes.',
       pasos: function (f, ps) { return [['i-persona', 'Elige con quién', 'Pareja, familiar u otra persona', false],
@@ -4118,6 +4130,9 @@
       (pasos.length ? '<h3 class="h5 ay-h">Para conseguir' + (f.id === 'ds1' || f.id === 'tasa' ? 'lo' : 'la') + '</h3><ul class="ay-pasos">' + pasos.map(function (x, k) {
         return '<li><span class="ay-paso-ic ' + ['t-verde', 't-azul', 't-amarillo'][k % 3] + '" aria-hidden="true">' + icono(x[0]) + '</span>' +
           '<span class="ay-txt"><strong>' + x[1] + '</strong><small>' + x[2] + '</small></span>' + (x[3] ? '<span class="ay-chip">' + icono('i-check') + 'Listo</span>' : '') + '</li>';
+      }).join('') + '</ul>' : '') +
+      (v.consejos ? '<h3 class="h5 ay-h">' + v.consejosTitulo + '</h3><ul class="ay-consejos">' + v.consejos.map(function (x) {
+        return '<li><span class="ay-consejo-ic" aria-hidden="true">' + icono(x[0]) + '</span><span class="ay-txt"><strong>' + x[1] + '</strong><small>' + x[2] + '</small></span><span class="ay-mas" aria-hidden="true">+</span></li>';
       }).join('') + '</ul>' : '') +
       '<div class="ay-pie' + (principal ? '' : ' solo') + '"><button type="button" class="btn btn-secundario" data-ayuda-volver>Volver</button>' + principal + '</div>';
     abrirHojaContenido(f.nombre, html, boton, function (hoja) {
@@ -9238,7 +9253,7 @@
   // Una sola lista: los de cada camino (en grupo, con garantía, usados y arriendo con opción), con «Camino ▾» y «Filtros».
   // Mirar otro camino no cambia tu plan.
   var deptoCamino = null; // null = el de tu camino (o todos); 'todos' o un id de CAMINOS_COMPARAR
-  var filtrosDeptos = { comuna: null, rango: true, dormitorios: null, estado: null, orden: 'antes', favoritos: false };
+  var filtrosDeptos = { comuna: null, rango: true, dormitorios: null, estado: null, orden: 'antes', favoritos: false, ds19: false, sinIva: false };
   // 20-nov: Departamentos para arrendar funciona igual que para vivir, con los caminos para arrendar.
   function caminosDeptos() { return estado.modo === 'arrendar' ? CAMINOS_ARRENDAR : CAMINOS_COMPARAR; }
   function caminoDeptosActual() {
@@ -9322,6 +9337,7 @@
       if (f.estado && x.estado !== f.estado) return false;
       if (f.favoritos && !esFavorito(x.id)) return false;
       if (f.ds19 && !(x.p && x.p.ds19)) return false;
+      if (f.sinIva && !(x.p && cumpleChip('sin-iva', x.p, departamentosDe(x.p.id)[0]))) return false;
       return true;
     });
     var clave = function (x) { return f.orden === 'precio' ? x.uf : (x.tuyo === null ? 1e6 : x.tuyo); };
@@ -9329,7 +9345,7 @@
   }
   function nFiltrosDeptos() {
     var f = filtrosDeptos;
-    return (f.comuna ? 1 : 0) + (f.rango ? 0 : 1) + (f.dormitorios !== null ? 1 : 0) + (f.estado ? 1 : 0) + (f.orden !== 'antes' ? 1 : 0) + (f.favoritos ? 1 : 0) + (f.ds19 ? 1 : 0);
+    return (f.comuna ? 1 : 0) + (f.rango ? 0 : 1) + (f.dormitorios !== null ? 1 : 0) + (f.estado ? 1 : 0) + (f.orden !== 'antes' ? 1 : 0) + (f.favoritos ? 1 : 0) + (f.ds19 ? 1 : 0) + (f.sinIva ? 1 : 0);
   }
   function lineaGrupo(g) {
     return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + 'Firman todos en ' + g.fecha + '</p>' +
@@ -9630,7 +9646,7 @@
         '<button type="button" class="btn btn-terciario btn-sm" id="btn-deptos-filtros" aria-haspopup="dialog">' + icono('i-filtro') + 'Filtros' + (n ? ' (' + n + ')' : '') + '</button></div>' + tabsDeptos('edificios') +
         '</header>' +
       bannerCaminoHtml(cam) +
-      (filtrosDeptos.ds19 ? '<p class="filtro-activo"><button type="button" class="chip chip-filtro" id="btn-quitar-ds19" aria-pressed="true">Solo proyectos DS19 <span aria-hidden="true">✕</span><span class="oculto-visual">: quitar</span></button></p>' : '') +
+      (filtrosDeptos.ds19 || filtrosDeptos.sinIva ? '<p class="filtro-activo"><button type="button" class="chip chip-filtro" id="btn-quitar-ds19" aria-pressed="true">' + (filtrosDeptos.ds19 ? 'Solo proyectos DS19' : 'Solo sin IVA') + ' <span aria-hidden="true">✕</span><span class="oculto-visual">: quitar</span></button></p>' : '') +
       (lista.length
         ? '<ul class="lista-proyectos lista-deptos" id="lista-proyectos">' + lista.map(tarjetaDepto).join('') + '</ul>'
         : '<div class="vacio"><svg aria-hidden="true"><use href="#i-proyectos"/></svg><h2 class="h3">Ninguno con estos filtros</h2>' +
@@ -9650,9 +9666,9 @@
       });
     });
     if ($('btn-deptos-filtros')) $('btn-deptos-filtros').addEventListener('click', function () { abrirFiltrosDeptos($('btn-deptos-filtros')); });
-    if ($('btn-quitar-ds19')) $('btn-quitar-ds19').addEventListener('click', function () { filtrosDeptos.ds19 = false; renderDepartamentos(); $('titulo-proyectos').focus(); });
+    if ($('btn-quitar-ds19')) $('btn-quitar-ds19').addEventListener('click', function () { filtrosDeptos.ds19 = false; filtrosDeptos.sinIva = false; renderDepartamentos(); $('titulo-proyectos').focus(); });
     if ($('btn-deptos-limpiar')) $('btn-deptos-limpiar').addEventListener('click', function () {
-      filtrosDeptos = { comuna: null, rango: true, dormitorios: null, estado: null, orden: 'antes', favoritos: false };
+      filtrosDeptos = { comuna: null, rango: true, dormitorios: null, estado: null, orden: 'antes', favoritos: false, ds19: false, sinIva: false };
       renderDepartamentos();
     });
   }
@@ -9687,32 +9703,35 @@
       return '<button type="button" class="chip chip-filtro" data-f="' + grupo + '" data-v="' + valor + '">' + texto + '</button>';
     };
     // 23-nov (Bárbara): cada filtro es un desplegable que muestra su valor actual; se abre uno a la vez.
+    // S43 (Bárbara): los filtros ordenados por sección, cada uno en su desplegable; DS19 y Sin IVA en «Beneficios».
     var grupos = [
-      ['comuna', 'Comuna', chip('comuna', '', 'Todas') + comunas.map(function (c) { return chip('comuna', esc(c), esc(c)); }).join('')],
-      rango ? ['rango', 'Precio', chip('rango', '1', 'Tu rango' + SEP + textoRango(rango)) + chip('rango', '0', 'Todos los precios')] : null,
-      ['dormitorios', 'Dormitorios', chip('dormitorios', '', 'Todos') + chip('dormitorios', '0', 'Estudio') + chip('dormitorios', '1', '1') + chip('dormitorios', '2', '2')],
-      ['estado', 'Estado', chip('estado', '', 'Todos') + chip('estado', 'obra', 'En obra') + chip('estado', 'nuevo', 'Terminado') + chip('estado', 'usado', 'Usado')],
-      ['orden', 'Ordenar por', chip('orden', 'antes', 'Llaves antes') + chip('orden', 'precio', 'Menor precio')]
+      ['comuna', 'Comuna', chip('comuna', '', 'Todas') + comunas.map(function (c) { return chip('comuna', esc(c), esc(c)); }).join(''), 'Dónde y cuánto'],
+      rango ? ['rango', 'Precio', chip('rango', '1', 'Tu rango' + SEP + textoRango(rango)) + chip('rango', '0', 'Todos los precios'), 'Dónde y cuánto'] : null,
+      ['dormitorios', 'Dormitorios', chip('dormitorios', '', 'Todos') + chip('dormitorios', '0', 'Estudio') + chip('dormitorios', '1', '1') + chip('dormitorios', '2', '2'), 'El departamento'],
+      ['estado', 'Estado', chip('estado', '', 'Todos') + chip('estado', 'obra', 'En obra') + chip('estado', 'nuevo', 'Terminado') + chip('estado', 'usado', 'Usado'), 'El departamento'],
+      estado.modo === 'vivir' ? ['beneficio', 'Subsidios y descuentos', chip('beneficio', '', 'Todos') + chip('beneficio', 'ds19', 'Proyectos DS19') + chip('beneficio', 'sin-iva', 'Sin IVA'), 'Beneficios'] : null,
+      ['orden', 'Ordenar por', chip('orden', 'antes', 'Llaves antes') + chip('orden', 'precio', 'Menor precio'), 'Cómo verlos']
     ].filter(Boolean);
     var resumenFiltro = function (g) {
       if (g === 'comuna') return f.comuna || 'Todas';
       if (g === 'rango') return f.rango ? 'Tu rango' : 'Todos los precios';
       if (g === 'dormitorios') return f.dormitorios === null ? 'Todos' : f.dormitorios === 0 ? 'Estudio' : String(f.dormitorios);
       if (g === 'estado') return { obra: 'En obra', nuevo: 'Terminado', usado: 'Usado' }[f.estado] || 'Todos';
+      if (g === 'beneficio') return f.ds19 ? 'Proyectos DS19' : f.sinIva ? 'Sin IVA' : 'Todos';
       return f.orden === 'precio' ? 'Menor precio' : 'Llaves antes';
     };
     var html =
-      '<ul class="filtros-lista">' + grupos.map(function (g) {
-        return '<li class="filtro-item"><button type="button" class="filtro-cab" data-filtro-grupo="' + g[0] + '" aria-expanded="false" aria-controls="filtro-cuerpo-' + g[0] + '">' +
+      '<ul class="filtros-lista">' + grupos.map(function (g, gi) {
+        return (gi === 0 || grupos[gi - 1][3] !== g[3] ? '<li class="filtro-seccion" aria-hidden="true">' + g[3] + '</li>' : '') + '<li class="filtro-item"><button type="button" class="filtro-cab" data-filtro-grupo="' + g[0] + '" aria-expanded="false" aria-controls="filtro-cuerpo-' + g[0] + '">' +
           '<span class="filtro-nombre">' + g[1] + '</span><span class="filtro-valor" id="filtro-valor-' + g[0] + '"></span>' +
           '<svg class="acel-flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>' +
           '<div class="filtro-cuerpo" id="filtro-cuerpo-' + g[0] + '" hidden><div class="chips-filtros">' + g[2] + '</div></div></li>';
       }).join('') + '</ul>' +
-      '<button type="button" class="interruptor bloque-chico" role="switch" id="filtro-favoritos" aria-checked="' + f.favoritos + '">' +
+      '<button type="button" class="interruptor bloque-chico filtro-favs" role="switch" id="filtro-favoritos" aria-checked="' + f.favoritos + '">' +
         '<span>Solo mis favoritos</span><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>' +
       '<button type="button" class="btn btn-primario btn-bloque bloque-chico" id="btn-ver-deptos"></button>';
     abrirHojaContenido('Filtros', html, boton, function (hoja) {
-      var valorDe = function (g) { return g === 'rango' ? (f.rango ? '1' : '0') : f[g] === null ? '' : String(f[g]); };
+      var valorDe = function (g) { return g === 'rango' ? (f.rango ? '1' : '0') : g === 'beneficio' ? (f.ds19 ? 'ds19' : f.sinIva ? 'sin-iva' : '') : f[g] === null ? '' : String(f[g]); };
       var actualizar = function () {
         hoja.querySelectorAll('[data-f]').forEach(function (b) { b.setAttribute('aria-pressed', String(valorDe(b.dataset.f) === b.dataset.v)); });
         grupos.forEach(function (g) { var el = $('filtro-valor-' + g[0]); if (el) el.textContent = resumenFiltro(g[0]); });
@@ -9736,6 +9755,7 @@
           if (g === 'rango') f.rango = v === '1';
           else if (g === 'dormitorios') f.dormitorios = v === '' ? null : Number(v);
           else if (g === 'orden') f.orden = v;
+          else if (g === 'beneficio') { f.ds19 = v === 'ds19'; f.sinIva = v === 'sin-iva'; if (v) f.rango = false; }
           else f[g] = v === '' ? null : v;
           actualizar();
         });
