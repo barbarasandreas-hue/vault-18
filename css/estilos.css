@@ -5553,3 +5553,33 @@ body:has(.hoja-pantalla) .barra { z-index: 61; }
 .ay-sw[aria-checked="true"] .interruptor-pista { background: var(--green-dark); }
 .ay-sw[aria-checked="true"] .interruptor-bola { transform: translateX(20px); }
 .ay-sw:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; border-radius: 16px; }
+
+/* S47: Ayudas · simular y ver qué falta */
+.ay-lab { margin: 6px 0 6px; font-size: 11.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--gray-semidark); }
+.ay-tiles.tres > div.nuevo strong { color: var(--green-dark); }
+.ay-tiles s { font-size: 12px; color: var(--gray-semidark); }
+.ay-card { background: var(--white); border-radius: 16px; box-shadow: 0 1px 4px rgba(55,71,79,.08); margin-top: 10px; overflow: hidden; }
+.ay-card .ay-item-tab { padding: 4px 14px 0; }
+.ay-sw-sim { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.ay-sw-txt { font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--gray-semidark); }
+.ay-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px 70px; }
+.ay-tags span { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 8px; background: var(--gray-light); color: var(--gray-semidark); }
+.ay-tags svg { width: 13px; height: 13px; margin: 0; }
+.ay-real { border-top: 1px solid var(--gray-semilight); background: #FBFCFC; padding: 12px 14px 14px; }
+.ay-real-t { font-size: 13.5px; font-weight: 800; margin: 0 0 8px; }
+.ay-etapas { list-style: none; display: flex; justify-content: space-between; margin: 0 0 10px; padding: 0; position: relative; }
+.ay-etapas::before { content: ''; position: absolute; left: 12px; right: 12px; top: 11px; height: 3px; background: var(--gray-semilight); }
+.ay-etapas li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; color: var(--gray-semidark); }
+.ay-etapas li:first-child { align-items: flex-start; } .ay-etapas li:last-child { align-items: flex-end; }
+.ay-etapas li span { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--white); border: 2px solid var(--gray-neutral); font-size: 11px; font-weight: 800; }
+.ay-etapas li span svg { width: 14px; height: 14px; margin: 0; }
+.ay-etapas li.ok span { background: var(--green-normal); border-color: var(--green-normal); color: var(--white); }
+.ay-etapas li.ahora { color: var(--blue-normal); } .ay-etapas li.ahora span { border-color: var(--blue-normal); color: var(--blue-normal); }
+.ay-real-pasos { list-style: none; margin: 0 0 6px; padding: 0; }
+.ay-real-pasos li { display: flex; gap: 10px; align-items: center; padding: 5px 0; font-size: 14px; }
+.ay-ck { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--gray-neutral); display: grid; place-items: center; flex: none; }
+.ay-real-pasos li.hecho .ay-ck { background: var(--green-normal); border-color: var(--green-normal); color: var(--white); }
+.ay-ck svg { width: 12px; height: 12px; margin: 0; }
+.ay-real-pasos li.hecho { color: var(--gray-semidark); }
+.ay-a-misiones { margin-top: 6px; }
+.ay-real .ay-ya { justify-content: flex-start; margin: 6px 0 0; }

@@ -231,6 +231,7 @@ test('S45: los números parten sin ayudas; la garantía y la tasa se suman con i
   const con = calc.calcularPiezas(pf, { garantia: true, tasa: true }, d, '2026-11-24');
   assert.ok(sin.meta > con.meta, 'sin garantía se junta más pie');
   assert.ok(sin.dividendo > con.dividendo * 0.95, 'sin subsidio a la tasa no baja el dividendo');
-  assert.match(app, /garantia: !!ps\.fogaesAgregado, tasa: !!ps\.tasaAgregado/);
+  assert.match(app, /garantia: !!\(ps\.fogaesAgregado \|\| ps\.simFogaes\)/);
+  assert.match(app, /Para que sea real · /);
   assert.match(app, /data-ay-switch="/);
 });

@@ -2020,7 +2020,8 @@
   // S45 (Bárbara): los números parten sin ayudas; la garantía del Estado y el subsidio a la tasa cuentan solo si la persona los suma.
   function piezasOn() {
     var ps = estado.pasos || {};
-    return Object.assign({ garantia: !!ps.fogaesAgregado, tasa: !!ps.tasaAgregado }, estado.piezas || {});
+    // S47: simular una ayuda también la cuenta en tus números (sin agregarla todavía a tus misiones).
+    return Object.assign({ garantia: !!(ps.fogaesAgregado || ps.simFogaes), tasa: !!(ps.tasaAgregado || ps.simTasa) }, estado.piezas || {});
   }
   // S20-T2: el DS1 mira el sueldo del núcleo (tope de su tramo) y el modo (no sirve para invertir).
   function perfilPiezas() {
@@ -3898,11 +3899,11 @@
     var precio = pd.precioUF, ps = estado.pasos;
     var formas = [];
     // Garantía del Estado: Bci presta 90 % en vez del 80 % del crédito tradicional.
-    var conAyuda = function (clave, v) { var pasos = Object.assign({}, estado.pasos); pasos[clave] = v; return conCambios({ pasos: pasos }, function () { return plazoDepartamento(p, null, solo); }); };
+    var conAyuda = function (clave, v) { var pasos = Object.assign({}, estado.pasos); pasos[clave] = v; pasos[{ fogaesAgregado: 'simFogaes', tasaAgregado: 'simTasa' }[clave]] = v; return conCambios({ pasos: pasos }, function () { return plazoDepartamento(p, null, solo); }); };
     if (!pd.on.respaldo) {
       var gCon = conAyuda('fogaesAgregado', true), gSin = conAyuda('fogaesAgregado', false);
       formas.push({ id: 'fogaes', sigla: 'FOGAES', nombre: 'Garantía del Estado', que: 'El Estado respalda tu crédito: Bci te presta hasta el 90' + NBSP + '% y juntas un pie del 10' + NBSP + '% (en vez del 20' + NBSP + '%).',
-        juntas: gCon.meta - gSin.meta, pagas: gCon.dividendo - gSin.dividendo, incluido: !!ps.fogaesAgregado, enGrupo: !!pd.on.grupo,
+        juntas: gCon.meta - gSin.meta, pagas: gCon.dividendo - gSin.dividendo, incluido: !!(ps.fogaesAgregado || ps.simFogaes), enGrupo: !!pd.on.grupo,
         req: [['Departamento nuevo, en primera venta', true], ['De hasta UF 6.000', precio <= 6000], ['Primera vez que la usas', null]],
         enPasos: !!ps.fogaesAgregado, lista: !!ps.fogaesCalifica });
     }
@@ -3919,7 +3920,7 @@
       enPasos: !!(conDS1 || ps.ds1Agregado || ps.ds1Postulado || ps.rsh), lista: !!ps.ds1Postulado });
     // 20-nov (Bárbara): el subsidio a la tasa no se da por sentado: depende de los cupos cuando Bci apruebe tu crédito.
     formas.push({ id: 'tasa', sigla: '%', nombre: 'Subsidio a la tasa', que: 'Baja la tasa de tu crédito en un departamento nuevo. No es seguro: depende de los cupos que queden cuando Bci apruebe tu crédito.',
-      juntas: 0, pagas: conAyuda('tasaAgregado', true).dividendo - conAyuda('tasaAgregado', false).dividendo, soloPagas: true, incluido: !!ps.tasaAgregado,
+      juntas: 0, pagas: conAyuda('tasaAgregado', true).dividendo - conAyuda('tasaAgregado', false).dividendo, soloPagas: true, incluido: !!(ps.tasaAgregado || ps.simTasa),
       req: [['Departamento nuevo, en primera venta', true], ['De hasta UF 4.000', precio <= 4000], ['Que queden cupos', null]],
       enPasos: !!ps.tasaAgregado, lista: !!ps.tasaPedido });
     // S43 (Bárbara): el DS19 como ayuda. Es el subsidio para sectores medios usado en proyectos DS19; solo sirve en esos edificios.
@@ -3963,26 +3964,58 @@
     return 'Cuánto cambia: ver detalle';
   }
   // S45 (Bárbara): en el detalle, una pestaña «Ayudas»: los números parten sin ayudas y cada una se suma con un interruptor.
+  // S47 (Bárbara, maqueta 20 opción A): SIMULAR suma la ayuda a los números; al activarla se despliega qué falta para que sea real.
   var AYUDA_INTERRUPTOR = { fogaes: 'fogaesAgregado', tasa: 'tasaAgregado', ds1: 'ds1Agregado' };
+  var AYUDA_SIM = { fogaes: 'simFogaes', tasa: 'simTasa' };
+  var AYUDA_TAGS = {
+    fogaes: [['i-banco', 'La aprueba Bci'], ['i-grupo', 'Cupos limitados']],
+    tasa: [['i-banco', 'La aprueba Bci'], ['i-grupo', 'Si quedan cupos']],
+    ds1: [['i-documento', 'Postulas en el Minvu'], ['i-calendario', 'Llamados con fecha']],
+    ds19: [['i-casa', 'Solo proyectos DS19'], ['i-grupo', 'Cupos limitados']],
+    sumar: [['i-documento', 'Acuerdo entre ustedes'], ['i-banco', 'Lo evalúa Bci']]
+  };
+  function ayudaSimulada(id, pd) {
+    var ps = estado.pasos || {};
+    if (id === 'ds1') return !!pd.on.subsidio;
+    return !!(ps[AYUDA_INTERRUPTOR[id]] || ps[AYUDA_SIM[id]]);
+  }
   function ayudasTabHtml(p, solo, caminoVista) {
-    var formas, pd;
-    try { formas = ayudasDelModo(formasParaVista(p, solo, caminoVista)); pd = plazoDepartamento(p, null, solo); } catch (e) { return ''; }
-    var llaves = pd.meses === null || pd.meses === undefined ? 'Aún no' : mesCorto(pd.meses + MESES_SI_A_LLAVES);
-    return '<div class="ay-tiles tres"><div><span class="ay-t-ic" aria-hidden="true">' + icono('i-alcancia') + '</span><small>Juntas</small><strong>' + formatoRedondeado(pd.meta).replace(/\s*millones/, NBSP + 'M') + '</strong></div>' +
-        '<div><span class="ay-t-ic" aria-hidden="true">' + icono('i-calendario') + '</span><small>Pagas al mes</small><strong>' + formatoRedondeado(pd.dividendo) + '</strong></div>' +
-        '<div><span class="ay-t-ic" aria-hidden="true">' + icono('i-llave') + '</span><small>Llaves</small><strong>' + llaves + '</strong></div></div>' +
-      '<p class="texto-apoyo ay-cuantas"><small>Activa las ayudas que quieras sumar y mira cómo cambian tus números.</small></p>' +
-      '<ul class="ay-lista ay-lista-tab">' + formas.map(function (f) {
+    var formas, pd, base;
+    try {
+      formas = ayudasDelModo(formasParaVista(p, solo, caminoVista)); pd = plazoDepartamento(p, null, solo);
+      base = conCambios({ pasos: Object.assign({}, estado.pasos, { fogaesAgregado: false, simFogaes: false, tasaAgregado: false, simTasa: false }), piezas: Object.assign({}, estado.piezas, { subsidio: false }) },
+        function () { return plazoDepartamento(p, null, solo); });
+    } catch (e) { return ''; }
+    var llav = function (x) { return x.meses === null || x.meses === undefined ? 'Aún no' : mesCorto(x.meses + MESES_SI_A_LLAVES); };
+    var M = function (v) { return formatoRedondeado(v).replace(/\s*millones/, NBSP + 'M'); };
+    var cambia = Math.abs(base.meta - pd.meta) > 1000 || Math.abs(base.dividendo - pd.dividendo) > 1000;
+    var tile = function (ic, etq, v, antes) { return '<div' + (cambia ? ' class="nuevo"' : '') + '><span class="ay-t-ic" aria-hidden="true">' + icono(ic) + '</span><small>' + etq + '</small><strong>' + v + '</strong>' + (cambia && antes !== v ? '<s>' + antes + '</s>' : '') + '</div>'; };
+    return '<p class="ay-lab">' + (cambia ? 'Si te aprueban las que simulas' : 'Sin ayudas') + '</p>' +
+      '<div class="ay-tiles tres">' + tile('i-alcancia', 'Juntas', M(pd.meta), M(base.meta)) + tile('i-calendario', 'Pagas al mes', formatoRedondeado(pd.dividendo), formatoRedondeado(base.dividendo)) + tile('i-llave', 'Llaves', llav(pd), llav(base)) + '</div>' +
+      formas.map(function (f) {
         var v = AYUDA_VISTA[f.id] || { tinte: 'azul', ic: 'i-info' };
-        var clave = AYUDA_INTERRUPTOR[f.id];
-        var on = f.id === 'ds1' ? !!pd.on.subsidio : !!f.incluido;
-        var interruptor = clave && !f.bloqueo && !f.enGrupo
-          ? '<button type="button" class="ay-sw" role="switch" aria-checked="' + on + '" data-ay-switch="' + f.id + '" aria-label="Sumar ' + f.nombre + '"><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>'
+        var puede = AYUDA_INTERRUPTOR[f.id] && !f.bloqueo && !f.enGrupo;
+        var on = puede && ayudaSimulada(f.id, pd);
+        var efecto = f.bloqueo || f.enGrupo || f.sinEfecto || f.id === 'ds19' ? efectoTextoAyuda(f)
+          : f.soloPagas ? 'Pagas ' + formatoRedondeado(Math.abs(f.pagas)) + ' menos al mes' : 'Juntas ' + formatoRedondeado(Math.abs(f.juntas || 0)) + ' menos';
+        var sw = puede ? '<button type="button" class="ay-sw ay-sw-sim" role="switch" aria-checked="' + on + '" data-ay-switch="' + f.id + '" aria-label="Simular ' + f.nombre + '"><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span><span class="ay-sw-txt" aria-hidden="true">Simular</span></button>'
           : icono('i-flecha', 'ac-flecha');
-        return '<li><div class="ay-item ay-item-tab"><button type="button" class="ay-item-info" data-ay-info="' + f.id + '">' +
+        var tags = (AYUDA_TAGS[f.id] || []).map(function (t) { return '<span>' + icono(t[0]) + t[1] + '</span>'; }).join('');
+        var despl = '';
+        if (on) {
+          var pasos = v.pasos ? v.pasos(f, estado.pasos || {}) : [];
+          var hechos = pasos.filter(function (x) { return x[3]; }).length;
+          var enMisiones = !!(estado.pasos || {})[AYUDA_INTERRUPTOR[f.id]];
+          despl = '<div class="ay-real"><p class="ay-real-t">Para que sea real · ' + hechos + ' de ' + pasos.length + '</p>' +
+            '<ol class="ay-etapas" aria-label="Etapas"><li class="ok"><span>' + icono('i-check') + '</span>Simulada</li><li class="' + (enMisiones ? 'ok' : 'ahora') + '"><span>' + (enMisiones ? icono('i-check') : '2') + '</span>Pedirla</li><li class="' + (f.lista ? 'ok' : '') + '"><span>3</span>Aprobada</li></ol>' +
+            '<ul class="ay-real-pasos">' + pasos.map(function (x) { return '<li class="' + (x[3] ? 'hecho' : '') + '"><span class="ay-ck" aria-hidden="true">' + (x[3] ? icono('i-check') : '') + '</span>' + x[1] + '</li>'; }).join('') + '</ul>' +
+            (enMisiones ? '<p class="ay-ya">' + icono('i-check') + 'En tus misiones</p>' : '<button type="button" class="btn btn-secundario btn-sm ay-a-misiones" data-ay-mision="' + f.id + '">Agregar a mis misiones</button>') + '</div>';
+        }
+        return '<section class="ay-card' + (on ? ' on' : '') + '"><div class="ay-item ay-item-tab"><button type="button" class="ay-item-info" data-ay-info="' + f.id + '">' +
           '<span class="ay-ic t-' + v.tinte + '" aria-hidden="true">' + icono(v.ic) + '</span>' +
-          '<span class="ay-txt"><strong>' + f.nombre + '</strong><small>' + efectoTextoAyuda(f) + '</small></span></button>' + interruptor + '</div></li>';
-      }).join('') + '</ul>' +
+          '<span class="ay-txt"><strong>' + f.nombre + '</strong><small>' + efecto + '</small></span></button>' + sw + '</div>' +
+          (tags ? '<div class="ay-tags">' + tags + '</div>' : '') + despl + '</section>';
+      }).join('') +
       '<p class="fp-sello">' + icono('i-escudo') + 'Lo confirma Bci al aprobar tu crédito.</p>';
   }
   function enlazarAyudasTab(cont, p, solo, caminoVista) {
@@ -3991,15 +4024,24 @@
         var id = b.dataset.aySwitch, on = b.getAttribute('aria-checked') !== 'true';
         var antes = plazoDepartamento(p, null, solo);
         estado.pasos = Object.assign({}, estado.pasos);
-        estado.pasos[AYUDA_INTERRUPTOR[id]] = on;
-        if (id === 'ds1' && estado.modo === 'vivir') estado.piezas = Object.assign({}, estado.piezas, { subsidio: on });
+        if (id === 'ds1') { estado.piezas = Object.assign({}, estado.piezas, { subsidio: on }); if (!on) estado.pasos.ds1Agregado = false; }
+        else { estado.pasos[AYUDA_SIM[id]] = on; if (!on) estado.pasos[AYUDA_INTERRUPTOR[id]] = false; }
         guardarEstado();
         var despues = plazoDepartamento(p, null, solo);
         mostrar();
         var nombre = { fogaes: 'la garantía del Estado', tasa: 'el subsidio a la tasa', ds1: 'el subsidio DS1' }[id];
         var dif = despues.meta - antes.meta, difM = despues.dividendo - antes.dividendo;
-        toast((on ? 'Sumaste ' : 'Quitaste ') + nombre + (Math.abs(dif) > 100000 ? ': juntas ' + formatoRedondeado(Math.abs(dif)) + (dif < 0 ? ' menos' : ' más') : Math.abs(difM) > 1000 ? ': pagas ' + formatoRedondeado(Math.abs(difM)) + (difM < 0 ? ' menos' : ' más') + ' al mes' : '') + '.');
+        toast((on ? 'Simulas ' : 'Quitaste ') + nombre + (Math.abs(dif) > 100000 ? ': juntas ' + formatoRedondeado(Math.abs(dif)) + (dif < 0 ? ' menos' : ' más') : Math.abs(difM) > 1000 ? ': pagas ' + formatoRedondeado(Math.abs(difM)) + (difM < 0 ? ' menos' : ' más') + ' al mes' : '') + '.');
         var nb = document.querySelector('[data-ay-switch="' + id + '"]'); if (nb) nb.focus();
+      });
+    });
+    cont.querySelectorAll('[data-ay-mision]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.dataset.ayMision;
+        estado.pasos = Object.assign({}, estado.pasos);
+        estado.pasos[AYUDA_INTERRUPTOR[id]] = true;
+        guardarEstado(); mostrar();
+        toast('Se sumó a tus misiones.');
       });
     });
     cont.querySelectorAll('[data-ay-info]').forEach(function (b) {
