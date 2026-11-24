@@ -2017,7 +2017,11 @@
 
 
   // ---------- Sprint 17: un solo plazo, piezas que se suman y texto mínimo (modo vivir) ----------
-  function piezasOn() { return estado.piezas || {}; }
+  // S45 (Bárbara): los números parten sin ayudas; la garantía del Estado y el subsidio a la tasa cuentan solo si la persona los suma.
+  function piezasOn() {
+    var ps = estado.pasos || {};
+    return Object.assign({ garantia: !!ps.fogaesAgregado, tasa: !!ps.tasaAgregado }, estado.piezas || {});
+  }
   // S20-T2: el DS1 mira el sueldo del núcleo (tope de su tramo) y el modo (no sirve para invertir).
   function perfilPiezas() {
     // S34: con tu pie ya en marcha, se calcula con lo que llevas (antes, con lo del principio: el mismo
@@ -3860,7 +3864,7 @@
       (familiar ? garantiaFamiliarDetalle({ precioUF: e.precioUF, pie: e.pie, subsidioUF: 0, creditoUF: e.precioUF * e.pctCredito }) : '') +
       '<div class="det-cifras"><div><small>Juntas antes de firmar</small><strong>' + formatoRedondeado(e.alEscriturar) + '</strong><small>' + (familiar ? 'pie del 5' + NBSP + '% y gastos' : 'pie y gastos') + '</small></div>' +
         '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(dividendo) + '</strong><small>' + (familiar ? 'crédito del 95' + NBSP + '%' : 'con seguros' + SEP + ufDecimales(dividendo / SUPUESTOS.uf, 2)) + '</small></div></div>' +
-      '<p class="det-subsidio">' + icono('i-info') + '<span>Si se acaba el subsidio a la tasa, el dividendo sube a <strong>' + formatoRedondeado(e.dividendoSinSubsidio) + '</strong>.</span></p>' +
+      (pd.on.tasa ? '<p class="det-subsidio">' + icono('i-info') + '<span>Si se acaba el subsidio a la tasa, el dividendo sube a <strong>' + formatoRedondeado(e.dividendoSinSubsidio) + '</strong>.</span></p>' : '') +
       o.extraNumeros +
       (familiar ? '' : plegable('detalle-credito', 'Ver detalle del crédito', '', repartoCasa(partesEscenario(e)) +
         '<ul class="datos-inversion"><li><span>Gastos al firmar</span><strong>' + formatoRedondeado(e.gastos) + '</strong></li></ul>'));
@@ -3892,11 +3896,11 @@
     var precio = pd.precioUF, ps = estado.pasos;
     var formas = [];
     // Garantía del Estado: Bci presta 90 % en vez del 80 % del crédito tradicional.
+    var conAyuda = function (clave, v) { var pasos = Object.assign({}, estado.pasos); pasos[clave] = v; return conCambios({ pasos: pasos }, function () { return plazoDepartamento(p, null, solo); }); };
     if (!pd.on.respaldo) {
-      var meta80 = ufAPesos(precio * (1 - SUPUESTOS_PIEZAS.creditoSiempre) + gastosUF(precio) - pd.subsidioUF);
-      var div80 = ufAPesos(cuotaFija(precio * SUPUESTOS_PIEZAS.creditoSiempre - pd.subsidioUF, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
+      var gCon = conAyuda('fogaesAgregado', true), gSin = conAyuda('fogaesAgregado', false);
       formas.push({ id: 'fogaes', sigla: 'FOGAES', nombre: 'Garantía del Estado', que: 'El Estado respalda tu crédito: Bci te presta hasta el 90' + NBSP + '% y juntas un pie del 10' + NBSP + '% (en vez del 20' + NBSP + '%).',
-        juntas: pd.meta - meta80, pagas: pd.dividendo - div80, incluido: true,
+        juntas: gCon.meta - gSin.meta, pagas: gCon.dividendo - gSin.dividendo, incluido: !!ps.fogaesAgregado, enGrupo: !!pd.on.grupo,
         req: [['Departamento nuevo, en primera venta', true], ['De hasta UF 6.000', precio <= 6000], ['Primera vez que la usas', null]],
         enPasos: !!ps.fogaesAgregado, lista: !!ps.fogaesCalifica });
     }
@@ -3913,7 +3917,7 @@
       enPasos: !!(conDS1 || ps.ds1Agregado || ps.ds1Postulado || ps.rsh), lista: !!ps.ds1Postulado });
     // 20-nov (Bárbara): el subsidio a la tasa no se da por sentado: depende de los cupos cuando Bci apruebe tu crédito.
     formas.push({ id: 'tasa', sigla: '%', nombre: 'Subsidio a la tasa', que: 'Baja la tasa de tu crédito en un departamento nuevo. No es seguro: depende de los cupos que queden cuando Bci apruebe tu crédito.',
-      juntas: 0, pagas: pd.dividendo - pd.dividendoSinSubsidio, soloPagas: true,
+      juntas: 0, pagas: conAyuda('tasaAgregado', true).dividendo - conAyuda('tasaAgregado', false).dividendo, soloPagas: true, incluido: !!ps.tasaAgregado,
       req: [['Departamento nuevo, en primera venta', true], ['De hasta UF 4.000', precio <= 4000], ['Que queden cupos', null]],
       enPasos: !!ps.tasaAgregado, lista: !!ps.tasaPedido });
     // S43 (Bárbara): el DS19 como ayuda. Es el subsidio para sectores medios usado en proyectos DS19; solo sirve en esos edificios.
@@ -3955,6 +3959,53 @@
     if (f.juntas !== null && f.juntas < -1000) return 'Juntas ' + formatoRedondeado(Math.abs(f.juntas)) + ' menos' + '';
     if (f.incluido) return 'Ya va en tus números';
     return 'Cuánto cambia: ver detalle';
+  }
+  // S45 (Bárbara): en el detalle, una pestaña «Ayudas»: los números parten sin ayudas y cada una se suma con un interruptor.
+  var AYUDA_INTERRUPTOR = { fogaes: 'fogaesAgregado', tasa: 'tasaAgregado', ds1: 'ds1Agregado' };
+  function ayudasTabHtml(p, solo, caminoVista) {
+    var formas, pd;
+    try { formas = ayudasDelModo(formasParaVista(p, solo, caminoVista)); pd = plazoDepartamento(p, null, solo); } catch (e) { return ''; }
+    var llaves = pd.meses === null || pd.meses === undefined ? 'Aún no' : mesCorto(pd.meses + MESES_SI_A_LLAVES);
+    return '<div class="ay-tiles tres"><div><span class="ay-t-ic" aria-hidden="true">' + icono('i-alcancia') + '</span><small>Juntas</small><strong>' + formatoRedondeado(pd.meta).replace(/\s*millones/, NBSP + 'M') + '</strong></div>' +
+        '<div><span class="ay-t-ic" aria-hidden="true">' + icono('i-calendario') + '</span><small>Pagas al mes</small><strong>' + formatoRedondeado(pd.dividendo) + '</strong></div>' +
+        '<div><span class="ay-t-ic" aria-hidden="true">' + icono('i-llave') + '</span><small>Llaves</small><strong>' + llaves + '</strong></div></div>' +
+      '<p class="texto-apoyo ay-cuantas"><small>Activa las ayudas que quieras sumar y mira cómo cambian tus números.</small></p>' +
+      '<ul class="ay-lista ay-lista-tab">' + formas.map(function (f) {
+        var v = AYUDA_VISTA[f.id] || { tinte: 'azul', ic: 'i-info' };
+        var clave = AYUDA_INTERRUPTOR[f.id];
+        var on = f.id === 'ds1' ? !!pd.on.subsidio : !!f.incluido;
+        var interruptor = clave && !f.bloqueo && !f.enGrupo
+          ? '<button type="button" class="ay-sw" role="switch" aria-checked="' + on + '" data-ay-switch="' + f.id + '" aria-label="Sumar ' + f.nombre + '"><span class="interruptor-pista" aria-hidden="true"><span class="interruptor-bola"></span></span></button>'
+          : icono('i-flecha', 'ac-flecha');
+        return '<li><div class="ay-item ay-item-tab"><button type="button" class="ay-item-info" data-ay-info="' + f.id + '">' +
+          '<span class="ay-ic t-' + v.tinte + '" aria-hidden="true">' + icono(v.ic) + '</span>' +
+          '<span class="ay-txt"><strong>' + f.nombre + '</strong><small>' + efectoTextoAyuda(f) + '</small></span></button>' + interruptor + '</div></li>';
+      }).join('') + '</ul>' +
+      '<p class="fp-sello">' + icono('i-escudo') + 'Lo confirma Bci al aprobar tu crédito.</p>';
+  }
+  function enlazarAyudasTab(cont, p, solo, caminoVista) {
+    cont.querySelectorAll('[data-ay-switch]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.dataset.aySwitch, on = b.getAttribute('aria-checked') !== 'true';
+        var antes = plazoDepartamento(p, null, solo);
+        estado.pasos = Object.assign({}, estado.pasos);
+        estado.pasos[AYUDA_INTERRUPTOR[id]] = on;
+        if (id === 'ds1' && estado.modo === 'vivir') estado.piezas = Object.assign({}, estado.piezas, { subsidio: on });
+        guardarEstado();
+        var despues = plazoDepartamento(p, null, solo);
+        mostrar();
+        var nombre = { fogaes: 'la garantía del Estado', tasa: 'el subsidio a la tasa', ds1: 'el subsidio DS1' }[id];
+        var dif = despues.meta - antes.meta, difM = despues.dividendo - antes.dividendo;
+        toast((on ? 'Sumaste ' : 'Quitaste ') + nombre + (Math.abs(dif) > 100000 ? ': juntas ' + formatoRedondeado(Math.abs(dif)) + (dif < 0 ? ' menos' : ' más') : Math.abs(difM) > 1000 ? ': pagas ' + formatoRedondeado(Math.abs(difM)) + (difM < 0 ? ' menos' : ' más') + ' al mes' : '') + '.');
+        var nb = document.querySelector('[data-ay-switch="' + id + '"]'); if (nb) nb.focus();
+      });
+    });
+    cont.querySelectorAll('[data-ay-info]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var f = ayudasDelModo(formasParaVista(p, solo, caminoVista)).filter(function (x) { return x.id === b.dataset.ayInfo; })[0];
+        if (f) abrirAyuda(f, p, solo, caminoVista, b);
+      });
+    });
   }
   // S43 (Bárbara): en el detalle del departamento, las ayudas son una fila (como en Tu compra), sin la lista desplegada.
   function ayudasDetalleFila(p, solo, caminoVista) {
@@ -4049,7 +4100,7 @@
         guardarEstado();
         cerrarHoja(false);
         mostrar();
-        toast(id === 'fogaes' ? 'Se sumó a tus misiones: la garantía del Estado.' : id === 'tasa' ? 'Se sumó a tus misiones: el subsidio a la tasa.' : 'Se sumó a tus misiones: el subsidio DS1.');
+        toast(id === 'fogaes' ? 'Sumaste la garantía del Estado a tus números y misiones.' : id === 'tasa' ? 'Sumaste el subsidio a la tasa a tus números y misiones.' : 'Sumaste el subsidio DS1 a tus números y misiones.');
       });
     });
   }
@@ -4103,8 +4154,10 @@
   function efectoTextoAyuda(f) {
     if (f.bloqueo) return 'Hoy no te sirve: ' + primeraMinuscula(f.bloqueo.razon);
     if (f.id === 'ds19') return 'Solo en proyectos DS19';
-    // S44: la garantía ya va en los números del camino; no se vuelve a restar.
-    if (f.incluido) return 'Ya va en tus números: pie del 10' + NBSP + '% en vez del 20' + NBSP + '%';
+    // S45: sumada = ya va en tus números.
+    if (f.enGrupo) return 'Ya va en la compra en grupo (pie del 10' + NBSP + '%)';
+    if (f.incluido && f.id === 'fogaes') return 'Sumada: pie del 10' + NBSP + '% en vez del 20' + NBSP + '%';
+    if (f.incluido && f.id === 'tasa') return 'Sumada: pagas ' + formatoRedondeado(Math.abs(f.pagas)) + ' menos al mes';
     if (f.sinEfecto) return 'Suma su sueldo a tu crédito';
     if (f.soloPagas) return Math.abs(f.pagas) >= 1000 ? 'Pagas ' + formatoRedondeado(Math.abs(f.pagas)) + ' menos al mes' : 'Baja tu tasa si quedan cupos';
     if (f.juntas !== null && f.juntas < -1000) return 'Juntas ' + formatoRedondeado(Math.abs(f.juntas)) + ' menos';
@@ -4146,7 +4199,7 @@
       if (val === null || val === undefined || Math.abs(val) < 1000) return 'Igual';
       return (val < 0 ? '−' : '+') + formatoRedondeado(Math.abs(val)).replace(/\s*millones/, NBSP + 'M') + (alMes ? ' al mes' : '');
     };
-    var nota20 = f.incluido ? '<p class="ay-incluida">' + icono('i-check') + '<span>Ya va en tus números. Las cifras de abajo son <strong>frente a un pie del 20' + NBSP + '%</strong>.</span></p>' : '';
+    var nota20 = f.incluido ? '<p class="ay-incluida">' + icono('i-check') + '<span>Ya la sumaste: va en tus números. Abajo, cuánto cambia frente a no tenerla.</span></p>' : '';
     var tiles = f.bloqueo || f.sinEfecto ? '' : nota20 +
       '<div class="ay-tiles">' + (f.soloPagas ? '' : '<div><span class="ay-t-ic" aria-hidden="true">' + icono('i-alcancia') + '</span><small>Juntas</small><strong>' + num(f.juntas) + '</strong></div>') +
         '<div><span class="ay-t-ic" aria-hidden="true">' + icono('i-calendario') + '</span><small>' + (f.soloPagas ? 'Si te lo dan, pagas al mes' : 'Pagas al mes') + '</small><strong>' + num(f.soloPagas ? -Math.abs(f.pagas) : f.pagas) + '</strong></div></div>';
@@ -4391,12 +4444,13 @@
               (pd.on.respaldo ? garantiaFamiliarDetalle(pd) : '') +
               '<div class="det-cifras"><div><small>Juntas antes de firmar</small><strong>' + formatoRedondeado(pd.meta) + '</strong><small>' + (pd.on.respaldo ? 'pie del 5' + NBSP + '% y gastos' : 'pie y gastos') + '</small></div>' +
                 '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(pd.dividendo) + '</strong><small>' + (pd.on.respaldo ? 'crédito del 95' + NBSP + '%' : 'con seguros' + SEP + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2)) + '</small></div></div>' +
-              '<p class="det-subsidio">' + icono('i-info') + '<span>Si se acaba el subsidio a la tasa, el dividendo sube a <strong>' + formatoRedondeado(pd.dividendoSinSubsidio) + '</strong> (' + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + ').</span></p>' +
+              (pd.on.tasa ? '<p class="det-subsidio">' + icono('i-info') + '<span>Si se acaba el subsidio a la tasa, el dividendo sube a <strong>' + formatoRedondeado(pd.dividendoSinSubsidio) + '</strong> (' + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + ').</span></p>' : '') +
               grupoPosible +
-              ayudasDetalleFila(p, solo, caminoVista) +
+              '' /* S45: las ayudas van en su propia pestaña */ +
               '<a class="tarjeta dueno-card" href="#compra/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
                 '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para tus gastos</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
               '' /* S43 (Bárbara): sin «Más opciones» ni «Ver detalle del crédito». */],
+            ['ayudas', 'Ayudas', ayudasTabHtml(p, solo, caminoVista)],
             conjunto && (bloqueGrupo || !pd.on.respaldo) ? ['grupo', 'Grupo', (pd.on.respaldo ? '' : fichaGrupoHtml(p)) + bloqueGrupo + conoceGrupo] : null,
             BARRIOS[p.comuna] ? ['barrio', 'Barrio', barrioSolo(p)] : null,
             ['visita', 'Visita', visitaHtml(p)]
@@ -4447,6 +4501,7 @@
     iniciarPestanasDetalle(contenedor);
     iniciarPagoAntes();
     iniciarVisita(p);
+    enlazarAyudasTab(contenedor, p, solo, caminoVista);
     var bAy = document.getElementById('btn-ayudas-detalle');
     if (bAy) bAy.addEventListener('click', function () { abrirBajarPrecio(p, solo, caminoVista, bAy); });
     var tituloAcel = document.getElementById('btn-acel-titulo');
@@ -8864,9 +8919,12 @@
     var fijo = { 'i-llave': 't-azul', 'i-alcancia': 't-verde' };
     var usados = f[1].map(function (r) { return fijo[r[0]]; }).filter(Boolean);
     var libres = TINTES_3.filter(function (t) { return usados.indexOf(t) === -1; });
-    return '<ul class="tiles-3 fc-rasgos">' + f[1].map(function (r) {
-      var t = fijo[r[0]] || libres.shift() || 't-azul';
-      return '<li class="tile ' + t + '"><span class="tile-ic" aria-hidden="true">' + icono(r[0]) + '</span>' + (r[1] === 'GRUPO' ? PCT_GRUPO() : r[1]) + '</li>';
+    // S45 (Bárbara): mismo orden que «Con tus números»: primero el pie (verde), luego las llaves (azul), luego el resto.
+    var orden = { 't-verde': 0, 't-azul': 1 };
+    return '<ul class="tiles-3 fc-rasgos">' + f[1].map(function (r, i) {
+      return { r: r, t: fijo[r[0]] || libres.shift() || 't-azul', i: i };
+    }).sort(function (a, b) { return ((a.t in orden ? orden[a.t] : 2) - (b.t in orden ? orden[b.t] : 2)) || (a.i - b.i); }).map(function (o) {
+      return '<li class="tile ' + o.t + '"><span class="tile-ic" aria-hidden="true">' + icono(o.r[0]) + '</span>' + (o.r[1] === 'GRUPO' ? PCT_GRUPO() : o.r[1]) + '</li>';
     }).join('') + '</ul>';
   }
   function pasosFilaHtml(id) {

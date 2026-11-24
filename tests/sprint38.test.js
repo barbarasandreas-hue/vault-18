@@ -222,3 +222,15 @@ test('S44: correcciones del recorrido (ayudas incluidas, sin IVA a tiempo, visit
   assert.match(app, /Lo que pierde el grupo/);
   assert.match(app, /chip-alcanza">Te alcanza/);
 });
+
+test('S45: los números parten sin ayudas; la garantía y la tasa se suman con interruptores en la pestaña Ayudas', () => {
+  const calc = require('../js/calculos.js');
+  const d = { listaUF: 2000, enObra: false, mesesEntrega: 0 };
+  const pf = { ahorroActual: 0, ahorroMensual: 300000 };
+  const sin = calc.calcularPiezas(pf, { garantia: false, tasa: false }, d, '2026-11-24');
+  const con = calc.calcularPiezas(pf, { garantia: true, tasa: true }, d, '2026-11-24');
+  assert.ok(sin.meta > con.meta, 'sin garantía se junta más pie');
+  assert.ok(sin.dividendo > con.dividendo * 0.95, 'sin subsidio a la tasa no baja el dividendo');
+  assert.match(app, /garantia: !!ps\.fogaesAgregado, tasa: !!ps\.tasaAgregado/);
+  assert.match(app, /data-ay-switch="/);
+});

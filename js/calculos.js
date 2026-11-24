@@ -1519,12 +1519,16 @@ function bloqueoPieza(id, on, depto, perfil) {
 function calcularPiezas(perfil, onEntrada, depto, hoyISO) {
   var on = {};
   ORDEN_PIEZAS.forEach(function (id) { on[id] = !!(onEntrada && onEntrada[id]); });
+  // S45 (Bárbara): la garantía del Estado y el subsidio a la tasa son ayudas que la persona suma.
+  // Sin decir nada (undefined) se mantienen como antes, para no romper otros cálculos.
+  on.garantia = !onEntrada || onEntrada.garantia === undefined ? true : !!onEntrada.garantia;
+  on.tasa = !onEntrada || onEntrada.tasa === undefined ? true : !!onEntrada.tasa;
   var d = deptoPiezas(depto, on);
   ORDEN_PIEZAS.forEach(function (id) { if (on[id] && bloqueoPieza(id, on, depto, perfil)) on[id] = false; });
   var S = SUPUESTOS_PIEZAS;
   var p = precioConPiezas(d.listaUF, on, d.descuento);
   // 9-nov: con respaldo familiar Bci presta el 95 %, igual que en la ficha (RESPALDO).
-  var creditoMax = (on.respaldo ? RESPALDO.credito : MODOS.vivir.credito) * p;
+  var creditoMax = (on.respaldo ? RESPALDO.credito : on.grupo || on.garantia ? MODOS.vivir.credito : SUPUESTOS_PIEZAS.creditoSiempre) * p;
   // S20-T2: el DS1 según su tramo. Crédito = precio − ahorro − subsidio, con tope de 90 %.
   var ds1 = on.subsidio ? ds1Para(p, perfil) : null;
   var subsidio = ds1 ? ds1.montoUF : 0;
@@ -1538,7 +1542,7 @@ function calcularPiezas(perfil, onEntrada, depto, hoyISO) {
   if (ds1 && ds1.mesesCuenta > 0) pisos.push({ meses: ds1.mesesCuenta, freno: 'cuenta-vivienda' });
   var plazo = plazoConPisos(ufAPesos(faltaUF), perfil && perfil.ahorroMensual, pisos);
   var credito = p - subsidio - pie;
-  var dividendo = ufAPesos(cuotaFija(credito, SUPUESTOS.tasaBci, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
+  var dividendo = ufAPesos(cuotaFija(credito, on.tasa ? SUPUESTOS.tasaBci : SUPUESTOS.tasaPeorCaso, SUPUESTOS.mesesBci) + SUPUESTOS.segurosUF);
   var hoy = hoyISO || '2026-11-03';
   return {
     on: on, precioUF: p, creditoUF: credito, pctCredito: credito / p, subsidioUF: subsidio,

@@ -5541,3 +5541,15 @@ body:has(.hoja-pantalla) .barra { z-index: 61; }
 .pestanas a:not([aria-current="page"]), .det-tabs button:not([aria-selected="true"]) { color: var(--gray-dark); }
 .fc-quien small { color: var(--gray-dark); }
 .galeria-puntos .galeria-punto { width: 24px; height: 24px; }
+
+/* S45: pestaña Ayudas en el detalle */
+.ay-tiles.tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ay-tiles.tres strong { font-size: 17px; }
+.ay-item-tab { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+.ay-item-info { flex: 1; display: flex; align-items: center; gap: 14px; min-width: 0; background: none; border: 0; padding: 6px 0; font: inherit; text-align: left; color: var(--gray-dark); cursor: pointer; min-height: 56px; }
+.ay-sw { flex: none; background: none; border: 0; padding: 8px 0 8px 8px; cursor: pointer; min-height: 44px; display: grid; place-items: center; }
+.ay-sw .interruptor-pista { display: inline-block; }
+.ay-item-tab .ac-flecha { width: 18px; height: 18px; color: var(--gray-neutral); transform: rotate(-90deg); flex: none; }
+.ay-sw[aria-checked="true"] .interruptor-pista { background: var(--green-dark); }
+.ay-sw[aria-checked="true"] .interruptor-bola { transform: translateX(20px); }
+.ay-sw:focus-visible { outline: 3px solid var(--blue-normal); outline-offset: 2px; border-radius: 16px; }
