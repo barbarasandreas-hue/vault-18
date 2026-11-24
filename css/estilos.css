@@ -5004,23 +5004,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 /* Barra superior más liviana */
 .marca-app { border-bottom: 0; box-shadow: 0 1px 0 rgba(55, 71, 79, .06); }
 
-/* Barra inferior flotante: una píldora blanca con sombra y solo íconos (como la referencia de Bárbara).
-   El nombre de cada pestaña sigue en el enlace para el lector de pantalla (texto en tamaño 0). */
-.barra {
-  left: 50%; right: auto; bottom: calc(12px + env(safe-area-inset-bottom));
-  width: min(calc(var(--ancho-telefono) - 24px), calc(100% - 24px)); transform: translateX(-50%);
-  padding: 0 10px; border: 0 !important; border-radius: 999px; background: var(--white) !important;
-  box-shadow: 0 10px 30px rgba(31, 42, 48, .16), 0 1px 3px rgba(31, 42, 48, .10) !important;
-}
-.barra ul { max-width: none; }
-.barra a { height: 62px; gap: 0; font-size: 0 !important; color: #1F2A30 !important; }
-.barra svg { width: 27px; height: 27px; }
-.barra a[aria-current="page"] { color: var(--green-dark) !important; }
-.barra a[aria-current="page"]::before {
-  top: auto; bottom: 9px; left: 50%; right: auto; width: 5px; height: 5px; border-radius: 50%;
-  transform: translateX(-50%); background: var(--green-normal);
-}
-.barra a:active svg { transform: scale(.92); transition: transform var(--dur-micro) var(--ease-salida); }
+/* S39c (Bárbara): la barra inferior vuelve a como estaba: pegada abajo, con nombres y la rayita arriba en la activa. */
 
 /* Selector Caminos | Edificios: riel gris con la opción elegida en blanco */
 .pestanas { background: var(--gray-semilight); border: 0; border-radius: 14px; padding: 4px; }
@@ -5094,3 +5078,47 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .ac-desplegable > ul:last-child { margin-bottom: 16px; }
 
 .noche .cierre-linea svg, .noche .falta-pie svg { color: var(--white) !important; stroke: currentColor; opacity: .95; }
+
+/* ===== S39c (23-nov) · Bloque 1 del plan ===== */
+/* Tu compra: botón blanco con anillo de avance dentro del azul */
+.pie-boton { position: relative; z-index: 1; display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  margin-top: 16px; padding: 12px 14px; border-radius: 16px; background: var(--white); color: #1F2A30; text-decoration: none;
+  box-shadow: 0 4px 14px rgba(13, 40, 80, .18); transition: transform var(--dur-micro) var(--ease-salida); }
+.pie-boton:active { transform: scale(.98); }
+.pb-anillo { position: relative; width: 48px; height: 48px; display: grid; place-items: center; }
+.pb-anillo svg { position: absolute; inset: 0; width: 48px; height: 48px; }
+.pb-anillo circle { fill: none; stroke-width: 5; }
+.pb-fondo { stroke: var(--green-20); }
+.pb-lleno { stroke: var(--green-normal); stroke-linecap: round; }
+.pb-anillo b { position: relative; font-size: 12px; font-weight: 800; color: var(--green-dark); }
+.pb-texto { display: grid; gap: 4px; justify-items: start; }
+.pb-texto strong { font-size: 16px; line-height: 1.2; }
+.pb-pastilla { padding: 2px 8px; border-radius: 999px; background: var(--blue-20); color: var(--blue-dark); font-size: 12px; font-weight: 700; }
+.pb-ir { font-size: 14px; font-weight: 700; color: var(--blue-dark); white-space: nowrap; }
+
+/* Tus pasos: «Ver con fechas» al lado del chip «Ahora» */
+.ahora-cab { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ahora-cab .chip { margin: 0; }
+.ahora-cab .metro-fechas { margin: 0; font-size: 14px; font-weight: 700; white-space: nowrap; }
+
+/* Tu pie: aire entre tarjetas y la línea de la firma en una fila */
+#pie-contenido .fila-regalo, #pie-contenido .tu-grupo-pie { margin-top: 16px; }
+.pie-tuyo > span:has(.pt-fila) { flex: 1; }
+.pt-fila { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.pt-fila strong { white-space: nowrap; font-size: 16px; }
+
+/* Edificios: toda la tarjeta se toca; sin «Ver proyecto ›» */
+.tarjeta-proyecto .tp-ver { display: none; }
+
+/* Colores Bci como familia: tonos claros, siempre juntos */
+.t-azul { background: var(--blue-20); color: var(--blue-dark); }
+.t-verde { background: var(--green-20); color: var(--green-dark); }
+.t-amarillo { background: #FFF4B3; color: #5C5200; }
+.t-rojo { background: #FBDADD; color: var(--red-dark); }
+.fila-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+.fila-ic svg { width: 22px; height: 22px; }
+.franja-bci { height: 5px; border-radius: 5px; margin: 8px 0 4px;
+  background: linear-gradient(90deg, var(--blue-normal) 0 25%, var(--green-normal) 25% 50%, var(--yellow-normal) 50% 75%, var(--red-normal) 75%); }
+.fila > .fila-ic { flex: 0 0 40px; width: 40px; display: grid; }
+.pie-tuyo .pt-fila { display: flex; width: 100%; }
+.pie-tuyo .pt-fila > span { display: inline; }

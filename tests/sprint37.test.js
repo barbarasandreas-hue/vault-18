@@ -49,8 +49,8 @@ test('E4: el filtro del estado del edificio dice Terminado', () => {
   assert.match(app, /chip\('estado', 'nuevo', 'Terminado'\)/);
 });
 
-test('E5: el detalle se llama «¿Cómo puedes llegar antes?» y Tu compra separa elegidos de los que puedes sumar', () => {
-  assert.match(app, /abrirHojaContenido\('¿Cómo puedes llegar antes\?'/);
+test('E5: el detalle se llama «Ayudas para tu compra» (S39, antes «¿Cómo puedes llegar antes?») y Tu compra separa elegidos de los que puedes sumar', () => {
+  assert.match(app, /abrirHojaContenido\('Ayudas para tu compra'/);
   assert.doesNotMatch(app, /<strong>Formas de pagar menos<\/strong>/);
   assert.match(app, /function aceleradoresCompraHtml/);
   assert.match(app, /Ya los sumaste/);

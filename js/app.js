@@ -2333,7 +2333,7 @@
     cont.innerHTML =
       (camino ? '<a href="#compra/caminos/' + camino + '" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>' + CAMINOS[camino].corto + '</a>'
         : '<a href="#departamentos/caminos" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Caminos</a>') +
-      '<header class="encabezado"><h1 id="titulo-caminos" class="h2">Ayudas para llegar antes</h1>' +
+      '<header class="encabezado"><h1 id="titulo-caminos" class="h2">Ayudas para tu compra</h1>' +
         '<p class="texto-apoyo">Suman a tu pie y adelantan tus llaves.</p>' +
         (rango ? '<p class="llega-rango">Para un departamento de ' + textoRango(rango) + SEP + '<button type="button" class="enlace" id="btn-caminos-rango" aria-haspopup="dialog">Cambiar</button></p>' : '') +
       '</header>' +
@@ -2489,10 +2489,16 @@
   }
   // 23-nov (Bárbara): en Tu compra, el cuadro claro del azul dice siempre cuánto te falta para tu pie,
   // en todos los caminos: así tiene sentido que el azul lleve a Tu pie.
-  function faltaPieHtml(falta, linea) {
-    return '<p class="cierre-grupo en-azul falta-pie">' + icono('i-alcancia') + '<span>' +
-      (falta > 0 ? 'Te faltan ' + formatoRedondeado(falta) + ' para tu pie' : 'Tu pie está listo') +
-      (linea ? '<b>' + linea + '</b>' : '') + '</span></p>';
+  // S39 1.2 (Bárbara): un botón blanco dentro del azul, con un anillo de avance: se entiende que lleva a Tu pie.
+  function faltaPieHtml(falta, meta, linea) {
+    var pct = meta > 0 ? Math.max(0, Math.min(100, Math.round((meta - falta) / meta * 100))) : 100;
+    var vuelta = 2 * Math.PI * 16;
+    return '<a class="pie-boton" href="#pie" aria-label="Ver tu pie: llevas ' + pct + ' %' + (falta > 0 ? ', faltan ' + formatoRedondeado(falta) : '') + '">' +
+      '<span class="pb-anillo" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" class="pb-fondo"/>' +
+        '<circle cx="20" cy="20" r="16" class="pb-lleno" transform="rotate(-90 20 20)" style="stroke-dasharray:' + (vuelta * pct / 100).toFixed(1) + ' ' + vuelta.toFixed(1) + '"/></svg><b>' + pct + '%</b></span>' +
+      '<span class="pb-texto"><strong>' + (falta > 0 ? 'Faltan ' + formatoRedondeado(falta).replace(' millones', ' M') : 'Tu pie está listo') + '</strong>' +
+        (linea ? '<small class="pb-pastilla">' + linea + '</small>' : '') + '</span>' +
+      '<span class="pb-ir" aria-hidden="true">Ver tu pie ›</span></a>';
   }
   // En grupo, la fecha para asegurar tu cupo va en una línea corta bajo la fecha.
   function cierreLineaHtml(p) {
@@ -2537,8 +2543,8 @@
         '<span class="noche-luna" aria-hidden="true"></span>' +
         '<p class="noche-etiqueta" id="titulo-cuando">Firman todos en</p>' +
         '<strong class="numero noche-plazo' + claseLargo(textoMeses(g.meses)) + '">' + textoMeses(g.meses) + '</strong>' +
-        '<p class="noche-sub">Recibes tus llaves en ' + g.fecha + ': el mismo día para todo el grupo</p>' +
-        (sinObra ? cierreLineaHtml(p) + faltaPieHtml(g.falta, g.falta === 0 ? '' : g.alcanza ? 'Con tu cuota de hoy llegas a la firma' : g.posible ? 'Sube tu cuota a ' + formatoRedondeado(g.cuota) + ' al mes' : 'Con este edificio no alcanzas')
+        '<p class="noche-sub">Recibes tus llaves en ' + g.fecha + (sinObra ? '' : ': el mismo día para todo el grupo') + '</p>' +
+        (sinObra ? cierreLineaHtml(p) + faltaPieHtml(g.falta, metaCompra(p), g.falta === 0 ? '' : g.alcanza ? 'Vas bien para la firma' : g.posible ? 'Junta ' + formatoRedondeado(g.cuota) + '/mes' : 'No alcanzas con este edificio')
           : '<p class="plan-grupo' + (g.alcanza ? ' ok' : g.posible ? ' sube' : ' no') + '">' + icono(g.alcanza ? 'i-check' : 'i-info') + '<span>' + textoPlanGrupo(g) + '</span></p>' +
             cierreGrupoHtml(p, 'en-azul')) +
         (sinObra ? '' : tarjetaObra(true)) +
@@ -2556,7 +2562,7 @@
       '<strong class="numero noche-plazo">' + (mesesPie === 0 ? '¡Listo!' : mesesRango(mesesPie, mesesPie)) + '</strong>' +
       (aproxRango(mesesPie, mesesPie) ? '<span class="noche-aprox">' + aproxRango(mesesPie, mesesPie) + '</span>' : '') +
       '<p class="noche-sub">' + (sinObra ? 'Recibes tus llaves aprox. en ' + fechaLlaves(pl.meses + MESES_SI_A_LLAVES, hoyDemo()) : 'Tus llaves: ' + fechaLlaves(pl.meses, hoyDemo())) + '</p>' +
-      (sinObra ? faltaPieHtml(Math.max(0, meta - ahorradoTuPie(meta)), mesesPie > 0 && estado.ahorroMensual > 0 ? 'Juntas ' + formatoRedondeado(estado.ahorroMensual) + ' al mes' : '') : cierreGrupoHtml(p, 'en-azul')) +
+      (sinObra ? faltaPieHtml(Math.max(0, meta - ahorradoTuPie(meta)), meta, mesesPie > 0 && estado.ahorroMensual > 0 ? 'Juntas ' + formatoRedondeado(estado.ahorroMensual) + '/mes' : '') : cierreGrupoHtml(p, 'en-azul')) +
       (sinObra ? '' : tarjetaObra(true)) +
     '</section>';
   }
@@ -2652,10 +2658,16 @@
       (sinCamino ? '<p class="camino-juego-nota">Tus pasos aparecen cuando eliges tu camino: cada camino tiene los suyos.</p>' : '') +
       (celebra ? '<div class="escalon-celebra cj-celebra" role="status"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#FFFFFF"/><path d="M6.5 12.5l3.6 3.6L17.5 8.8" fill="none" stroke="#28652B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
         '<span>¡Avanzaste un paso!<small>Sigue así: ya vas en el paso ' + Math.min(h.indice, N) + ' de ' + N + '.</small></span></div>' : '') +
-      (ahora ? '<div class="metro-ahora" style="--x:' + pct(actualI) + '">' + ahora + '</div>' : '') +
-      // S36: sin camino no hay fechas que mostrar.
-      (sinCamino ? '' : '<a class="enlace metro-fechas" href="#compra/recorrido">Ver con fechas ›</a>') +
+      (ahora ? '<div class="metro-ahora" style="--x:' + pct(actualI) + '">' + conFechasEnAhora(ahora, sinCamino) + '</div>' : '') +
+      // S36: sin camino no hay fechas que mostrar. S39: con «Ahora», el enlace va al lado de su chip.
+      (sinCamino || ahora ? '' : '<a class="enlace metro-fechas" href="#compra/recorrido">Ver con fechas ›</a>') +
     '</section>';
+  }
+  function conFechasEnAhora(ahora, sinCamino) {
+    var i = ahora.indexOf('<p class="chip chip-ahora">');
+    if (sinCamino || i === -1) return ahora;
+    var j = ahora.indexOf('</p>', i) + 4;
+    return ahora.slice(0, i) + '<div class="ahora-cab">' + ahora.slice(i, j) + '<a class="enlace metro-fechas" href="#compra/recorrido">Ver con fechas ›</a></div>' + ahora.slice(j);
   }
   // S33-C2 (E7): tu edificio y tu grupo, como avance de tu compra. Al tocarla, abre Tu pie.
   // S33-C2 (E7), ajustado: el edificio real (foto o dibujo de la obra y su etapa), no el dibujo de tu pie,
@@ -2741,7 +2753,7 @@
         icono('i-flecha', 'ac-flecha') + '</button></li>';
     };
     // 23-nov (Bárbara): desplegable cerrado, como en el detalle del departamento.
-    return '<details class="tarjeta aceleradores-compra ac-desplegable"><summary><span class="ac-sum-texto"><strong class="h5" id="titulo-ac">¿Cómo puedes llegar antes?</strong>' +
+    return '<details class="tarjeta aceleradores-compra ac-desplegable"><summary><span class="ac-sum-texto"><strong class="h5" id="titulo-ac">Ayudas para tu compra</strong>' +
         '<small>' + plural(aplican.length, 'ayuda', 'ayudas') + SEP + (elegidos.length ? plural(elegidos.length, 'sumada', 'sumadas') : 'ninguna sumada') + '</small></span>' +
         icono('i-flecha', 'ac-sum-flecha') + '</summary>' +
       (elegidos.length ? '<p class="ac-sub">Ya los sumaste</p><ul class="mc-lista">' + elegidos.map(function (f) { return fila(f, 'ac-elegido', f.auto ? 'Va incluido en tu camino' : f.lista ? 'Listo' : 'Está en tus misiones'); }).join('') + '</ul>' : '') +
@@ -2824,6 +2836,7 @@
       ip.querySelectorAll('.misiones-compra [data-mision], .con-fecha [data-mision]').forEach(function (b) { b.addEventListener('click', function () { abrirMision(b.dataset.mision, b); }); });
       // S33-C2: el azul de la fecha lleva a Tu pie (con un enlace visible y el bloque entero tocable).
       ip.querySelectorAll('.mi-compra-fecha').forEach(function (sec) {
+        if (sec.querySelector('.pie-boton')) return; // S39: el botón «Ver tu pie» ya lo dice.
         if (!sec.querySelector('.noche-pie')) {
           var a = document.createElement('a'); a.className = 'noche-pie'; a.href = '#pie'; a.setAttribute('aria-label', 'Ver tu pie');
           a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>'; sec.appendChild(a);
@@ -2984,13 +2997,13 @@
     if (solo) {
       etiqueta = 'Precio del departamento';
       cifra = formatoRedondeado(ufAPesos(estado.modo === 'vivir' ? plazoDepartamento(p, null, true).precioUF : d.listaUF));
-      lineas.push('En obra' + SEP + (p.entregaEstimada ? 'entrega ' + formatoFecha(p.entregaEstimada) : 'en construcción'));
+      lineas.push(p.entregaEstimada ? 'Entrega ' + formatoFecha(p.entregaEstimada) : 'En construcción');
     } else if (p.tipo !== 'conjunto') {
       etiqueta = 'Precio' + (conIva ? ' sin IVA' : ' del departamento');
       cifra = formatoRedondeado(p.tipo === 'venta' && estado.modo === 'vivir' ? ufAPesos(plazoDepartamento(p).precioUF) : r.escenario.precio);
       if (p.tipo === 'financiamiento') lineas.push(lineaPersonasPie(p));
       lineas.push((p.tipo === 'financiamiento' ? porcentajeEntero(r.avanceFinanciamiento) + NBSP + '% del pie reunido' + SEP : '') +
-        (p.cierre ? 'Cierra el ' + formatoFecha(p.cierre) : 'Terminado' + SEP + 'lo recibes al firmar'));
+        (p.cierre ? 'Cierra el ' + formatoFecha(p.cierre) : 'Lo recibes al firmar'));
     } else {
       // 11-nov: el precio total con el descuento del grupo, y cuánto te descuentan al unirte.
       var conDesc = estado.modo === 'vivir' ? ufAPesos(plazoDepartamento(p).precioUF) : r.escenario.precio;
@@ -3743,7 +3756,7 @@
     // 23-nov (Bárbara): el título es un desplegable; por dentro, las ayudas con su estado.
     return '<section class="tarjeta acel-detalle">' +
       '<button type="button" class="acel-titulo" id="btn-acel-titulo" aria-expanded="false" aria-controls="acel-bloque">' +
-        '<span class="acel-titulo-texto"><strong>¿Cómo puedes llegar antes?</strong><small>' + formas.length + ' ayudas · ' + abiertas + ' abiertas</small></span>' +
+        '<span class="acel-titulo-texto"><strong>Ayudas para tu compra</strong><small>' + formas.length + ' ayudas · ' + abiertas + ' abiertas</small></span>' +
         '<svg class="acel-flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>' +
       '</button>' +
       '<div class="acel-bloque" id="acel-bloque" hidden>' +
@@ -3839,7 +3852,7 @@
         '</li>';
       }).join('') + '</ul>' +
       '<p class="fp-sello">' + icono('i-escudo') + 'Lo confirma Bci al aprobar tu crédito.</p>';
-    abrirHojaContenido('¿Cómo puedes llegar antes?', html, boton, function () {
+    abrirHojaContenido('Ayudas para tu compra', html, boton, function () {
       if (foco) setTimeout(function () { var fo = document.getElementById('fp-' + foco); if (fo) fo.scrollIntoView({ block: 'start' }); }, 60);
       enlazarSumarFormas();
     });
@@ -6906,7 +6919,7 @@
     if (p) {
       var g = planGrupo(p);
       return g.falta === 0 || v >= g.cuota ? 'Llegas con tu pie a la firma: <strong>' + g.fecha + '</strong>'
-        : 'No llegas a la firma de ' + g.fecha + ': junta <strong>' + formatoRedondeado(g.cuota) + '</strong> al mes';
+        : '<span class="pt-fila"><span>Para la firma (' + g.fecha.replace(/^(\w{3})\w* de /, '$1 ') + ')</span><strong>' + formatoRedondeado(g.cuota) + '/mes</strong></span>';
     }
     // 23-nov: tres hitos. El deslizador mueve «Pie listo» (cuando terminas de juntar); las llaves, 3 meses después.
     var trad = !(estado.caminoElegido && CAMINOS_COMPARAR.indexOf(estado.caminoElegido) !== -1);
@@ -7017,9 +7030,9 @@
               '<button type="button" class="enlace pie-otro-mes" id="btn-otro-mes">Simular el mes siguiente</button>'
             : '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-pagar-cuota">Pagar mi cuota</button>') +
       '</section>' +
-      grupoEnPieHtml() +
       '<button type="button" class="tarjeta fila fila-regalo" id="btn-pedir-regalo" aria-haspopup="dialog"><span class="regalo-circulo" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="1" fill="none" stroke="#B20913" stroke-width="2"/><path d="M3 7h18v3H3zM12 7v13M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0" fill="none" stroke="#B20913" stroke-width="2" stroke-linejoin="round"/></svg></span>' +
         '<span><strong>Regalo para tu pie</strong><small>Comparte un enlace con tu familia</small><span class="regalo-compartir">Compartir ›</span></span></button>' +
+      grupoEnPieHtml() +
       // S36 (lienzo P31 y P32): cabecera azul con el escudo y las protecciones como una lista de banco (reemplaza a protegido-visual).
       '<section class="pp-protegido" aria-labelledby="titulo-protegido">' +
         '<div class="pp-cab"><svg class="pp-fondo" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/></svg>' +
@@ -7640,7 +7653,7 @@
             : (m === null || m === undefined ? 'Todavía no llegas' : 'Llegas en <strong>' + textoLlegada(m) + '</strong>')) + '</p>' +
           '<button type="button" class="btn btn-mi-camino" id="btn-mi-camino" aria-haspopup="dialog">Elegir este camino</button>') +
       (vivir && id === 'arriendo-opcion' ? '' : vivir ? '<a class="tarjeta fila como-funciona" href="#compra/caminos/' + id + '/como"><span class="circulo-icono verde" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg></span>' +
-          '<span><strong>Ayudas para llegar antes</strong><small>' + vistaAyudas(id) + '</small></span>' +
+          '<span><strong>Ayudas para tu compra</strong><small>' + vistaAyudas(id) + '</small></span>' +
           '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>'
         : '<button type="button" class="tarjeta fila como-funciona" data-simular="' + id + '" aria-haspopup="dialog">' + icono('i-ayuda', 'icono-grande') +
           '<span><strong>¿Cómo funciona?</strong><small>Tasa, dividendo y costo total</small></span>' +
@@ -8740,7 +8753,7 @@
         (esArrendarCamino(id) ? '' : '<a href="#departamentos/camino/' + id + '"><span class="fc-mas-icono verde" aria-hidden="true">' + icono('i-casa') + '</span><span><strong>Ver sus departamentos</strong><small>' + plural(k, 'departamento', 'departamentos') + (filtrosDeptos.rango && rangoActual() ? ' en tu rango' : '') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>') +
         (CAMINOS[id] && CAMINOS[id].familiar ? (function () { var rf = respaldoFamiliar(listaMeta()); return '<a href="#compra/ficha/respaldo-familiar/familiar"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-grupo') + '</span><span><strong>Cómo lo vive tu familiar</strong><small>Deja ' + formatoRedondeado(rf.deposito) + ' y lo recupera en ' + (rf.mesesLibera / 12).toFixed(0) + ' años</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>'; })() : '') +
         (id === 'individual-vivir' ? '<a href="#compra/caminos/individual-vivir/califica"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-escudo') + '</span><span><strong>¿Calificas?</strong><small>Revisa los requisitos con tus datos</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
-        (estado.modo === 'vivir' && id !== 'arriendo-opcion' ? '<a href="#compra/caminos/' + id + '/como"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-pronto') + '</span><span><strong>Ayudas para llegar antes</strong><small>Lo que puede acercar tu fecha</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
+        (estado.modo === 'vivir' && id !== 'arriendo-opcion' ? '<a href="#compra/caminos/' + id + '/como"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-pronto') + '</span><span><strong>Ayudas para tu compra</strong><small>Lo que puede acercar tu fecha</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
         '<a href="#perfil/ayuda"><span class="fc-mas-icono gris" aria-hidden="true">' + icono('i-info') + '</span><span><strong>Qué significan estos términos</strong><small>' + (CAMINO_TERMINOS[id] || 'Pie, dividendo, preaprobación') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' +
       '</nav>' +
       '<p class="fc-cuidado">' + icono('i-alerta') + '<span><strong>Ten en cuenta:</strong> ' + inf.cuidado + '</span></p>' +
@@ -10322,6 +10335,8 @@
 
   // ---------- Perfil (S3-F5) ----------
   // S15-F6: Perfil en filas cortas. Mis datos se edita en una hoja; avisos y ayuda tienen su pantalla.
+  // S39 1.7: cada fila de Perfil con un color Bci claro; juntos se leen como familia, no como alerta.
+  var TINTE_PERFIL = { 'i-persona': 't-verde', 'i-campana': 't-azul', 'i-buscar': 't-amarillo', 'i-ayuda': 't-rojo', 'i-sube': 't-verde', 'i-casa': 't-azul', 'i-documento': 't-amarillo' };
   function renderPerfil(sub) {
     var c = $('perfil-contenido');
     // S28-B7: una sola cabecera por pantalla. En las subpantallas (Tu equipo, Avisos, Ayuda) manda la suya.
@@ -10387,7 +10402,7 @@
     var activos = TIPOS_AVISO.filter(function (t) { return !estado.avisosApagados[t]; }).length;
     var ingreso = ingresoTotal(estado.sueldoPropio, estado.sueldoPareja);
     var fila = function (etiqueta, href, ic, titulo, detalle, id) {
-      var dentro = icono(ic, 'icono-grande') + '<span><strong>' + titulo + '</strong>' + (detalle ? '<small>' + detalle + '</small>' : '') + '</span>' +
+      var dentro = '<span class="fila-ic ' + (TINTE_PERFIL[ic] || 't-azul') + '" aria-hidden="true">' + icono(ic) + '</span><span><strong>' + titulo + '</strong>' + (detalle ? '<small>' + detalle + '</small>' : '') + '</span>' +
         '<svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg>';
       return '<li>' + (etiqueta === 'a' ? '<a class="fila" href="' + href + '">' + dentro + '</a>'
         : '<button type="button" class="fila" id="' + id + '" aria-haspopup="dialog">' + dentro + '</button>') + '</li>';

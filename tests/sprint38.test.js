@@ -93,19 +93,18 @@ test('La sigla FOGAES solo queda en el glosario', () => {
   assert.match(visibles[0], /garantia: \{ nombre: 'Garantía del Estado \(FOGAES\)'/);
 });
 
-test('S39: barra inferior flotante con solo íconos; los nombres siguen para el lector de pantalla', () => {
+test('S39c: la barra inferior vuelve a como estaba (con nombres), sin la píldora flotante', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'css', 'estilos.css'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  assert.match(css, /\.barra a \{ height: 62px; gap: 0; font-size: 0 !important;/);
-  assert.match(css, /border-radius: 999px; background: var\(--white\) !important;/);
+  assert.doesNotMatch(css, /font-size: 0 !important/);
+  assert.match(css, /la barra inferior vuelve a como estaba/);
   ['Tu compra', 'Tu pie', 'Departamentos', 'Perfil'].forEach((t) => assert.ok(html.includes('</svg>' + t + '</a>'), t));
-});
+})
 
 test('S39b: el azul de Tu compra dice cuánto falta para tu pie en todos los caminos; el cupo va en una línea', () => {
-  assert.match(app, /function faltaPieHtml\(falta, linea\)/);
-  assert.match(app, /'Te faltan ' \+ formatoRedondeado\(falta\) \+ ' para tu pie'/);
-  assert.match(app, /sinObra \? cierreLineaHtml\(p\) \+ faltaPieHtml\(g\.falta/);
-  assert.match(app, /sinObra \? faltaPieHtml\(Math\.max\(0, meta - ahorradoTuPie\(meta\)\)/);
+  assert.match(app, /function faltaPieHtml\(falta, meta, linea\)/);
+  assert.match(app, /sinObra \? cierreLineaHtml\(p\) \+ faltaPieHtml\(g\.falta, metaCompra\(p\)/);
+  assert.match(app, /sinObra \? faltaPieHtml\(Math\.max\(0, meta - ahorradoTuPie\(meta\)\), meta/);
 });
 
 test('S39b: Tu equipo te anima en una fila; ¿Cómo puedes llegar antes? es un desplegable', () => {
@@ -118,4 +117,20 @@ test('S39b: Caminos en filas con íconos, sin textos de relleno; Edificios sin �
   assert.doesNotMatch(app, /caminos para llegar a tu departamento\. Conoce cada uno/);
   assert.doesNotMatch(app, /Con tu respuesta te recomendamos uno de estos caminos/);
   assert.doesNotMatch(app, /plural\(lista\.length, 'departamento', 'departamentos'\) \+ \(filtrosDeptos\.rango && rango \? ' en tu rango'/);
+});
+
+test('S39c bloque 1: botón «Ver tu pie» con anillo, «Ver con fechas» junto a «Ahora», Tu pie ordenado, Ayudas para tu compra, Edificios y Perfil', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'css', 'estilos.css'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.match(app, /class="pie-boton" href="#pie"/);
+  assert.match(app, /Ver tu pie ›/);
+  assert.match(app, /if \(sec\.querySelector\('\.pie-boton'\)\) return;/);
+  assert.match(app, /function conFechasEnAhora\(ahora, sinCamino\)/);
+  assert.ok(app.indexOf('id="btn-pedir-regalo"') < app.indexOf("grupoEnPieHtml() +"), 'el regalo va antes del grupo en Tu pie');
+  assert.match(app, /<span class="pt-fila"><span>Para la firma \(/);
+  assert.doesNotMatch(app, /¿Cómo puedes llegar antes\?<\/strong>|>Ayudas para llegar antes</);
+  assert.match(app, /'Entrega ' \+ formatoFecha\(p\.entregaEstimada\)/);
+  assert.match(css, /\.tarjeta-proyecto \.tp-ver \{ display: none; \}/);
+  assert.match(app, /var TINTE_PERFIL = \{/);
+  assert.match(html, /class="franja-bci"/);
 });
