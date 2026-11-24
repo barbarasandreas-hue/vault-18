@@ -190,7 +190,7 @@ test('S39 3.2: Tu grupo con foto, cifras, «Te toca», conversación, votaciones
   ['chat', 'votos', 'vocero', 'reglas'].forEach((k) => assert.match(app, new RegExp("fila\\('" + k + "'")));
   assert.match(app, /La fecha de firma y de llaves no se vota/);
   assert.match(app, /No compartas tu RUT, tu dirección ni datos de tu cuenta/);
-  assert.match(app, /'votoGrupo', 'voceroYo'\]/);
+  assert.match(app, /'votoGrupo', 'voceroYo'(, 'grupoAvisoVisto')?\]/);
   assert.match(app, /enGrupoCompra\(\) \? '' : tuEdificioHtml\(s\)/);
   assert.match(app, /data-ir-grupo/);
 });

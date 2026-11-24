@@ -94,9 +94,9 @@
   var CLAVE_ESTADO = 'primer-peldano-estado';
   var GUARDADOS = ['modo', 'sueldoPropio', 'sueldoPareja', 'arriendoActual', 'otrasCuotas', 'contrato',
     'ahorroMensual', 'tipoAhorro', 'ahorrado', 'ahorroIniciado', 'ahorroActual', 'caminoElegido', 'mesAhorro', 'racha', 'ultimoProtector', 'historialMeses', 'preguntasListas', 'rangoPrecio',
-    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo', 'presentacion', 'muro', 'visitaGrupo', 'saldoCorriente', 'mesesTrabajo', 'deudasAtrasadas', 'rshTramo', 'caminoAnterior', 'prioridad', 'prioridadRespondida', 'acuerdoCredito', 'respaldoAceptado', 'usadoElegido', 'misionesFestejo', 'respObra', 'respFamilia', 'votoGrupo', 'voceroYo'];
+    'avisosApagados', 'cuotaAutomatica', 'parejaInvitada', 'regalos', 'listaRegalos', 'unidosGrupo', 'avisosVistos', 'avatar', 'equipo', 'conQuien', 'piezas', 'modoElegido', 'quiereInvertir', 'ultimaVisita', 'novedades', 'pasos', 'animosDados', 'animos', 'construido', 'favoritos', 'visita', 'visitaVersion', 'vecinos', 'trabajo', 'arriendoElegido', 'mesContrato', 'visitas', 'caminoPorModo', 'presentacion', 'muro', 'visitaGrupo', 'saldoCorriente', 'mesesTrabajo', 'deudasAtrasadas', 'rshTramo', 'caminoAnterior', 'prioridad', 'prioridadRespondida', 'acuerdoCredito', 'respaldoAceptado', 'usadoElegido', 'misionesFestejo', 'respObra', 'respFamilia', 'votoGrupo', 'voceroYo', 'grupoAvisoVisto'];
   var VALORES_POR_DEFECTO = { modo: 'arrendar', sueldoPropio: null, sueldoPareja: null, arriendoActual: null,
-    otrasCuotas: null, contrato: 'indefinido', mesesTrabajo: null, deudasAtrasadas: null, rshTramo: null, caminoAnterior: null, prioridad: null, prioridadRespondida: false, acuerdoCredito: null, respaldoAceptado: false, usadoElegido: null, misionesFestejo: '', respObra: null, respFamilia: null, votoGrupo: null, voceroYo: false,
+    otrasCuotas: null, contrato: 'indefinido', mesesTrabajo: null, deudasAtrasadas: null, rshTramo: null, caminoAnterior: null, prioridad: null, prioridadRespondida: false, acuerdoCredito: null, respaldoAceptado: false, usadoElegido: null, misionesFestejo: '', respObra: null, respFamilia: null, votoGrupo: null, voceroYo: false, grupoAvisoVisto: false,
     ahorroMensual: null, tipoAhorro: 'propio', ahorrado: 0, ahorroIniciado: false, meAlcanza: false,
     ahorroActual: null, caminoElegido: null, masBaratoTipo: null, masBaratoAjuste: null,
     mesAhorro: 0, racha: 0, ultimoProtector: null, historialMeses: [], preguntasListas: false, pregunta: 1, rangoPrecio: null, filtroRango: false,
@@ -442,6 +442,7 @@
       estado.respaldoAceptado = g.respaldoAceptado === true;
       estado.votoGrupo = g.votoGrupo === 'si' || g.votoGrupo === 'no' ? g.votoGrupo : null;
       estado.voceroYo = g.voceroYo === true;
+      estado.grupoAvisoVisto = g.grupoAvisoVisto === true;
       estado.respObra = ['si', 'terminado', 'igual'].indexOf(g.respObra) !== -1 ? g.respObra : null;
       estado.respFamilia = ['ahorros', 'apoyo', 'solo'].indexOf(g.respFamilia) !== -1 ? g.respFamilia : null;
       estado.misionesFestejo = typeof g.misionesFestejo === 'string' ? g.misionesFestejo.slice(0, 300) : '';
@@ -1410,7 +1411,8 @@
   function selectorGrupoHtml() {
     return '<div class="pestanas tg-selector" role="tablist" aria-label="Tu compra o tu grupo">' +
       [['compra', 'Tu compra'], ['grupo', 'Tu grupo']].map(function (t) {
-        return '<button type="button" role="tab" data-vista-compra="' + t[0] + '" aria-selected="' + (vistaCompra === t[0]) + '">' + t[1] + '</button>';
+        return '<button type="button" role="tab" data-vista-compra="' + t[0] + '" aria-selected="' + (vistaCompra === t[0]) + '">' + t[1] +
+          (t[0] === 'grupo' && !estado.grupoAvisoVisto ? '<span class="tg-nuevo">Nuevo</span>' : '') + '</button>';
       }).join('') + '</div>';
   }
   function datosGrupo(p) {
@@ -1465,17 +1467,18 @@
   }
   function abrirChatGrupo(p, boton) {
     var mios = estado.muro[p.id] || [];
+    var avM = function (k) { var a = AVATARES_REGALO[(k + 1) % AVATARES_REGALO.length]; return '<span class="tg-av tg-av-msg" style="--fondo:' + a.fondo + '" aria-hidden="true">' + avatarSVG(a.av, 30) + '</span>'; };
     var msgs = '<li class="tg-msg sis">Se unió alguien al grupo' + SEP + 'hace 4 días</li>' +
-      MURO_BASE.map(function (t, k) { return '<li class="tg-msg"><small>' + APODOS_GRUPO[(k + 1) % APODOS_GRUPO.length] + '</small>' + t + '</li>'; }).join('') +
-      mios.map(function (t) { return '<li class="tg-msg yo"><small>Tú</small>' + esc(t) + '</li>'; }).join('');
+      MURO_BASE.map(function (t, k) { return '<li class="tg-msg">' + avM(k) + '<span class="tg-burbuja"><small>' + APODOS_GRUPO[(k + 1) % APODOS_GRUPO.length] + '</small>' + t + '</span></li>'; }).join('') +
+      mios.map(function (t) { return '<li class="tg-msg yo"><span class="tg-burbuja"><small>Tú</small>' + esc(t) + '</span><span class="tg-av tg-av-msg tg-yo" aria-hidden="true">' + avatarSVG(estado.avatar, 30) + '</span></li>'; }).join('');
     abrirHojaContenido('Conversación del grupo',
-      '<ul class="tg-chat">' + msgs + '</ul>' +
+      '<div class="tarjeta tg-chat-tarjeta"><ul class="tg-chat">' + msgs + '</ul>' +
       '<div class="tg-rapidos">' + ['¡Bien!', 'Ya pagué mi cuota', '¿Vamos a ver la obra?', 'Tengo una duda'].map(function (t) {
-        return '<button type="button" class="chip chip-filtro" data-chat-rapido="' + t + '">' + t + '</button>'; }).join('') + '</div>' +
+        return '<button type="button" class="chip chip-filtro tg-q" data-chat-rapido="' + t + '">' + t + '</button>'; }).join('') + '</div>' +
       '<form class="muro-form" id="form-chat-grupo"><label class="oculto-visual" for="chat-grupo-texto">Escribe al grupo</label>' +
         '<input id="chat-grupo-texto" class="campo-texto" maxlength="140" placeholder="Escribe al grupo…" autocomplete="off">' +
         '<button type="submit" class="btn btn-secundario-dark btn-sm">Enviar</button></form>' +
-      '<p class="vecinos-nota"><small>Lo modera Bci. No compartas tu RUT, tu dirección ni datos de tu cuenta.</small></p>', boton, function (hoja) {
+      '<p class="vecinos-nota tg-moderacion">' + icono('i-escudo') + '<small>Lo modera Bci. No compartas tu RUT, tu dirección ni datos de tu cuenta.</small></p></div>', boton, function (hoja) {
         var enviar = function (t) {
           t = (t || '').trim().slice(0, 140); if (!t) return;
           estado.muro = Object.assign({}, estado.muro); estado.muro[p.id] = (estado.muro[p.id] || []).concat([t]).slice(-10);
@@ -1486,18 +1489,30 @@
         var l = hoja.querySelector('.tg-chat'); if (l && l.lastElementChild) l.lastElementChild.scrollIntoView({ block: 'nearest' });
       });
   }
+  function barraVotosHtml(aFavor, enContra, faltan) {
+    var pv = function (cl, ic) { return '<span class="tg-pv ' + cl + '" aria-hidden="true">' + (ic || '') + '</span>'; };
+    var h = ''; var i;
+    for (i = 0; i < aFavor; i++) h += pv('f', '✓');
+    for (i = 0; i < enContra; i++) h += pv('e', '✕');
+    for (i = 0; i < faltan; i++) h += pv('x', false);
+    return '<div class="tg-vbarra"><span class="tg-pvs">' + h + '</span><span class="tg-vleyenda"><b>' + aFavor + ' a favor</b>' + SEP + enContra + ' en contra' + SEP +
+      (faltan ? (faltan === 1 ? 'falta 1 voto' : 'faltan ' + faltan + ' votos') : 'votaron todos') + '</span></div>';
+  }
+  function segVotos(a, n) { var h = ''; for (var i = 0; i < n; i++) h += '<u' + (i < a ? '' : ' class="no"') + '></u>'; return '<span class="tg-seg" aria-hidden="true">' + h + '</span>'; }
   function abrirVotosGrupo(p, boton) {
     var voto = estado.votoGrupo;
+    var nv = 4; // las 4 personas que votan en este ejemplo
+    var vf = Math.min(nv, 2 + (voto === 'si' ? 1 : 0)), vc = voto === 'no' ? 1 : 0, vx = Math.max(0, nv - vf - vc);
     abrirHojaContenido('Votaciones',
       '<section class="tarjeta tg-toca"><span class="chip tg-chip-toca">Abierta' + SEP + 'cierra en 3 días</span><h3 class="h5">¿Alargar el cierre hasta el 15 de febrero?</h3>' +
-        '<p class="texto-apoyo"><small>Propuesta de ' + APODOS_GRUPO[1] + '. ' + (voto ? 'Votaste ' + (voto === 'si' ? 'a favor.' : 'en contra.') : 'Aún no votas.') + '</small></p>' +
+        '<p class="texto-apoyo"><small>Propuesta de ' + APODOS_GRUPO[1] + '. ' + (voto ? 'Votaste ' + (voto === 'si' ? 'a favor.' : 'en contra.') : 'Aún no votas.') + '</small></p>' + barraVotosHtml(vf, vc, vx) +
         '<div class="tg-voto-btns"><button type="button" class="btn ' + (voto === 'si' ? 'btn-primario' : 'btn-secundario') + '" data-voto-hoja="si">A favor</button><button type="button" class="btn ' + (voto === 'no' ? 'btn-primario' : 'btn-secundario') + '" data-voto-hoja="no">En contra</button></div></section>' +
       '<h3 class="h5">Cerradas</h3><ul class="tg-filas tg-cerradas">' +
-        '<li><span class="tg-ic t-verde" aria-hidden="true">' + icono('i-calendario') + '</span><span><strong>Visita a la obra el sábado a las 11:00</strong><small>Aprobada' + SEP + '4 de 4</small></span></li>' +
-        '<li><span class="tg-ic t-azul" aria-hidden="true">' + icono('i-persona') + '</span><span><strong>' + APODOS_GRUPO[0] + ' como vocera</strong><small>Aprobada' + SEP + '3 de 4</small></span></li>' +
+        '<li><span class="tg-ic t-verde" aria-hidden="true">' + icono('i-calendario') + '</span><span><strong>Visita a la obra el sábado a las 11:00</strong><small>Aprobada' + SEP + '4 de 4</small>' + segVotos(4, 4) + '</span></li>' +
+        '<li><span class="tg-ic t-azul" aria-hidden="true">' + icono('i-persona') + '</span><span><strong>' + APODOS_GRUPO[0] + ' como vocera</strong><small>Aprobada' + SEP + '3 de 4</small>' + segVotos(3, 4) + '</span></li>' +
       '</ul>' +
       '<h3 class="h5">Proponer un cambio</h3><div class="tg-rapidos">' + ['Alargar el cierre de cupos', 'Fijar una visita a la obra', 'Cambiar de vocero'].map(function (t) {
-        return '<button type="button" class="chip chip-filtro" data-proponer="' + t + '">' + t + '</button>'; }).join('') + '</div>' +
+        return '<button type="button" class="chip chip-filtro tg-q" data-proponer="' + t + '">' + t + '</button>'; }).join('') + '</div>' +
       '<p class="ficha-grupo-nota">' + icono('i-info') + 'La fecha de firma y de llaves no se vota: depende de cuándo la inmobiliaria entregue el edificio.</p>', boton, function (hoja) {
         hoja.querySelectorAll('[data-voto-hoja]').forEach(function (b) { b.addEventListener('click', function () { estado.votoGrupo = b.dataset.votoHoja; guardarEstado(); mostrar(); abrirVotosGrupo(p, boton); toast('Tu voto quedó guardado (simulado).'); }); });
         hoja.querySelectorAll('[data-proponer]').forEach(function (b) { b.addEventListener('click', function () { toast('Propusiste: ' + b.dataset.proponer.toLowerCase() + '. El grupo tiene 3 días para votar (simulado).'); }); });
@@ -1551,7 +1566,17 @@
       '</header>';
     var enlazarSelector = function () {
       document.querySelectorAll('[data-vista-compra]').forEach(function (b) {
-        b.addEventListener('click', function () { vistaCompra = b.dataset.vistaCompra; renderCamino(); var t = document.querySelector('[data-vista-compra="' + vistaCompra + '"]'); if (t) t.focus(); });
+        b.addEventListener('click', function () { vistaCompra = b.dataset.vistaCompra; if (vistaCompra === 'grupo' && !estado.grupoAvisoVisto) { estado.grupoAvisoVisto = true; guardarEstado(); } renderCamino(); var t = document.querySelector('[data-vista-compra="' + vistaCompra + '"]'); if (t) t.focus(); });
+      });
+    };
+    var enlazarAviso = function () {
+      document.querySelectorAll('[data-aviso-grupo]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          estado.grupoAvisoVisto = true; guardarEstado();
+          if (b.dataset.avisoGrupo === 'ver') vistaCompra = 'grupo';
+          renderCamino();
+          var t = document.querySelector('[data-vista-compra="' + vistaCompra + '"]'); if (t) t.focus();
+        });
       });
     };
     if (conGrupo && vistaCompra === 'grupo') {
@@ -1559,8 +1584,13 @@
       enlazarSelector(); enlazarTuGrupo($('inicio-principal'), x.p);
       return;
     }
+    var avisoGrupo = conGrupo && !estado.grupoAvisoVisto
+      ? '<section class="tg-aviso" role="status" aria-label="Novedad"><span class="tg-aviso-ic t-azul" aria-hidden="true">' + icono('i-grupo') + '</span>' +
+        '<span class="tg-aviso-txt"><strong>Nuevo: Tu grupo</strong><small>Se sumó una pestaña aquí arriba: conversa, vota y mira cómo va tu grupo.</small></span>' +
+        '<button type="button" class="btn btn-primario btn-sm" data-aviso-grupo="ver">Ver tu grupo</button>' +
+        '<button type="button" class="tg-aviso-x" data-aviso-grupo="cerrar" aria-label="Cerrar aviso">×</button></section>' : '';
     $('inicio-principal').innerHTML =
-      cabeza +
+      cabeza + avisoGrupo +
       novedadesInicio(x) +
       (x.paso < 4 ? cuandoLlegasCompra(x.p, true) + animosInicio() + bloqueRecorrido() :
       '<section class="tarjeta proximo" aria-label="Dónde vas">' +
@@ -1590,7 +1620,7 @@
           '</section>'
         : ''));
     iniciarSiguientePaso();
-    enlazarSelector();
+    enlazarSelector(); enlazarAviso();
     if ($('btn-novedades-ok')) $('btn-novedades-ok').addEventListener('click', function () {
       estado.novedades = [];
       guardarEstado();
@@ -8652,7 +8682,7 @@
     var f = FICHA_CORTA[id], ics = ICONOS_COMO[id];
     if (!f || !ics) return pasosVisuales(id);
     return '<ol class="como-fila">' + f[2].map(function (t, i) {
-      return '<li><span class="cf-ic" aria-hidden="true">' + icono(ics[i]) + '<b>' + (i + 1) + '</b></span><span>' + t + '</span></li>';
+      return '<li><span class="cf-ic ' + TINTES_3[i % 3] + '" aria-hidden="true">' + icono(ics[i]) + '<b>' + (i + 1) + '</b></span><span>' + t + '</span></li>';
     }).join('') + '</ol>';
   }
   // Cómo funciona en 3 pasos, con un ícono por paso.
@@ -9007,7 +9037,8 @@
     var r = recomendadoParaTi();
     var chips = (id === estado.caminoElegido ? '<span class="fc-chip fuerte">Tu camino</span>' : r && r.id === id ? '<span class="fc-chip fuerte">Te lo recomendamos</span>' : '') +
       (DATOS_CAMINO[id] || []).slice(-1).map(function (t) { return '<span class="fc-chip">' + t + '</span>'; }).join('');
-    var celda = function (etq, val, nota) { return '<div><small>' + etq + '</small><strong>' + val + '</strong><small>' + nota + '</small></div>'; };
+    var ncel = 0, ICS_CEL = ['i-alcancia', 'i-llave', 'i-calendario'];
+    var celda = function (etq, val, nota) { var q = ncel++ % 3; return '<div class="' + TINTES_3[q] + '"><span class="fcn-ic" aria-hidden="true">' + icono(ICS_CEL[q]) + '</span><small>' + etq + '</small><strong>' + val + '</strong><small>' + nota + '</small></div>'; };
     var k = filtrarDeptos(itemsDeptos(id), filtrosDeptos).length;
     return '<div class="fc" style="' + varsCamino(id) + '">' +
       '<section class="fc-cabeza" style="background: linear-gradient(180deg, ' + c[0] + ' 0%, var(--gray-light) 100%)">' +
@@ -9026,8 +9057,8 @@
         (esArrendarCamino(id) ? '' : '<a href="#departamentos/camino/' + id + '"><span class="fc-mas-icono verde" aria-hidden="true">' + icono('i-casa') + '</span><span><strong>Ver sus departamentos</strong><small>' + plural(k, 'departamento', 'departamentos') + (filtrosDeptos.rango && rangoActual() ? ' en tu rango' : '') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>') +
         (CAMINOS[id] && CAMINOS[id].familiar ? (function () { var rf = respaldoFamiliar(listaMeta()); return '<a href="#compra/ficha/respaldo-familiar/familiar"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-grupo') + '</span><span><strong>Cómo lo vive tu familiar</strong><small>Deja ' + formatoRedondeado(rf.deposito) + ' y lo recupera en ' + (rf.mesesLibera / 12).toFixed(0) + ' años</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>'; })() : '') +
         (id === 'individual-vivir' ? '<a href="#compra/caminos/individual-vivir/califica"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-escudo') + '</span><span><strong>¿Calificas?</strong><small>Revisa los requisitos con tus datos</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
-        (estado.modo === 'vivir' && id !== 'arriendo-opcion' ? '<a href="#compra/caminos/' + id + '/como"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-pronto') + '</span><span><strong>Ayudas para tu compra</strong><small>Lo que puede acercar tu fecha</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
-        '<a href="#perfil/ayuda"><span class="fc-mas-icono gris" aria-hidden="true">' + icono('i-info') + '</span><span><strong>Qué significan estos términos</strong><small>' + (CAMINO_TERMINOS[id] || 'Pie, dividendo, preaprobación') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' +
+        (estado.modo === 'vivir' && id !== 'arriendo-opcion' ? '<a href="#compra/caminos/' + id + '/como"><span class="fc-mas-icono amarillo" aria-hidden="true">' + icono('i-pronto') + '</span><span><strong>Ayudas para tu compra</strong><small>Lo que puede acercar tu fecha</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
+        '<a href="#perfil/ayuda"><span class="fc-mas-icono rojo" aria-hidden="true">' + icono('i-info') + '</span><span><strong>Qué significan estos términos</strong><small>' + (CAMINO_TERMINOS[id] || 'Pie, dividendo, preaprobación') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' +
       '</nav>' +
       '<p class="fc-cuidado">' + icono('i-alerta') + '<span><strong>Ten en cuenta:</strong> ' + inf.cuidado + '</span></p>' +
     '</div>';
