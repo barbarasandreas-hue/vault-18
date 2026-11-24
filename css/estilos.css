@@ -5303,3 +5303,5 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .tg-vleyenda { font-size: 13px; } .tg-vleyenda br { display: none; } .tg-vleyenda::after { content: ""; }
 .tg-toca ~ h3 { margin-top: 22px; }
 .tg-cerradas { padding: 4px 16px; background: var(--white); border-radius: 16px; box-shadow: var(--sombra-1); }
+.fc-tarjeta.fc-quien { background: var(--blue-20); box-shadow: none; }
+.fc-quien .fc-para-icono { background: var(--white); color: var(--blue-dark); }

@@ -1504,7 +1504,7 @@
     var nv = 4; // las 4 personas que votan en este ejemplo
     var vf = Math.min(nv, 2 + (voto === 'si' ? 1 : 0)), vc = voto === 'no' ? 1 : 0, vx = Math.max(0, nv - vf - vc);
     abrirHojaContenido('Votaciones',
-      '<section class="tarjeta tg-toca"><span class="chip tg-chip-toca">Abierta' + SEP + 'cierra en 3 días</span><h3 class="h5">¿Alargar el cierre hasta el 15 de febrero?</h3>' +
+      '<section class="tarjeta tg-toca"><span class="chip tg-chip-toca">' + (voto ? 'Abierta' : 'Te toca') + SEP + 'cierra en 3 días</span><h3 class="h5">¿Alargar el cierre hasta el 15 de febrero?</h3>' +
         '<p class="texto-apoyo"><small>Propuesta de ' + APODOS_GRUPO[1] + '. ' + (voto ? 'Votaste ' + (voto === 'si' ? 'a favor.' : 'en contra.') : 'Aún no votas.') + '</small></p>' + barraVotosHtml(vf, vc, vx) +
         '<div class="tg-voto-btns"><button type="button" class="btn ' + (voto === 'si' ? 'btn-primario' : 'btn-secundario') + '" data-voto-hoja="si">A favor</button><button type="button" class="btn ' + (voto === 'no' ? 'btn-primario' : 'btn-secundario') + '" data-voto-hoja="no">En contra</button></div></section>' +
       '<h3 class="h5">Cerradas</h3><ul class="tg-filas tg-cerradas">' +
@@ -9053,6 +9053,7 @@
         '</div><p class="fc-sello">' + icono('i-escudo') + 'Sin contar que el departamento suba de precio</p></section>' +
       '<section class="fc-tarjeta" aria-labelledby="fc-como"><h2 class="h5" id="fc-como">Cómo funciona</h2>' + pasosFilaHtml(id) +
         '<details class="fc-pasos"><summary>Ver tus ' + h.total + ' pasos</summary>' + listaPasosPrevia(h) + '</details></section>' +
+      (INFO_CAMINO[id] && INFO_CAMINO[id].para ? '<section class="fc-tarjeta fc-para fc-quien" aria-labelledby="fc-quien"><span class="fc-para-icono" aria-hidden="true">' + icono('i-persona') + '</span><span><strong id="fc-quien">Para quién</strong><small>' + INFO_CAMINO[id].para + '</small></span></section>' : '') +
       '<nav class="fc-mas" aria-label="Más sobre este camino">' +
         (esArrendarCamino(id) ? '' : '<a href="#departamentos/camino/' + id + '"><span class="fc-mas-icono verde" aria-hidden="true">' + icono('i-casa') + '</span><span><strong>Ver sus departamentos</strong><small>' + plural(k, 'departamento', 'departamentos') + (filtrosDeptos.rango && rangoActual() ? ' en tu rango' : '') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>') +
         (CAMINOS[id] && CAMINOS[id].familiar ? (function () { var rf = respaldoFamiliar(listaMeta()); return '<a href="#compra/ficha/respaldo-familiar/familiar"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-grupo') + '</span><span><strong>Cómo lo vive tu familiar</strong><small>Deja ' + formatoRedondeado(rf.deposito) + ' y lo recupera en ' + (rf.mesesLibera / 12).toFixed(0) + ' años</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>'; })() : '') +
