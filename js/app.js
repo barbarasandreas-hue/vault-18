@@ -4034,7 +4034,7 @@
         ['i-documento', 'Confirma que es tu primera compra', 'La garantía se usa una sola vez', !!ps.fogaesCalifica],
         ['i-banco', 'Pídela al pedir tu crédito', 'Bci la solicita por ti', false]]; } },
     ds1: { tinte: 'verde', ic: 'i-alcancia',
-      que: 'Es <strong>plata del Estado que se suma a tu pie</strong> y no se devuelve. Sirve en departamentos de hasta UF 4.000. La entrega el Minvu y hay que postular. No es el DS19.',
+      que: 'Es <strong>dinero del Estado que se suma a tu pie</strong> y no se devuelve. Sirve en departamentos de hasta UF 4.000. Lo entrega el Minvu y hay que postular. No es el DS19.',
       pasos: function (f, ps) { return [['i-documento', 'Inscríbete en el Registro Social de Hogares', 'En línea, en ChileAtiende', !!ps.rsh],
         ['i-alcancia', 'Ten tu cuenta de vivienda con ahorro', f.espera || 'Con el ahorro mínimo de tu tramo', false],
         ['i-calendario', 'Postula cuando abra el llamado', 'Te avisamos las fechas', !!ps.ds1Postulado],
@@ -9425,7 +9425,7 @@
         '<li class="tile t-amarillo"><span class="tile-ic" aria-hidden="true">' + icono('i-grupo') + '</span>Cupos limitados</li>' +
       '</ul>' +
       '<section class="tarjeta ds19-que" aria-labelledby="ds19-que-t"><h2 class="h5" id="ds19-que-t">¿Qué es el subsidio?</h2><ul class="ds19-que-filas">' +
-        '<li><span class="tg-ic t-azul" aria-hidden="true">' + icono('i-banco') + '</span><span><strong>Plata del Estado</strong><small>Un aporte para tu primera vivienda. No se devuelve.</small></span></li>' +
+        '<li><span class="tg-ic t-azul" aria-hidden="true">' + icono('i-banco') + '</span><span><strong>Dinero del Estado</strong><small>Un aporte para tu primera vivienda. No se devuelve.</small></span></li>' +
         '<li><span class="tg-ic t-verde" aria-hidden="true">' + icono('i-alcancia') + '</span><span><strong>Baja lo que pagas</strong><small>Se descuenta del precio: juntas menos pie y pides menos crédito.</small></span></li>' +
         '<li><span class="tg-ic t-amarillo" aria-hidden="true">' + icono('i-casa') + '</span><span><strong>Solo en proyectos DS19</strong><small>Hay cupos limitados. Se postula con la inmobiliaria y lo confirma el Minvu.</small></span></li>' +
       '</ul><p class="texto-apoyo"><small>Monto de ejemplo: desde UF 350 (unos ' + formatoRedondeado(ufAPesos(350)) + '), según tu tramo.</small></p></section>' +
