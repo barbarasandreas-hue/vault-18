@@ -141,7 +141,7 @@ test('S39 2.1: detalle con reglas del grupo en 4 tarjetitas dentro de «Grupo» 
   assert.match(app, /regla\('t-azul', 'i-grupo'/);
   assert.match(app, /regla\('t-rojo', 'i-ok', 'Sales gratis'/);
   assert.match(app, /\['grupo', 'Grupo', \(pd\.on\.respaldo \? '' : fichaGrupoHtml\(p\)\)/);
-  assert.match(app, /<details class="tarjeta mas-opciones"><summary>Más opciones/);
+  assert.doesNotMatch(app, /<details class="tarjeta mas-opciones"><summary>Más opciones/); // S43: se eliminó
   assert.match(app, /Recibes tus llaves en <strong>' \+ g\.fecha \+ '<\/strong>, todos el mismo día/);
 });
 

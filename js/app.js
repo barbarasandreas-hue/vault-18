@@ -3195,6 +3195,13 @@
     } else if (p.tipo !== 'conjunto') {
       etiqueta = 'Precio' + (conIva ? ' sin IVA' : ' del departamento');
       cifra = formatoRedondeado(p.tipo === 'venta' && estado.modo === 'vivir' ? ufAPesos(plazoDepartamento(p).precioUF) : r.escenario.precio);
+      // S43 (Bárbara): en los sin IVA se ve cuánto ganas (supuesto: baja de 10 % del precio).
+      if (p.tipo === 'venta' && estado.modo === 'vivir' && cumpleChip('sin-iva', p, d)) {
+        var precioIva = p.tipo === 'venta' ? ufAPesos(plazoDepartamento(p).precioUF) : 0;
+        var baja = SUPUESTOS_PIEZAS.bajaIVA;
+        lineas.push(conIva ? '<span class="tp-antes">Antes <s>' + formatoRedondeado(precioIva / (1 - baja)) + '</s> · ahorras ' + formatoRedondeado(precioIva / (1 - baja) * baja) + '</span>'
+          : '<span class="tp-iva">' + icono('i-alcancia') + 'Sin IVA: ahorras ' + formatoRedondeado(precioIva * baja) + '</span>');
+      }
       if (p.tipo === 'financiamiento') lineas.push(lineaPersonasPie(p));
       lineas.push((p.tipo === 'financiamiento' ? porcentajeEntero(r.avanceFinanciamiento) + NBSP + '% del pie reunido' + SEP : '') +
         (p.cierre ? 'Cierra el ' + formatoFecha(p.cierre) : 'Lo recibes al firmar'));
@@ -3211,7 +3218,7 @@
       lineas.push(grupoTxt);
     }
     var foto = fotoEdificio(p);
-    var chipTipo = solo ? ['azul', 'En obra'] : p.tipo === 'conjunto' ? ['azul', 'Compra en grupo'] : p.tipo === 'venta' ? ['verde', 'Terminado' + (conIva ? SEP + 'sin IVA' : '')] : ['amarillo', NOMBRE_TIPO[p.tipo]];
+    var chipTipo = solo ? ['azul', 'En obra'] : p.tipo === 'conjunto' ? ['azul', 'Compra en grupo'] : p.tipo === 'venta' ? ['verde', 'Terminado' + (conIva || (estado.modo === 'vivir' && cumpleChip('sin-iva', p, d)) ? SEP + 'sin IVA' : '')] : ['amarillo', NOMBRE_TIPO[p.tipo]];
     return '<li><a class="tarjeta tarjeta-proyecto tarjeta-canvas" href="' + (base || '#departamentos/') + esc(p.id) + (sufijo || '') + '">' +
       (foto ? '<img class="tp-foto" src="' + foto + '" alt="' + esc(p.nombre) + ' (foto referencial)" loading="lazy" width="800" height="600">' : '<span class="tp-foto">' + fachada(p) + '</span>') +
       (compacta ? '' : '<span class="tp-tipo ' + chipTipo[0] + '">' + chipTipo[1] + '</span>') +
@@ -3934,7 +3941,7 @@
     try { return formasPagarMenos(p, solo); } finally { estado.piezas = antes; }
   }
   function efectoCortoForma(f) {
-    if (f.lista) return 'Lista';
+    if (f.lista) return 'Cumples: Bci la confirma con tu crédito';
     if (f.enPasos) return 'En tus pasos';
     if (f.bloqueo) return 'Hoy no te sirve: ' + primeraMinuscula(f.bloqueo.razon);
     if (f.sinEfecto) return 'Suma la renta de otra persona';
@@ -3942,6 +3949,18 @@
     if (f.juntas !== null && f.juntas < -1000) return 'Juntas ' + formatoRedondeado(Math.abs(f.juntas)) + ' menos' + '';
     if (f.incluido) return 'Ya va en tus números';
     return 'Cuánto cambia: ver detalle';
+  }
+  // S43 (Bárbara): en el detalle del departamento, las ayudas son una fila (como en Tu compra), sin la lista desplegada.
+  function ayudasDetalleFila(p, solo, caminoVista) {
+    var formas;
+    try { formas = ayudasDelModo(formasParaVista(p, solo, caminoVista)); } catch (e) { return ''; }
+    var aplican = formas.filter(function (f) { return !f.bloqueo; });
+    if (!aplican.length) return '';
+    var ahorro = aplican.reduce(function (a, f) { return a + (f.juntas && f.juntas < 0 && !(f.auto || f.enPasos) ? -f.juntas : 0); }, 0);
+    var sub = ahorro >= 100000 ? 'Podrías juntar hasta ' + formatoRedondeado(ahorro).replace(/\s*millones/, NBSP + 'M') + ' menos' : plural(aplican.length, 'ayuda', 'ayudas') + ' para este departamento';
+    return '<button type="button" class="tarjeta aceleradores-compra ay-fila-compra" id="btn-ayudas-detalle" aria-haspopup="dialog">' +
+      '<span class="ay-ic t-amarillo" aria-hidden="true">' + ICONO_ETIQUETA + '</span>' +
+      '<span class="ay-txt"><strong>Ayudas para tu compra</strong><small>' + sub + '</small></span>' + icono('i-flecha', 'ac-flecha') + '</button>';
   }
   function aceleradoresDetalleHtml(p, solo, caminoVista) {
     var formas;
@@ -4342,6 +4361,10 @@
             '<p class="det-etq">Precio' + (enGrupo ? ' con descuento del grupo' : p.tipo === 'venta' && piezasValidas(piezasOn()).iva ? ' sin IVA' : '') + '</p>' +
             '<div class="det-precio-fila"><strong class="det-precio-num">' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong>' +
               (enGrupo && r.ahorro > 0 ? '<span class="det-ahorras">Ahorras ' + formatoRedondeado(r.ahorro) + '</span>' : '') + '</div>' +
+            (p.tipo === 'venta' && cumpleChip('sin-iva', p, departamentosDe(p.id)[0])
+              ? '<p class="det-iva">' + icono('i-alcancia') + '<span>' + (piezasValidas(piezasOn()).iva
+                  ? 'Sin IVA ahorras <strong>' + formatoRedondeado(ufAPesos(pd.precioUF) / (1 - SUPUESTOS_PIEZAS.bajaIVA) * SUPUESTOS_PIEZAS.bajaIVA) + '</strong> (ya va en el precio)'
+                  : 'Sin IVA ahorras <strong>' + formatoRedondeado(ufAPesos(pd.precioUF) * SUPUESTOS_PIEZAS.bajaIVA) + '</strong> si firmas la promesa antes de dic 2027') + '</span></p>' : '') +
             (enGrupo && mesesParaEntrega(p) > 0
               ? (function () { var g = planGrupo(p); return '<p class="det-tuyo" id="det-llaves">' + icono('i-llave') + '<span>Recibes tus llaves en <strong>' + g.fecha + '</strong>, todos el mismo día</span></p>'; })()
               : '<p class="det-tuyo" id="det-llaves">' + icono('i-calendario') + '<span>' + (pd.meses === null || pd.meses === undefined ? 'Todavía no te alcanza' : 'Recibirías tus llaves <strong>aprox. ' + fechaLlaves(pd.meses + MESES_SI_A_LLAVES, hoyDemo()) + '</strong>') + '</span></p>' +
@@ -4354,12 +4377,10 @@
                 '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(pd.dividendo) + '</strong><small>' + (pd.on.respaldo ? 'crédito del 95' + NBSP + '%' : 'con seguros' + SEP + ufDecimales(pd.dividendo / SUPUESTOS.uf, 2)) + '</small></div></div>' +
               '<p class="det-subsidio">' + icono('i-info') + '<span>Si se acaba el subsidio a la tasa, el dividendo sube a <strong>' + formatoRedondeado(pd.dividendoSinSubsidio) + '</strong> (' + ufDecimales(pd.dividendoSinSubsidio / SUPUESTOS.uf, 2) + ').</span></p>' +
               grupoPosible +
-              aceleradoresDetalleHtml(p, solo, caminoVista) +
+              ayudasDetalleFila(p, solo, caminoVista) +
               '<a class="tarjeta dueno-card" href="#compra/dueno/' + esc(p.id) + '"><span class="circulo-icono azul" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 10.5L12 4l8.5 6.5V20H3.5zM9.5 20v-5h5v5"/></svg></span>' +
                 '<span><strong>Tu mes como dueño</strong><small>Dividendo, gastos comunes y lo que te queda para tus gastos</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>' +
-              // S39 2.1: lo secundario, en un desplegable.
-              (soloPosible || !pd.on.respaldo ? '<details class="tarjeta mas-opciones"><summary>Más opciones' + icono('i-flecha', 'mo-flecha') + '</summary>' + soloPosible +
-                (pd.on.respaldo ? '' : '<button type="button" class="enlace detalle-credito-link" id="btn-detalle-credito" aria-haspopup="dialog">Ver detalle del crédito</button>') + '</details>' : '')],
+              '' /* S43 (Bárbara): sin «Más opciones» ni «Ver detalle del crédito». */],
             conjunto && (bloqueGrupo || !pd.on.respaldo) ? ['grupo', 'Grupo', (pd.on.respaldo ? '' : fichaGrupoHtml(p)) + bloqueGrupo + conoceGrupo] : null,
             BARRIOS[p.comuna] ? ['barrio', 'Barrio', barrioSolo(p)] : null,
             ['visita', 'Visita', visitaHtml(p)]
@@ -4410,6 +4431,8 @@
     iniciarPestanasDetalle(contenedor);
     iniciarPagoAntes();
     iniciarVisita(p);
+    var bAy = document.getElementById('btn-ayudas-detalle');
+    if (bAy) bAy.addEventListener('click', function () { abrirBajarPrecio(p, solo, caminoVista, bAy); });
     var tituloAcel = document.getElementById('btn-acel-titulo');
     if (tituloAcel) tituloAcel.addEventListener('click', function () {
       var abre = this.getAttribute('aria-expanded') !== 'true';
@@ -8206,7 +8229,7 @@
   function novedadGuardado(p) {
     var r = resumen(p);
     if (p.tipo === 'conjunto') return (r.cuposLibres > 0 ? (r.cuposLibres === 1 ? 'Falta 1 persona' : 'Faltan ' + r.cuposLibres + ' personas') : 'Grupo completo') + SEP + 'cierra el ' + fechaCorta(p.cierre);
-    if (p.tipo === 'venta') return cumpleChip('sin-iva', p, departamentosDe(p.id)[0]) ? 'Sin IVA si firmas la promesa antes de dic-2027' : 'Terminado' + SEP + 'lo recibes al firmar';
+    if (p.tipo === 'venta') return cumpleChip('sin-iva', p, departamentosDe(p.id)[0]) ? 'Sin IVA: ahorras ' + formatoRedondeado(ufAPesos(departamentosDe(p.id)[0].listaUF) * SUPUESTOS_PIEZAS.bajaIVA) + ' si firmas antes de dic-2027' : 'Terminado' + SEP + 'lo recibes al firmar';
     return formatoPorcentaje(r.avanceFinanciamiento, 0) + ' financiado' + SEP + 'cierra el ' + fechaCorta(p.cierre);
   }
   function renderGuardados() {
@@ -9345,7 +9368,8 @@
   }
   function nFiltrosDeptos() {
     var f = filtrosDeptos;
-    return (f.comuna ? 1 : 0) + (f.rango ? 0 : 1) + (f.dormitorios !== null ? 1 : 0) + (f.estado ? 1 : 0) + (f.orden !== 'antes' ? 1 : 0) + (f.favoritos ? 1 : 0) + (f.ds19 ? 1 : 0) + (f.sinIva ? 1 : 0);
+    // S43 (Bárbara): el precio y el orden no cuentan como filtros puestos.
+    return (f.comuna ? 1 : 0) + (f.dormitorios !== null ? 1 : 0) + (f.estado ? 1 : 0) + (f.favoritos ? 1 : 0) + (f.ds19 || f.sinIva ? 1 : 0);
   }
   function lineaGrupo(g) {
     return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + 'Firman todos en ' + g.fecha + '</p>' +
@@ -9643,7 +9667,7 @@
     var rango = rangoActual();
     cont.innerHTML =
       '<header class="encabezado">' + MARCA + '<div class="titulo-con-boton"><h1 id="titulo-proyectos" class="h2" tabindex="-1">Departamentos</h1>' +
-        '<button type="button" class="btn btn-terciario btn-sm" id="btn-deptos-filtros" aria-haspopup="dialog">' + icono('i-filtro') + 'Filtros' + (n ? ' (' + n + ')' : '') + '</button></div>' + tabsDeptos('edificios') +
+        '<button type="button" class="btn-filtro-ic" id="btn-deptos-filtros" aria-haspopup="dialog" aria-label="Filtros' + (n ? ', ' + n + ' puestos' : '') + '">' + icono('i-filtro') + (n ? '<span class="btn-filtro-n" aria-hidden="true">' + n + '</span>' : '') + '</button></div>' + tabsDeptos('edificios') +
         '</header>' +
       bannerCaminoHtml(cam) +
       (filtrosDeptos.ds19 || filtrosDeptos.sinIva ? '<p class="filtro-activo"><button type="button" class="chip chip-filtro" id="btn-quitar-ds19" aria-pressed="true">' + (filtrosDeptos.ds19 ? 'Solo proyectos DS19' : 'Solo sin IVA') + ' <span aria-hidden="true">✕</span><span class="oculto-visual">: quitar</span></button></p>' : '') +
