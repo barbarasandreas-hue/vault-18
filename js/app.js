@@ -4398,7 +4398,8 @@
         '<button type="button" class="btn btn-terciario btn-bloque" id="btn-detalle-datos">Cambiar mis datos</button>';
     } else if (esMiCompra && estado.modo === 'vivir' && puedeCambiarMeta()) {
       // S32-B5 (D5): es tu meta, todavía sin reservar.
-      comprar = '<p class="aviso">Es tu departamento: con él calculamos tu fecha.</p><a href="#compra" class="btn btn-secundario-dark btn-bloque">Ver tu compra</a>';
+      // S48 (Bárbara): sin el recuadro grande; un solo botón que dice que es el tuyo.
+      comprar = '<a href="#compra" class="btn btn-secundario-dark btn-bloque btn-tu-depto">' + icono('i-check') + 'Es el tuyo · Ver tu compra</a>';
     } else if (esMiCompra) {
       comprar = '<p class="aviso">Ya te uniste a este proyecto.</p>' +
         '<a href="#compra/' + rutaPasoActual() + '" class="btn btn-primario btn-lg btn-bloque">Ver tu compra</a>';
@@ -8530,7 +8531,7 @@
         ]) : '<div class="det-cifras"><div><small>Pie (20' + NBSP + '%)</small><strong>' + formatoRedondeado(pie) + '</strong><small>más ' + formatoRedondeado(gastos) + ' de gastos</small></div>' +
             '<div><small>Dividendo al mes</small><strong>' + formatoRedondeado(dividendo) + '</strong><small>con seguros' + SEP + ufDecimales(dividendo / SUPUESTOS.uf, 2) + '</small></div></div>' +
           '<p class="det-subsidio">' + icono('i-info') + '<span>Bci presta el 80' + NBSP + '% a 30 años. Un usado no tiene subsidio a la tasa ni garantía del Estado, por eso el pie es más alto.</span></p>') +
-      (vivir ? (estado.usadoElegido === u.id && estado.caminoElegido === 'usados' ? '<p class="aviso">Es tu departamento: con él calculamos tu fecha.</p>'
+      (vivir ? (estado.usadoElegido === u.id && estado.caminoElegido === 'usados' ? '<a href="#compra" class="btn btn-secundario-dark btn-bloque btn-tu-depto">' + icono('i-check') + 'Es el tuyo · Ver tu compra</a>'
           : puedeCambiarMeta() ? notaCambioCamino({ tipo: 'usado', u: u }) + '<button type="button" class="btn btn-primario btn-bloque usado-cta" id="btn-usado-meta" aria-haspopup="dialog">Elegir este departamento</button>' : '')
         : '<button type="button" class="btn btn-primario btn-bloque usado-cta" id="btn-usado-camino" aria-haspopup="dialog">Elegir este camino</button>') +
       '<p class="texto-apoyo texto-centro"><small>Fotos referenciales</small></p>';

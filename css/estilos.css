@@ -5583,3 +5583,7 @@ body:has(.hoja-pantalla) .barra { z-index: 61; }
 .ay-real-pasos li.hecho { color: var(--gray-semidark); }
 .ay-a-misiones { margin-top: 6px; }
 .ay-real .ay-ya { justify-content: flex-start; margin: 6px 0 0; }
+
+/* S48 */
+.btn-tu-depto { display: flex; align-items: center; justify-content: center; gap: 6px; letter-spacing: .02em; }
+.btn-tu-depto svg { width: 18px; height: 18px; margin: 0; flex: none; }
