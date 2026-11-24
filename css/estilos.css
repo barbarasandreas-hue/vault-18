@@ -5326,3 +5326,7 @@ body:has(.hoja-pantalla) .barra { z-index: 61; }
 .ds19-que { margin-bottom: 16px; }
 .pt-fila { font-size: 14px; white-space: nowrap; }
 .pt-fila strong { font-size: 15px; }
+
+/* S43: precio antes del descuento en la tarjeta de compra en grupo */
+.tp-antes { color: var(--gray-dark, #4a5a63); font-size: 14px; }
+.tp-antes s { text-decoration-thickness: 1.5px; }

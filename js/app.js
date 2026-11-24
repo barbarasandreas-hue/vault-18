@@ -3205,6 +3205,8 @@
       // S42 (Bárbara): menos información antes del detalle: el precio con descuento, las personas y el cierre.
       etiqueta = r.ahorro > 0 ? 'Precio con ' + pctDe(r.ahorro) + ' de descuento' : 'Precio del departamento';
       cifra = formatoRedondeado(conDesc);
+      // S43 (Bárbara): de vuelta cuánto salía antes del descuento y cuánto sale ahora.
+      if (r.ahorro > 0) lineas.push('<span class="tp-antes">Antes <s>' + formatoRedondeado(lista) + '</s> · ahorras ' + formatoRedondeado(r.ahorro) + '</span>');
       lineas.push(grupoTxt);
     }
     var foto = fotoEdificio(p);
