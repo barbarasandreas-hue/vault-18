@@ -186,7 +186,9 @@ test('23-nov: al elegir camino se ve una confirmación y luego «Abrir mi cuenta
 });
 
 test('23-nov: caminos en «Tú solo / Con otras personas», usados dentro de Compra directa, DS19 propio, Perfil ordenado', () => {
-  assert.match(app32, /\['Tú solo', 'Con tu propio crédito\.', \['individual-vivir', 'arriendo-opcion', 'ds19'\]\]/);
+  // S43: el DS19 pasó a ser una ayuda.
+  assert.match(app32, /\['Tú solo', 'Con tu propio crédito\.', \['individual-vivir', 'arriendo-opcion'\]\]/);
+  assert.match(app32, /id: 'ds19', sigla: 'DS19', nombre: 'Subsidio DS19'/);
   assert.match(app32, /id !== 'usados' \|\| estado\.caminoElegido === 'usados'/);
   assert.match(app32, /if \(p\[1\] === 'ds19'\) return r\('caminos', 'deptos', renderDS19\)/);
   assert.match(app32, /estado\.pasos\.facilitadora \?/);

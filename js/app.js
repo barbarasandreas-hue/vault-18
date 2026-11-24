@@ -3895,7 +3895,7 @@
     formas.push({ id: 'ds1', sigla: 'DS1', nombre: 'Subsidio DS1', que: 'El Estado pone dinero en tu pie' + (ds1.montoUF ? ': unas ' + formatoUF(Math.round(ds1.montoUF)) + ' para este departamento' : '') + '. Se postula en el Minvu. No es el DS19: el DS1 sirve en cualquier departamento bajo el tope; el DS19 solo en proyectos DS19.',
       juntas: bloq ? null : con.meta - sin.meta, pagas: bloq ? null : con.dividendo - sin.dividendo, incluido: conDS1, bloqueo: bloq,
       espera: !bloq && ds1.mesesCuenta ? 'Tu cuenta de vivienda debe tener ' + ds1.mesesCuenta + ' meses' : '',
-      req: [['Departamento de hasta UF 4.000', precio <= 4000], ['Tu sueldo bajo el tope del tramo', !(bloq && /sueldo/i.test(bloq.razon))],
+      req: [['Departamento de hasta UF 2.200 (o UF 4.000 con el tramo nuevo)', precio <= 4000], ['Ingreso del hogar bajo el tope del tramo', !(bloq && /sueldo/i.test(bloq.razon))],
         ['Registro Social de Hogares', ps.rsh ? true : null], ['No tener otra vivienda', null]],
       enPasos: !!(conDS1 || ps.ds1Agregado || ps.ds1Postulado || ps.rsh), lista: !!ps.ds1Postulado });
     // 20-nov (Bárbara): el subsidio a la tasa no se da por sentado: depende de los cupos cuando Bci apruebe tu crédito.
@@ -3903,6 +3903,12 @@
       juntas: 0, pagas: pd.dividendo - pd.dividendoSinSubsidio, soloPagas: true,
       req: [['Departamento nuevo, en primera venta', true], ['De hasta UF 4.000', precio <= 4000], ['Que queden cupos', null]],
       enPasos: !!ps.tasaAgregado, lista: !!ps.tasaPedido });
+    // S43 (Bárbara): el DS19 como ayuda. Es el subsidio para sectores medios usado en proyectos DS19; solo sirve en esos edificios.
+    if (estado.modo === 'vivir') formas.push({ id: 'ds19', sigla: 'DS19', nombre: 'Subsidio DS19', sinEfecto: true,
+      que: 'Subsidio del Estado para tu primera vivienda, solo en proyectos DS19.', juntas: 0, pagas: 0,
+      bloqueo: p.ds19 ? null : { razon: 'este edificio no es DS19', como: 'Solo sirve en proyectos DS19. Puedes ver cuáles son en Edificios.' },
+      req: [['Proyecto DS19', !!p.ds19], ['Registro Social de Hogares', ps.rsh ? true : null], ['No tener otra vivienda', null]],
+      enPasos: !!ps.ds19Agregado, lista: false });
     // 23-nov: sumar a alguien al crédito (en Bci, complementar renta con un codeudor). No cambia los montos: suma renta.
     formas.push({ id: 'sumar', sigla: '+1', nombre: 'Sumar a alguien al crédito', sinEfecto: true,
       que: 'Tu pareja, un familiar u otra persona aparece en el mismo crédito y suma su renta. La app te ayuda a dejar por escrito el acuerdo entre ustedes.',
@@ -4034,9 +4040,9 @@
         ['i-documento', 'Confirma que es tu primera compra', 'La garantía se usa una sola vez', !!ps.fogaesCalifica],
         ['i-banco', 'Pídela al pedir tu crédito', 'Bci la solicita por ti', false]]; } },
     ds1: { tinte: 'verde', ic: 'i-alcancia',
-      que: 'Es <strong>dinero del Estado que se suma a tu pie</strong> y no se devuelve. Sirve en departamentos de hasta UF 4.000. Lo entrega el Minvu y hay que postular. No es el DS19.',
+      que: 'Es <strong>dinero del Estado que se suma a tu pie</strong> y no se devuelve. Hoy sirve en viviendas de hasta UF 2.200 (viene un tramo nuevo hasta UF 4.000). Lo entrega el Minvu y hay que postular. No es el DS19.',
       pasos: function (f, ps) { return [['i-documento', 'Inscríbete en el Registro Social de Hogares', 'En línea, en ChileAtiende', !!ps.rsh],
-        ['i-alcancia', 'Ten tu cuenta de vivienda con ahorro', f.espera || 'Con el ahorro mínimo de tu tramo', false],
+        ['i-alcancia', 'Junta el ahorro mínimo', 'Desde 80 UF (unos ' + formatoRedondeado(ufAPesos(80)) + '), con tu cuenta abierta hace 12 meses', false],
         ['i-calendario', 'Postula cuando abra el llamado', 'Te avisamos las fechas', !!ps.ds1Postulado],
         ['i-llave', 'Usa el certificado al firmar', 'Se descuenta de tu pie', false]]; } },
     tasa: { tinte: 'amarillo', ic: 'i-sube',
@@ -4044,6 +4050,12 @@
       pasos: function (f) { return [['i-casa', 'Departamento nuevo, hasta UF 4.000', 'En primera venta', f.req[0][1] === true && f.req[1][1] === true],
         ['i-banco', 'Pídelo cuando Bci apruebe tu crédito', 'Bci revisa si quedan cupos', false],
         ['i-calendario', 'Se aplica a tu dividendo', 'Desde la primera cuota', false]]; } },
+    ds19: { tinte: 'azul', ic: 'i-casa',
+      que: 'Es <strong>dinero del Estado para tu primera vivienda, pero solo en proyectos DS19</strong>: edificios que lo tienen, con cupos limitados. Se postula con la inmobiliaria y lo confirma el Minvu. Hoy sirve en viviendas de hasta UF 2.200.',
+      pasos: function (f, ps) { return [['i-documento', 'Inscríbete en el Registro Social de Hogares', 'En línea, en ChileAtiende', !!ps.rsh],
+        ['i-alcancia', 'Junta el ahorro mínimo', 'Desde 80 UF (unos ' + formatoRedondeado(ufAPesos(80)) + ') en tu cuenta de vivienda', false],
+        ['i-casa', 'Elige un proyecto DS19', 'Están marcados en Edificios', !!(f.req[0] && f.req[0][1])],
+        ['i-banco', 'Postula con la inmobiliaria', 'Lo confirma el Minvu', false]]; } },
     sumar: { tinte: 'rojo', ic: 'i-grupo',
       que: 'Tu pareja, un familiar u otra persona <strong>aparece en el mismo crédito y suma su sueldo</strong>. Así Bci puede prestarte más. Antes, dejen escrito el acuerdo entre ustedes.',
       pasos: function (f, ps) { return [['i-persona', 'Elige con quién', 'Pareja, familiar u otra persona', false],
@@ -4052,6 +4064,7 @@
   };
   function efectoTextoAyuda(f) {
     if (f.bloqueo) return 'Hoy no te sirve: ' + primeraMinuscula(f.bloqueo.razon);
+    if (f.id === 'ds19') return 'Solo en proyectos DS19';
     if (f.sinEfecto) return 'Suma su sueldo a tu crédito';
     if (f.soloPagas) return Math.abs(f.pagas) >= 1000 ? 'Pagas ' + formatoRedondeado(Math.abs(f.pagas)) + ' menos al mes' : 'Baja tu tasa si quedan cupos';
     if (f.juntas !== null && f.juntas < -1000) return 'Juntas ' + formatoRedondeado(Math.abs(f.juntas)) + ' menos';
@@ -4094,7 +4107,8 @@
         '<div><span class="ay-t-ic" aria-hidden="true">' + icono('i-calendario') + '</span><small>' + (f.soloPagas ? 'Si te lo dan, pagas al mes' : 'Pagas al mes') + '</small><strong>' + num(f.soloPagas ? -Math.abs(f.pagas) : f.pagas) + '</strong></div></div>';
     var pasos = v.pasos(f, ps);
     var yaSumada = f.auto || f.enPasos || f.lista;
-    var principal = f.auto || f.bloqueo ? '' : f.id === 'sumar'
+    var principal = f.id === 'ds19' ? '<button type="button" class="btn btn-primario" data-ver-ds19>Ver proyectos DS19</button>'
+      : f.auto || f.bloqueo ? '' : f.id === 'sumar'
       ? '<button type="button" class="btn btn-primario" data-sumar-forma="sumar">' + (f.enPasos ? 'Cambiar el acuerdo' : 'Armar el acuerdo') + '</button>'
       : yaSumada ? '<span class="ay-ya">' + icono('i-check') + 'En tus misiones</span>'
       : '<button type="button" class="btn btn-primario" data-sumar-forma="' + f.id + '">Agregar a misiones</button>';
@@ -4114,6 +4128,8 @@
       t.parentNode.insertBefore(hero, t); hero.appendChild(ic); hero.appendChild(t);
       var volver = function () { abrirBajarPrecio(p, solo, caminoVista, boton); };
       hoja.querySelector('[data-ayuda-volver]').addEventListener('click', volver);
+      var vd = hoja.querySelector('[data-ver-ds19]');
+      if (vd) vd.addEventListener('click', function () { estado.pasos.ds19Agregado = true; guardarEstado(); cerrarHoja(false); filtrosDeptos.ds19 = true; filtrosDeptos.rango = false; deptoCamino = 'todos'; location.hash = '#departamentos'; setTimeout(function () { irVistaDeptos('edificios'); }, 0); });
       var arriba = $('btn-cerrar-hoja'), nuevo = arriba.cloneNode(true);
       nuevo.lastChild.textContent = 'Ayudas';
       arriba.parentNode.replaceChild(nuevo, arriba);
@@ -8966,10 +8982,7 @@
             '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5h.01"/></svg></button></div>' +
           linea(n) + '</li>';
       }).join('') +
-      // S43 (Bárbara): DS19 también aparece en Comparar. Su fecha y cuota dependen del proyecto, así que no entra al lado a lado.
-      (estado.modo === 'vivir' ? '<li class="cmp-ds19"><a href="#departamentos/ds19"><span class="cam-icono" aria-hidden="true">' + icono('i-casa') + '</span>' +
-        '<span class="cmp-ds19-txt"><b>Subsidio DS19</b><small>Solo en proyectos DS19' + SEP + 'la fecha depende del proyecto</small></span>' +
-        '<span class="cmp-ds19-ir">¿Calificas? ›</span></a></li>' : '') + '</ul>' +
+      '</ul>' +
       '<div class="cmp-anios" aria-hidden="true"><span style="left:0">Hoy</span>' + anios.filter(function (h) { return parseFloat(h.split('left:')[1]) > 12; }).join('') + '</div>';
   }
   function ladoALadoHtml(nums) {
@@ -9400,7 +9413,8 @@
   var cambiandoPrioridad = false;
   // 23-nov: los caminos para vivir, en dos grupos.
   var GRUPOS_CAMINOS = [
-    ['Tú solo', 'Con tu propio crédito.', ['individual-vivir', 'arriendo-opcion', 'ds19']],
+    // S43 (Bárbara): el DS19 deja de ser camino; es una ayuda (un subsidio que se usa en ciertos proyectos).
+    ['Tú solo', 'Con tu propio crédito.', ['individual-vivir', 'arriendo-opcion']],
     ['Con otras personas', 'Junto a un grupo o con el respaldo de un familiar.', ['grupo-vivir', 'familiar-vivir']]
   ];
   // 23-nov: DS19 como camino propio, con su «¿Calificas?».
