@@ -875,7 +875,7 @@
       if (estado.visitaGrupo[id]) delete estado.visitaGrupo[id]; else estado.visitaGrupo[id] = true;
       guardarEstado();
       var y = window.scrollY; mostrar(); window.scrollTo(0, y);
-      toast(estado.visitaGrupo[id] ? 'Te sumaste a la visita (simulado).' : 'Ya no vas a la visita.');
+      toast(estado.visitaGrupo[id] ? 'Te sumaste a la visita.' : 'Ya no vas a la visita.');
       return;
     }
     var b = ev.target.closest('[data-presentarme]');
@@ -899,7 +899,7 @@
           if (!pres.trabajo && !pres.hogar && !pres.motivo) { toast('Elige al menos una cosa para contar.'); return; }
           estado.presentacion = pres; guardarEstado();
           cerrarHoja(false); var y = window.scrollY; mostrar(); window.scrollTo(0, y);
-          toast('Tu grupo ya puede verte (simulado).');
+          toast('Tu grupo ya puede verte.');
         });
         if ($('btn-borrar-pres')) $('btn-borrar-pres').addEventListener('click', function () {
           estado.presentacion = null; guardarEstado();
@@ -918,7 +918,7 @@
     estado.muro[id] = (estado.muro[id] || []).concat([texto]).slice(-10);
     guardarEstado();
     var y = window.scrollY; mostrar(); window.scrollTo(0, y);
-    toast('Saludo publicado en el muro (simulado).');
+    toast('Saludo publicado en el muro.');
   });
   // 9-nov: Tus vecinos. Solo para vivir y por elección propia. Sin nombres (CLAUDE.md): solo la cifra y avatares sin nombre.
   function tusVecinos(p, r) {
@@ -932,7 +932,7 @@
       '<button type="button" class="btn btn-secundario-dark btn-bloque" data-vecinos="' + esc(p.id) + '">Quiero conocer a mis vecinos</button>';
     else if (!cerrado) cuerpo = '<p class="texto-apoyo">Listo. Cuando el grupo cierre' + (p.cierre ? ', el ' + formatoFecha(p.cierre) : '') + ', te mostramos a los vecinos que también quieran conocerse.</p>' +
       '<button type="button" class="enlace" data-vecinos="' + esc(p.id) + '">Ya no quiero</button>';
-    else cuerpo = '<p class="texto-apoyo">' + plural(sumados, 'vecino quiere', 'vecinos quieren') + ' conocerse (simulado):</p>' +
+    else cuerpo = '<p class="texto-apoyo">' + plural(sumados, 'vecino quiere', 'vecinos quieren') + ' conocerse:</p>' +
       '<div class="vecinos-lista" aria-hidden="true">' + new Array(sumados + 1).join('<span class="vecino-inicial">' + icono('i-persona') + '</span>') + '</div>' +
       '<button type="button" class="btn btn-secundario-dark btn-bloque" id="btn-saludar-vecinos">Saludar al grupo</button>' +
       '<button type="button" class="enlace" data-vecinos="' + esc(p.id) + '">Ya no quiero</button>';
@@ -949,7 +949,7 @@
       mostrar();
       return;
     }
-    if (ev.target.closest('#btn-saludar-vecinos')) toast('Saludo enviado al grupo (simulado).');
+    if (ev.target.closest('#btn-saludar-vecinos')) toast('Saludo enviado al grupo.');
   });
   function grupoConEdificio(proyecto, r) {
     return '<div class="grupo-edificio">' + edificioGrupo(proyecto, r) +
@@ -1481,7 +1481,7 @@
         var enviar = function (t) {
           t = (t || '').trim().slice(0, 140); if (!t) return;
           estado.muro = Object.assign({}, estado.muro); estado.muro[p.id] = (estado.muro[p.id] || []).concat([t]).slice(-10);
-          guardarEstado(); abrirChatGrupo(p, boton); toast('Mensaje enviado (simulado).');
+          guardarEstado(); abrirChatGrupo(p, boton); toast('Mensaje enviado.');
         };
         hoja.querySelectorAll('[data-chat-rapido]').forEach(function (b) { b.addEventListener('click', function () { enviar(b.dataset.chatRapido); }); });
         $('form-chat-grupo').addEventListener('submit', function (e) { e.preventDefault(); enviar($('chat-grupo-texto').value); });
@@ -1513,8 +1513,8 @@
       '<h3 class="h5">Proponer un cambio</h3><div class="tg-rapidos">' + ['Alargar el cierre de cupos', 'Fijar una visita a la obra', 'Cambiar de vocero'].map(function (t) {
         return '<button type="button" class="chip chip-filtro tg-q" data-proponer="' + t + '">' + t + '</button>'; }).join('') + '</div>' +
       '<p class="ficha-grupo-nota">' + icono('i-info') + 'La fecha de firma y de llaves no se vota: depende de cuándo la inmobiliaria entregue el edificio.</p>', boton, function (hoja) {
-        hoja.querySelectorAll('[data-voto-hoja]').forEach(function (b) { b.addEventListener('click', function () { estado.votoGrupo = b.dataset.votoHoja; guardarEstado(); mostrar(); abrirVotosGrupo(p, boton); toast('Tu voto quedó guardado (simulado).'); }); });
-        hoja.querySelectorAll('[data-proponer]').forEach(function (b) { b.addEventListener('click', function () { toast('Propusiste: ' + b.dataset.proponer.toLowerCase() + '. El grupo tiene 3 días para votar (simulado).'); }); });
+        hoja.querySelectorAll('[data-voto-hoja]').forEach(function (b) { b.addEventListener('click', function () { estado.votoGrupo = b.dataset.votoHoja; guardarEstado(); mostrar(); abrirVotosGrupo(p, boton); toast('Tu voto quedó guardado.'); }); });
+        hoja.querySelectorAll('[data-proponer]').forEach(function (b) { b.addEventListener('click', function () { toast('Propusiste: ' + b.dataset.proponer.toLowerCase() + '. El grupo tiene 3 días para votar.'); }); });
       });
   }
   function abrirVoceroGrupo(p, boton) {
@@ -1525,7 +1525,7 @@
       '<div class="acciones"><button type="button" class="btn ' + (estado.voceroYo ? 'btn-secundario' : 'btn-primario') + ' btn-bloque" id="btn-vocero-yo">' + (estado.voceroYo ? 'Ya no quiero ser vocero' : 'Ofrecerme como vocero') + '</button></div>', boton, function () {
         $('btn-vocero-yo').addEventListener('click', function () {
           estado.voceroYo = !estado.voceroYo; guardarEstado(); cerrarHoja(false); mostrar();
-          toast(estado.voceroYo ? 'Te ofreciste como vocero: el grupo votará (simulado).' : 'Retiraste tu oferta.');
+          toast(estado.voceroYo ? 'Te ofreciste como vocero: el grupo votará.' : 'Retiraste tu oferta.');
         });
       });
   }
@@ -1534,7 +1534,7 @@
       b.addEventListener('click', function () {
         estado.votoGrupo = b.dataset.votoGrupo === 'cambiar' ? null : b.dataset.votoGrupo;
         guardarEstado(); mostrar();
-        if (estado.votoGrupo) toast('Tu voto quedó guardado (simulado).');
+        if (estado.votoGrupo) toast('Tu voto quedó guardado.');
       });
     });
     cont.querySelectorAll('[data-grupo-abrir]').forEach(function (b) {
@@ -2513,7 +2513,7 @@
       return '<li class="ayuda-fila" id="ayuda-' + id + '">' +
         '<h2 class="ayuda-fila-titulo"><button type="button" class="ayuda-cab" data-ayuda="' + id + '" aria-expanded="' + (abierta ? 'true' : 'false') + '" aria-controls="ayuda-cuerpo-' + id + '">' +
           '<span class="ayuda-sigla" aria-hidden="true">' + a.sigla + '</span>' +
-          '<span class="ayuda-nombre"><span>' + a.nombre + '</span><span class="chip ' + (a.hoy ? 'chip-existe' : 'chip-propuesta') + '">' + (a.hoy ? 'Existe hoy' : 'Propuesta para Bci') + '</span>' + (id === 'ds19' ? '' : '<span class="chip chip-existe">Acelerador</span>') + (id === 'ds1' ? (ACELERADORES_ABIERTOS_DEMO || diasEntre(hoyDemo(), cierreDS1) > 0 ? '<span class="chip chip-existe">Postulaciones abiertas</span>' : '<span class="chip chip-propuesta">Postulaciones cerradas</span>') : '') + '</span>' +
+          '<span class="ayuda-nombre"><span>' + a.nombre + '</span>' + (id === 'ds19' ? '' : '<span class="chip chip-existe">Acelerador</span>') + (id === 'ds1' ? (ACELERADORES_ABIERTOS_DEMO || diasEntre(hoyDemo(), cierreDS1) > 0 ? '<span class="chip chip-existe">Postulaciones abiertas</span>' : '<span class="chip chip-propuesta">Postulaciones cerradas</span>') : '') + '</span>' +
           '<span class="ayuda-impacto">' + impacto + '</span>' +
           icono('i-flecha', 'ayuda-flecha') +
         '</button></h2>' +
@@ -2647,7 +2647,7 @@
     $('btn-animos-ok').addEventListener('click', function () {
       estado.animos = []; guardarEstado();
       var s = document.querySelector('.animos'); if (s) s.remove();
-      toast('Le contamos a tu equipo (simulado).');
+      toast('Le contamos a tu equipo.');
     });
   }
 
@@ -2719,7 +2719,7 @@
       return '<li class="regla-grupo ' + tinte + '"><span class="rg-ic" aria-hidden="true">' + icono(ic) + '</span><span><strong>' + dato + '</strong>' + texto + '</span></li>';
     };
     return '<section class="ficha-grupo" aria-labelledby="ficha-grupo-titulo">' +
-      '<h3 class="h5" id="ficha-grupo-titulo">Reglas de este grupo <span class="chip chip-propuesta">Ejemplo simulado</span></h3>' +
+      '<h3 class="h5" id="ficha-grupo-titulo">Reglas de este grupo</h3>' +
       '<ul class="reglas-grupo">' +
         regla('t-azul', 'i-grupo', (p.cupos || 10) + ' personas', 'para formar el grupo') +
         regla('t-verde', 'i-sube', pct + NBSP + '% menos', 'en el precio') +
@@ -3052,7 +3052,7 @@
     }
     if ($('btn-recuerdame')) $('btn-recuerdame').addEventListener('click', function () {
       $('btn-recuerdame').remove();
-      toast('Te lo recordamos el viernes (simulado).');
+      toast('Te lo recordamos el viernes.');
     });
   }
   // Tu pie, compacto: saldo, barra hacia la meta y "Bajo llave". Abre la pantalla Tu pie.
@@ -3202,16 +3202,10 @@
       var conDesc = estado.modo === 'vivir' ? ufAPesos(plazoDepartamento(p).precioUF) : r.escenario.precio;
       var lista = conDesc + r.ahorro;
       var pctDe = function (x) { return lista ? Math.round(x / lista * 100) + NBSP + '%' : ''; };
-      etiqueta = r.ahorro > 0 ? 'Precio con descuento del grupo' : 'Precio del departamento';
+      // S42 (Bárbara): menos información antes del detalle: el precio con descuento, las personas y el cierre.
+      etiqueta = r.ahorro > 0 ? 'Precio con ' + pctDe(r.ahorro) + ' de descuento' : 'Precio del departamento';
       cifra = formatoRedondeado(conDesc);
-      if (r.ahorro > 0) lineas.push('Precio normal <s>' + formatoRedondeado(lista) + '</s>');
-      lineas.push(r.ahorro > 0
-        ? '<span class="tp-descuento">Descuento al unirte: ' + formatoRedondeado(r.ahorro) + ' (' + pctDe(r.ahorro) + ')</span>'
-        : '<span class="tp-descuento">Si el grupo llega a 5 personas: ' + formatoRedondeado(r.ahorroCompleto) + ' de descuento (' + pctDe(r.ahorroCompleto) + ')</span>');
-      // 11-nov: cuántas personas hay en el grupo, en su propia línea y con ícono.
       lineas.push(grupoTxt);
-      if (compacta) lineas.push('Cierra el ' + fechaCorta(p.cierre));
-      else { if (r.ahorro > 0 && completo) lineas.push(completo); lineas.push('Cierra el ' + formatoFecha(p.cierre)); }
     }
     var foto = fotoEdificio(p);
     var chipTipo = solo ? ['azul', 'En obra'] : p.tipo === 'conjunto' ? ['azul', 'Compra en grupo'] : p.tipo === 'venta' ? ['verde', 'Terminado' + (conIva ? SEP + 'sin IVA' : '')] : ['amarillo', NOMBRE_TIPO[p.tipo]];
@@ -3607,7 +3601,6 @@
       '<div class="faq-invertir">' + faq.map(function (f) {
         return '<details class="tarjeta"><summary><strong>' + f[0] + '</strong><svg class="flecha-abajo" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary><p>' + f[1] + '</p></details>';
       }).join('') + '</div>' +
-      '<p class="tarjeta compacta nota-inversion nota-linea"><svg class="icono" aria-hidden="true"><use href="#i-info"/></svg><span><strong>Es una propuesta.</strong> Esta forma de invertir aún no existe en Bci. Los números son simulados.</span></p>' +
       '<div class="acciones"><a class="btn btn-primario btn-lg btn-bloque" href="#inversiones">Ver oportunidades</a></div>';
     iniciarSimInversion();
     var rango = $('ic-mes');
@@ -3712,7 +3705,7 @@
       '<p class="texto-apoyo">' + esc(p.nombre) + '. Te acompaña la corredora de la inmobiliaria.</p>' +
       '<div class="horarios-visita">' + hs.map(function (h, i) {
         return '<button type="button" class="btn btn-secundario-dark btn-bloque" data-horario="' + i + '">' + textoVisita(h) + '</button>';
-      }).join('') + '</div><p class="texto-apoyo">Horarios de ejemplo · simulado</p>', boton, function (hoja) {
+      }).join('') + '</div>', boton, function (hoja) {
         hoja.querySelectorAll('[data-horario]').forEach(function (b) {
           b.addEventListener('click', function () {
             var h = hs[Number(b.dataset.horario)];
@@ -4077,7 +4070,7 @@
         '<div class="gf-fam-txt"><small>Tu familiar deja en Bci</small><strong>' + formatoRedondeado(rf.deposito) + '</strong><small>10' + NBSP + '% del precio' + SEP + 'con intereses</small></div>' +
         '<ol class="gf-linea"><li><b>Hoy</b><span>Lo deja</span></li><li><b>' + (anios === 1 ? '1 año' : 'En ' + anios + ' años') + '</b><span>Tu deuda baja al 80' + NBSP + '%</span></li><li><b>Vuelve</b><span>Lo recupera</span></li></ol>' +
       '</div>' +
-      '<p class="gf-ojo">' + icono('i-alerta') + '<span>Si no pagas y hay remate, tu familiar puede perder su garantía. Es una propuesta: hoy no existe en Chile.</span></p>' +
+      '<p class="gf-ojo">' + icono('i-alerta') + '<span>Si no pagas y hay remate, tu familiar puede perder su garantía.</span></p>' +
       '<a class="enlace gf-enlace" href="#compra/ficha/respaldo-familiar/familiar">Cómo lo vive tu familiar ›</a>' +
     '</section>';
   }
@@ -4331,7 +4324,7 @@
       guardarEstado();
       this.setAttribute('aria-pressed', on);
       this.innerHTML = icono('i-campana') + (on ? 'Te avisamos de novedades' : 'Avísame si abren, cierran o cambian');
-      toast(on ? 'Listo: te avisamos si un acelerador abre, cierra o cambia (simulado).' : 'Ya no te avisamos de los aceleradores.');
+      toast(on ? 'Listo: te avisamos si un acelerador abre, cierra o cambia.' : 'Ya no te avisamos de los aceleradores.');
     });
     if ($('btn-detalle-credito')) $('btn-detalle-credito').addEventListener('click', function () {
       abrirHojaContenido('Detalle del crédito', repartoCasa(partesPiezas(pd), formatoRedondeado) +
@@ -5155,12 +5148,12 @@
           '<p class="texto-apoyo">Responde en <strong>' + DIAS_RESPUESTA_BCI + '</strong>. Te avisamos cuando esté lista.</p>' +
           '<ol class="espera-linea"><li class="hecho">Enviaste tus datos y documentos</li><li class="actual">Bci revisa tu sueldo y tus deudas</li><li>Te llega la respuesta</li></ol>' +
         '</div>' +
-        '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-avanzar-tiempo">' + icono('i-pronto') + 'Avanzar 3 días (simulación)</button>' +
+        '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-avanzar-tiempo">' + icono('i-pronto') + 'Avanzar 3 días</button>' +
         '<p class="texto-centro"><a class="enlace" href="#compra">Volver a tus pasos</a></p>' +
       '</section>';
     $('btn-avanzar-tiempo').addEventListener('click', function () {
       guardarCompra(Object.assign({}, estado.compra, { respuestaLista: true }));
-      toast('Pasaron 3 días hábiles: llegó la respuesta de Bci (simulado).');
+      toast('Pasaron 3 días hábiles: llegó la respuesta de Bci.');
       renderMiCompra();
       window.scrollTo(0, 0);
     });
@@ -5203,7 +5196,7 @@
                 ? '<h3>Tu preaprobación alcanza</h3><p>Es la misma que ya tenías: no la pides de nuevo. Te podría prestar hasta</p>'
                 : '<h3>¡Bci te preaprobó!</h3><p>Te podría prestar hasta</p>') +
               '<strong>' + formatoRedondeado(ufAPesos(r.creditoUF)) + '</strong>' +
-              '<span class="pp-chip">' + formatoUF(r.creditoUF) + SEP + 'simulado</span></section>' +
+              '<span class="pp-chip">' + formatoUF(r.creditoUF) + '</span></section>' +
             '<section class="tarjeta pp-rango"><p class="pp-rango-titulo">' + icono('i-ok') + (rg ? 'Alcanza para tu rango' : 'Alcanza para este departamento') + '</p>' +
               '<span class="pp-barra" aria-hidden="true"><i style="left:' + ((rg ? rg.desde : creditoNecesario * 0.9) / tope * 100).toFixed(1) + '%;width:' + (((rg ? rg.hasta - rg.desde : creditoNecesario * 0.1)) / tope * 100).toFixed(1) + '%"></i></span>' +
               '<p class="pp-rango-leyenda"><span>UF 0</span><span class="tuyo">' + (rg ? 'Tu rango: ' + textoRango(rg) : 'Este departamento') + '</span><span>' + formatoUF(r.creditoUF) + '</span></p></section>' +
@@ -5516,7 +5509,7 @@
       renderTu5(p, d);
       plegablesAbiertos['mas-opciones'] = true;
       $('btn-cuota-automatica').focus();
-      toast(estado.cuotaAutomatica ? 'Cuota automática el día 5 (simulado).' : 'Pagas tu cuota a mano.');
+      toast(estado.cuotaAutomatica ? 'Cuota automática el día 5.' : 'Pagas tu cuota a mano.');
     });
     $('btn-no-pude').addEventListener('click', function () {
       var r = registrarMes({ mes: estado.mesAhorro, racha: estado.racha, ultimoProtector: estado.ultimoProtector }, false);
@@ -5558,7 +5551,7 @@
         toast(textoHito(nuevos[nuevos.length - 1], enGrupo ? (p.etapaObra || 0) : undefined));
         if (navigator.vibrate) navigator.vibrate(40);
       }
-      else anunciar('Cuota pagada (simulado). Te faltan ' + textoMeses(faltanAhora) + '.');
+      else anunciar('Cuota pagada. Te faltan ' + textoMeses(faltanAhora) + '.');
       $('btn-simular-mes').focus();
     });
     iniciarMoneda();
@@ -6283,9 +6276,7 @@
   }
 
   function chipExiste(id) {
-    return CAMINOS[id].existeHoy
-      ? '<span class="chip chip-existe">Existe hoy</span>'
-      : '<span class="chip chip-propuesta">Propuesta para Bci</span>';
+    return '';
   }
 
   // S11-F2: reparto visual. Una casa en franjas (desde abajo: Bci, inversionistas, tú), con su leyenda.
@@ -6965,7 +6956,7 @@
     } else if (id === 'preaprobacion') {
       var pr = preaprobacion(estado.sueldoPropio, estado.sueldoPareja, estado.otrasCuotas);
       texto = (s.grupo ? 'Bci revisa tus sueldos y aseguras tu cupo en el grupo.' : 'Bci revisa tus sueldos. Pídela con tu pie casi listo: la preaprobación vence.') +
-        (pr && pr.cumple ? '</p><p class="texto-apoyo">Bci te podría prestar hasta <strong>' + formatoRedondeado(ufAPesos(pr.creditoUF)) + '</strong>' + SEP + 'simulado' : '');
+        (pr && pr.cumple ? '</p><p class="texto-apoyo">Bci te podría prestar hasta <strong>' + formatoRedondeado(ufAPesos(pr.creditoUF)) + '</strong>' : '');
       // S28-B4: sin callejón. Si faltan datos o documentos, la hoja los resuelve aquí mismo.
       // S31-A: antes de pedir, "¿Listo para el banco?": lo que el banco revisa, para no recibir un no.
       var rb = revisarBanco();
@@ -6984,7 +6975,7 @@
       // S33-C9: tu pie está listo, pero el edificio todavía no se entrega. Se puede avanzar el tiempo (simulación).
       var pE = proyectoCompra(), mE = esperaMinima(pE).meses;
       texto = 'Tu pie está listo. Bci confirma tu crédito y firmas cuando terminen tu edificio: aprox. en ' + fechaLlaves(mE, hoyDemo()) + '.';
-      accion = botonEnHoja('btn-hito-accion', 'Avanzar hasta la entrega (simulación)');
+      accion = botonEnHoja('btn-hito-accion', 'Avanzar hasta la entrega');
     } else if (id === 'asegurar' || id === 'aprobacion') {
       texto = id === 'asegurar' ? 'Visitas tu departamento, lo reservas y firmas la promesa.' : 'Bci confirma tu crédito con la tasación del departamento.';
       // S31-B: lo que sigue hasta las llaves, con quién hace cada paso.
@@ -7012,7 +7003,7 @@
             var mz = esperaMinima(proyectoCompra()).meses;
             estado.mesAhorro = (estado.mesAhorro || 0) + mz;
             guardarEstado(); cerrarHoja(false);
-            toast('Pasaron ' + plural(mz, 'mes', 'meses') + ': entregaron tu edificio (simulado).');
+            toast('Pasaron ' + plural(mz, 'mes', 'meses') + ': entregaron tu edificio.');
             mostrar();
           }
           else if (id === 'numeros') { cerrarHoja(false); abrirMisDatos(boton); }
@@ -7020,12 +7011,12 @@
           else if (id === 'contrato') {
             if (!hitoHecho('entrada', s)) { toast('Primero: junta el 5 % para entrar.'); return; }
             estado.mesContrato = estado.mesAhorro || 0;
-            marcarPaso('contratoArriendo', 'Firmaste y te mudaste (simulado).');
-          } else if (id === 'asegurar' && usadoMeta()) marcarPaso('usadoReservado', 'Reservaste tu departamento y firmaste la promesa (simulado).');
-          else if (id === 'es-tuyo' && usadoMeta()) { marcarPaso('usadoTuyo', '¡Es tuyo! Firmaste la escritura (simulado).'); confeti(); }
+            marcarPaso('contratoArriendo', 'Firmaste y te mudaste.');
+          } else if (id === 'asegurar' && usadoMeta()) marcarPaso('usadoReservado', 'Reservaste tu departamento y firmaste la promesa.');
+          else if (id === 'es-tuyo' && usadoMeta()) { marcarPaso('usadoTuyo', '¡Es tuyo! Firmaste la escritura.'); confeti(); }
           else if (id === 'es-tuyo' && s.arriendo) {
             if (!s.preaprobado) { toast('Primero: tu preaprobación.'); return; }
-            marcarPaso('arriendoTuyo', '¡Es tuyo! (simulado)');
+            marcarPaso('arriendoTuyo', '¡Es tuyo!');
           }
           else if (id === 'preaprobacion') {
             if (!s.numeros) { cerrarHoja(false); abrirMisDatos(boton); return; }
@@ -7040,14 +7031,14 @@
             if (!s.documentos) {
               estado.pasos.documentos = true; guardarEstado();
               mostrar();
-              toast('Documentos listos (simulado).');
+              toast('Documentos listos.');
               abrirHito('preaprobacion', null);
               return;
             }
             if (rbb.falta) { toast('Primero resuelve lo marcado en rojo.'); return; }
             if (s.arriendo && !hitoHecho('pie', s)) { toast('Primero: junta tu pie.'); return; }
             if (s.arriendo && (estado.mesAhorro || 0) - (estado.mesContrato || 0) < ARRIENDO_OPCION.compraDesdeMes) { toast('Puedes comprar desde el tercer año de contrato.'); return; }
-            marcarPaso('preaprobado', 'Bci te preaprobó (simulado).');
+            marcarPaso('preaprobado', 'Bci te preaprobó.');
           }
         });
       }, ar && id === 'entrada' ? { confirmacion: true } : undefined); // S36 (lienzo P65): la entrada del 5 % es una ventana chica sobre Tu compra.
@@ -7063,7 +7054,7 @@
       '<h2 class="h4" id="titulo-protegido">' + icono('i-escudo') + 'Tu pie está protegido</h2>' +
       '<ul class="capas">' + capas.map(function (c) {
         return '<li class="capa' + (c.activa ? ' activa' : '') + '">' + icono(c.activa ? 'i-check' : 'i-candado', 'capa-icono') +
-          '<span><strong>' + c.titulo + (c.propuesta ? '<span class="chip-propuesta-mini">Propuesta para Bci</span>' : '') + '</strong>' +
+          '<span><strong>' + c.titulo + '</strong>' +
           '<small>' + (c.activa ? c.de : 'Actívalo abajo, en Tu cuota') + '</small></span></li>';
       }).join('') + '</ul></section>';
   }
@@ -7111,7 +7102,7 @@
     if (p) {
       var g = planGrupo(p);
       return g.falta === 0 || v >= g.cuota ? 'Llegas con tu pie a la firma: <strong>' + g.fecha + '</strong>'
-        : '<span class="pt-fila"><span>Para la firma (' + g.fecha.replace(/^(\w{3})\w* de /, '$1 ') + ')</span><strong>' + formatoRedondeado(g.cuota) + '/mes</strong></span>';
+        : '<span class="pt-fila"><span>Para firmar (' + g.fecha.replace(/^(\w{3})\w* de /, '$1 ') + ')</span><strong>' + formatoRedondeado(g.cuota) + '/mes</strong></span>';
     }
     // 23-nov: tres hitos. El deslizador mueve «Pie listo» (cuando terminas de juntar); las llaves, 3 meses después.
     var trad = !(estado.caminoElegido && CAMINOS_COMPARAR.indexOf(estado.caminoElegido) !== -1);
@@ -7180,7 +7171,7 @@
       cont.innerHTML = cabeza +
         '<section class="tarjeta bloque obra-invita"><div class="obra-claro">' + obraSvg(avanceObra(0, 0, false)) + '</div>' +
           '<h2 class="h4">Empieza a llenar tu pie</h2>' +
-          '<p class="texto-apoyo">Tu pie vive en una cuenta de vivienda Bci, en UF. Cada cuota suma una parte.</p></section>' +
+          '<p class="texto-apoyo">Cada cuota suma una parte de tu pie.</p></section>' +
         deslizadorPie() +
         selloProteccion(s) +
         '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-abrir-cuenta">Abrir mi cuenta</button></div>';
@@ -7246,7 +7237,7 @@
       '</section>';
     $('btn-pedir-regalo').addEventListener('click', function () { abrirPedirRegalo($('btn-pedir-regalo')); });
     iniciarDeslizadorPie();
-    if ($('btn-activar-llave')) $('btn-activar-llave').addEventListener('click', function () { marcarPaso('bajoLlave', 'Tu pie quedó bajo llave (simulado).'); });
+    if ($('btn-activar-llave')) $('btn-activar-llave').addEventListener('click', function () { marcarPaso('bajoLlave', 'Tu pie quedó bajo llave.'); });
     $('btn-movimientos').addEventListener('click', function () {
       abrirHojaContenido('Movimientos', movimientosPie(), $('btn-movimientos'));
     });
@@ -7402,7 +7393,7 @@
   // S34: al abrir la cuenta se dice que lo ahorrado pasa a tu pie (antes aparecía de golpe, sin explicar).
   function textoCuentaAbierta() {
     var a = estado.ahorroActual || 0;
-    return a > 0 ? 'Abriste tu cuenta de vivienda y pasaste ahí tus ' + formatoRedondeado(a) + ' ahorrados (simulado).' : 'Abriste tu cuenta de vivienda (simulado).';
+    return a > 0 ? 'Abriste tu cuenta de vivienda y pasaste ahí tus ' + formatoRedondeado(a) + ' ahorrados.' : 'Abriste tu cuenta de vivienda.';
   }
   var avisoTiempo = '';
   function mostrarComprobante(x) {
@@ -7591,9 +7582,8 @@
   }
   function etiquetaCamino(id, r) {
     if (id === estado.caminoElegido) return '<span class="chip chip-recomendado">Tu camino</span>';
-    if (!CAMINOS[id].existeHoy) return '<span class="chip chip-propuesta">Propuesta para Bci</span>';
     if (r && r.id === id) return '<span class="chip chip-existe">Recomendado</span>';
-    return '<span class="chip chip-existe">Existe hoy</span>';
+    return '';
   }
   function caminosExplorar(perfil, r) {
     var sel = caminosParaMostrar(perfil, r);
@@ -7664,7 +7654,7 @@
           return '<a class="tarjeta explorar-otra" href="#compra/ficha/' + id + '"><span class="explorar-mini-icono verde" aria-hidden="true">' + (id === 'arriendo-opcion'
               ? '<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v3M21 12v2"/></svg>'
               : '<svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15.3 3.5 9.2A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.5 2.6c0 6.1-8.5 11.3-8.5 11.3z"/></svg>') + '</span>' +
-            '<span><strong>' + CAMINOS[id].nombre + '</strong><small>' + (CAMINOS[id].existeHoy ? 'Existe hoy' : 'Propuesta para Bci') + '</small></span></a>';
+            '<span><strong>' + CAMINOS[id].nombre + '</strong></span></a>';
         }).join('') +
       '</section>') ;
   }
@@ -7715,8 +7705,8 @@
   var COLOR_EXPLORAR = { 'individual-vivir': 0, 'grupo-vivir': 1, usados: 2, 'arriendo-opcion': 3, 'familiar-vivir': 0 };
   var DATOS_CAMINO = {
     'individual-vivir': ['Pie 10' + NBSP + '% o 20' + NBSP + '%', 'Nuevos o usados'], 'grupo-vivir': ['Pagan menos', 'En obra'], usados: ['Pie 20' + NBSP + '%', 'Usados'],
-    'arriendo-opcion': ['Entras con 5' + NBSP + '%', 'Propuesta'],
-    'familiar-vivir': ['Pie 5' + NBSP + '%', 'Propuesta'], 'familiar-invertir': ['Pie 5' + NBSP + '%', 'Propuesta'],
+    'arriendo-opcion': ['Entras con 5' + NBSP + '%'],
+    'familiar-vivir': ['Pie 5' + NBSP + '%'], 'familiar-invertir': ['Pie 5' + NBSP + '%'],
     'pie-compartido': ['Pie 5' + NBSP + '%', 'Para arrendar'], 'grupo-pie-compartido': ['Pie 5' + NBSP + '%', 'En grupo'],
     'grupo-invertir': ['Pagan menos', 'En obra'], 'individual-invertir': ['Pie 20' + NBSP + '%']
   };
@@ -8192,7 +8182,7 @@
           '<p class="tp-linea">Pie de ' + formatoRedondeado(ufAPesos(u.listaUF * 0.2)) + (calza ? SEP + 'calza con DS1' : '') + '</p>' +
         '</li>';
       }).join('') + '</ul>' : '<p class="texto-apoyo">' + (filtroUsados.fav ? 'Todavía no guardas ninguno.' : 'Ninguno con estos filtros.') + '</p>') +
-      '<p class="texto-apoyo texto-centro"><small>Ejemplos simulados' + SEP + 'fotos referenciales</small></p>';
+      '<p class="texto-apoyo texto-centro"><small>Fotos referenciales</small></p>';
     // 9-nov: para invertir, es el mismo Crédito al 80 %: se puede hacer tu camino.
     if ($('btn-usados-camino')) $('btn-usados-camino').addEventListener('click', function () { confirmarMiCamino('individual-invertir', $('btn-usados-camino')); });
     cont.querySelectorAll('[data-usado-filtro]').forEach(function (b) {
@@ -8252,7 +8242,7 @@
       (vivir ? (estado.usadoElegido === u.id && estado.caminoElegido === 'usados' ? '<p class="aviso">Es tu departamento: con él calculamos tu fecha.</p>'
           : puedeCambiarMeta() ? notaCambioCamino({ tipo: 'usado', u: u }) + '<button type="button" class="btn btn-primario btn-bloque usado-cta" id="btn-usado-meta" aria-haspopup="dialog">Elegir este departamento</button>' : '')
         : '<button type="button" class="btn btn-primario btn-bloque usado-cta" id="btn-usado-camino" aria-haspopup="dialog">Elegir este camino</button>') +
-      '<p class="texto-apoyo texto-centro"><small>Ejemplo simulado' + SEP + 'fotos referenciales</small></p>';
+      '<p class="texto-apoyo texto-centro"><small>Fotos referenciales</small></p>';
     iniciarGalerias(cont);
     if (vivir) { iniciarPestanasDetalle(cont); iniciarVisita(u); }
     if ($('btn-usado-meta')) $('btn-usado-meta').addEventListener('click', function () { confirmarDeptoMeta({ tipo: 'usado', u: u }, $('btn-usado-meta')); });
@@ -8352,7 +8342,7 @@
       (tuyo
         ? '<section class="noche sin-slider" aria-labelledby="titulo-plazo"><span class="noche-luna" aria-hidden="true"></span>' +
             '<p class="noche-etiqueta" id="titulo-plazo">¡Es tuyo!</p><strong class="numero noche-plazo">' + esc(u.nombre) + '</strong>' +
-            '<p class="noche-sub">Firmaste la escritura (simulado)</p></section>'
+            '<p class="noche-sub">Firmaste la escritura</p></section>'
         : !a.cumple
         ? '<section class="tarjeta protagonista todavia-no" aria-labelledby="titulo-plazo"><p class="estado-semaforo">' + icono('i-pronto') + 'Todavía no</p>' +
             '<h2 class="h3" id="titulo-plazo">' + a.razon + '</h2>' + salidaArriendoHtml(u) + '</section>'
@@ -8409,7 +8399,6 @@
     cont.innerHTML =
       '<a href="#departamentos/caminos" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>Caminos</a>' +
       '<header class="encabezado">' +
-        '<div class="camino-cabeza"><span class="chip chip-propuesta">Propuesta</span></div>' +
         '<h1 id="titulo-caminos" class="h2">Arriendo con opción de compra</h1>' +
         '<p class="texto-apoyo camino-descripcion">Entras con el 5' + NBSP + '% y arriendas. Parte de cada cuota va a tu pie. Con el 20' + NBSP + '%, Bci te presta el resto.</p>' +
       '</header>' +
@@ -8432,7 +8421,7 @@
         '</li>';
       }).join('') + '</ul>' +
       '<p class="llega-sello">' + icono('i-escudo') + 'Sin contar que el departamento suba de precio</p>' +
-      '<p class="texto-apoyo texto-centro"><small>Ejemplos simulados' + SEP + 'fotos referenciales</small></p>';
+      '<p class="texto-apoyo texto-centro"><small>Fotos referenciales</small></p>';
     if ($('btn-arriendo-camino')) $('btn-arriendo-camino').addEventListener('click', function () { confirmarArriendo($('btn-arriendo-camino')); });
     ponerOtrosCaminos(cont, 'arriendo-opcion');
   }
@@ -8490,7 +8479,7 @@
       (esArriendo() && estado.arriendoElegido === u.id
         ? '<div class="accion-fija detalle-accion"><p class="aviso">Es tu departamento.</p><a class="btn btn-secundario-dark btn-bloque" href="#compra">Ver tu compra</a></div>'
         : '<div class="accion-fija detalle-accion"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-arriendo-depto">Quiero este departamento</button></div>') +
-      '<p class="texto-apoyo texto-centro"><small>Ejemplo simulado' + SEP + 'fotos referenciales' + SEP + 'arriendo: ' + u.origenArriendo + '</small></p>';
+      '<p class="texto-apoyo texto-centro"><small>Fotos referenciales' + SEP + 'arriendo: ' + u.origenArriendo + '</small></p>';
     iniciarGalerias(cont);
     iniciarPlegables();
     iniciarPestanasDetalle(cont);
@@ -8543,7 +8532,7 @@
       que: 'Un familiar deja el 10' + NBSP + '% del precio en una cuenta Bci, como garantía. Bci te presta el 95' + NBSP + '% y tú juntas el 5' + NBSP + '% y los gastos.',
       como: ['Tu familiar deja el 10' + NBSP + '% en una cuenta Bci, con intereses.', 'Juntas el 5' + NBSP + '% y Bci te presta el 95' + NBSP + '%.', 'Cuando tu deuda baja al 80' + NBSP + '%, el dinero vuelve a tu familiar.'],
       para: 'Si un familiar puede dejar dinero guardado unos años.',
-      cuidado: 'Es una propuesta: hoy no existe en Chile. Si no pagas y hay remate, tu familiar puede perder su garantía.' },
+      cuidado: 'Si no pagas y hay remate, tu familiar puede perder su garantía.' },
     usados: { bueno: 'Sirve para usados', ojo: 'Pie del 20' + NBSP + '%: tardas más', depto: 'Nuevo o usado',
       que: 'El crédito de siempre: Bci te presta el 80' + NBSP + '% y tú juntas el 20' + NBSP + '%. Es el que sirve para departamentos usados.',
       como: ['Eliges un departamento nuevo o usado.', 'Juntas el 20' + NBSP + '% en tu cuenta de vivienda.', 'Bci te preaprueba; reservas, firmas y recibes tus llaves.'],
@@ -8565,7 +8554,7 @@
       que: 'Un familiar deja el 10' + NBSP + '% del precio en una cuenta Bci, como garantía. Bci te presta el 95' + NBSP + '% y el departamento es todo tuyo, sin inversionistas.',
       como: ['Tu familiar deja el 10' + NBSP + '% en una cuenta Bci, con intereses.', 'Juntas el 5' + NBSP + '% y Bci te presta el 95' + NBSP + '%.', 'Lo arriendas y, cuando tu deuda baja al 80' + NBSP + '%, el dinero vuelve a tu familiar.'],
       para: 'Si quieres invertir con poco ahorro y un familiar puede dejar dinero guardado unos años.',
-      cuidado: 'Es una propuesta: hoy no existe en Chile. Si un mes no lo arriendas, el dividendo lo pagas tú; si no pagas y hay remate, tu familiar puede perder su garantía.' },
+      cuidado: 'Si un mes no lo arriendas, el dividendo lo pagas tú; si no pagas y hay remate, tu familiar puede perder su garantía.' },
     'individual-invertir': { bueno: 'Sirve para nuevos y usados', ojo: 'Pie del 20' + NBSP + '%: tardas más', depto: 'Nuevo o usado',
       que: 'El crédito de siempre: Bci te presta el 80' + NBSP + '% y tú juntas el 20' + NBSP + '% y los gastos.',
       como: ['Eliges un departamento nuevo o usado.', 'Juntas el 20' + NBSP + '% en tu cuenta de vivienda.', 'Bci te preaprueba; firmas y lo arriendas.'],
@@ -8679,8 +8668,13 @@
   function rasgosCaminoHtml(id) {
     var f = FICHA_CORTA[id];
     if (!f) return '';
-    return '<ul class="tiles-3 fc-rasgos">' + f[1].map(function (r, i) {
-      return '<li class="tile ' + TINTES_3[i] + '"><span class="tile-ic" aria-hidden="true">' + icono(r[0]) + '</span>' + (r[1] === 'GRUPO' ? PCT_GRUPO() : r[1]) + '</li>';
+    // Mismo fin, mismo color: las llaves o la mudanza en azul y el pie o la entrada en verde, igual que «Con tus números».
+    var fijo = { 'i-llave': 't-azul', 'i-alcancia': 't-verde' };
+    var usados = f[1].map(function (r) { return fijo[r[0]]; }).filter(Boolean);
+    var libres = TINTES_3.filter(function (t) { return usados.indexOf(t) === -1; });
+    return '<ul class="tiles-3 fc-rasgos">' + f[1].map(function (r) {
+      var t = fijo[r[0]] || libres.shift() || 't-azul';
+      return '<li class="tile ' + t + '"><span class="tile-ic" aria-hidden="true">' + icono(r[0]) + '</span>' + (r[1] === 'GRUPO' ? PCT_GRUPO() : r[1]) + '</li>';
     }).join('') + '</ul>';
   }
   function pasosFilaHtml(id) {
@@ -9043,7 +9037,8 @@
     var chips = (id === estado.caminoElegido ? '<span class="fc-chip fuerte">Tu camino</span>' : r && r.id === id ? '<span class="fc-chip fuerte">Te lo recomendamos</span>' : '') +
       (DATOS_CAMINO[id] || []).slice(-1).map(function (t) { return '<span class="fc-chip">' + t + '</span>'; }).join('');
     var ncel = 0, ICS_CEL = ['i-alcancia', 'i-llave', 'i-calendario'];
-    var celda = function (etq, val, nota) { var q = ncel++ % 3; val = String(val).replace(/\s*millones/, NBSP + 'M'); return '<div class="' + TINTES_3[q] + '"><span class="fcn-ic" aria-hidden="true">' + icono(ICS_CEL[q]) + '</span><small>' + etq + '</small><strong>' + val + '</strong><small>' + nota + '</small></div>'; };
+    var CEL_T = ['t-verde', 't-azul', 't-amarillo'];
+    var celda = function (etq, val, nota) { var q = ncel++ % 3; val = String(val).replace(/\s*millones/, NBSP + 'M'); return '<div class="' + CEL_T[q] + '"><span class="fcn-ic" aria-hidden="true">' + icono(ICS_CEL[q]) + '</span><small>' + etq + '</small><strong>' + val + '</strong><small>' + nota + '</small></div>'; };
     var k = filtrarDeptos(itemsDeptos(id), filtrosDeptos).length;
     return '<div class="fc" style="' + varsCamino(id) + '">' +
       '<section class="fc-cabeza" style="background: linear-gradient(180deg, ' + c[0] + ' 0%, var(--gray-light) 100%)">' +
@@ -9228,7 +9223,7 @@
   }
   function lineaGrupo(g) {
     return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + 'Firman todos en ' + g.fecha + '</p>' +
-      (g.falta && !g.alcanza ? '<p class="tp-linea tp-cuota' + (g.posible ? '' : ' no') + '">' + (g.posible ? 'Junta ' + formatoRedondeado(g.cuota) + ' al mes para llegar' : 'No te alcanza: necesitarías ' + formatoRedondeado(g.cuota) + ' al mes') + '</p>' : '');
+      (g.falta && !g.alcanza && !g.posible ? '<p class="tp-linea tp-cuota no">No te alcanza con este edificio</p>' : '');
   }
   function lineaTuyo(m) { return '<p class="tp-linea tp-tuyo">' + icono('i-calendario') + (m === null ? 'Todavía no te alcanza' : (estado.modo === 'arrendar' ? 'Firmas ' : 'Recibirías tus llaves ') + mesTuyo(m)) + '</p>'; }
   function tarjetaDepto(x, i) {
@@ -9507,7 +9502,7 @@
         ? '<ul class="lista-proyectos lista-deptos" id="lista-proyectos">' + lista.map(tarjetaDepto).join('') + '</ul>'
         : '<div class="vacio"><svg aria-hidden="true"><use href="#i-proyectos"/></svg><h2 class="h3">Ninguno con estos filtros</h2>' +
             '<div class="acciones"><button type="button" class="btn btn-primario btn-bloque" id="btn-deptos-limpiar">Quitar filtros</button></div></div>') +
-      '<p class="texto-apoyo texto-centro"><small>Ejemplos simulados' + SEP + 'fotos referenciales</small></p>';
+      '<p class="texto-apoyo texto-centro"><small>Fotos referenciales</small></p>';
     enlazarVistasDeptos(cont);
     $('btn-deptos-cambiar').addEventListener('click', function () {
       deptosAbierto = !deptosAbierto;
@@ -9754,7 +9749,7 @@
         ? '<section class="tarjeta elegido-sigue" aria-labelledby="titulo-sigue">' +
             '<p class="elegido-etq">Tu primer paso</p>' +
             '<h2 class="h4" id="titulo-sigue">Abre tu cuenta de vivienda</h2>' +
-            '<p class="texto-apoyo">Ahí juntas tu pie, en UF. Se abre en minutos y no tiene costo (simulado).</p>' +
+            '<p class="texto-apoyo">Ahí juntas tu pie, en UF. Se abre en minutos y no tiene costo.</p>' +
             '<button type="button" class="btn btn-primario btn-bloque" id="btn-elegido-cuenta">Abrir mi cuenta</button>' +
             '<a class="btn btn-terciario btn-bloque" href="#compra">Ahora no, ver mis pasos</a>' +
           '</section>'
@@ -9851,7 +9846,7 @@
       registro.recordarme = Number($('btn-recordarme').dataset.meses);
       guardarRegistro();
       $('btn-recordarme').remove();
-      toast('Listo: te recordamos tu meta cada mes (simulado).');
+      toast('Listo: te recordamos tu meta cada mes.');
     });
     if ($('btn-ver-estudios')) $('btn-ver-estudios').addEventListener('click', function () {
       estado.masBaratoTipo = 'estudio';
@@ -9909,7 +9904,7 @@
         '<li><span>Dividendo al mes</span><strong>' + formatoPesos(f.dividendo) + '</strong></li>' +
         '<li><span>Tu familiar lo recupera en</span><strong>' + (f.mesesLibera / 12).toFixed(1).replace('.', ',') + ' años</strong></li>';
       peor = 'si hay remate, tu familiar puede perder su depósito.';
-      referente = 'Barclays Family Springboard (Reino Unido). En Chile no existe hoy.';
+      referente = 'Barclays Family Springboard (Reino Unido).';
     }
     var interesa = registro.meInteresa.indexOf(id) !== -1;
     cont.innerHTML =
@@ -9974,7 +9969,6 @@
     cont.innerHTML =
       '<a href="#compra/caminos/familiar-' + (estado.modo === 'vivir' ? 'vivir' : 'invertir') + '" class="enlace volver"><svg aria-hidden="true"><use href="#i-flecha"/></svg>' + CAMINOS['familiar-vivir'].nombre + '</a>' +
       '<section class="respaldo-heroe" aria-labelledby="titulo-ficha">' +
-        '<span class="respaldo-chip">Propuesta' + SEP + 'aún no existe en Chile</span>' +
         '<h1 id="titulo-ficha" class="h2">Garantía de un familiar</h1>' +
         '<p>Tu familiar <strong>no te regala el dinero</strong>: lo deja en Bci como garantía y lo recupera.</p>' +
         DIBUJO_RESPALDO +
@@ -10002,7 +9996,7 @@
             '<p>Si ' + 'quien compra' + ' deja de pagar su crédito y no hay otra forma de cubrir la deuda, el banco puede usar tu depósito para pagar lo que falte. Ese dinero no se recupera.</p>' +
             '<p class="cf-cifra"><small>Lo máximo que puedes perder</small><strong id="rf-maximo">' + formatoRedondeado(f.deposito) + '</strong></p>' +
             '<p class="cf-cifra cf-ok"><small>Lo esperable si todo sigue bien</small><strong>$0, y se te libera de a poco</strong></p>' +
-            '<p class="texto-apoyo"><small>Puedes perder tu depósito, hasta ese monto. Esto es una propuesta a validar con Bci: hoy no existe.</small></p>' +
+            '<p class="texto-apoyo"><small>Puedes perder tu depósito, hasta ese monto.</small></p>' +
             (estado.respaldoAceptado
               ? '<p class="cf-semaforo" role="status"><span class="cf-luz verde" aria-hidden="true"></span><span><strong>Todo al día</strong><small>Tu semáforo está en verde. Si cambia, te avisamos antes de que se use tu respaldo.</small></span></p>'
               : '<label class="cf-casilla"><input type="checkbox" id="cf-acepto"> <span>Entiendo que puedo perder hasta <strong id="cf-monto">' + formatoRedondeado(f.deposito) + '</strong> si el crédito no se paga.</span></label>' +
@@ -10441,7 +10435,7 @@
         estado.parejaInvitada = true;
         guardarEstado();
         otraVez('btn-agregar-equipo');
-        toast('Invitamos a tu pareja (simulado).');
+        toast('Invitamos a tu pareja.');
       };
       // Sin pareja en tu equipo, primero se diseña su avatar (sin uno sugerido).
       if (!miembrosCon(['pareja']).length) agregarAlEquipo($('btn-invitar-pareja'), 'pareja', invitar);
@@ -10468,8 +10462,8 @@
       renderTu5(p, d);
       toast('Tu lista está lista. Comparte el enlace.');
     });
-    if ($('btn-enlace-regalo')) $('btn-enlace-regalo').addEventListener('click', function () { toast('Enlace copiado (simulado).'); });
-    if ($('btn-compartir')) $('btn-compartir').addEventListener('click', function () { toast('Enlace del proyecto copiado (simulado).'); });
+    if ($('btn-enlace-regalo')) $('btn-enlace-regalo').addEventListener('click', function () { toast('Enlace copiado.'); });
+    if ($('btn-compartir')) $('btn-compartir').addEventListener('click', function () { toast('Enlace del proyecto copiado.'); });
   }
 
 
@@ -10517,7 +10511,7 @@
         if (texto.indexOf(enlaceRegalo(codigoRegalo())) === -1) texto += ' ' + enlaceRegalo(codigoRegalo());
         if (navigator.share) { navigator.share({ text: texto }).catch(function () {}); return; }
         try { navigator.clipboard.writeText(texto); } catch (e) { /* sin portapapeles */ }
-        toast('Mensaje copiado (simulado).');
+        toast('Mensaje copiado.');
       });
     });
   }
@@ -10529,7 +10523,7 @@
     // S22-F3: también sin compra, desde Tu pie. Con compra en el paso del pie, vuelve a esa pantalla.
     var conCompra = !!(c && pasoEfectivo() === 2);
     var volverA = conCompra ? '#mis-proyectos/compra' : '#pie';
-    var volver = '<p class="vista-familia">' + icono('i-persona') + 'Así lo ve tu familia · simulado ' +
+    var volver = '<p class="vista-familia">' + icono('i-persona') + 'Así lo ve tu familia ' +
       '<a class="enlace" href="' + volverA + '">Volver</a></p>';
     var sp = fotoPasos();
     if (!estado.listaRegalos || !sp.cuentaVivienda || !(sp.meta > 0) || (c && !conCompra)) {
@@ -10759,7 +10753,7 @@
           '<button type="button" class="enlace" id="btn-reiniciar-no">Cancelar</button>' +
         '</div>' +
       '</div>' +
-      '<p class="perfil-version" id="perfil-version">Primer Peldaño' + SEP + 'prototipo del Taller de Interacción IV</p>';
+      '<p class="perfil-version" id="perfil-version">Primer Peldaño</p>';
     var toquesVersion = 0;
     $('perfil-version').addEventListener('click', function () {
       if (++toquesVersion < 3) return;

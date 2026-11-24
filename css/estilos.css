@@ -5317,3 +5317,12 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .fila-ic svg, .tg-ic svg, .fcn-ic svg, .tile-ic svg, .fc-mas-icono svg, .fc-para-icono svg, .rg-ic svg, .tg-aviso-ic svg { margin: 0; }
 .noche-nombre, .noche-nombre svg { color: var(--white); }
 .noche-nombre svg { stroke: currentColor; }
+
+/* ===== S42 ===== */
+/* La barra de abajo se ve también cuando se abre una pantalla (Conversación, Votaciones, Mis datos…). */
+.hoja-inferior.hoja-pantalla { bottom: calc(66px + env(safe-area-inset-bottom)); height: auto; padding-bottom: 20px; }
+body:has(.hoja-pantalla) .barra { z-index: 61; }
+.aceleradores-compra { margin-top: 16px; }
+.ds19-que { margin-bottom: 16px; }
+.pt-fila { font-size: 14px; white-space: nowrap; }
+.pt-fila strong { font-size: 15px; }

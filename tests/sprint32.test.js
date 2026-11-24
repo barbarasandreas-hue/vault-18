@@ -143,7 +143,7 @@ test('S32-B9: asegurar es después de la postulación; con el edificio en obra, 
   assert.match(app32, /asegurado: !!\(c && c\.carga && paso >= \(c\.sinGrupo \|\| !esGrupo\(\) \? 2 : 3\)\)/);
   // S33-C9: ahora se puede avanzar hasta la entrega (simulación).
   assert.match(app32, /firmas cuando terminen tu edificio/); // S34: «terminen», como en Tu edificio real
-  assert.match(app32, /Avanzar hasta la entrega \(simulación\)/);
+  assert.match(app32, /Avanzar hasta la entrega/);
 });
 
 test('23-nov: Departamentos tiene Caminos | Edificios; sin camino abre Caminos y con camino Edificios', () => {

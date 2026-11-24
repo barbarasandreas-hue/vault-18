@@ -42,7 +42,7 @@ test('E4: ficha estándar de la compra en grupo marcada como ejemplo simulado', 
   assert.match(app, /function fichaGrupoHtml/);
   assert.match(app, /\(p\.cupos \|\| 10\) \+ ' personas', 'para formar el grupo'/); // S39: en tarjetitas
   assert.match(app, /nadie queda amarrado/);
-  assert.match(app, /Ejemplo simulado/);
+  assert.doesNotMatch(app, /Ejemplo simulado/); // S42: la app no se presenta como prototipo
 });
 
 test('E4: el filtro del estado del edificio dice Terminado', () => {
@@ -75,7 +75,7 @@ test('E7: el familiar ve cuánto puede perder como máximo y acepta con casilla 
   assert.match(app, /Acepto ser su respaldo/);
   assert.match(app, /aria-disabled/);
   assert.match(app, /'respaldoAceptado'/);
-  assert.match(app, /propuesta a validar con Bci/);
+  assert.doesNotMatch(app, /propuesta a validar con Bci/); // S42
 });
 
 test('Arriendo con opción de compra no tiene «Ayudas para llegar antes» y su ruta /como no vuelve en bucle', () => {

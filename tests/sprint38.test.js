@@ -127,7 +127,7 @@ test('S39c bloque 1: botón «Ver tu pie» con anillo, «Ver con fechas» junto 
   assert.match(app, /if \(sec\.querySelector\('\.pie-boton'\)\) return;/);
   assert.match(app, /function conFechasEnAhora\(ahora, sinCamino\)/);
   assert.ok(app.indexOf('id="btn-pedir-regalo"') < app.indexOf("grupoEnPieHtml() +"), 'el regalo va antes del grupo en Tu pie');
-  assert.match(app, /<span class="pt-fila"><span>Para la firma \(/);
+  assert.match(app, /<span class="pt-fila"><span>Para firmar \(/);
   assert.doesNotMatch(app, /¿Cómo puedes llegar antes\?<\/strong>|>Ayudas para llegar antes</);
   assert.match(app, /'Entrega ' \+ formatoFecha\(p\.entregaEstimada\)/);
   assert.match(css, /\.tarjeta-proyecto \.tp-ver \{ display: none; \}/);
@@ -193,4 +193,14 @@ test('S39 3.2: Tu grupo con foto, cifras, «Te toca», conversación, votaciones
   assert.match(app, /'votoGrupo', 'voceroYo'(, 'grupoAvisoVisto')?\]/);
   assert.match(app, /enGrupoCompra\(\) \? '' : tuEdificioHtml\(s\)/);
   assert.match(app, /data-ir-grupo/);
+});
+
+test('S42: la app no muestra mensajes de prototipo ni de «propuesta» y la barra queda visible en las pantallas', () => {
+  const app = fs.readFileSync(path.join(__dirname, '..', 'js', 'app.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'css', 'estilos.css'), 'utf8');
+  assert.doesNotMatch(app, /prototipo del Taller/);
+  assert.doesNotMatch(app, /Propuesta para Bci/);
+  assert.doesNotMatch(app, /hoy no existe/);
+  assert.doesNotMatch(app, /Existe hoy/);
+  assert.match(css, /body:has\(\.hoja-pantalla\) \.barra/);
 });

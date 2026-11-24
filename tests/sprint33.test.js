@@ -57,7 +57,7 @@ test('C8 (E8): perfil de ejemplo con avatar, sin nombres en la interfaz', () => 
 });
 test('C9 (E9): preaprobación sin «Paso N de 6» repetido, con tiempo de respuesta y avanzar el tiempo', () => {
   assert.doesNotMatch(app, /'<p class="ceja-paso">Paso '/);
-  assert.match(app, /Avanzar 3 días \(simulación\)/);
+  assert.match(app, /Avanzar 3 días/);
   assert.match(app, /respuestaLista !== false/);
   assert.match(app, /class="enlace pp-deptos"/); // S34: mirar otros departamentos es secundario
 });
