@@ -8978,16 +8978,17 @@
           return '<button type="button" class="chip chip-filtro" data-prioridad="' + p[0] + '" aria-pressed="' + (estado.prioridad === p[0]) + '">' + p[1] + '</button>';
         }).join('') + '</div></fieldset>'
         // S39 2.5: para vivir, las mismas 3 preguntas de Caminos (se responden una vez).
-        : (!estado.prioridadRespondida || cambiandoPrioridad ? preguntasCaminoHtml()
-          : '<p class="prioridad-guardada">Tus respuestas: <strong>' + (resumenRespuestas() || 'sin responder') + '</strong> <button type="button" class="enlace" data-cambiar-respuestas>Cambiar</button></p>')) +
-      '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
-        '<p class="si-juntas-fila"><label for="rango-comparar" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-comparar">' + formatoRedondeado(mensual) + '</strong></p>' +
-        '<input type="range" id="rango-comparar" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '" aria-valuetext="' + formatoRedondeado(mensual) + ' al mes">' +
-      '</section>' +
+        // S43 (Bárbara): sin la línea «Tus respuestas · Cambiar».
+        : (!estado.prioridadRespondida || cambiandoPrioridad ? preguntasCaminoHtml() : '')) +
       '<section class="carrera" aria-labelledby="titulo-carrera"><h2 class="h5" id="titulo-carrera">Elige dos para verlos lado a lado</h2>' +
         '<p class="texto-apoyo cmp-sub"><small>' + (arrendar ? 'De hoy a cuando firmas' : 'De hoy a tus llaves') + '</small></p>' +
         // 20-nov: sin la descripción bajo el título.
         '<div id="carrera-cuerpo" aria-live="polite">' + carreraHtml(nums, paraTi) + '</div></section>' +
+      // S43 (Bárbara): «Si juntas al mes» va bajo los caminos; al moverlo cambian las líneas de arriba.
+      '<section class="tarjeta bloque si-juntas" aria-labelledby="titulo-si-juntas">' +
+        '<p class="si-juntas-fila"><label for="rango-comparar" id="titulo-si-juntas">Si juntas al mes</label><strong class="numero" id="valor-comparar">' + formatoRedondeado(mensual) + '</strong></p>' +
+        '<input type="range" id="rango-comparar" min="' + minimo + '" max="' + maximo + '" step="' + paso + '" value="' + mensual + '" aria-valuetext="' + formatoRedondeado(mensual) + ' al mes">' +
+      '</section>' +
       '<section class="lado" aria-labelledby="titulo-lado"><h2 class="h5" id="titulo-lado">Lado a lado</h2>' +
         '<div id="lado-cuerpo">' + ladoALadoHtml(nums) + '</div></section>' +
       (noMostrados.length ? '<details class="tarjeta explorar-porque"><summary><span><strong>Por qué no te mostramos otros</strong><small>' + plural(noMostrados.length, 'camino', 'caminos') + '</small></span>' +
@@ -9426,33 +9427,16 @@
         }).join('') + '</div>' +
         '<button type="button" class="enlace" data-prioridad-deptos="ninguna">Ahora no</button>' +
       '</section>';
-    // S43 (Bárbara, maqueta 13 derecha): el recomendado en una franja «Para ti» y los demás en cuadros con su dibujo.
-    var lineaCuadro = function (id) {
-      if (id === 'ds19') return 'Con subsidio';
-      var n = porId[id] || {};
-      if (id === 'arriendo-opcion') return 'Te mudas ' + (n.mudas !== null && n.mudas <= 0 ? 'ya' : mesCorto(n.mudas));
-      return mesCorto(n.tuyo) + (n.pagas ? SEP + formatoRedondeado(n.pagas) : '');
-    };
-    var cuadro = function (id) {
-      var href = id === 'ds19' ? '#departamentos/ds19' : rutaCamino(id);
-      return '<li><a class="camt" href="' + href + '" style="' + varsCamino(id) + '">' +
-        '<span class="camt-dib">' + ilustracionCamino(id) + '</span>' +
-        '<strong>' + (id === 'ds19' ? 'Proyectos DS19' : nombreCaminoD(id)) + '</strong><small>' + lineaCuadro(id) + '</small></a></li>';
-    };
-    var paraTiHtml = !conReco || preguntando ? '' :
-      '<a class="camt-reco" href="' + rutaCamino(reco) + '" style="' + varsCamino(reco) + '">' +
-        '<span class="camt-reco-dib">' + ilustracionCamino(reco) + '</span>' +
-        '<span class="camt-reco-texto"><span class="camt-chip">Para ti</span><strong>' + nombreCaminoD(reco) + '</strong>' +
-        '<small>' + (reco === 'arriendo-opcion' ? 'Te mudas ' + mesCorto((porId[reco] || {}).mudas) : 'Llaves ' + mesCorto((porId[reco] || {}).tuyo)) + ((porId[reco] || {}).pagas ? SEP + formatoRedondeado(porId[reco].pagas) + '/mes' : '') + '</small></span></a>';
-    var orden = GRUPOS_CAMINOS.reduce(function (a, g) { return a.concat(g[2]); }, []);
-    var cuadros = orden.filter(function (id) { return id === 'ds19' || (ids.indexOf(id) !== -1 && (!paraTiHtml || id !== reco)); });
     cont.innerHTML =
       '<header class="encabezado">' + MARCA + '<h1 id="titulo-proyectos" class="h2" tabindex="-1">Departamentos</h1>' + tabsDeptos('caminos') + '</header>' +
-      lineaPrioridad + preguntaHtml + (vivirEx ? '' : heroHtml) +
+      lineaPrioridad + preguntaHtml + heroHtml +
       (vivirEx
-        ? paraTiHtml +
-          '<section class="camt-sec" aria-labelledby="camt-titulo"><h2 class="h5" id="camt-titulo">' + (paraTiHtml ? 'Otros caminos' : 'Caminos') + '</h2>' +
-            '<ul class="camt-grilla">' + cuadros.map(cuadro).join('') + '</ul></section>' +
+        ? GRUPOS_CAMINOS.map(function (g, gi) {
+            var lista = g[2].filter(function (id) { return id === 'ds19' || (ids.indexOf(id) !== -1 && (!conReco || id !== reco)); });
+            if (!lista.length) return '';
+            return '<section class="ex-otros ex-grupo" aria-labelledby="ex-grupo-' + gi + '"><h2 class="h5" id="ex-grupo-' + gi + '">' + g[0] + '</h2><ul>' +
+              lista.map(function (id) { return id === 'ds19' ? itemDS19() : itemCamino(id); }).join('') + '</ul></section>';
+          }).join('') +
           '<a class="btn btn-secundario btn-bloque ex-comparar" href="#departamentos/comparar">Comparar los caminos</a>'
         : '<section class="ex-otros" aria-labelledby="ex-otros-titulo"><h2 class="h5" id="ex-otros-titulo">' + (conReco ? 'Otros caminos' : 'Los caminos') + '</h2><ul>' +
             ids.filter(function (id) { return !conReco || id !== reco; }).map(itemCamino).join('') + '</ul>' +

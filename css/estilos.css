@@ -5386,3 +5386,10 @@ body:has(.hoja-pantalla) .barra { z-index: 61; }
 .camt strong { font-size: 15px; line-height: 1.2; }
 .camt small { font-size: 12.5px; color: var(--gray-semidark); }
 .explorar-porque summary small { display: block; font-weight: 400; }
+
+/* S43c: cada camino de Comparar en su tarjetita */
+.cmp-lista li { background: var(--white); border-radius: 16px; padding: 8px 12px 12px; margin-bottom: 8px; border: 1.5px solid transparent; box-shadow: 0 1px 4px rgba(55,71,79,.08); }
+.cmp-lista li + li { border-top: 1.5px solid transparent; }
+.cmp-lista li.sel { border-color: var(--cf); }
+.cmp-anios { margin-left: 48px; margin-right: 16px; }
+.carrera + .si-juntas { margin-top: 4px; }

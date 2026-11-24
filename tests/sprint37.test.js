@@ -23,7 +23,7 @@ test('E2: el DS1 se marca como acelerador', () => {
 
 test('E3: arriba de la lista de caminos una tarjeta pregunta qué te importa; la respuesta se guarda', () => {
   assert.match(app, /¿Qué es lo que más te importa\?/);
-  assert.match(app, /lineaPrioridad \+ preguntaHtml \+ \(vivirEx \? .. : heroHtml\)/);
+  assert.match(app, /lineaPrioridad \+ preguntaHtml \+ heroHtml/);
   assert.doesNotMatch(app, /if \(!estado\.prioridadRespondida\) \{\n      cont\.innerHTML/);
   assert.match(app, /'prioridad', 'prioridadRespondida'/);
   assert.match(app, /Ahora no/);
