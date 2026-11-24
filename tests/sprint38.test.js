@@ -173,5 +173,24 @@ test('S39 2.5: las 3 preguntas recomiendan en el orden acordado y se usan en Cam
   assert.ok(i > 0 && i < j && j < k && k < l, 'orden de la regla');
   assert.match(app, /enlazarPreguntasCamino\(cont, renderDepartamentos\)/);
   assert.match(app, /enlazarPreguntasCamino\(cont, renderComparar\)/);
-  assert.match(app, /'respObra', 'respFamilia'\]/);
+  assert.match(app, /'respObra', 'respFamilia'/);
+});
+
+test('S39 3.1: Comparar con línea de tiempo y casillas para marcar dos', () => {
+  assert.match(app, /class="tl" aria-hidden="true"/);
+  assert.match(app, /Marca dos para verlos lado a lado/);
+  assert.match(app, /class="tl-sel-btn" data-comparar="/);
+  assert.doesNotMatch(app, /ojo: 'Solo departamentos nuevos'/);
+});
+
+test('S39 3.2: Tu grupo con foto, cifras, «Te toca», conversación, votaciones, vocero y reglas', () => {
+  assert.match(app, /function tuGrupoHtml\(p\)/);
+  assert.match(app, /data-vista-compra="/);
+  assert.match(app, /class="tg-foto"/);
+  ['chat', 'votos', 'vocero', 'reglas'].forEach((k) => assert.match(app, new RegExp("fila\\('" + k + "'")));
+  assert.match(app, /La fecha de firma y de llaves no se vota/);
+  assert.match(app, /No compartas tu RUT, tu dirección ni datos de tu cuenta/);
+  assert.match(app, /'votoGrupo', 'voceroYo'\]/);
+  assert.match(app, /enGrupoCompra\(\) \? '' : tuEdificioHtml\(s\)/);
+  assert.match(app, /data-ir-grupo/);
 });
