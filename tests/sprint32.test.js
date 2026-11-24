@@ -156,7 +156,7 @@ test('23-nov: Departamentos tiene Caminos | Edificios; sin camino abre Caminos y
 
 test('23-nov: Tu compra sin camino muestra «Entre [mes] y [mes]», según el camino', () => {
   assert.match(app32, /function rangoLlavesCaminos\(\)/);
-  assert.match(app32, /'Entre <span class="sin-corte">'/);
+  assert.match(app32, /'Desde <span class="sin-corte">'/); // S44
   assert.match(app32, /según el camino que elijas/);
 });
 

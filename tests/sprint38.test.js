@@ -212,3 +212,13 @@ test('S43: Ayudas con detalle (qué es, pasos como misiones, Volver abajo) y «p
   assert.match(app, /data-ayuda-volver>Volver</);
   assert.match(app, />Agregar a misiones</);
 });
+
+test('S44: correcciones del recorrido (ayudas incluidas, sin IVA a tiempo, visita, plazos, salir del grupo)', () => {
+  assert.match(app, /if \(f\.incluido\) return 'Ya va en tus números/);
+  assert.match(app, /function ivaFueraDePlazo\(pd\)/);
+  assert.doesNotMatch(app, /estado\.visitas\[k\]\.fue; \}\) \|\| !!c/);
+  assert.match(app, /function abrirSalirGrupo\(boton\)/);
+  assert.match(app, /Entiendo lo que pierdo yo y lo que pierde el grupo/);
+  assert.match(app, /Lo que pierde el grupo/);
+  assert.match(app, /chip-alcanza">Te alcanza/);
+});

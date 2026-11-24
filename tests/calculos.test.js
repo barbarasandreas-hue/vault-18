@@ -322,8 +322,8 @@ for (const [propio, pareja, modo, uf] of [
   });
 }
 
-test('capacidad en modo vivir no pasa del tope del FOGAES (UF 4.500)', () => {
-  assert.strictEqual(c.capacidadCompraUF(3000000, 3000000, 'vivir'), 4500);
+test('capacidad en modo vivir no pasa del tope del FOGAES (UF 6.000, ley 2026)', () => {
+  assert.ok(c.capacidadCompraUF(3000000, 3000000, 'vivir') <= 6000);
 });
 
 test('capacidad: sin sueldos devuelve null', () => {

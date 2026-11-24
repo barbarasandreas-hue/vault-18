@@ -40,7 +40,7 @@ test('4: «postular» solo para el DS1 y los términos con explicación', () => 
   assert.doesNotMatch(app, /postular no te obliga|'Ir a postular'/);
   assert.match(app, /'preaprobacion': \{ termino: 'Preaprobación'/);
   assert.match(app, /'ds1': \{ termino: 'Subsidio DS1'/);
-  assert.match(app, /20 % con crédito tradicional/);
+  assert.match(app, /20 % sin ayudas/);
   assert.match(calc, /'Para el DS1'/);
   assert.strictEqual(c.ETAPAS_OBRA_CLARA[1], 'Están levantando los muros');
 });

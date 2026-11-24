@@ -5510,3 +5510,34 @@ body:has(.hoja-pantalla) .barra { z-index: 61; }
 .btn-filtro-ic { position: relative; flex: none; width: 44px; height: 44px; margin-top: 12px; border-radius: 50%; border: 1.5px solid var(--gray-semilight); background: var(--white); color: var(--blue-dark); display: grid; place-items: center; cursor: pointer; }
 .btn-filtro-ic svg { width: 22px; height: 22px; margin: 0; }
 .btn-filtro-n { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--blue-normal); color: var(--white); font-size: 11.5px; font-weight: 800; display: grid; place-items: center; }
+
+/* S44: correcciones del recorrido */
+.tp-iva.no, .det-iva.no { color: var(--gray-dark); }
+.det-iva.no { background: #FFF4B3; color: #5C5200; }
+.ay-incluida { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; padding: 8px 12px; border-radius: 12px; background: var(--green-20); color: var(--green-dark); font-size: 14px; }
+.ay-incluida svg { width: 18px; height: 18px; margin: 0; flex: none; }
+.camt-porque { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--gray-dark); }
+.camt-porque svg { width: 14px; height: 14px; margin: 0; }
+.chip-alcanza { background: var(--green-20); color: var(--green-dark); }
+
+/* S44: salir del grupo con advertencia */
+.tg-salir { margin: 8px 0 4px; }
+.tg-salir .enlace { color: var(--red-dark, #B20913); }
+.salir-grupo h3 { margin: 12px 0 4px; }
+.salir-lista { list-style: none; margin: 0; padding: 0; }
+.salir-lista li { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 14px; line-height: 1.35; }
+.salir-lista svg { width: 20px; height: 20px; margin: 0; flex: none; }
+.salir-lista.pierdes svg { color: var(--red-dark, #B20913); }
+.salir-lista.grupo svg { color: #5C5200; }
+.salir-no { display: flex; gap: 8px; align-items: flex-start; margin: 12px 0; padding: 10px 12px; border-radius: 12px; background: var(--green-20); color: var(--green-dark); font-size: 14px; }
+.salir-no svg { width: 18px; height: 18px; margin: 0; flex: none; }
+.salir-entiendo { display: flex; gap: 10px; align-items: center; margin: 8px 0 12px; font-size: 14px; font-weight: 600; min-height: 44px; }
+.salir-entiendo input { width: 22px; height: 22px; accent-color: var(--blue-normal); flex: none; }
+.btn-peligro:disabled { opacity: .45; cursor: not-allowed; }
+/* S44: contraste WCAG 2.2 AA (1.4.3) y tamaño de toque (2.5.8) */
+.btn-primario { background-color: #267F29; border-color: #267F29; }
+.btn-primario:hover { background-color: var(--green-dark); }
+.metro-fechas { color: var(--blue-dark); }
+.pestanas a:not([aria-current="page"]), .det-tabs button:not([aria-selected="true"]) { color: var(--gray-dark); }
+.fc-quien small { color: var(--gray-dark); }
+.galeria-puntos .galeria-punto { width: 24px; height: 24px; }

@@ -1019,7 +1019,7 @@
     'dividendo': { termino: 'Dividendo', pregunta: '¿Qué es el dividendo?',
       texto: 'Es la cuota que pagas cada mes a Bci por el crédito hipotecario, con los seguros incluidos.' },
     'pie': { termino: 'Pie', pregunta: '¿Qué es el pie?',
-      texto: 'Es la parte del precio que pones tú: 10 % con garantía del Estado o en grupo, 20 % con crédito tradicional y 5 % con pie compartido (para arrendar). Además juntas los gastos de escritura.' },
+      texto: 'Es la parte del precio que pones tú: 10 % con garantía del Estado o en grupo, 20 % sin ayudas y 5 % con pie compartido (para arrendar). Además juntas los gastos de escritura.' },
     'tu-limite': { termino: 'Tu límite', pregunta: '¿Cuál es el límite?',
       texto: 'Lo que pagas al mes no puede pasar de 25 % de lo que ganan tú y tu pareja, y te tiene que quedar al menos 40 % para tus gastos del mes (comida, transporte, cuentas).' },
     'carga': { termino: 'Carga', pregunta: '¿Qué es la carga?',
@@ -1461,7 +1461,9 @@
         fila('votos', 't-amarillo', 'i-ok', 'Votaciones', (voto ? '' : '1 abierta' + SEP) + '2 cerradas', 0) +
         fila('vocero', 't-verde', 'i-persona', 'Vocero', (estado.voceroYo ? 'Te ofreciste como vocero' : APODOS_GRUPO[0] + SEP + '3 de 4 votos'), 0) +
         fila('reglas', 't-rojo', 'i-documento', 'Reglas del grupo', (p.cupos || 10) + ' personas' + SEP + Math.round(SUPUESTOS_PIEZAS.descuentoGrupo * 100) + NBSP + '% menos' + SEP + 'sales gratis', 0) +
-      '</ul></section>';
+      '</ul></section>' +
+      // S44 (Bárbara): salir del grupo se encuentra fácil, pero antes avisa qué pierdes tú y qué pierde el grupo.
+      '<p class="texto-centro tg-salir"><button type="button" class="enlace" id="btn-salir-grupo" aria-haspopup="dialog">Salir del grupo</button></p>';
     // S43 (Bárbara): sin el dibujo de la obra; la fecha de término va en el cuadro de la obra.
   }
   function abrirChatGrupo(p, boton) {
@@ -1940,7 +1942,8 @@
             '<small>' + textoRango(rg) + (queHay(rg) ? SEP + queHay(rg) : '') + '</small>' +
             ((n === 0 || !conteoIgual || !alcanza) ? '<span class="chip-fila">' +
               (n === 0 || !conteoIgual ? '<span class="chip chip-propuesta">' + (n === 0 ? 'Sin departamentos hoy' : plural(n, 'departamento', 'departamentos')) + '</span>' : '') +
-              (n > 0 && !alcanza ? ' <span class="chip chip-no-alcanza">No te alcanza hoy</span>' : '') + '</span>' : '') + '</span>' +
+              (n > 0 && !alcanza ? ' <span class="chip chip-no-alcanza">No te alcanza hoy</span>' : '') + '</span>' : '') +
+            (n > 0 && cap !== null && rg.hasta <= cap ? '<span class="chip-fila"><span class="chip chip-alcanza">Te alcanza</span></span>' : '') + '</span>' +
         '</button></li>';
       }).join('') + '</ul>' +
       atras;
@@ -2164,8 +2167,8 @@
   function textoLlavesRango(x) {
     if (x.desde.meses === null) return '';
     if (x.desde.meses === x.hasta.meses) return x.hasta.llaves;
-    var a = x.desde.llaves.split(' de '), b = x.hasta.llaves.split(' de ');
-    return 'Entre ' + (a[1] === b[1] ? a[0] : x.desde.llaves) + ' y ' + x.hasta.llaves;
+    // S44: un rango largo no orienta; se dice desde cuándo.
+    return 'Desde ' + x.desde.llaves;
   }
   var FRENO = { ahorro: 'Te frena: juntar tu pie', entrega: 'Te frena: la entrega', 'cuenta-vivienda': 'Te frena: tu cuenta de vivienda', ninguno: 'Nada te frena' };
   // S24-B1: lo que cambia al mover el slider, comparado con lo que juntas hoy.
@@ -2207,7 +2210,7 @@
     if (!s.cuentaVivienda)
       return '<div class="' + clase + '">' +
         '<div class="obra-izq">' + obraSvg(o) + '</div><div class="obra-der">' +
-          '<h2 class="h5" id="titulo-obra">Empieza a llenar tu pie</h2>' +
+          '<h2 class="h5" id="titulo-obra">' + (ahorroHoy() > 0 ? 'Ya tienes ' + formatoRedondeado(ahorroHoy()) + ' para tu pie' : 'Empieza a llenar tu pie') + '</h2>' +
           '<a class="btn ' + (dentro ? 'btn-secundario-light' : 'btn-secundario-dark') + ' btn-sm" href="#pie">Abrir mi cuenta</a></div></div>';
     // Comentario 9-nov: Tu pie (Cuenta Vivienda) y su avance van en la misma tarjeta que tu departamento en obra.
     var pct = s.meta > 0 ? Math.min(100, Math.round(s.ahorrado / s.meta * 100)) : 0;
@@ -2262,7 +2265,7 @@
   function etiquetaTradicional(m) {
     // S29 (13-nov, Bárbara): más corto, sin "para un crédito tradicional".
     // S31 (18-nov, Bárbara): se mantiene arriba, pero dice claro que es el crédito tradicional.
-    return m === 0 ? 'Ya tienes tu pie del 20' + NBSP + '%' : 'Si compras con crédito tradicional (pie del 20' + NBSP + '%), lo juntas en';
+    return m === 0 ? 'Ya tienes tu pie del 20' + NBSP + '%' : 'Si compras sin ayudas (pie del 20' + NBSP + '%), lo juntas en';
   }
   function renderTuCaminoVivir() {
     var c = $('inicio-principal');
@@ -2301,7 +2304,7 @@
         ? '<section class="noche mi-compra-fecha" aria-labelledby="titulo-plazo">' +
             '<span class="noche-luna" aria-hidden="true"></span>' +
             '<p class="noche-etiqueta" id="titulo-plazo">Recibes tus llaves</p>' +
-            '<strong class="numero noche-plazo noche-plazo-rango" id="numero-plazo">' + (rc.desde === rc.hasta ? 'En <span class="sin-corte">' + mesCorto(rc.desde) + '</span>' : 'Entre <span class="sin-corte">' + mesCorto(rc.desde) + '</span> y <span class="sin-corte">' + mesCorto(rc.hasta) + '</span>') + '</strong>' +
+            '<strong class="numero noche-plazo noche-plazo-rango" id="numero-plazo">' + (rc.desde === rc.hasta ? 'En <span class="sin-corte">' + mesCorto(rc.desde) + '</span>' : 'Desde <span class="sin-corte">' + mesCorto(rc.desde) + '</span>') + '</strong>' +
             '<span class="noche-aprox" id="plazo-aprox">según el camino que elijas</span>' +
           '</section>'
         : '<section class="noche mi-compra-fecha" aria-labelledby="titulo-plazo">' +
@@ -2946,7 +2949,8 @@
         icono('i-flecha', 'ac-flecha') + '</button></li>';
     };
     // S43 (Bárbara, maqueta 17): una sola fila con la etiqueta de descuento; adentro, cada ayuda con sus pasos.
-    var ahorro = elegibles.reduce(function (a, f) { return a + (f.juntas && f.juntas < 0 ? -f.juntas : 0); }, 0);
+    var ahorro = elegibles.reduce(function (a, f) { return a + (f.juntas && f.juntas < 0 && !f.incluido ? -f.juntas : 0); }, 0);
+    try { ahorro = Math.min(ahorro, Math.max(0, plazoDepartamento(p, null, compraSinGrupo(p)).meta - ahorroHoy())); } catch (e) {}
     var sub = elegidos.length ? 'Sumaste ' + elegidos.length + ' de ' + aplican.length
       : ahorro >= 100000 ? 'Podrías juntar hasta ' + formatoRedondeado(ahorro).replace(/\s*millones/, NBSP + 'M') + ' menos' : plural(aplican.length, 'ayuda', 'ayudas') + ' para ti';
     return '<button type="button" class="tarjeta aceleradores-compra ay-fila-compra" data-aceleradores-abrir aria-haspopup="dialog">' +
@@ -3197,9 +3201,11 @@
       cifra = formatoRedondeado(p.tipo === 'venta' && estado.modo === 'vivir' ? ufAPesos(plazoDepartamento(p).precioUF) : r.escenario.precio);
       // S43 (Bárbara): en los sin IVA se ve cuánto ganas (supuesto: baja de 10 % del precio).
       if (p.tipo === 'venta' && estado.modo === 'vivir' && cumpleChip('sin-iva', p, d)) {
-        var precioIva = p.tipo === 'venta' ? ufAPesos(plazoDepartamento(p).precioUF) : 0;
+        var pdIva = plazoDepartamento(p);
+        var precioIva = ufAPesos(pdIva.precioUF);
         var baja = SUPUESTOS_PIEZAS.bajaIVA;
-        lineas.push(conIva ? '<span class="tp-antes">Antes <s>' + formatoRedondeado(precioIva / (1 - baja)) + '</s> · ahorras ' + formatoRedondeado(precioIva / (1 - baja) * baja) + '</span>'
+        if (ivaFueraDePlazo(pdIva)) lineas.push('<span class="tp-iva no">Sin IVA hasta dic 2027: con tu fecha no alcanzas</span>');
+        else lineas.push(conIva ? '<span class="tp-antes">Antes <s>' + formatoRedondeado(precioIva / (1 - baja)) + '</s> · ahorras ' + formatoRedondeado(precioIva / (1 - baja) * baja) + '</span>'
           : '<span class="tp-iva">' + icono('i-alcancia') + 'Sin IVA: ahorras ' + formatoRedondeado(precioIva * baja) + '</span>');
       }
       if (p.tipo === 'financiamiento') lineas.push(lineaPersonasPie(p));
@@ -3902,7 +3908,7 @@
     formas.push({ id: 'ds1', sigla: 'DS1', nombre: 'Subsidio DS1', que: 'El Estado pone dinero en tu pie' + (ds1.montoUF ? ': unas ' + formatoUF(Math.round(ds1.montoUF)) + ' para este departamento' : '') + '. Se postula en el Minvu. No es el DS19: el DS1 sirve en cualquier departamento bajo el tope; el DS19 solo en proyectos DS19.',
       juntas: bloq ? null : con.meta - sin.meta, pagas: bloq ? null : con.dividendo - sin.dividendo, incluido: conDS1, bloqueo: bloq,
       espera: !bloq && ds1.mesesCuenta ? 'Tu cuenta de vivienda debe tener ' + ds1.mesesCuenta + ' meses' : '',
-      req: [['Departamento de hasta UF 2.200 (o UF 4.000 con el tramo nuevo)', precio <= 4000], ['Ingreso del hogar bajo el tope del tramo', !(bloq && /sueldo/i.test(bloq.razon))],
+      req: [['Departamento de hasta UF 2.200 (o hasta UF 4.000 con el tramo nuevo)', precio <= 4000], ['Ingreso del hogar bajo el tope del tramo', !(bloq && /sueldo/i.test(bloq.razon))],
         ['Registro Social de Hogares', ps.rsh ? true : null], ['No tener otra vivienda', null]],
       enPasos: !!(conDS1 || ps.ds1Agregado || ps.ds1Postulado || ps.rsh), lista: !!ps.ds1Postulado });
     // 20-nov (Bárbara): el subsidio a la tasa no se da por sentado: depende de los cupos cuando Bci apruebe tu crédito.
@@ -3956,7 +3962,8 @@
     try { formas = ayudasDelModo(formasParaVista(p, solo, caminoVista)); } catch (e) { return ''; }
     var aplican = formas.filter(function (f) { return !f.bloqueo; });
     if (!aplican.length) return '';
-    var ahorro = aplican.reduce(function (a, f) { return a + (f.juntas && f.juntas < 0 && !(f.auto || f.enPasos) ? -f.juntas : 0); }, 0);
+    var ahorro = aplican.reduce(function (a, f) { return a + (f.juntas && f.juntas < 0 && !(f.auto || f.enPasos || f.incluido) ? -f.juntas : 0); }, 0);
+    try { ahorro = Math.min(ahorro, Math.max(0, plazoDepartamento(p, null, solo).meta - ahorroHoy())); } catch (e) {}
     var sub = ahorro >= 100000 ? 'Podrías juntar hasta ' + formatoRedondeado(ahorro).replace(/\s*millones/, NBSP + 'M') + ' menos' : plural(aplican.length, 'ayuda', 'ayudas') + ' para este departamento';
     return '<button type="button" class="tarjeta aceleradores-compra ay-fila-compra" id="btn-ayudas-detalle" aria-haspopup="dialog">' +
       '<span class="ay-ic t-amarillo" aria-hidden="true">' + ICONO_ETIQUETA + '</span>' +
@@ -4059,7 +4066,7 @@
         ['i-documento', 'Confirma que es tu primera compra', 'La garantía se usa una sola vez', !!ps.fogaesCalifica],
         ['i-banco', 'Pídela al pedir tu crédito', 'Bci la solicita por ti', false]]; } },
     ds1: { tinte: 'verde', ic: 'i-alcancia',
-      que: 'Es <strong>dinero del Estado que se suma a tu pie</strong> y no se devuelve. Hoy sirve en viviendas de hasta UF 2.200 (viene un tramo nuevo hasta UF 4.000). Lo entrega el Minvu y hay que postular. No es el DS19.',
+      que: 'Es <strong>dinero del Estado que se suma a tu pie</strong> y no se devuelve. Sirve en viviendas de hasta UF 2.200, y de UF 2.200 a 4.000 con el tramo nuevo (postulación hasta el 27 de noviembre de 2026). Lo entrega el Minvu y hay que postular. No es el DS19.',
       pasos: function (f, ps) { return [['i-documento', 'Inscríbete en el Registro Social de Hogares', 'En línea, en ChileAtiende', !!ps.rsh],
         ['i-alcancia', 'Junta el ahorro mínimo', 'Desde 80 UF (unos ' + formatoRedondeado(ufAPesos(80)) + '), con tu cuenta abierta hace 12 meses', false],
         ['i-calendario', 'Postula cuando abra el llamado', 'Te avisamos las fechas', !!ps.ds1Postulado],
@@ -4096,6 +4103,8 @@
   function efectoTextoAyuda(f) {
     if (f.bloqueo) return 'Hoy no te sirve: ' + primeraMinuscula(f.bloqueo.razon);
     if (f.id === 'ds19') return 'Solo en proyectos DS19';
+    // S44: la garantía ya va en los números del camino; no se vuelve a restar.
+    if (f.incluido) return 'Ya va en tus números: pie del 10' + NBSP + '% en vez del 20' + NBSP + '%';
     if (f.sinEfecto) return 'Suma su sueldo a tu crédito';
     if (f.soloPagas) return Math.abs(f.pagas) >= 1000 ? 'Pagas ' + formatoRedondeado(Math.abs(f.pagas)) + ' menos al mes' : 'Baja tu tasa si quedan cupos';
     if (f.juntas !== null && f.juntas < -1000) return 'Juntas ' + formatoRedondeado(Math.abs(f.juntas)) + ' menos';
@@ -4103,6 +4112,10 @@
     return 'Mira cuánto cambia';
   }
   // S43: para arrendar no sirven las ayudas de primera vivienda (garantía del Estado, DS1, subsidio a la tasa).
+  // S44: el sin IVA vale si la promesa se firma antes de dic 2027; la promesa se firma con el pie listo.
+  // S44: lo que ya tienes para el pie (en la cuenta o lo que contaste al empezar).
+  function ahorroHoy() { return Math.max(estado.ahorrado || 0, estado.ahorroActual || 0); }
+  function ivaFueraDePlazo(pd) { return !pd || pd.meses === null || pd.meses === undefined || pd.meses > mesesEntre(hoyDemo(), SUPUESTOS_PIEZAS.finIVA); }
   function ayudasDelModo(formas) { return estado.modo === 'arrendar' ? formas.filter(function (f) { return f.id === 'sumar'; }) : formas; }
   function abrirBajarPrecio(p, solo, caminoVista, boton, foco) {
     var formas = ayudasDelModo(formasParaVista(p, solo, caminoVista));
@@ -4114,7 +4127,7 @@
       '<p class="texto-apoyo ay-cuantas"><small>' + (sumadas ? 'Con ' + plural(sumadas, 'ayuda sumada', 'ayudas sumadas') : 'Toca una ayuda para ver qué es y cómo conseguirla') + '</small></p>' +
       '<ul class="ay-lista">' + formas.map(function (f) {
         var v = AYUDA_VISTA[f.id] || { tinte: 'azul', ic: 'i-info' };
-        var marca = f.auto ? '<span class="ay-chip">Incluida</span>' : f.enPasos || f.lista ? '<span class="ay-chip">' + icono('i-check') + 'Sumada</span>' : icono('i-flecha', 'ac-flecha');
+        var marca = f.auto || (f.incluido && !(f.enPasos || f.lista)) ? '<span class="ay-chip">Incluida</span>' : f.enPasos || f.lista ? '<span class="ay-chip">' + icono('i-check') + 'Sumada</span>' : icono('i-flecha', 'ac-flecha');
         return '<li><button type="button" class="ay-item" data-ayuda="' + f.id + '">' +
           '<span class="ay-ic t-' + v.tinte + '" aria-hidden="true">' + icono(v.ic) + '</span>' +
           '<span class="ay-txt"><strong>' + f.nombre + '</strong><small>' + efectoTextoAyuda(f) + '</small></span>' + marca + '</button></li>';
@@ -4133,7 +4146,8 @@
       if (val === null || val === undefined || Math.abs(val) < 1000) return 'Igual';
       return (val < 0 ? '−' : '+') + formatoRedondeado(Math.abs(val)).replace(/\s*millones/, NBSP + 'M') + (alMes ? ' al mes' : '');
     };
-    var tiles = f.bloqueo || f.sinEfecto ? '' :
+    var nota20 = f.incluido ? '<p class="ay-incluida">' + icono('i-check') + '<span>Ya va en tus números. Las cifras de abajo son <strong>frente a un pie del 20' + NBSP + '%</strong>.</span></p>' : '';
+    var tiles = f.bloqueo || f.sinEfecto ? '' : nota20 +
       '<div class="ay-tiles">' + (f.soloPagas ? '' : '<div><span class="ay-t-ic" aria-hidden="true">' + icono('i-alcancia') + '</span><small>Juntas</small><strong>' + num(f.juntas) + '</strong></div>') +
         '<div><span class="ay-t-ic" aria-hidden="true">' + icono('i-calendario') + '</span><small>' + (f.soloPagas ? 'Si te lo dan, pagas al mes' : 'Pagas al mes') + '</small><strong>' + num(f.soloPagas ? -Math.abs(f.pagas) : f.pagas) + '</strong></div></div>';
     var pasos = v.pasos(f, ps);
@@ -4362,7 +4376,9 @@
             '<div class="det-precio-fila"><strong class="det-precio-num">' + formatoRedondeado(ufAPesos(pd.precioUF)) + '</strong>' +
               (enGrupo && r.ahorro > 0 ? '<span class="det-ahorras">Ahorras ' + formatoRedondeado(r.ahorro) + '</span>' : '') + '</div>' +
             (p.tipo === 'venta' && cumpleChip('sin-iva', p, departamentosDe(p.id)[0])
-              ? '<p class="det-iva">' + icono('i-alcancia') + '<span>' + (piezasValidas(piezasOn()).iva
+              ? '<p class="det-iva' + (ivaFueraDePlazo(pd) ? ' no' : '') + '">' + icono('i-alcancia') + '<span>' + (ivaFueraDePlazo(pd)
+                  ? 'Es sin IVA si firmas la promesa antes de dic 2027. Con tu fecha no alcanzas ese ahorro de <strong>' + formatoRedondeado(ufAPesos(pd.precioUF) * SUPUESTOS_PIEZAS.bajaIVA) + '</strong>. Si juntas más al mes, puede que sí.'
+                  : piezasValidas(piezasOn()).iva
                   ? 'Sin IVA ahorras <strong>' + formatoRedondeado(ufAPesos(pd.precioUF) / (1 - SUPUESTOS_PIEZAS.bajaIVA) * SUPUESTOS_PIEZAS.bajaIVA) + '</strong> (ya va en el precio)'
                   : 'Sin IVA ahorras <strong>' + formatoRedondeado(ufAPesos(pd.precioUF) * SUPUESTOS_PIEZAS.bajaIVA) + '</strong> si firmas la promesa antes de dic 2027') + '</span></p>' : '') +
             (enGrupo && mesesParaEntrega(p) > 0
@@ -6203,6 +6219,38 @@
     $('btn-salir-si').addEventListener('click', salirDeCompra);
   }
 
+  function abrirSalirGrupo(boton) {
+    var p = proyectoCompra();
+    if (!p) return;
+    var r = resumen(p), g = null;
+    try { g = planGrupo(p); } catch (e) { g = null; }
+    var quedan = Math.max(0, (r.cuposTomados || 1) - 1);
+    var pct = Math.round(SUPUESTOS_PIEZAS.descuentoGrupo * 100) + NBSP + '%';
+    var html = '<div class="salir-grupo">' +
+      '<h3 class="h6">Lo que pierdes tú</h3><ul class="salir-lista pierdes">' +
+        '<li>' + icono('i-alcancia') + '<span>El descuento del grupo: <strong>' + (r.ahorro > 0 ? formatoRedondeado(r.ahorro) : pct + ' del precio') + '</strong></span></li>' +
+        '<li>' + icono('i-llave') + '<span>Tu lugar en el grupo' + (g && g.fecha ? ' y firmar con todos en <strong>' + g.fecha + '</strong>' : '') + '</span></li>' +
+        '<li>' + icono('i-calendario') + '<span>Tu fecha: vuelves a calcularla comprando solo, con el precio sin descuento</span></li>' +
+      '</ul>' +
+      '<h3 class="h6">Lo que pierde el grupo</h3><ul class="salir-lista grupo">' +
+        '<li>' + icono('i-grupo') + '<span>Quedan <strong>' + quedan + ' de ' + (r.cupos || p.cupos) + '</strong> personas</span></li>' +
+        '<li>' + icono('i-alerta') + '<span>Si no se completan, el descuento puede bajar para todos y el cierre puede atrasarse</span></li>' +
+      '</ul>' +
+      '<p class="salir-no">' + icono('i-escudo') + '<span>Lo que no pierdes: tu ahorro. Sales sin multa antes del cierre y te devolvemos lo que llevas.</span></p>' +
+      '<label class="salir-entiendo"><input type="checkbox" id="salir-entiendo"><span>Entiendo lo que pierdo yo y lo que pierde el grupo</span></label>' +
+      '<button type="button" class="btn btn-peligro btn-bloque" id="btn-salir-grupo-si" disabled>Salir del grupo</button>' +
+      '<button type="button" class="btn btn-primario btn-bloque bloque-chico" id="btn-salir-grupo-no">Me quedo en el grupo</button></div>';
+    abrirHojaContenido('¿Salir del grupo?', html, boton, function (hoja) {
+      var ck = hoja.querySelector('#salir-entiendo'), si = hoja.querySelector('#btn-salir-grupo-si');
+      ck.addEventListener('change', function () { si.disabled = !ck.checked; });
+      hoja.querySelector('#btn-salir-grupo-no').addEventListener('click', function () { cerrarHoja(true); });
+      si.addEventListener('click', function () { cerrarHoja(false); vistaCompra = 'compra'; guardarCompra(null); location.hash = '#compra'; mostrar(); toast('Saliste del grupo. Tu ahorro sigue en tu cuenta.'); });
+    }, { confirmacion: true });
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('#btn-salir-grupo');
+    if (b) abrirSalirGrupo(b);
+  });
   function salirDeCompra() {
     guardarCompra(null);
     location.hash = '#compra';
@@ -6779,7 +6827,8 @@
       acuerdo: !!ps.sumarAgregado, acuerdoFirmado: !!ps.acuerdoFirmado,
       informeDeudas: !!ps.informeDeudas || preaprobado,
       visitar: !!estado.caminoElegido && !esArriendo() && !esGrupo(),
-      visito: Object.keys(estado.visitas || {}).some(function (k) { return estado.visitas[k] && estado.visitas[k].fue; }) || !!c || (estado.caminoElegido === 'usados' && !!estado.usadoElegido)
+      // S44: elegir un departamento no es visitarlo.
+      visito: Object.keys(estado.visitas || {}).some(function (k) { return estado.visitas[k] && estado.visitas[k].fue; })
     };
   }
   function nombreCaminoActual() {
@@ -7241,7 +7290,7 @@
     if (m === null) return 'Todavía no te alcanza';
     var pl = Math.max(0, m - MESES_SI_A_LLAVES);
     return 'Pie listo <strong>' + (pl === 0 ? 'ya' : mesTuyo(pl)) + '</strong>' +
-      '<small>Recibes tus llaves ' + mesTuyo(m) + '</small>' + (trad ? '<small>Con crédito tradicional</small>' : '');
+      '<small>Recibes tus llaves ' + mesTuyo(m) + '</small>' + (trad ? '<small>Si compras sin ayudas (pie del 20' + NBSP + '%)</small>' : '');
   }
   function deslizadorPie(dentro) {
     if (estado.modo !== 'vivir' || esArriendo()) return '';
@@ -7302,12 +7351,14 @@
     if (!s.cuentaVivienda) {
       cont.innerHTML = cabeza +
         '<section class="tarjeta bloque obra-invita"><div class="obra-claro">' + obraSvg(avanceObra(0, 0, false)) + '</div>' +
-          '<h2 class="h4">Empieza a llenar tu pie</h2>' +
-          '<p class="texto-apoyo">Cada cuota suma una parte de tu pie.</p></section>' +
+          // S44: si ya tienes ahorro, se dice; sin camino, lo primero es elegirlo.
+          '<h2 class="h4">' + (ahorroHoy() > 0 ? 'Ya tienes ' + formatoRedondeado(ahorroHoy()) + ' para tu pie' : 'Empieza a llenar tu pie') + '</h2>' +
+          '<p class="texto-apoyo">' + (!estado.caminoElegido ? 'Elige un camino y te decimos cuánto juntar.' : ahorroHoy() > 0 ? 'Abre tu cuenta de vivienda y sigue juntando en UF.' : 'Cada cuota suma una parte de tu pie.') + '</p></section>' +
         deslizadorPie() +
-        selloProteccion(s) +
-        '<div class="accion-fija"><button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-abrir-cuenta">Abrir mi cuenta</button></div>';
-      $('btn-abrir-cuenta').addEventListener('click', function () { marcarPaso('cuentaVivienda', textoCuentaAbierta()); });
+        (estado.caminoElegido ? selloProteccion(s) : '') +
+        '<div class="accion-fija">' + (estado.caminoElegido ? '<button type="button" class="btn btn-primario btn-lg btn-bloque" id="btn-abrir-cuenta">Abrir mi cuenta</button>'
+          : '<a class="btn btn-primario btn-lg btn-bloque" href="#departamentos">Elegir mi camino</a>') + '</div>';
+      if ($('btn-abrir-cuenta')) $('btn-abrir-cuenta').addEventListener('click', function () { marcarPaso('cuentaVivienda', textoCuentaAbierta()); });
       iniciarDeslizadorPie();
       return;
     }
@@ -8015,7 +8066,16 @@
     ponerOtrosCaminos(cont, id);
   }
   // S32-B5: «Cómo funciona» del crédito tradicional y del arriendo con opción (los departamentos, en Departamentos).
+  var ayudasPendiente = null;
+  function itemAyudasCamino(id) {
+    var pc = proyectoCompra();
+    if (pc && estado.caminoElegido === id) return { p: pc, solo: compraSinGrupo(pc) };
+    var lista = filtrarDeptos(itemsDeptos(id), filtrosDeptos).filter(function (x) { return x.p && x.tipo === 'proyecto'; });
+    if (!lista.length) lista = itemsDeptos(id).filter(function (x) { return x.p && x.tipo === 'proyecto'; });
+    return lista.length ? { p: lista[0].p, solo: !!lista[0].solo } : null;
+  }
   function renderCaminoInfo(id) {
+    if (ayudasPendiente && ayudasPendiente.id === id) { var ap = ayudasPendiente; ayudasPendiente = null; setTimeout(function () { abrirBajarPrecio(ap.it.p, ap.it.solo, id, null); }, 0); }
     var cont = $('caminos-contenido');
     var esTuyo = id === estado.caminoElegido;
     cont.innerHTML =
@@ -9203,7 +9263,7 @@
         '<details class="fc-pasos"><summary>Ver tus ' + h.total + ' pasos</summary>' + listaPasosPrevia(h) + '</details></section>' +
       (INFO_CAMINO[id] && INFO_CAMINO[id].para ? '<section class="fc-tarjeta fc-para fc-quien" aria-labelledby="fc-quien"><span class="fc-para-icono" aria-hidden="true">' + icono('i-persona') + '</span><span><strong id="fc-quien">Para quién</strong><small>' + INFO_CAMINO[id].para + '</small></span></section>' : '') +
       '<nav class="fc-mas" aria-label="Más sobre este camino">' +
-        (esArrendarCamino(id) ? '' : '<a href="#departamentos/camino/' + id + '"><span class="fc-mas-icono verde" aria-hidden="true">' + icono('i-casa') + '</span><span><strong>Ver sus departamentos</strong><small>' + plural(k, 'departamento', 'departamentos') + (filtrosDeptos.rango && rangoActual() ? ' en tu rango' : '') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>') +
+        (asegurarFiltroObra(), esArrendarCamino(id) ? '' : '<a href="#departamentos/camino/' + id + '"><span class="fc-mas-icono verde" aria-hidden="true">' + icono('i-casa') + '</span><span><strong>Ver sus departamentos</strong><small>' + plural(k, 'departamento', 'departamentos') + (filtrosDeptos.estado === 'nuevo' ? (k === 1 ? ' terminado' : ' terminados') : '') + (filtrosDeptos.rango && rangoActual() ? ' en tu rango' : '') + '</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>') +
         (CAMINOS[id] && CAMINOS[id].familiar ? (function () { var rf = respaldoFamiliar(listaMeta()); return '<a href="#compra/ficha/respaldo-familiar/familiar"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-grupo') + '</span><span><strong>Cómo lo vive tu familiar</strong><small>Deja ' + formatoRedondeado(rf.deposito) + ' y lo recupera en ' + (rf.mesesLibera / 12).toFixed(0) + ' años</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>'; })() : '') +
         (id === 'individual-vivir' ? '<a href="#compra/caminos/individual-vivir/califica"><span class="fc-mas-icono azul" aria-hidden="true">' + icono('i-escudo') + '</span><span><strong>¿Calificas?</strong><small>Revisa los requisitos con tus datos</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
         (estado.modo === 'vivir' && id !== 'arriendo-opcion' ? '<a href="#compra/caminos/' + id + '/como"><span class="fc-mas-icono amarillo" aria-hidden="true">' + icono('i-pronto') + '</span><span><strong>Ayudas para tu compra</strong><small>Lo que puede acercar tu fecha</small></span>' + icono('i-flecha', 'fc-flecha') + '</a>' : '') +
@@ -9248,8 +9308,8 @@
             '<button type="button" role="radio" aria-checked="' + (r === 'no') + '" data-cal="no">No, nunca</button>' +
             '<button type="button" role="radio" aria-checked="' + (r === 'si') + '" data-cal="si">Sí</button></div></div></section>' +
       (r === 'no' ? '<section class="cal-resultado ok" role="status">' + icono('i-check') + '<span><strong>' + (req.every(function (q) { return q[2]; }) ? 'Calificas' : 'Calificas si cumples lo que falta') + '</strong><small>Lo pides con tu crédito, al pedir tu preaprobación.</small></span></section>'
-        : r === 'si' ? '<section class="cal-resultado no" role="status"><span><strong>Esta garantía es una sola vez</strong><small>Igual puedes comprar con el crédito tradicional: Bci presta el 80' + NBSP + '% y juntas un pie del 20' + NBSP + '%.</small>' +
-          '<a class="enlace" href="' + rutaCamino('usados') + '">Ver el crédito tradicional ›</a></span></section>' : '') +
+        : r === 'si' ? '<section class="cal-resultado no" role="status"><span><strong>Esta garantía es una sola vez</strong><small>Igual puedes comprar con un pie del 20 %: Bci presta el 80' + NBSP + '% y juntas un pie del 20' + NBSP + '%.</small>' +
+          '<a class="enlace" href="' + rutaCamino('usados') + '">Ver cómo comprar con pie del 20 % ›</a></span></section>' : '') +
       '<div class="cal-notas"><p>' + icono('i-info') + '<span><strong>No es seguro:</strong> el subsidio a la tasa depende de los cupos que queden cuando Bci apruebe tu crédito.' +
           (y ? ' Sin subsidio, tu dividendo sería <strong>' + formatoRedondeado(y.dividendoSinSubsidio) + '</strong> en vez de ' + formatoRedondeado(y.dividendo) + '.' : '') + '</span></p>' +
         '<p>' + icono('i-escudo') + 'Lo confirma Bci al aprobar tu crédito.</p></div>' +
@@ -9351,7 +9411,15 @@
     });
     return items;
   }
+  // S44: «Prefiero terminado» se recuerda aunque se recargue la app.
+  var filtroObraListo = false;
+  function asegurarFiltroObra() {
+    if (filtroObraListo) return;
+    filtroObraListo = true;
+    if (estado.respObra === 'terminado' && !filtrosDeptos.estado) filtrosDeptos.estado = 'nuevo';
+  }
   function filtrarDeptos(items, f) {
+    asegurarFiltroObra();
     var rango = rangoActual();
     var lista = items.filter(function (x) {
       if (f.comuna && x.comuna !== f.comuna) return false;
@@ -9392,7 +9460,7 @@
     if (x.tipo === 'usado') {
       var titulo = 'Departamento en ' + esc(u.comuna);
       return '<li class="tarjeta usado">' + img + botonFavorito({ id: u.id, nombre: titulo }) +
-        '<span class="usado-etiqueta">Usado' + SEP + 'de ' + u.anio + SEP + 'crédito tradicional</span>' +
+        '<span class="usado-etiqueta">Usado' + SEP + 'de ' + u.anio + SEP + 'pie del 20' + NBSP + '%</span>' +
         '<h3 class="tp-nombre"><a class="usado-enlace" href="#departamentos/usado/' + esc(u.id) + '">' + titulo + '</a></h3>' +
         '<p class="tp-ficha">' + esc(u.comuna) + SEP + (u.dormitorios ? plural(u.dormitorios, 'dormitorio', 'dormitorios') : 'Estudio') + SEP + plural(u.banos || 1, 'baño', 'baños') + SEP + u.m2 + NBSP + 'm²</p>' +
         '<p class="usado-precio"><strong class="tp-cifra">' + formatoRedondeado(ufAPesos(u.listaUF)) + '</strong> <span>' + formatoUF(u.listaUF) + '</span></p>' +
@@ -9581,6 +9649,7 @@
       '<a class="camt-reco" href="' + rutaCamino(reco) + '" style="' + varsCamino(reco) + '">' +
         '<span class="cam-icono camt-reco-ic" aria-hidden="true">' + iconoCaminoD(reco) + '</span>' +
         '<span class="camt-reco-texto"><span class="camt-chip">Para ti</span><strong>' + nombreCaminoD(reco) + '</strong>' +
+        (porqueReco ? '<span class="camt-porque">' + icono('i-check') + porqueReco + '</span>' : '') +
         '<small>' + (reco === 'arriendo-opcion' ? 'Te mudas ' + mesCorto((porId[reco] || {}).mudas) : (esArrendarCamino(reco) ? 'Firmas ' : 'Llaves ') + mesCorto((porId[reco] || {}).tuyo)) + ((porId[reco] || {}).pagas ? SEP + formatoRedondeado(porId[reco].pagas) + '/mes' : '') + '</small></span></a>';
     var orden = GRUPOS_CAMINOS.reduce(function (a, g) { return a.concat(g[2]); }, []);
     var cuadros = vivirEx ? orden.filter(function (id) { return id === 'ds19' || (ids.indexOf(id) !== -1 && (!paraTiHtml || id !== reco)); })
@@ -10375,6 +10444,8 @@
       if (paso <= 3) {
         c.etapa = 'pie';
         c.meses = mesesRestantes(metaCompra(p), estado.ahorrado, estado.ahorroMensual);
+        // S44: el mismo plazo que muestra Tu compra.
+        if (estado.modo === 'vivir') { try { var pdA = plazoDepartamento(p, null, compraSinGrupo(p)); if (pdA.meses !== null && pdA.meses !== undefined) c.meses = pdA.meses; } catch (e) {} }
         if (c.meses === null) c.etapa = null;
       } else {
         var m = mesDelDepartamento(p, departamentoDeMiCompra(p));
@@ -11047,7 +11118,13 @@
       var q = p.slice(1);
       if (q[1] === 'cambia') return r('caminos', 'deptos', function () { cambiosActivos = {}; renderCaminos(); });
       if (q[1] === 'arriendo-opcion') return r('caminos', 'deptos', function () { if (q[2] === 'como') location.replace('#compra/caminos/arriendo-opcion'); else if (q[2]) location.replace('#departamentos/arriendo/' + q[2]); else if (estado.modo === 'vivir') renderCaminoInfo('arriendo-opcion'); else renderArriendoCamino(); });
-      if (q[1] && q[2] === 'como') return r('caminos', 'deptos', function () { renderLlegaAntes(q[1]); });
+      // S44: «Ayudas para tu compra» desde un camino abre las mismas Ayudas que Tu compra, con un departamento de ese camino.
+      if (q[1] && q[2] === 'como') return r('caminos', 'deptos', function () {
+        var it = estado.modo === 'vivir' && INFO_CAMINO[q[1]] ? itemAyudasCamino(q[1]) : null;
+        if (!it) { renderLlegaAntes(q[1]); return; }
+        ayudasPendiente = { id: q[1], it: it };
+        location.replace('#compra/caminos/' + q[1]);
+      });
       if (q[1] === 'individual-vivir' && q[2] === 'califica') return r('caminos', 'deptos', renderCalifica);
       if (q[1] === 'usados' && q[2]) return r('caminos', 'deptos', function () { location.replace('#departamentos/usado/' + q[2]); });
       if (q[1] === 'usados') return r('caminos', 'deptos', function () { if (estado.modo === 'vivir') renderCaminoInfo('usados'); else renderUsados(); });

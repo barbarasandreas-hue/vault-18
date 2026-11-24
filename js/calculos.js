@@ -13,7 +13,7 @@ var SUPUESTOS = {
   segurosUF: 0.7,           // al mes
   rentaParticipacion: 0.06, // anual en UF, sobre la parte de los inversionistas (pie compartido)
   topeRecompraMeses: 84,    // si a los 84 meses no recompró todo, refinancia o vende
-  topeFogaesUF: 4500,       // la garantía FOGAES llega a viviendas de hasta UF 4.500
+  topeFogaesUF: 6000,       // S44: la ley de 2026 amplió la garantía FOGAES a viviendas nuevas de hasta UF 6.000
   pctCostosVenta: 0.02,     // supuesto de diseño: corretaje y gastos si el comprador vende
   protectorCadaMeses: 6,    // "Este mes no pude": una vez cada 6 meses
   // S26: Tu mes como dueño. Estimados, no datos del edificio:
@@ -1664,7 +1664,7 @@ function hitoActual(s) {
 
 // Fechas que importan (validadas el 7-nov-2026; CLAUDE.md).
 var FECHAS_IMPORTAN = [
-  { id: 'ds1', texto: 'Cierra la postulación al DS1', fecha: '2026-11-27' },
+  { id: 'ds1', texto: 'Cierra el DS1 para viviendas de UF 2.200 a 4.000', fecha: '2026-11-27' },
   { id: 'iva', texto: 'Último mes para firmar la promesa sin IVA', fecha: '2027-11-30' },
   { id: 'garantia', texto: 'Último día para pedir la garantía del Estado (pie del 10 %)', fecha: '2028-05-31' }
 ];
