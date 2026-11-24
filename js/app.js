@@ -2930,11 +2930,11 @@
   // 23-nov: los aceleradores en Tu compra, con departamento elegido: los que ya sumaste y los que puedes sumar.
   // Si un acelerador no sirve para este departamento (bloqueado), no aparece.
   function aceleradoresCompraHtml() {
-    if (estado.modo !== 'vivir') return '';
     var p = proyectoCompra();
     if (!p) return '';
     var formas;
     try { formas = formasPagarMenos(p, compraSinGrupo(p)); } catch (e) { return ''; }
+    formas = ayudasDelModo(formas);
     var aplican = formas.filter(function (f) { return !f.bloqueo; });
     var elegidos = aplican.filter(function (f) { return f.auto || f.enPasos; });
     var elegibles = aplican.filter(function (f) { return !(f.auto || f.enPasos); });
@@ -4058,8 +4058,10 @@
     if (f.incluido) return 'Ya va en tus números';
     return 'Mira cuánto cambia';
   }
+  // S43: para arrendar no sirven las ayudas de primera vivienda (garantía del Estado, DS1, subsidio a la tasa).
+  function ayudasDelModo(formas) { return estado.modo === 'arrendar' ? formas.filter(function (f) { return f.id === 'sumar'; }) : formas; }
   function abrirBajarPrecio(p, solo, caminoVista, boton, foco) {
-    var formas = formasParaVista(p, solo, caminoVista);
+    var formas = ayudasDelModo(formasParaVista(p, solo, caminoVista));
     if (foco) { var ff = formas.filter(function (f) { return f.id === foco; })[0]; if (ff) { abrirAyuda(ff, p, solo, caminoVista, boton); return; } }
     var pd = null; try { pd = plazoDepartamento(p, null, solo); } catch (e) { pd = null; }
     var sumadas = formas.filter(function (f) { return f.auto || f.enPasos; }).length;
@@ -8963,7 +8965,11 @@
           '<button type="button" class="carrera-info" data-info-camino="' + n.id + '" aria-haspopup="dialog" aria-label="Cómo funciona ' + nombreCamino(n.id) + '">' +
             '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5h.01"/></svg></button></div>' +
           linea(n) + '</li>';
-      }).join('') + '</ul>' +
+      }).join('') +
+      // S43 (Bárbara): DS19 también aparece en Comparar. Su fecha y cuota dependen del proyecto, así que no entra al lado a lado.
+      (estado.modo === 'vivir' ? '<li class="cmp-ds19"><a href="#departamentos/ds19"><span class="cam-icono" aria-hidden="true">' + icono('i-casa') + '</span>' +
+        '<span class="cmp-ds19-txt"><b>Proyectos DS19</b><small>Con subsidio del Estado' + SEP + 'la fecha depende del proyecto</small></span>' +
+        '<span class="cmp-ds19-ir">¿Calificas? ›</span></a></li>' : '') + '</ul>' +
       '<div class="cmp-anios" aria-hidden="true"><span style="left:0">Hoy</span>' + anios.filter(function (h) { return parseFloat(h.split('left:')[1]) > 12; }).join('') + '</div>';
   }
   function ladoALadoHtml(nums) {
@@ -9047,9 +9053,10 @@
         '<input type="radio" name="explorar-modo" id="explorar-arrendar" value="arrendar"' + (arrendar ? ' checked' : '') + '><label for="explorar-arrendar">Para arrendar</label>' +
       '</div></fieldset>' +
       barraCaminoAnterior() +
-      (arrendar ? '<fieldset class="prioridades cr-prioridades"><legend class="h6">¿Qué te importa más?</legend><div class="prioridades-chips">' +
-        prioridades.map(function (p) {
-          return '<button type="button" class="chip chip-filtro" data-prioridad="' + p[0] + '" aria-pressed="' + (estado.prioridad === p[0]) + '">' + p[1] + '</button>';
+      (arrendar ? '<fieldset class="prioridades cr-prioridades preguntas-camino"><legend class="h5">¿Qué te importa más?</legend><div class="pc-opciones">' +
+        prioridades.map(function (p, i) {
+          // S43: mismos botones que las preguntas para vivir (blancos con borde de color).
+          return '<button type="button" class="pc-opcion ' + ['t-azul', 't-verde', 't-amarillo'][i % 3] + '" data-prioridad="' + p[0] + '" aria-pressed="' + (estado.prioridad === p[0]) + '"><strong>' + p[1] + '</strong></button>';
         }).join('') + '</div></fieldset>'
         // S39 2.5: para vivir, las mismas 3 preguntas de Caminos (se responden una vez).
         // S43 (Bárbara): sin la línea «Tus respuestas · Cambiar».
@@ -9376,7 +9383,9 @@
   }
   function nombreCaminoD(id) { return id === 'todos' ? 'Todos los caminos' : id === 'usados' ? NOMBRE_USADOS : nombreCamino(id); }
   // S36: el mismo ícono por camino en toda la app: grupo, escudo (garantía), casa (tradicional) y llave (arriendo).
-  var ICONO_CAMINO_D = { 'familiar-invertir': 'M12 20.5S3.5 15.3 3.5 9.2A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.5 2.6c0 6.1-8.5 11.3-8.5 11.3z', 'familiar-vivir': 'M12 20.5S3.5 15.3 3.5 9.2A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.5 2.6c0 6.1-8.5 11.3-8.5 11.3z', 'individual-vivir': 'M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3zM8.5 12l2.5 2.5 4.5-5', usados: 'M3.5 11L12 4l8.5 7M5.5 9.5V20h13V9.5M10 20v-5h4v5' };
+  // S43 (Bárbara): la garantía de un familiar es una mano que sostiene una casa; el corazón es de favoritos.
+  var ICONO_RESPALDO = 'M6.5 10L12 5l5.5 5v5h-11zM10.5 15v-3h3v3M2 18.5h3.5l3 2H15a1.6 1.6 0 0 0 0-3.2h-3M15.6 18l3.8-2.1a1.6 1.6 0 0 1 1.7 2.7l-4.6 3';
+  var ICONO_CAMINO_D = { 'individual-invertir': 'M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18', 'familiar-invertir': ICONO_RESPALDO, 'familiar-vivir': ICONO_RESPALDO, 'individual-vivir': 'M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3zM8.5 12l2.5 2.5 4.5-5', usados: 'M3.5 11L12 4l8.5 7M5.5 9.5V20h13V9.5M10 20v-5h4v5' };
   function iconoCaminoD(id) {
     if (id === 'todos') return icono('i-proyectos');
     if (ICONO_CAMINO_D[id]) return '<svg class="camino-dibujo" viewBox="0 0 24 24" aria-hidden="true"><path d="' + ICONO_CAMINO_D[id] + '"/></svg>';
@@ -9491,13 +9500,13 @@
         filaCamino(rutaCamino(reco), reco, nombreCaminoD(reco), datosFila(reco), icono('i-ok') + (porqueReco || (estado.prioridad ? porque[estado.prioridad].charAt(0).toUpperCase() + porque[estado.prioridad].slice(1) : 'Te lo recomendamos'))) + '</ul></section>';
     var lineaPrioridad = !preguntando && (vivirEx ? resumenRespuestas() : conReco)
       ? (vivirEx ? ''
-        : '<p class="prioridad-guardada">Lo que más te importa: <strong>' + nombrePrioridad + '</strong> <button type="button" class="enlace" id="btn-cambiar-prioridad">Cambiar mi respuesta</button></p>') : '';
+        : '') : ''; // S43: sin «Lo que más te importa · Cambiar mi respuesta».
     var preguntaHtml = !preguntando ? '' : vivirEx ? preguntasCaminoHtml() :
       '<section class="tarjeta pregunta-prioridad" aria-labelledby="titulo-pregunta-prioridad">' +
         '<h2 class="h5" id="titulo-pregunta-prioridad">¿Qué es lo que más te importa?</h2>' +
         '<p class="texto-apoyo"><small>Te recomendamos un camino.</small></p>' +
-        '<div class="prioridades-chips">' + PRIORIDADES.map(function (p) {
-          return '<button type="button" class="chip chip-filtro" data-prioridad-deptos="' + p[0] + '" aria-pressed="' + (estado.prioridad === p[0]) + '">' + p[1] + '</button>';
+        '<div class="pc-opciones">' + PRIORIDADES.map(function (p, i) {
+          return '<button type="button" class="pc-opcion ' + ['t-azul', 't-verde', 't-amarillo'][i % 3] + '" data-prioridad-deptos="' + p[0] + '" aria-pressed="' + (estado.prioridad === p[0]) + '"><strong>' + p[1] + '</strong></button>';
         }).join('') + '</div>' +
         '<button type="button" class="enlace" data-prioridad-deptos="ninguna">Ahora no</button>' +
       '</section>';
@@ -9518,20 +9527,23 @@
       '<a class="camt-reco" href="' + rutaCamino(reco) + '" style="' + varsCamino(reco) + '">' +
         '<span class="cam-icono camt-reco-ic" aria-hidden="true">' + iconoCaminoD(reco) + '</span>' +
         '<span class="camt-reco-texto"><span class="camt-chip">Para ti</span><strong>' + nombreCaminoD(reco) + '</strong>' +
-        '<small>' + (reco === 'arriendo-opcion' ? 'Te mudas ' + mesCorto((porId[reco] || {}).mudas) : 'Llaves ' + mesCorto((porId[reco] || {}).tuyo)) + ((porId[reco] || {}).pagas ? SEP + formatoRedondeado(porId[reco].pagas) + '/mes' : '') + '</small></span></a>';
+        '<small>' + (reco === 'arriendo-opcion' ? 'Te mudas ' + mesCorto((porId[reco] || {}).mudas) : (esArrendarCamino(reco) ? 'Firmas ' : 'Llaves ') + mesCorto((porId[reco] || {}).tuyo)) + ((porId[reco] || {}).pagas ? SEP + formatoRedondeado(porId[reco].pagas) + '/mes' : '') + '</small></span></a>';
     var orden = GRUPOS_CAMINOS.reduce(function (a, g) { return a.concat(g[2]); }, []);
-    var cuadros = orden.filter(function (id) { return id === 'ds19' || (ids.indexOf(id) !== -1 && (!paraTiHtml || id !== reco)); });
+    var cuadros = vivirEx ? orden.filter(function (id) { return id === 'ds19' || (ids.indexOf(id) !== -1 && (!paraTiHtml || id !== reco)); })
+      : ids.filter(function (id) { return !paraTiHtml || id !== reco; });
     cont.innerHTML =
       '<header class="encabezado">' + MARCA + '<h1 id="titulo-proyectos" class="h2" tabindex="-1">Departamentos</h1>' + tabsDeptos('caminos') + '</header>' +
-      lineaPrioridad + preguntaHtml + (vivirEx ? '' : heroHtml) +
+      lineaPrioridad + preguntaHtml +
       (vivirEx
         ? paraTiHtml +
           '<section class="camt-sec" aria-labelledby="camt-titulo"><h2 class="h5" id="camt-titulo">' + (paraTiHtml ? 'Otros caminos' : 'Caminos') + '</h2>' +
             '<ul class="camt-grilla">' + cuadros.map(cuadro).join('') + '</ul></section>' +
           '<a class="btn btn-secundario btn-bloque ex-comparar" href="#departamentos/comparar">Comparar los caminos</a>'
-        : '<section class="ex-otros" aria-labelledby="ex-otros-titulo"><h2 class="h5" id="ex-otros-titulo">' + (conReco ? 'Otros caminos' : 'Los caminos') + '</h2><ul>' +
-            ids.filter(function (id) { return !conReco || id !== reco; }).map(itemCamino).join('') + '</ul>' +
-            '<a class="btn btn-secundario btn-bloque ex-comparar" href="#departamentos/comparar">Comparar los ' + ids.length + ' caminos</a></section>' +
+        // S43 (Bárbara): para arrendar, la misma franja «Para ti» y los cuadros de colores.
+        : paraTiHtml +
+          '<section class="camt-sec" aria-labelledby="ex-otros-titulo"><h2 class="h5" id="ex-otros-titulo">' + (paraTiHtml ? 'Otros caminos' : 'Los caminos') + '</h2>' +
+            '<ul class="camt-grilla">' + cuadros.map(cuadro).join('') + '</ul></section>' +
+          '<a class="btn btn-secundario btn-bloque ex-comparar" href="#departamentos/comparar">Comparar los ' + ids.length + ' caminos</a>' +
           // 23-nov: «Invertir en el pie de otros» vive en el modo para arrendar, aquí (antes estaba en Perfil).
           '<a class="tarjeta fila ex-invertir" href="#inversiones">' + icono('i-sube', 'icono-grande') +
             '<span><strong>Invertir en el pie de otros</strong><small>Otro producto: 6' + NBSP + '% al año en UF</small></span><svg class="flecha-derecha" aria-hidden="true"><use href="#i-flecha"/></svg></a>') +

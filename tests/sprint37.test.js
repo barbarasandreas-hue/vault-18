@@ -23,11 +23,11 @@ test('E2: el DS1 se marca como acelerador', () => {
 
 test('E3: arriba de la lista de caminos una tarjeta pregunta qué te importa; la respuesta se guarda', () => {
   assert.match(app, /¿Qué es lo que más te importa\?/);
-  assert.match(app, /lineaPrioridad \+ preguntaHtml \+ \(vivirEx \? .. : heroHtml\)/);
+  assert.match(app, /lineaPrioridad \+ preguntaHtml \+/);
   assert.doesNotMatch(app, /if \(!estado\.prioridadRespondida\) \{\n      cont\.innerHTML/);
   assert.match(app, /'prioridad', 'prioridadRespondida'/);
   assert.match(app, /Ahora no/);
-  assert.match(app, /Cambiar mi respuesta/);
+  assert.match(app, /Ahora no/);
   assert.match(app, /btn-cambiar-prioridad-perfil/);
   assert.match(app, /'Otros caminos' : 'Los caminos'/);
 });
